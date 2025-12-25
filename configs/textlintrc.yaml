@@ -11,7 +11,7 @@ filters:
   comments: true
   allowlist:
     allowlistConfigPaths:
-      - .textlint/allowlist.yml
+      - ./.textlint/allowlist.yml
 rules:
   preset-ja-technical-writing:
     sentence-length:
@@ -37,11 +37,10 @@ rules:
         - numbers
   ja-hiraku: true
   common-misspellings: true
-  ja-no-orthographic-variants: true
   no-mixed-zenkaku-and-hankaku-alphabet: true
   "@proofdict/proofdict":
     dictURL: "https://atsushifx.github.io/proof-dictionary/"
   prh:
     rulePaths:
-      - ./.textlint/dict/prh.yml
-      - ./.textlint/dict/prh-my-settings.yml
+      - ./.textlint/dicts/prh.yml
+      - ./.textlint/dicts/prh-my-settings.yml
