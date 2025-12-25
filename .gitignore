@@ -40,9 +40,12 @@ $~*
 ## Coding AI depended
 # SDD (Spec-Driven Development) files
 **/.cc-sdd/
+**/.deckrd/
 
 # CLAUDE.md
 .claude/*
+!.claude/skills/
+!.claude/skills/*
 
 # MCP server dependency files
 .serena/
