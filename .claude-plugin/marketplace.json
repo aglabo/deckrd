@@ -1,0 +1,20 @@
+{
+  "name": "deckrd",
+  "owner": {
+    "name": "aglabo",
+    "url": "https://github.com/aglabo"
+  },
+  "metadata": {
+    "description": "Deckrd - your goals to tasks framework",
+    "version": "0.1.0"
+  },
+  "plugins": {
+    "name": "deckrd",
+    "description": "your goals to tasks framework",
+    "source": "./",
+    "strict": false,
+    "skills": [
+      "./skills/deckrd"
+    ]
+  }
+}
