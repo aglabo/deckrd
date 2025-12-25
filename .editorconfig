@@ -38,12 +38,7 @@ tab_width = 2
 # ─────────────────────────────
 # YAML
 # ─────────────────────────────
-[*.yaml]
-indent_style = space
-indent_size = 2
-tab_width = 2
-
-[*.yml]
+[*.{yaml,yml}]
 indent_style = space
 indent_size = 2
 tab_width = 2

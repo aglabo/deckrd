@@ -11,7 +11,7 @@ We hope your ideas will help make this project even better.
 
 ### 1. Report an Issue
 
-- Please use [Issues](https://github.com/<Owner/Repository>/issues) to report bugs or suggest features.
+- Please use [Issues](https://github.com/aglabo/deckrd/issues) to report bugs or suggest features.
 - Add enough details (steps, expected behavior, actual behavior).
 
 ### 2. Submit a Pull Request
@@ -27,7 +27,7 @@ We hope your ideas will help make this project even better.
 ### Setup
 
 ```bash
-git clone https://github.com/<Owner/Repository>.git
+git clone https://github.com/aglabo/deckrd.git
 ```
 
 ### Testing
@@ -61,9 +61,9 @@ All contributors must follow our [CODE_OF_CONDUCT.md](https://github.com/aglabo/
 
 <!-- textlint-disable @textlint-ja/ai-writing/no-ai-list-formatting -->
 
-- [🐛 Report a Bug](https://github.com/<Owner/Repository>/issues/new?template=bug_report.yml)
-- [✨ Request a Feature](https://github.com/<Owner/Repository>/issues/new?template=feature_request.yml)
-- [💬 Open a Topic](https://github.com/<Owner/Repository>/issues/new?template=open_topic.yml)
-- [🔀 Create a Pull Request](https://github.com/<Owner/Repository>/compare)
+- [🐛 Report a Bug](https://github.com/aglabo/deckrd/issues/new?template=bug_report.yml)
+- [✨ Request a Feature](https://github.com/aglabo/deckrd/issues/new?template=feature_request.yml)
+- [💬 Open a Topic](https://github.com/aglabo/deckrd/issues/new?template=open_topic.yml)
+- [🔀 Create a Pull Request](https://github.com/aglabo/deckrd/compare)
 
 <!-- textlint-enable -->

@@ -11,7 +11,7 @@
 
 ### 1. Issue の報告
 
-- バグ報告や機能提案は、[Issue](https://github.com/<Owner/Repository>/issues) にてお願いいたします。
+- バグ報告や機能提案は、[Issue](https://github.com/aglabo/deckrd/issues) にてお願いいたします。
 - 報告の際は、再現手順や期待される動作、実際の動作など、詳細な情報を提供してください。
 
 ### 2. プルリクエストの提出
@@ -29,7 +29,7 @@
 次の手順で、開発環境をセットアップします。
 
 ```bash
-git clone https://github.com/<Owner/Repository>.git
+git clone https://github.com/aglabo/deckrd.git
 ```
 
 ### テスト
@@ -63,9 +63,9 @@ git clone https://github.com/<Owner/Repository>.git
 
 <!-- textlint-disable @textlint-ja/ai-writing/no-ai-list-formatting -->
 
-- [🐛 バグ報告を作成する](https://github.com/<Owner/Repository>/issues/new?template=bug_report.yml)
-- [✨ 機能提案を作成する](https://github.com/<Owner/Repository>/issues/new?template=feature_request.yml)
-- [💬 自由トピックを投稿する](https://github.com/<Owner/Repository>/issues/new?template=open_topic.yml)
-- [🔀 Pull Request を作成する](https://github.com/<Owner/Repository>/compare)
+- [🐛 バグ報告を作成する](https://github.com/aglabo/deckrd/issues/new?template=bug_report.yml)
+- [✨ 機能提案を作成する](https://github.com/aglabo/deckrd/issues/new?template=feature_request.yml)
+- [💬 自由トピックを投稿する](https://github.com/aglabo/deckrd/issues/new?template=open_topic.yml)
+- [🔀 Pull Request を作成する](https://github.com/aglabo/deckrd/compare)
 
 <!-- textlint-enable -->

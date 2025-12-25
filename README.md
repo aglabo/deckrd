@@ -1,5 +1,8 @@
 # 📦 OSS Project Starter Template
 
+<!-- textlint-disable ja-technical-writing/sentence-length -->
+<!-- markdownlint-disable line-length -->
+
 This template is designed to help you quickly launch a modern open source project with best practices and essential tools pre-configured.
 
 ---
@@ -36,7 +39,7 @@ This template is designed to help you quickly launch a modern open source projec
 | cspell     | Spellchecker for code and documentation        |
 | dprint     | Fast and extensible code formatter (optional)  |
 
-> ⚠️ **Note**
+> **Note**
 > These tools are installed independently using Scoop or pnpm and are not bundled with the repository.
 > You are responsible for managing their versions and keeping them up to date.
 
