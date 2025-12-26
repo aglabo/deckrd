@@ -9,6 +9,7 @@
 #
 
 set -euo pipefail
+TZ='UTC'
 
 # バージョンを標準入力から読み込む関数
 read_version() {
@@ -72,7 +73,8 @@ create_release_directory() {
   fi
 
   mkdir -p "$release_dir"
-  echo "Created release directory: $release_dir"
+  echo "Created release directory: $release_dir" >&2
+  echo "$release_dir"
 }
 
 # 一時的なdistディレクトリを作成する関数
@@ -296,7 +298,8 @@ main() {
   trap cleanup EXIT
 
   # リリースディレクトリを作成
-  create_release_directory "$normalized_version" || exit 1
+  local release_dir
+  release_dir=$(create_release_directory "$normalized_version") || exit 1
 
   # skills/deckrdを一時dist下にコピー
   copy_deckrd_to_dist "$temp_dist" || exit 1
@@ -310,7 +313,7 @@ main() {
   # 一時dist/deckrdをzipアーカイブ
   archive_deckrd "$normalized_version" "$temp_dist" || exit 1
 
-  (cd "$release_dir" && sha256sum "deckrd-$normalized_version.zip" \
+  (cd "$release_dir" && sha256sum -t "deckrd-$normalized_version.zip" \
   > "deckrd-$normalized_version.zip.sha256")
 }
 
