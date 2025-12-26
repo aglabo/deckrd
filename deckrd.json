@@ -1,0 +1,10 @@
+{
+  "name": "deckrd",
+  "description": "Your goals to tasks framework",
+  "version": "0.0.1",
+  "stage": "experimental",
+  "artifact": {
+    "type": "skills",
+    "path": "skills/deckrd"
+  }
+}

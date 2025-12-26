@@ -35,8 +35,14 @@ $~*
 .env*
 .env.*
 
-## AI generated files
+## Build & Release
+/dist/
+/release/*
+/releases/*
+.version
 
+
+## AI generated files
 ## Coding AI depended
 # SDD (Spec-Driven Development) files
 **/.cc-sdd/
