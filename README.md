@@ -104,7 +104,7 @@ The following subcommands are available:
 - `req`: Create `requirements` (requirements definition document)
 - `spec`: Create `specification` (specification document)
 - `impl`: Create `implementation` (implementation decision criteria document)
-- `task`: Create `tasks.md` (implementation task list; test definitions in BDD)
+- `tasks`: Create `tasks.md` (implementation task list; test definitions in BDD)
 - `dr`: Create `Decision Records`
 
 Execute the commands in order from top to bottom to create the implementation task list.

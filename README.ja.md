@@ -108,7 +108,7 @@ Code / Tests
 - `req`: `requirements` (要件定義書 )を作成する
 - `spec`: `specification` (仕様書) を作成する
 - `impl`: `implementation` (実装要判断基準書) を作成する
-- `task`: `tasks.md` 実装用タスクリスト (BDD におけルテスト定義) を作成する
+- `tasks`: `tasks.md` 実装用タスクリスト (BDD におけルテスト定義) を作成する
 - `dr`: `Decision Records`を作成する
 
 コマンドを上から順番に実行していくことで、実装用のタスクリストを作成します。
