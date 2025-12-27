@@ -9,7 +9,8 @@
 #
 
 set -euo pipefail
-TZold=$TZ
+export TZ
+[[ ${TZ+x} ]] && TZold="$TZ"
 export TZ=UTC
 
 # バージョンを標準入力から読み込む関数
@@ -277,7 +278,6 @@ main() {
   echo ""
 
   # 一時的なdistディレクトリを作成
-  local temp_dist
   temp_dist=$(create_temp_dist) || exit 1
   echo "Created temporary dist directory: $temp_dist"
   echo ""
@@ -312,4 +312,10 @@ main() {
 }
 
 main
-export TZ=$TZold
+
+# restore TZ
+if [[ ${TZold+x} ]]; then
+  export TZ="$TZold"
+else
+  unset TZ
+fi
