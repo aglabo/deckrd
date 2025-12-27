@@ -15,8 +15,10 @@ created: { { DATE } }
 
 ## DR-01: {{DECISION_TITLE}} - {{YYYY-MM-DD HH:MM:SS}}
 
+**Phase**: {{PHASE}}
 **Status**: Accepted
 
+<!-- Phase may be: req | spec | impl | tasks -->
 <!-- Status may be: Proposed | Accepted | Deprecated | Superseded -->
 
 ### Context
@@ -49,6 +51,7 @@ created: { { DATE } }
 
 ## DR-02: {{DECISION_TITLE}} - {{YYYY-MM-DD HH:MM:SS}}
 
+**Phase**: {{PHASE}}
 **Status**: Accepted
 
 ### Context

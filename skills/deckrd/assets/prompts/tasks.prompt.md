@@ -14,7 +14,8 @@ You will receive:
 1. This PROMPT
 2. PARAMETERS
 3. SPECIFICATIONS document
-4. (Optionally) an external Tasks template reference
+4. IMPLEMENTATION document (implementation.md)
+5. (Optionally) an external Tasks template reference
 
 ## Output rules
 
@@ -99,23 +100,32 @@ Use category prefixes in describe blocks:
 
 ## Generation Rules
 
-1. **Read specifications** and identify:
+1. **Read IMPLEMENTATION document first**:
+   - Identify actual function/class/method names
+   - Note any renamed or refactored components
+   - Understand the actual implementation structure
+   - **ALWAYS use the names defined in implementation.md**
+
+2. **Read SPECIFICATIONS** and identify:
    - Test targets (functions, classes, methods)
    - Input/output constraints
    - Edge cases and error conditions
+   - Cross-reference with implementation.md for exact names
 
-2. **Break down** each specification into:
+3. **Break down** each specification into:
    - Test target (describe block level 1)
    - Given/When scenarios (describe block level 2)
    - Then assertions (it block level)
+   - **Use exact function/method names from implementation.md**
 
-3. **Generate tasks** with:
+4. **Generate tasks** with:
    - Unique Task ID
    - Markdown checkbox
    - Clear test description
    - Mapping to BDD structure
+   - **Target names matching implementation.md**
 
-4. **Order tasks** by:
+5. **Order tasks** by:
    - Test target sequence
    - Normal → Error → Edge case progression
 
@@ -142,3 +152,5 @@ Each task MUST include:
 - Create overly granular tasks (combine related assertions)
 - Skip error handling scenarios
 - Omit edge case coverage
+- **Use function/method names from specifications if they differ from implementation.md**
+- **Ignore implementation.md when naming test targets**

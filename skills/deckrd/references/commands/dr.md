@@ -1,11 +1,12 @@
 # dr Command
+
 <!-- textlint-disable ja-technical-writing/sentence-length -->
 <!-- markdownlint-disable line-length -->
 
 Manage Decision Records (DR) for the active module.
 
-Decision Records are non-normative, append-only records of decisions.
-made during the requirements definition phase.
+Decision Records are non-normative, append-only records of decisions
+made during any phase of the development process (req, spec, impl, tasks).
 
 ## Usage
 
@@ -40,7 +41,8 @@ Usage:
   deckrd dr         Show this help
   deckrd dr --add   Append a new Decision Record
 
-Note: DRs can only be added during the 'req' step.
+Note: DRs can be added during any step (req, spec, impl, tasks).
+      For 'tasks' step, confirmation will be requested.
 ```
 
 ### Add Mode
@@ -54,13 +56,25 @@ Note: DRs can only be added during the 'req' step.
 - Session must exist at `docs/.deckrd/.session.json`
 - `session.active` must be set
 - `session.modules[active]` must exist
-- `session.modules[active].current_step` MUST equal `"req"`
+- `session.modules[active].current_step` must be one of: `"req"`, `"spec"`, `"impl"`, `"tasks"`
 
-**`If current_step !== "req":`**
+**If `current_step === "tasks"`:**
+
+Prompt user for confirmation:
 
 ```bash
-Error: DR can only be added during the 'req' step.
-Current step: <current_step>
+You are in the 'tasks' step.
+Do you want to record this decision? (yes/no):
+```
+
+- If user responds `no` (or n, N, NO): Exit without creating or modifying files
+- If user responds `yes` (or y, Y, YES): Proceed with DR creation
+
+**If `current_step` is invalid (not req/spec/impl/tasks):**
+
+```bash
+Error: Invalid step '<current_step>'.
+DR can be added during: req, spec, impl, tasks
 ```
 
 Exit with error. Do NOT create or modify files.
@@ -151,6 +165,7 @@ deckrd/assets/
 ```markdown
 ## DR-<ID>: <Decision Title> - <YYYY-MM-DD HH:MM:SS>
 
+**Phase**: <current_step>
 **Status**: Accepted
 
 ### Context
@@ -183,12 +198,13 @@ deckrd/assets/
 
 ## Error Handling
 
-| Condition                     | Action                          |
-| ----------------------------- | ------------------------------- |
-| No session file               | Error, exit with non-zero       |
-| No active module              | Error, exit with non-zero       |
-| `current_step !== "req"`      | Error with message, no file ops |
-| Module path mismatch in front | Warning only, proceed           |
+| Condition                                   | Action                          |
+| ------------------------------------------- | ------------------------------- |
+| No session file                             | Error, exit with non-zero       |
+| No active module                            | Error, exit with non-zero       |
+| `current_step` not in (req/spec/impl/tasks) | Error with message, no file ops |
+| User declines in tasks step                 | Exit gracefully, no file ops    |
+| Module path mismatch in front               | Warning only, proceed           |
 
 **Error Philosophy:**
 
@@ -201,15 +217,16 @@ deckrd/assets/
 
 - Do NOT auto-summarize chat history
 - Do NOT generate DRs implicitly
-- Do NOT allow DR creation in spec/impl steps
 - Do NOT support DR editing or deletion
+- Do NOT skip confirmation for tasks step
 
 ## Workflow Integration
 
-DRs are created ONLY during the `req` step when explicitly requested.
+DRs can be created during any step when explicitly requested.
+Confirmation is required for the `tasks` step.
 
 ```bash
-init ──> req (DR allowed here) ──> spec ──> impl ──> tasks
+init ──> req (DR allowed) ──> spec (DR allowed) ──> impl (DR allowed) ──> tasks (DR allowed with confirmation)
 ```
 
 ## AI Interaction Engine
@@ -220,10 +237,10 @@ from user input and interaction logs.
 The provided scripts invoke this engine and are required for normal
 Deckrd operation, rather than serving as optional reference implementations.
 
-Execute: [run_prompt.sh](../../scripts/run-prompt.sh)
+Execute: [run-prompt.sh](../../scripts/run-prompt.sh)
 
 For `--add` mode:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/run_prompt.sh decision-record <user_context> [--lang <lang>] --output "decision-records.md" --append
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/run-prompt.sh decision-record <user_context> [--lang <lang>] --output "decision-records.md" --append
 ```

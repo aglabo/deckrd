@@ -5,26 +5,30 @@ Initialize module directory structure and session.
 ## Usage
 
 ```bash
-/deckrd init [--lang <lang>] <namespace>/<module>
+/deckrd init [--lang <lang>] [--ai-model <model>] <namespace>/<module>
 ```
 
 ## Options
 
-| Option          | Default  | Description                             |
-| --------------- | -------- | --------------------------------------- |
-| `--lang <lang>` | `system` | Document language: `system`, `en`, `ja` |
+| Option                | Default  | Description                                           |
+| --------------------- | -------- | ----------------------------------------------------- |
+| `--lang <lang>`       | `system` | Document language: `system`, `en`, `ja`               |
+| `--ai-model <model>` | `sonnet` | AI model: `gpt-*`, `o1-*`, `claude-*`, `haiku`, `sonnet`, `opus` |
 
 ## Example
 
 ```bash
-# Default language (system)
+# Default settings (system language, sonnet model)
 /deckrd init AGTKind/isCollection
 
-# Specify Japanese
+# Specify Japanese language
 /deckrd init --lang ja AGTKind/isCollection
 
-# Specify English
-/deckrd init --lang en AGTKind/isCollection
+# Specify AI model
+/deckrd init --ai-model claude-sonnet-4-5 AGTKind/isCollection
+
+# Specify both language and model
+/deckrd init --lang en --ai-model gpt-4o AGTKind/isCollection
 ```
 
 ## Actions
@@ -45,6 +49,7 @@ Initialize module directory structure and session.
    {
      "active": "<namespace>/<module>",
      "lang": "system",
+     "ai_model": "sonnet",
      "created_at": "<timestamp>",
      "updated_at": "<timestamp>",
      "modules": {
@@ -59,10 +64,10 @@ Initialize module directory structure and session.
 
 ## Script
 
-Execute: [scripts/init-docs.sh](../../scripts/init-docs.sh)
+Execute: [scripts/init-dirs.sh](../../scripts/init-dirs.sh)
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/init-docs.sh [--lang <lang>] <namespace>/<module>
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/init-dirs.sh [--lang <lang>] [--ai-model <model>] <namespace>/<module>
 ```
 
 > **Note**: `${CLAUDE_PLUGIN_ROOT}` resolves to the plugin installation directory.

@@ -28,6 +28,7 @@ You will receive:
 ## Parameters
 
 - LANG: system | en | ja | other
+- PHASE: req | spec | impl | tasks
 
 ---
 
@@ -49,6 +50,8 @@ You will receive:
 - Each Decision Record MUST:
   - Have a unique ID: DR-01, DR-02, ...
   - Include timestamp in header: `## DR-<ID>: <Title> - <YYYY-MM-DD HH:MM:SS>`
+  - Include **Phase** field: `**Phase**: <PHASE from parameters>`
+  - Include **Status** field: `**Status**: Accepted` (or other appropriate status)
   - Follow the **Decision Record template defined by this skill**
 - Order Decision Records by architectural impact (higher impact first), or by appearance order if impact is unclear.
 
