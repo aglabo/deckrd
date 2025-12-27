@@ -39,31 +39,52 @@ SESSION_FILE="docs/.deckrd/.session.json"
 DECKRD_BASE=""
 
 ##
-# @description Load DECKRD_BASE from session.json
-# Reads "active" field and sets DECKRD_BASE="docs/.deckrd/${active}"
-load_deckrd_base_from_session() {
+# @description Session AI model (set from session)
+SESSION_AI_MODEL=""
+
+##
+# @description Session language (set from session)
+SESSION_LANG=""
+
+##
+# @description Load configuration from session.json
+# Reads "active", "ai_model", and "lang" fields from session
+load_session_config() {
   if [[ ! -f "$SESSION_FILE" ]]; then
     return 0
   fi
 
-  local active=""
-
-  # Try jq first (most reliable)
-  if command -v jq >/dev/null 2>&1; then
-    active=$(jq -r '.active // empty' "$SESSION_FILE" 2>/dev/null || true)
-  # Fallback to node
-  elif command -v node >/dev/null 2>&1; then
-    active=$(node -e "try{console.log(require('./${SESSION_FILE}').active||'')}catch(e){}" 2>/dev/null || true)
+  if ! command -v jq >/dev/null 2>&1; then
+    echo "Warning: jq is not installed. Cannot load session configuration." >&2
+    return 0
   fi
+
+  local active=""
+  local ai_model=""
+  local lang=""
+
+  active=$(jq -r '.active // empty' "$SESSION_FILE" 2>/dev/null || true)
+  ai_model=$(jq -r '.ai_model // empty' "$SESSION_FILE" 2>/dev/null || true)
+  lang=$(jq -r '.lang // empty' "$SESSION_FILE" 2>/dev/null || true)
 
   if [[ -n "$active" ]]; then
     DECKRD_BASE="docs/.deckrd/${active}"
     export DECKRD_BASE
   fi
+
+  if [[ -n "$ai_model" ]]; then
+    SESSION_AI_MODEL="$ai_model"
+    export SESSION_AI_MODEL
+  fi
+
+  if [[ -n "$lang" ]]; then
+    SESSION_LANG="$lang"
+    export SESSION_LANG
+  fi
 }
 
-# Initialize DECKRD_BASE from session
-load_deckrd_base_from_session
+# Initialize configuration from session
+load_session_config
 
 # Set default if not loaded
 if [[ -z "${DECKRD_BASE}" ]]; then
@@ -90,12 +111,14 @@ readonly ASSETS_DIR
 SUPPORTED_TYPES=("requirements" "spec" "tasks" "impl")
 
 ##
-# @description Default AI model
-AI_MODEL="gpt-5.2"
+# @description AI model (loaded from session or default)
+# Can be overridden with --model option
+AI_MODEL="${SESSION_AI_MODEL:-gpt-5.2}"
 
 ##
-# @description Document language (system, en, ja, etc.)
-LANG_OPT="system"
+# @description Document language (loaded from session or default)
+# Can be overridden with --lang option
+LANG_OPT="${SESSION_LANG:-system}"
 
 ##
 # @description Document type (requirements, spec, tasks, impl)
@@ -109,9 +132,36 @@ CONTEXT_INPUT=""
 # @description Output file path (empty = stdout)
 OUTPUT_FILE=""
 
+##
+# @description AI command array (populated by get_model_command)
+declare -a AI_COMMAND
+
 # ============================================================================
 # Functions
 # ============================================================================
+
+##
+# @description Validate AI model name format
+# @arg $1 string AI model name
+# @return 0 if valid, exits on invalid format
+validate_ai_model() {
+  local model="$1"
+
+  # Allow simple model name: letters, numbers, hyphens, underscores, dots
+  if [[ "$model" =~ ^[A-Za-z0-9_.-]+$ ]]; then
+    return 0
+  fi
+
+  # Allow org/model format
+  if [[ "$model" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]; then
+    return 0
+  fi
+
+  echo "Error: AI model must contain only letters, numbers, hyphens, underscores, and dots" >&2
+  echo "  Allowed formats: 'model-name' or 'org/model-name'" >&2
+  echo "  Invalid model: ${model}" >&2
+  exit 1
+}
 
 ##
 # @description Show usage information
@@ -133,14 +183,19 @@ Document Types:
   impl            Generate implementation guide
 
 Options:
-  --model <model>   AI model name (default: gpt-5.2)
-                    Supported: gpt-*, o1-*, claude-*, haiku, sonnet, opus
-  --lang <lang>     Document language (default: system)
-                    Values: system, en, ja, or any language name
-  --output <file>   Output file path relative to DECKRD_BASE (default: stdout)
-                    Example: --output requirements/requirements.md
-                    → writes to \${DECKRD_BASE}/requirements/requirements.md
-  -h, --help        Show this help message
+  --ai-model <model>  AI model name (default: loaded from session, or gpt-5.2)
+                      Supported: gpt-*, o1-*, claude-*, haiku, sonnet, opus
+                      Formats: 'model-name' or 'org/model-name'
+  --lang <lang>       Document language (default: loaded from session, or system)
+                      Values: system, en, ja, or any language name
+  --output <file>     Output file path relative to DECKRD_BASE (default: stdout)
+                      Example: --output requirements/requirements.md
+                      → writes to \${DECKRD_BASE}/requirements/requirements.md
+  -h, --help          Show this help message
+
+Session Configuration:
+  Default values for --ai-model and --lang are loaded from:
+    docs/.deckrd/.session.json
 
 File Resolution:
   requirements  →  prompts/requirements.prompt.md
@@ -172,16 +227,18 @@ parse_options() {
         show_usage
         exit 0
         ;;
-      --model)
+      --ai-model)
         if [[ -z "${2:-}" ]]; then
-          echo "Error: --model requires a model name" >&2
+          echo "Error: --ai-model requires a model name" >&2
           exit 1
         fi
+        validate_ai_model "$2"
         AI_MODEL="$2"
         shift 2
         ;;
-      --model=*)
+      --ai-model=*)
         AI_MODEL="${1#*=}"
+        validate_ai_model "$AI_MODEL"
         shift
         ;;
       --lang)
@@ -318,22 +375,22 @@ resolve_doc_paths() {
 }
 
 ##
-# @description Get CLI command for specified AI model
+# @description Set AI command array for specified AI model
 # @arg $1 string AI model name
-# @stdout CLI command string
+# @return 0 on success, 1 on unsupported model
+# @global AI_COMMAND array populated with command and arguments
 get_model_command() {
-  local model="${1:-gpt-5.2}"
-  local cmd=""
+  local model="${1:-sonnet}"
 
   case "$model" in
     gpt-* | o1-*)
-      cmd="codex exec --model ${model}"
+      AI_COMMAND=("codex" "exec" "--model" "$model")
       ;;
     claude-* | haiku | sonnet | opus)
-      cmd="claude -p --model ${model}"
+      AI_COMMAND=("claude" "-p" "--model" "$model")
       ;;
     */*)
-      cmd="opencode run --model ${model}"
+      AI_COMMAND=("opencode" "run" "--model" "$model")
       ;;
     *)
       echo "Error: Unsupported model: ${model}" >&2
@@ -341,7 +398,7 @@ get_model_command() {
       ;;
   esac
 
-  echo "$cmd"
+  return 0
 }
 
 ##
@@ -385,11 +442,10 @@ execute_prompt() {
   local lang="$3"
   local context="$4"
 
-  local cmd
-  cmd=$(get_model_command "${AI_MODEL}") || return 1
+  get_model_command "${AI_MODEL}" || return 1
 
-  # NOTE: eval is used intentionally; model command is strictly controlled.
-  build_ai_input "$prompt_path" "$template_path" "$lang" "$context" | eval "$cmd"
+  # Execute AI command using array (no eval needed)
+  build_ai_input "$prompt_path" "$template_path" "$lang" "$context" | "${AI_COMMAND[@]}"
 }
 
 ##
