@@ -9,7 +9,8 @@
 #
 
 set -euo pipefail
-TZ='UTC'
+TZold=$TZ
+export TZ=UTC
 
 # バージョンを標準入力から読み込む関数
 read_version() {
@@ -117,14 +118,12 @@ archive_deckrd() {
 
   # zipアーカイブを作成
   # 現在のディレクトリをdeckrdの親ディレクトリに変更して、相対パスでアーカイブを作成
-  if ! command -v zip &> /dev/null; then
+  if ! command -v zip >/dev/null 2>&1; then
     echo "Error: zip is not installed" >&2
     return 1
   fi
 
-  (cd "$temp_dist" && zip -r "$archive_file" "deckrd")
-
-  if [ $? -eq 0 ]; then
+  if (cd "$temp_dist" && zip -r "$archive_file" "deckrd"); then
     echo "Created archive: $archive_file"
   else
     echo "Error: Failed to create archive" >&2
@@ -151,21 +150,20 @@ copy_license_files() {
   fi
 
   # LICENSE* ファイルをコピー
-  local license_files=("$project_root"/LICENSE*)
-  local found=false
+  local found=0
 
-  for license_file in "${license_files[@]}"; do
-    # ファイルが存在するか確認
-    if [ -f "$license_file" ]; then
-      local filename
-      filename=$(basename "$license_file")
-      cp "$license_file" "$dist_deckrd_dir/$filename"
-      echo "Copied license file: $filename"
-      found=true
-    fi
+  for license_file in "$project_root"/LICENSE*; do
+    # ファイルが存在するか確認（globが展開されなかった場合もスキップ）
+    [ -f "$license_file" ] || continue
+
+    local filename
+    filename=$(basename "$license_file")
+    cp "$license_file" "$dist_deckrd_dir/$filename"
+    echo "Copied license file: $filename"
+    found=1
   done
 
-  if [ "$found" = false ]; then
+  if [ "$found" -eq 0 ]; then
     echo "Warning: No LICENSE files found in project root" >&2
   fi
 }
@@ -197,14 +195,12 @@ copy_deckrd_json() {
   fi
 
   # jq を使用して特定フィールドだけを抽出
-  if ! command -v jq &> /dev/null; then
+  if ! command -v jq >/dev/null 2>&1; then
     echo "Error: jq is not installed" >&2
     return 1
   fi
 
-  jq '{name, description, version, stage}' "$source_json" > "$dest_json"
-
-  if [ $? -eq 0 ]; then
+  if jq '{name, description, version, stage}' "$source_json" > "$dest_json"; then
     echo "Copied deckrd.json to dist/deckrd/deckrd.json"
   else
     echo "Error: Failed to copy deckrd.json" >&2
@@ -244,10 +240,9 @@ copy_deckrd_to_dist() {
   fi
 
   # skills/deckrd を temp_dist 下にコピー
-  if command -v rsync &> /dev/null; then
+  if command -v rsync >/dev/null 2>&1; then
     # rsync が利用可能な場合
-    rsync -a "$deckrd_source" "$deckrd_dest"
-    if [ $? -eq 0 ]; then
+    if rsync -a "$deckrd_source/" "$deckrd_dest/"; then
       echo "Copied skills/deckrd to $temp_dist/deckrd (using rsync)"
     else
       echo "Error: Failed to copy skills/deckrd to $temp_dist/" >&2
@@ -257,8 +252,7 @@ copy_deckrd_to_dist() {
     # rsync が利用不可の場合は cp -fr にフォールバック
     echo "rsync not found, falling back to cp -fr"
     mkdir -p "$deckrd_dest"
-    cp -fr "$deckrd_source/" "$deckrd_dest"
-    if [ $? -eq 0 ]; then
+    if cp -fr "$deckrd_source/" "$deckrd_dest"; then
       echo "Copied skills/deckrd to $temp_dist/deckrd (using cp -fr)"
     else
       echo "Error: Failed to copy skills/deckrd to $temp_dist/" >&2
@@ -318,3 +312,4 @@ main() {
 }
 
 main
+export TZ=$TZold

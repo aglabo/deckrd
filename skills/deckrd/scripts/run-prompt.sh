@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
-# deckrd run-prompt.sh - Execute prompt with specified model and language
+# src: ./skills/deckrd/scripts/init-dirs.sh
+# @(#) : deckrd ディレクトリ初期化スクリプト
+#
+# Copyright (c) 2025 atsushifx <https://github.com/atsushifx>
+#
+# This software is released under the MIT License.
+# https://opensource.org/licenses/MIT
+
 #
 # @file run-prompt.sh
 # @brief Execute AI prompt with configurable model and language
@@ -24,7 +31,8 @@
 # @version 2.1.0
 # @license MIT
 
-set -euo pipefail
+# don't use  -u for checking error by Agent
+set -eo pipefail
 
 # ============================================================================
 # deckrd Path Initialization
@@ -35,7 +43,7 @@ set -euo pipefail
 SESSION_FILE="docs/.deckrd/.session.json"
 
 ##
-# @description deckrd base path (set from session)
+# @description deckrd base path - DECKRD_BASE may point to module root when session is active
 DECKRD_BASE=""
 
 ##
@@ -47,6 +55,21 @@ SESSION_AI_MODEL=""
 SESSION_LANG=""
 
 ##
+# @description Extract JSON value using grep/sed fallback
+# @arg $1 string JSON file path
+# @arg $2 string JSON key name
+# @stdout Extracted value (empty if not found)
+extract_json_value_fallback() {
+  local file="$1"
+  local key="$2"
+
+  # Match: "key": "value" or "key":"value"
+  # Handles whitespace variations and returns empty if not found
+  grep -o "\"${key}\"[[:space:]]*:[[:space:]]*\"[^\"]*\"" "$file" 2>/dev/null | \
+    sed -E 's/[^:]*:[[:space:]]*"([^"]*)".*/\1/' || echo ""
+}
+
+##
 # @description Load configuration from session.json
 # Reads "active", "ai_model", and "lang" fields from session
 load_session_config() {
@@ -54,18 +77,23 @@ load_session_config() {
     return 0
   fi
 
-  if ! command -v jq >/dev/null 2>&1; then
-    echo "Warning: jq is not installed. Cannot load session configuration." >&2
-    return 0
-  fi
-
   local active=""
   local ai_model=""
   local lang=""
 
-  active=$(jq -r '.active // empty' "$SESSION_FILE" 2>/dev/null || true)
-  ai_model=$(jq -r '.ai_model // empty' "$SESSION_FILE" 2>/dev/null || true)
-  lang=$(jq -r '.lang // empty' "$SESSION_FILE" 2>/dev/null || true)
+  if command -v jq >/dev/null 2>&1; then
+    # Preferred: use jq
+    active=$(jq -r '.active // empty' "$SESSION_FILE" 2>/dev/null || true)
+    ai_model=$(jq -r '.ai_model // empty' "$SESSION_FILE" 2>/dev/null || true)
+    lang=$(jq -r '.lang // empty' "$SESSION_FILE" 2>/dev/null || true)
+  else
+    # Fallback: use grep/sed
+    echo "Warning: session.json loaded via fallback; values may be incomplete" >&2
+
+    active=$(extract_json_value_fallback "$SESSION_FILE" "active")
+    ai_model=$(extract_json_value_fallback "$SESSION_FILE" "ai_model")
+    lang=$(extract_json_value_fallback "$SESSION_FILE" "lang")
+  fi
 
   if [[ -n "$active" ]]; then
     DECKRD_BASE="docs/.deckrd/${active}"

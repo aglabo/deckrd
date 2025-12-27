@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
-# deckrd init_dirs.sh - Initialize documentation directory structure and session
+# src: ./skills/deckrd/scripts/init-dirs.sh
+# @(#) : deckrd ディレクトリ初期化スクリプト
+#
+# Copyright (c) 2025 atsushifx <https://github.com/atsushifx>
+#
+# This software is released under the MIT License.
+# https://opensource.org/licenses/MIT
 #
 # @file init_dirs.sh
 # @brief Initialize DECKRD documentation directory structure and session
@@ -37,7 +43,8 @@
 # @version 2.0.0
 # @license MIT
 
-set -euo pipefail
+# don't use  -u for checking error by Agent
+set -eo pipefail
 
 # ============================================================================
 # Script Configuration
@@ -350,13 +357,13 @@ init_session() {
     return 0
   fi
 
-  if [[ -f "$SESSION_FILE" ]]; then
-    # Check if jq is available
-    if ! command -v jq >/dev/null 2>&1; then
-      echo "Warning: jq is not installed. Cannot update session file." >&2
-      return 1
-    fi
+  # check Execution environment
+  if ! command -v jq >/dev/null 2>&1; then
+    echo "Error: jq is not installed. Cannot update session file." >&2
+    return 1
+  fi
 
+  if [[ -f "$SESSION_FILE" ]]; then
     # Check current active module
     local current_active
     current_active=$(jq -r '.active // empty' "$SESSION_FILE" 2>/dev/null || true)
@@ -398,6 +405,7 @@ init_session() {
 # Main Execution
 # ============================================================================
 
+# Parse command-line options
 parse_options "$@"
 
 # Always create base directory structure (including temp, notes)
