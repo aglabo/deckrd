@@ -108,10 +108,12 @@ Code / Tests
 - `req`: `requirements` (要件定義書 )を作成する
 - `spec`: `specification` (仕様書) を作成する
 - `impl`: `implementation` (実装要判断基準書) を作成する
-- `tasks`: `tasks.md` 実装用タスクリスト (BDD におけルテスト定義) を作成する
+- `tasks`: `tasks.md` 実装用タスクリスト (BDD におけるテスト定義) を作成する
 - `dr`: `Decision Records`を作成する
+- `status`: 現在のワークフロー進捗と状態を表示する
 
 コマンドを上から順番に実行していくことで、実装用のタスクリストを作成します。
+`status`コマンドは任意のタイミングで実行でき、現在のモジュールとワークフロー進捗を確認できます。
 
 > 補足:
 >

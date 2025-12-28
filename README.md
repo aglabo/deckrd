@@ -106,8 +106,10 @@ The following subcommands are available:
 - `impl`: Create `implementation` (implementation decision criteria document)
 - `tasks`: Create `tasks.md` (implementation task list; test definitions in BDD)
 - `dr`: Create `Decision Records`
+- `status`: Display current workflow progress and status
 
 Execute the commands in order from top to bottom to create the implementation task list.
+The `status` command can be run at any time to check the current module and workflow progress.
 
 > Notes:
 >
