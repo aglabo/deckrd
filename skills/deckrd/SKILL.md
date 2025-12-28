@@ -2,6 +2,7 @@
 name: deckrd
 description: Stepwise derivation workflow from requirements to executable tasks.
 ---
+
 <!-- textlint-disable ja-technical-writing/sentence-length -->
 <!-- textlint-disable ja-technical-writing/max-comma -->
 <!-- markdownlint-disable line-length -->
@@ -25,6 +26,7 @@ Deckrd enables documentation to function as a practical engine for action, not j
 | `spec`            | Derive specifications from requirements        |
 | `impl`            | Derive implementation plan from specifications |
 | `tasks`           | Derive executable tasks from implementation    |
+| `status`          | Display current workflow progress and status   |
 
 ## Session Resolution
 
@@ -42,10 +44,10 @@ Session state is stored in `docs/.deckrd/.session.json`.
 | -------------- | ------------ | ------------------------------------------------- |
 | (none)         | init         | [commands/init.md](references/commands/init.md)   |
 | init completed | req          | [commands/req.md](references/commands/req.md)     |
-| req (current)  | dr           | [commands/dr.md](references/commands/dr.md)       |
 | req completed  | spec         | [commands/spec.md](references/commands/spec.md)   |
 | spec completed | impl         | [commands/impl.md](references/commands/impl.md)   |
 | impl completed | tasks        | [commands/tasks.md](references/commands/tasks.md) |
 
 **For workflow overview:** [workflow.md](references/workflow.md)
 **For session management details:** [session.md](references/session.md)
+**For status command:** [commands/status.md](references/commands/status.md)
