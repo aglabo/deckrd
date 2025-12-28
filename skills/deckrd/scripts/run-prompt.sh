@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# src: ./skills/deckrd/scripts/init-dirs.sh
-# @(#) : deckrd ディレクトリ初期化スクリプト
+# src: ./skills/deckrd/scripts/run-prompt.sh
+# @(#) : deckrd script for executing AI prompts with configurable models
 #
 # Copyright (c) 2025 atsushifx <https://github.com/atsushifx>
 #
@@ -19,7 +19,7 @@
 #
 # @example
 #   # Generate requirements in Japanese
-#   run-prompt.sh requirements "ユーザー入力" --lang ja
+#   run-prompt.sh requirements "user input" --lang ja
 #
 #   # Generate spec with context from file
 #   run-prompt.sh spec @docs/input.md --model claude-sonnet-4-5 --lang en
@@ -54,7 +54,56 @@ SESSION_AI_MODEL=""
 # @description Session language (set from session)
 SESSION_LANG=""
 
+
+# ============================================================================
+# Script Configuration
+# ============================================================================
+
 ##
+# @description Script directory path
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPT_DIR
+
+##
+# @description deckrd assets directory
+ASSETS_DIR="${SCRIPT_DIR}/../assets"
+readonly ASSETS_DIR
+
+##
+# @description Document type mapping (short form -> normalized form)
+# Maps short aliases to their normalized file-matching form
+declare -A SHORT_TO_LONG=(
+  [req]="requirements"
+  [spec]="specifications"
+  [impl]="implementation"
+  [task]="tasks"
+)
+
+##
+# @description Primary document types for display (derived from SHORT_TO_LONG values)
+# Populated after SHORT_TO_LONG declaration to get unique long form values
+PRIMARY_TYPES=($(printf '%s\n' "${SHORT_TO_LONG[@]}" | sort -u))
+
+##
+# @description Document type (requirements, spec, impl, tasks)
+DOC_TYPE=""
+
+##
+# @description Context input (from stdin or argument)
+CONTEXT_INPUT=""
+
+##
+# @description Output file path (empty = stdout)
+OUTPUT_FILE=""
+
+##
+# @description AI command array (populated by get_model_command)
+declare -a AI_COMMAND
+
+# ============================================================================
+# Functions
+# ============================================================================
+
 # @description Extract JSON value using grep/sed fallback
 # @arg $1 string JSON file path
 # @arg $2 string JSON key name
@@ -81,7 +130,7 @@ load_session_config() {
   local ai_model=""
   local lang=""
 
-  if command -v jq >/dev/null 2>&1; then
+  if [[ CAN_USE_JQ -eq 1 ]]; then
     # Preferred: use jq
     active=$(jq -r '.active // empty' "$SESSION_FILE" 2>/dev/null || true)
     ai_model=$(jq -r '.ai_model // empty' "$SESSION_FILE" 2>/dev/null || true)
@@ -110,63 +159,6 @@ load_session_config() {
     export SESSION_LANG
   fi
 }
-
-# Initialize configuration from session
-load_session_config
-
-# Set default if not loaded
-if [[ -z "${DECKRD_BASE}" ]]; then
-  DECKRD_BASE="docs/.deckrd"
-  export DECKRD_BASE
-fi
-
-# ============================================================================
-# Script Configuration
-# ============================================================================
-
-##
-# @description Script directory path
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly SCRIPT_DIR
-
-##
-# @description deckrd assets directory
-ASSETS_DIR="${SCRIPT_DIR}/../assets"
-readonly ASSETS_DIR
-
-##
-# @description Supported document types
-SUPPORTED_TYPES=("requirements" "spec" "tasks" "impl")
-
-##
-# @description AI model (loaded from session or default)
-# Can be overridden with --model option
-AI_MODEL="${SESSION_AI_MODEL:-gpt-5.2}"
-
-##
-# @description Document language (loaded from session or default)
-# Can be overridden with --lang option
-LANG_OPT="${SESSION_LANG:-system}"
-
-##
-# @description Document type (requirements, spec, tasks, impl)
-DOC_TYPE=""
-
-##
-# @description Context input (from stdin or argument)
-CONTEXT_INPUT=""
-
-##
-# @description Output file path (empty = stdout)
-OUTPUT_FILE=""
-
-##
-# @description AI command array (populated by get_model_command)
-declare -a AI_COMMAND
-
-# ============================================================================
-# Functions
-# ============================================================================
 
 ##
 # @description Validate AI model name format
@@ -200,7 +192,7 @@ Usage: run-prompt.sh <type> [context] [OPTIONS]
 Execute AI prompt with auto-loaded prompt and template files.
 
 Arguments:
-  <type>            Document type (required): ${SUPPORTED_TYPES[*]}
+  <type>            Document type (required): ${PRIMARY_TYPES[*]}
   [context]         Context/input text or @filepath for file content
                     If starts with @, reads content from the specified file
 
@@ -234,7 +226,7 @@ Execution Flow:
 
 Examples:
   # Generate requirements in Japanese
-  run-prompt.sh requirements "ユーザー入力" --lang ja
+  run-prompt.sh requirements "user input" --lang ja
 
   # Generate spec with context from file
   run-prompt.sh spec @docs/input.md --model claude-sonnet-4-5 --lang en
@@ -345,48 +337,40 @@ resolve_context() {
 }
 
 ##
-# @description Validate document type
-# @arg $1 string Document type
+# @description Validate and normalize document type
+# @arg $1 string Document type (short or long form)
+# @stdout Normalized long form document type
 validate_doc_type() {
-  local doc_type="$1"
+  local input="$1"
 
-  for supported in "${SUPPORTED_TYPES[@]}"; do
-    if [[ "$doc_type" == "$supported" ]]; then
+  # Check if input is a short form
+  if [[ -v SHORT_TO_LONG[$input] ]]; then
+    echo "${SHORT_TO_LONG[$input]}"
+    return 0
+  fi
+
+  # Check if input is already a normalized long form
+  for long_form in "${PRIMARY_TYPES[@]}"; do
+    if [[ "$input" == "$long_form" ]]; then
+      echo "$input"
       return 0
     fi
   done
 
-  echo "Error: Unknown document type: $doc_type" >&2
-  echo "Supported types: ${SUPPORTED_TYPES[*]}" >&2
+  echo "Error: Unknown document type: $input" >&2
+  echo "Supported types: ${PRIMARY_TYPES[*]} (or short forms: req, spec, impl, task)" >&2
   exit 1
 }
 
 ##
-# @description Map document type to file base name
-# @arg $1 string Document type (short form)
-# @stdout File base name (full form)
-map_doc_type_to_filename() {
-  local doc_type="$1"
-  case "$doc_type" in
-    requirements) echo "requirements" ;;
-    spec)         echo "specifications" ;;
-    impl)         echo "implementation" ;;
-    tasks)        echo "tasks" ;;
-    *)            echo "$doc_type" ;;
-  esac
-}
-
-##
 # @description Resolve prompt and template paths for document type
-# @arg $1 string Document type
+# @arg $1 string Document type (normalized form from validate_doc_type)
 # @stdout Two lines: prompt path, template path
 resolve_doc_paths() {
   local doc_type="$1"
-  local file_base
-  file_base=$(map_doc_type_to_filename "$doc_type")
 
-  local prompt_path="${ASSETS_DIR}/prompts/${file_base}.prompt.md"
-  local template_path="${ASSETS_DIR}/templates/${file_base}.template.md"
+  local prompt_path="${ASSETS_DIR}/prompts/${doc_type}.prompt.md"
+  local template_path="${ASSETS_DIR}/templates/${doc_type}.template.md"
 
   if [[ ! -f "$prompt_path" ]]; then
     echo "Error: Prompt file not found: $prompt_path" >&2
@@ -499,6 +483,33 @@ output_result() {
 # Main Execution
 # ============================================================================
 
+# check if jq is installed for session.json parsing
+command -v jq >/dev/null 2>&1 && CAN_USE_JQ=1 || CAN_USE_JQ=0
+
+## Initialize deckrd base and session config
+
+# Initialize configuration from session
+load_session_config
+
+# Set default if not loaded
+if [[ -z "${DECKRD_BASE}" ]]; then
+  DECKRD_BASE="docs/.deckrd"
+  export DECKRD_BASE
+fi
+
+
+## Initialize command-line options
+
+# @description AI model (loaded from session or default)
+# Can be overridden with --model option
+AI_MODEL="${SESSION_AI_MODEL:-sonnet}"
+
+##
+# @description Document language (loaded from session or default)
+# Can be overridden with --lang option
+LANG_OPT="${SESSION_LANG:-system}"
+
+# Parse command-line options
 parse_options "$@"
 
 if [[ -z "$DOC_TYPE" ]]; then
@@ -507,7 +518,7 @@ if [[ -z "$DOC_TYPE" ]]; then
   exit 1
 fi
 
-validate_doc_type "$DOC_TYPE"
+DOC_TYPE=$(validate_doc_type "$DOC_TYPE")
 
 paths=$(resolve_doc_paths "$DOC_TYPE")
 PROMPT_PATH=$(echo "$paths" | head -1)
