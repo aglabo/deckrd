@@ -16,7 +16,7 @@
 #   The script:
 #   1. Prompts for a version number and normalizes it to vX.Y.Z format
 #   2. Creates a release directory: releases/<normalized-version>/
-#   3. Copies skills/deckrd to temporary directory
+#   3. Copies plugins/deckrd to temporary directory
 #   4. Includes LICENSE, README files from project root
 #   5. Includes deckrd.json with name, description, version, and stage fields
 #   6. Creates a zip archive
@@ -188,7 +188,7 @@ create_temp_dist() {
 # @return 0 on success, 1 on error
 copy_deckrd_to_dist() {
   local temp_dist="$1"
-  local deckrd_source="${PROJECT_ROOT}/skills/deckrd"
+  local deckrd_source="${PROJECT_ROOT}/plugins/deckrd"
   local deckrd_dest="${temp_dist}/deckrd"
 
   # Validate temporary dist directory
@@ -212,18 +212,18 @@ copy_deckrd_to_dist() {
   # Copy using rsync if available, otherwise fallback to cp
   if command -v rsync >/dev/null 2>&1; then
     if rsync -a "$deckrd_source/" "$deckrd_dest/"; then
-      echo "Copied skills/deckrd to $temp_dist/deckrd (using rsync)"
+      echo "Copied plugins/deckrd to $temp_dist/deckrd (using rsync)"
     else
-      echo "Error: Failed to copy skills/deckrd to $temp_dist/" >&2
+      echo "Error: Failed to copy plugins/deckrd to $temp_dist/" >&2
       return 1
     fi
   else
     echo "rsync not found, falling back to cp -fr"
     mkdir -p "$deckrd_dest"
     if cp -fr "$deckrd_source/" "$deckrd_dest"; then
-      echo "Copied skills/deckrd to $temp_dist/deckrd (using cp -fr)"
+      echo "Copied plugins/deckrd to $temp_dist/deckrd (using cp -fr)"
     else
-      echo "Error: Failed to copy skills/deckrd to $temp_dist/" >&2
+      echo "Error: Failed to copy plugins/deckrd to $temp_dist/" >&2
       return 1
     fi
   fi
@@ -402,7 +402,7 @@ main() {
   local release_dir
   release_dir=$(create_release_directory "$normalized_version") || exit 1
 
-  # Copy skills/deckrd
+  # Copy plugins/deckrd
   copy_deckrd_to_dist "$TEMP_DIST" || exit 1
 
   # Copy LICENSE and README files
