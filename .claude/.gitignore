@@ -1,0 +1,21 @@
+# src: .gitignore
+# @(#) : gitignore settings for cluude agents,skills, ...
+#
+# Copyright (c) 2025 atsushifx <http://github.com/atsushifx>
+#
+# This software is released under the MIT License.
+# https://opensource.org/licenses/MIT
+
+# default deny all files
+*
+
+# Git settings
+!.git*
+
+# settings
+!settings.json
+
+## cluade add-ons
+# Agents
+!agents/
+!agents/*
