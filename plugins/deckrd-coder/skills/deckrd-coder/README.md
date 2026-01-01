@@ -19,15 +19,15 @@ Deckrd ワークフローの tasks.md から指定したタスク（例：`T01-0
 ### 基本構文
 
 ```bash
-/coding <TASK_ID>
+/deckrd-coder <TASK_ID>
 ```
 
 ### 実行例
 
 ```bash
-/coding T01-02
-/coding T01-03
-/coding T01-10
+/deckrd-coder T01-02
+/deckrd-coder T01-03
+/deckrd-coder T01-10
 ```
 
 ## 含まれるコンポーネント
@@ -48,7 +48,7 @@ Deckrd ワークフローの tasks.md から指定したタスク（例：`T01-0
 
 ```bash
 # deckrd-coder スキルを使用
-/coding <TASK_ID>
+/deckrd-coder <TASK_ID>
 ```
 
 ## 構成
