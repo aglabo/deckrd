@@ -6,8 +6,6 @@
 
 ## About deckrd
 
-<!-- markdownlint-disable line-length -->
-
 deckrd is a **document-driven workflow for progressively documenting and organizing requirements through implementation decisions**.
 
 It manages the following documents as separate, distinct layers:
@@ -18,23 +16,11 @@ It manages the following documents as separate, distinct layers:
 - implementation (implementation decisions and guidelines)
 - tasks (implementation tasks)
 
-The implementation layer in particular is designed to capture **decisions not directly written in code**, such as:
-"Why was this implementation approach chosen?" and "What is the scope of implementation?"
-
-This template positions deckrd as an **assistive tool for preventing the cognitive gap between design and implementation**.
-
-> Prerequisites (Usage Environment):
->
-> - AI execution environment (Claude Code / codex cli, etc.)
-> - Access to a compatible LLM
-
-<!-- markdownlint-enable -->
+> Prerequisites: AI execution environment (Claude Code, etc.) and access to a compatible LLM
 
 ## Installation
 
 ### Using as Claude Code plugins
-
-In Claude Code, you can use deckrd as a plugin.
 
 ```bash
 # Add marketplace if needed
@@ -44,135 +30,58 @@ claude plugin marketplace add aglabo/deckrd
 claude plugin install deckrd@deckrd
 ```
 
-> **Note**
-> On Windows, installation may fail if TEMP/TMP points to
-> a different drive than the plugins cache.
-> In that case, set TEMP/TMP to the same drive.
+### Agent Skills (codex, etc.)
 
-### Agent Skills
-
-For `codex` and similar tools:
-
-`deckrd` is implemented as `Agent Skills`. Therefore, you can install it using the following steps:
-
-1. Download the `zip` archive:
-   Download the zip archive from [deckrd - release](https://github.com/aglabo/deckrd/releases)
-
-2. Copy the files:
-   Copy the `deckrd` directory from the extracted zip to your Agent Skills directory
-
-   Example (Unix-like environments):
-
-   ```bash
-   cp -fr deckrd ~/.codex/skills
-   ```
+1. Download the zip archive from [deckrd - release](https://github.com/aglabo/deckrd/releases)
+2. Copy the `deckrd` directory to your Agent Skills directory
 
 ## Basic Usage
 
-### Document Creation Flow
+### Workflow
 
-In `deckrd`, documents are created in the following order:
-
-```plaintext
+```
 Goals / Ideas
-|
-v
-requirements
-|
-v
-decision-records (as needed)
-|
-v
-specifications
-|
-v
-implementation
-|
-v
-tasks
-|
-v
+    ↓
+requirements (Define requirements)
+    ↓
+specifications (Write specifications)
+    ↓
+implementation (Decision criteria)
+    ↓
+tasks (Implementation tasks)
+    ↓
 Code / Tests
 ```
 
-### `deckrd` Subcommands
+### Key Commands
 
-`deckrd` uses subcommands to create documents.
-The following subcommands are available:
+| Command                     | Description                        |
+| --------------------------- | ---------------------------------- |
+| `init <namespace>/<module>` | Prepare directories for documents  |
+| `req`                       | Create requirements definition     |
+| `spec`                      | Create specification document      |
+| `impl`                      | Create implementation criteria     |
+| `tasks`                     | Create implementation task list    |
+| `dr --add`                  | Record Decision Records (optional) |
+| `status`                    | Check workflow progress            |
 
-- `init`: Prepare directories for document creation
-- `req`: Create `requirements` (requirements definition document)
-- `spec`: Create `specification` (specification document)
-- `impl`: Create `implementation` (implementation decision criteria document)
-- `tasks`: Create `tasks.md` (implementation task list; test definitions in BDD)
-- `dr`: Create `Decision Records`
-- `status`: Display current workflow progress and status
-
-Execute the commands in order from top to bottom to create the implementation task list.
-The `status` command can be run at any time to check the current module and workflow progress.
-
-> Notes:
+> For details, see the plugin README:
 >
-> - You can iterate between requirements / specifications / implementation
-> - tasks is the entry point to the implementation phase; there is generally no going back
+> - [deckrd plugin](plugins/deckrd/README.md)
 
-### Directory Structure
+## Important Notes
 
-`deckrd` creates a `docs/.deckrd` directory in the project root.
-The directory structure is as follows:
-
-```bash
-/docs/.deckrd/<namespace>/<module>/
-  |-- decision-records.md
-  |-- implementation
-  |   `-- implementation.md
-  |-- requirements
-  |   `-- requirements.md
-  |-- specifications
-  |   `-- specifications.md
-  `-- tasks
-      `-- tasks.md
-```
-
-`<namespace>` and `<module>` are specified as arguments to the `init` command.
-
-### `dr` Command (`Decision Records`)
-
-With `deckrd`, you don't just create documents and stop there.
-You continue to refine documents through discussions with AI.
-
-The `dr` command records the results of these discussions as `Decision Records`.
-To ensure only necessary discussions are recorded, you must include the `--add` option as a safeguard.
-
-```bash
-# Example (Agent command)
-/deckrd dr --add
-```
-
-## implementation (Implementation Decision Criteria)
-
-In deckrd, there is a document layer called
-**implementation (implementation decision criteria)** between specifications and tasks.
-
-The implementation layer records:
-
-- Rationale for choosing implementation strategies
-- Decision basis when multiple options existed
-- Constraints (compatibility, performance, dependencies, etc.)
-- Items intentionally decided "not to implement"
-- Prerequisites that strongly affect implementation but don't appear in specifications
+### About implementation
 
 The implementation layer is **not a place to write actual code**.
-It is also not intended to provide copy-paste implementation examples.
+It records the following aspects of implementation decisions:
 
-The role of this document is to enable tracking of
-"why the implementation turned out this way" afterwards,
-and to prevent the cognitive gap that occurs between design (specifications) and implementation (tasks).
+- Rationale for choosing implementation strategies
+- Decision basis when multiple options exist
+- Constraints (compatibility, performance, dependencies, etc.)
+- Items intentionally decided "not to implement"
 
-The final deliverables of implementation are reflected in tasks and code,
-but the decision-making process is preserved in implementation.
-
-## What deckrd Does NOT Do
+### What deckrd Does NOT Do
 
 deckrd does not aim to:
 
@@ -181,3 +90,52 @@ deckrd does not aim to:
 - Impose a single development methodology (TDD / BDD, etc.)
 
 deckrd is purely an **assistive framework for organizing thoughts and decisions**.
+
+---
+
+## deckrd-coder Plugin
+
+### About deckrd-coder
+
+`deckrd-coder` is an **optional plugin** for deckrd users.
+It takes `tasks.md` generated by deckrd and automatically implements them using a strict BDD (Behavior-Driven Development) process.
+
+**Completely optional**: You can use deckrd alone to generate tasks and implement them manually at your own pace.
+
+### Installation
+
+deckrd-coder is available from the deckrd marketplace:
+
+```bash
+claude plugin install deckrd-coder@deckrd
+```
+
+### Basic Usage
+
+```bash
+# Step 1: Plan and document with deckrd
+/deckrd init myProject/feature
+/deckrd req
+/deckrd spec
+/deckrd impl
+/deckrd tasks
+
+# Step 2: Implement automatically with deckrd-coder (optional)
+/deckrd-coder T01-01    # Implement task T01-01
+/deckrd-coder T01-02    # Implement task T01-02
+# ... (run for each task)
+
+# Step 3: Verify and commit
+git diff
+git add .
+git commit
+```
+
+### Important Notes
+
+- **Prerequisites**: deckrd's `tasks.md` is required. Run deckrd first.
+- **Implementation Flow**: Automatically executes Red-Green-Refactor cycle (test → implement → refactor)
+- **Quality Gates**: Automatically validates tests, linting, and type checking
+- **Commit**: Execute manually (not automatic)
+
+> For details, see [deckrd-coder plugin](plugins/deckrd-coder/README.md)
