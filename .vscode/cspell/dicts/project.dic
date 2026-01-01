@@ -1,6 +1,10 @@
 # this files is words list for check spell on cSpell
 adr
+clippy
 deckrd
+mypy
+pylint
+pytest
 rumdl
 Tera
 topo
