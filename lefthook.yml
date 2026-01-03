@@ -19,7 +19,9 @@ pre-commit:
         --secretlintrc ./configs/secretlint.config.yaml
         --secretlintignore .gitignore
         --maskSecrets
-        "{staged_files}" .
+        "{staged_files}"
+      skip:
+        - empty
 
 prepare-commit-msg:
   commands:

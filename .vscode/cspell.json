@@ -40,6 +40,7 @@
     "vim",
     // user defined dictionaries
     "user-dic",
+    "textlint-dic",
     "project-dic"
   ],
   "useGitignore": true

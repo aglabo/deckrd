@@ -48,8 +48,10 @@ $~*
 **/.cc-sdd/
 **/.deckrd/
 
-# CLAUDE.md
+# claude code settings
 .claude/*
+
+# add claude skills
 !.claude/skills/
 !.claude/skills/*
 

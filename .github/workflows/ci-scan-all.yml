@@ -32,16 +32,16 @@ jobs:
     name: Actionlint
     permissions:
       contents: read
-    uses: aglabo/.github/.github/workflows/ci-common-lint-actionlint.yml@r1.0.3
+    uses: aglabo/.github/.github/workflows/ci-common-lint-actionlint.yml@r1.0.4
 
   ghalint:
     name: Ghalint
     permissions:
       contents: read
-    uses: aglabo/.github/.github/workflows/ci-common-lint-ghalint.yml@r1.0.3
+    uses: aglabo/.github/.github/workflows/ci-common-lint-ghalint.yml@r1.0.4
 
   scan-gitleaks:
     name: Gitleaks Secret Scan
     permissions:
       contents: read
-    uses: aglabo/.github/.github/workflows/ci-common-scan-gitleaks.yml@r1.0.3
+    uses: aglabo/.github/.github/workflows/ci-common-scan-gitleaks.yml@r1.0.4
