@@ -84,6 +84,36 @@ The skill automatically:
 5. Executes quality gates
 6. Records progress and completes
 
+## Troubleshooting
+
+### Skill not found error
+
+If you get an "Unknown skill: deckrd" error when trying to use `/deckrd`:
+
+1. **Check marketplace installation**:
+
+   ```bash
+   ls ~/.claude/plugins/marketplaces/deckrd-tools/
+   ```
+
+2. Verify plugin structure:
+   ls ~/.claude/plugins/marketplaces/deckrd-tools/plugins/deckrd/skills/
+
+3. Manual skill discovery:
+   If the Skill tool doesn't recognize deckrd, search all marketplaces:
+   ls ~/.claude/plugins/marketplaces/
+
+### For each marketplace found
+
+ls {marketplace}/plugins/*/skills/
+4. Report to Claude:
+Show Claude the marketplace structure and ask it to use the skill directly from the discovered path.
+
+Note for AI assistants: When a user says "use agent skill" or "use skill" and the skill is not found via the Skill
+tool, automatically search marketplace directories as shown above before asking the user for guidance.
+
+Where documents are stored
+
 ## Workflow Overview
 
 The implementation follows a 6-phase workflow:

@@ -1,10 +1,16 @@
 {
   "name": "deckrd",
   "description": "deckrd: your goal to tasks framework",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "author": {
     "name": "atsushifx",
     "email": "atsushifx@gmail.com"
   },
+  "skills": [
+    "./skills/deckrd/"
+  ],
+  "agents": [
+    "./agents/deckrd-info.md"
+  ],
   "license": "MIT"
 }

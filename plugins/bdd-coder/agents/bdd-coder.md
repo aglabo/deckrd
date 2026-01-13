@@ -46,7 +46,7 @@ config:
    - Enforce strict phase ordering: no skipping to implementation before RED confirmation
    - No multi-test parallelization
 
-4. **Append-first principle: Group related assertions** (追記優先原則)
+4. **Append-first principle: Group related assertions**
    - Rule: When Given/When context matches existing test, append to it instead of creating new test
    - **Creating a new test block for a new assertion is forbidden unless one of the exception conditions below is met**
    - Rationale: Preserves semantic test grouping; enables rapid failure diagnosis

@@ -1,11 +1,11 @@
 {
-  "name": "deckrd",
+  "name": "deckrd-tools",
   "owner": {
     "name": "aglabo",
     "url": "https://github.com/aglabo"
   },
   "metadata": {
-    "description": "Deckrd - your goals to tasks framework",
+    "description": "deckrd tools - your goals to tasks framework, and related tools",
     "version": "0.0.4"
   },
   "plugins": [
@@ -16,6 +16,9 @@
       "strict": true,
       "skills": [
         "./skills/deckrd"
+      ],
+      "agents": [
+        "./agents/deckrd-info.md"
       ]
     },
     {
@@ -24,7 +27,7 @@
       "source": "./plugins/deckrd-coder",
       "strict": true,
       "skills": [
-        "./plugins/deckrd-coder/skills/deckrd-coder"
+        "./skills/deckrd-coder"
       ]
     },
     {

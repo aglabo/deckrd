@@ -27,9 +27,14 @@ thumbs.db
 $~*
 ~*
 *~
-*tmp
 *swp
 *lock
+# temp files
+*tmp
+tmp**
+**/*tmp
+**/tmp*
+
 
 # .env files
 .env*
