@@ -15,7 +15,7 @@
       "source": "./plugins/deckrd",
       "strict": false,
       "skills": [
-        "./plugins/deckrd/skills/deckrd"
+        "./skills/deckrd"
       ]
     },
     {
@@ -24,7 +24,7 @@
       "source": "./plugins/deckrd-coder",
       "strict": false,
       "skills": [
-        "./plugins/deckrd-coder/skills/deckrd-coder"
+        "./skills/deckrd-coder"
       ]
     },
     {
