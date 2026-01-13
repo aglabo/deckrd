@@ -1,0 +1,10 @@
+{
+  "name": "bdd-coder",
+  "description": "BDD-style coding agent for deckrd tasks",
+  "version": "0.0.4",
+  "author": {
+    "name": "atsushifx",
+    "email": "atsushifx@gmail.com"
+  },
+  "license": "MIT"
+}

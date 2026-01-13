@@ -1,7 +1,7 @@
 {
   "name": "deckrd-coder",
-  "description": "Deckrd タスク実装スキル - tasks.md から指定タスクを自動抽出し、BDD厳格プロセスで実装。内部で bdd-coder エージェント実行。プロジェクトメモリ & serena-mcp 活用でトークン効率化。",
-  "version": "0.0.3",
+  "description": "Deckrd task implementation skill - automatically extracts specified tasks from tasks.md and implements them using strict BDD process. Internally executes bdd-coder agent. Optimizes token usage with project memory & serena-mcp.",
+  "version": "0.0.4",
   "author": {
     "name": "atsushifx",
     "email": "atsushifx@gmail.com"

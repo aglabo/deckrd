@@ -13,27 +13,27 @@
       "name": "deckrd",
       "description": "your goals to tasks framework",
       "source": "./plugins/deckrd",
-      "strict": false,
+      "strict": true,
       "skills": [
-        "./plugins/deckrd/skills/deckrd"
+        "./skills/deckrd"
       ]
     },
     {
       "name": "deckrd-coder",
-      "description": "Deckrd タスク実装スキル - tasks.md から指定タスクを抽出し、BDD 厳格プロセスで実装。内部で bdd-coder の判断規則を適用する。",
+      "description": "Deckrd task implementation skill - extracts specified tasks from tasks.md and implements them using strict BDD process. Internally applies bdd-coder decision rules.",
       "source": "./plugins/deckrd-coder",
-      "strict": false,
+      "strict": true,
       "skills": [
         "./plugins/deckrd-coder/skills/deckrd-coder"
       ]
     },
     {
       "name": "bdd-coder",
-      "description": "BDD 実装における判断規則を定義するメソッドレベルのエージェント。テストをファイル単位ではなくアサーション単位で扱い、「1メッセージ＝1テスト」の原則に基づく RED→GREEN→REFACTOR の厳密な段階実装を規定する。",
+      "description": "Method-level agent that defines decision rules for BDD implementation. Handles tests at the assertion level rather than file level, and enforces strict RED→GREEN→REFACTOR phased implementation based on the '1 message = 1 test' principle.",
       "source": "./plugins/bdd-coder",
       "strict": false,
       "agents": [
-        "./plugins/bdd-coder/agents/bdd-coder.md"
+        "./agents/bdd-coder.md"
       ]
     }
   ]

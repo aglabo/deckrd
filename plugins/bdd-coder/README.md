@@ -1,6 +1,6 @@
-<!-- textlint-disable ja-technical-writing/sentence-length -->
-
 # bdd-coder
+
+<!-- textlint-disable ja-technical-writing/sentence-length -->
 
 **bdd-coder** is a methodology-level agent that defines
 *how to structure, group, and evolve test cases* in strict BDD-style development.

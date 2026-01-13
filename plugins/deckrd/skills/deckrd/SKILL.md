@@ -1,6 +1,6 @@
 ---
 name: deckrd
-description: Stepwise derivation workflow from requirements to executable tasks.
+description: "Use when structuring requirements, specifications, or tasks. Enforces stepwise derivation and phase integrity."
 ---
 
 <!-- textlint-disable ja-technical-writing/sentence-length -->

@@ -1,5 +1,5 @@
 // src: configs/commitlint.config.js
-// @(#) : commitlint 基本設定
+// @(#) : commitlint basic configuration
 //
 // Copyright (c) 2025 atsushifx <http://github.com/atsushifx>
 //
