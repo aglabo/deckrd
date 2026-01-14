@@ -230,33 +230,55 @@ copy_deckrd_to_dist() {
 }
 
 ##
-# @description Copy LICENSE and README files to distribution
-# @arg $1 string Temporary dist directory path
+# @description Copy files matching patterns from source to destination directory
+# @arg $1 string Source directory path
+# @arg $2 string Destination directory path (created if not exists)
+# @arg $@ string File patterns to copy (e.g., "README*" "LICENSE*" "CHANGELOG.md")
 # @return 0 on success, 1 on error
 copy_files_to_dist() {
-  local temp_dist="$1"
-  local dist_deckrd_dir="${temp_dist}/deckrd"
+  local src="$1"
+  local dist="$2"
+  shift 2
+  local patterns=("$@")
 
-  # Validate dist directory exists
-  if [ ! -d "$dist_deckrd_dir" ]; then
-    echo "Error: Directory not found: $dist_deckrd_dir" >&2
+  # Validate source directory
+  if [ -z "$src" ] || [ ! -d "$src" ]; then
+    echo "Error: Source directory not found: $src" >&2
     return 1
   fi
 
-  # Copy LICENSE and README files
-  local patterns=("README" "LICENSE")
-  local glob_patterns=()
+  # Validate dist argument
+  if [ -z "$dist" ]; then
+    echo "Error: Destination directory not specified" >&2
+    return 1
+  fi
 
-  # Build glob patterns
+  # Create destination directory if not exists
+  if [ ! -d "$dist" ]; then
+    mkdir -p "$dist" || {
+      echo "Error: Failed to create directory: $dist" >&2
+      return 1
+    }
+  fi
+
+  # Check if patterns provided
+  if [ ${#patterns[@]} -eq 0 ]; then
+    echo "Warning: No file patterns specified" >&2
+    return 0
+  fi
+
+  # Copy files for each pattern
+  local copied=0
   for pattern in "${patterns[@]}"; do
-    glob_patterns+=("${PROJECT_ROOT}"/${pattern}*)
+    if cp -fr "${src}"/${pattern} "$dist/" 2>/dev/null; then
+      ((copied++)) || true
+    fi
   done
 
-  # Copy files
-  if cp -fr "${glob_patterns[@]}" "$dist_deckrd_dir/" 2>/dev/null; then
-    echo "Copied files to dist/deckrd/"
+  if [ $copied -gt 0 ]; then
+    echo "Copied files to $dist/"
   else
-    echo "Warning: Failed to copy some files" >&2
+    echo "Warning: No files matched the patterns" >&2
   fi
 }
 
@@ -406,7 +428,10 @@ main() {
   copy_deckrd_to_dist "$TEMP_DIST" || exit 1
 
   # Copy LICENSE and README files
-  copy_files_to_dist "$TEMP_DIST" || exit 1
+  copy_files_to_dist "$PROJECT_ROOT" "${TEMP_DIST}/deckrd" "README*" "LICENSE*" || exit 1
+
+  # Copy CHANGELOG.md to docs/
+  copy_files_to_dist "$PROJECT_ROOT" "${TEMP_DIST}/deckrd/docs" "CHANGELOG.md" || exit 1
 
   # Copy deckrd.json with selected fields
   copy_deckrd_json "$TEMP_DIST" || exit 1
