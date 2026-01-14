@@ -34,7 +34,7 @@
       "name": "bdd-coder",
       "description": "Method-level agent that defines decision rules for BDD implementation. Handles tests at the assertion level rather than file level, and enforces strict RED→GREEN→REFACTOR phased implementation based on the '1 message = 1 test' principle.",
       "source": "./plugins/bdd-coder",
-      "strict": false,
+      "strict": true,
       "agents": [
         "./agents/bdd-coder.md"
       ]
