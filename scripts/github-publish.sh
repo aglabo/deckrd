@@ -92,7 +92,7 @@ Required files in releases/<version>/:
   - deckrd-<version>.zip.sha256
 
 Optional files:
-  - release-notes    Release notes content (used as GitHub release body)
+  - release-notes.md    Release notes content (markdown, used as GitHub release body)
 
 Options:
   -n, --dry-run    Show what would be done without executing
@@ -207,8 +207,8 @@ verify_release_files() {
   echo "Found: ${archive_file}"
   echo "Found: ${checksum_file}"
 
-  # Check optional release-notes file
-  local release_notes_file="release-notes"
+  # Check optional release-notes file (markdown format)
+  local release_notes_file="release-notes.md"
   if [ -f "${release_dir}/${release_notes_file}" ]; then
     echo "Found: ${release_notes_file} (will be used as release body)"
   else
@@ -249,7 +249,7 @@ publish_to_github() {
   local release_dir="${RELEASES_DIR}/${normalized_version}"
   local archive_file="${ARCHIVE_PREFIX}-${normalized_version}.zip"
   local checksum_file="${archive_file}.sha256"
-  local release_notes_file="${release_dir}/release-notes"
+  local release_notes_file="${release_dir}/release-notes.md"
   local tag_name="${normalized_version}"
 
   echo ""
@@ -265,20 +265,24 @@ publish_to_github() {
     fi
   fi
 
-  # Determine notes option based on release-notes file existence
-  local notes_option
+  # Get repository URL dynamically for display
+  local repo_url
+  repo_url="$(gh repo view --json url -q .url 2>/dev/null)" || repo_url="https://github.com/aglabo/deckrd"
+
+  # Determine notes description for dry-run display only
+  local notes_desc
   if [ -f "$release_notes_file" ]; then
-    notes_option="--notes-file \"${release_notes_file}\""
+    notes_desc="--notes-file \"${release_notes_file}\""
     echo "Using release notes from: ${release_notes_file}"
   else
-    notes_option="--notes \"Release ${normalized_version}\""
+    notes_desc="--notes \"Release ${normalized_version}\""
     echo "Using default release notes"
   fi
 
-  # Build the command for display
+  # Build the command for display (dry-run only)
   local gh_command="gh release create \"$tag_name\" \\
     --title \"deckrd ${normalized_version}\" \\
-    ${notes_option} \\
+    ${notes_desc} \\
     --draft=false \\
     \"${release_dir}/${archive_file}\" \\
     \"${release_dir}/${checksum_file}\""
@@ -302,7 +306,7 @@ publish_to_github() {
     fi
     echo ""
     echo "[DRY-RUN] Release URL would be:"
-    echo "  https://github.com/aglabo/deckrd/releases/tag/${tag_name}"
+    echo "  ${repo_url}/releases/tag/${tag_name}"
     return 0
   fi
 
@@ -317,7 +321,7 @@ publish_to_github() {
       "${release_dir}/${checksum_file}"; then
       echo ""
       echo "Successfully published release ${normalized_version}"
-      echo "View at: https://github.com/aglabo/deckrd/releases/tag/${tag_name}"
+      echo "View at: ${repo_url}/releases/tag/${tag_name}"
       return 0
     else
       echo "Error: Failed to create GitHub release" >&2
@@ -333,7 +337,7 @@ publish_to_github() {
       "${release_dir}/${checksum_file}"; then
       echo ""
       echo "Successfully published release ${normalized_version}"
-      echo "View at: https://github.com/aglabo/deckrd/releases/tag/${tag_name}"
+      echo "View at: ${repo_url}/releases/tag/${tag_name}"
       return 0
     else
       echo "Error: Failed to create GitHub release" >&2
