@@ -379,6 +379,43 @@ generate_checksum() {
   fi
 }
 
+# Verify SHA256 checksum of existing release archive
+# Arguments:
+#   $1 - normalized version (e.g., "0.0.4")
+# Returns:
+#   0 - checksum verification successful
+#   1 - verification failed or files not found
+verify_checksum() {
+  local normalized_version="$1"
+  local release_dir="${RELEASES_DIR}/${normalized_version}"
+  local archive_file="deckrd-${normalized_version}.zip"
+  local checksum_file="${archive_file}.sha256"
+
+  if [ ! -d "$release_dir" ]; then
+    echo "Error: Release directory not found: $release_dir" >&2
+    return 1
+  fi
+
+  if [ ! -f "${release_dir}/${archive_file}" ]; then
+    echo "Error: Archive file not found: ${release_dir}/${archive_file}" >&2
+    return 1
+  fi
+
+  if [ ! -f "${release_dir}/${checksum_file}" ]; then
+    echo "Error: Checksum file not found: ${release_dir}/${checksum_file}" >&2
+    return 1
+  fi
+
+  echo "Verifying checksum for ${archive_file}..."
+  if (cd "$release_dir" && sha256sum -c "$checksum_file"); then
+    echo "Checksum verification: OK"
+    return 0
+  else
+    echo "Error: Checksum verification failed" >&2
+    return 1
+  fi
+}
+
 ##
 # @description Cleanup temporary directory and Restore TZ on exit
 cleanup() {
@@ -413,6 +450,32 @@ main() {
   echo "Normalized version: $normalized_version"
   echo ""
 
+  # Check if release already exists
+  local release_dir="${RELEASES_DIR}/${normalized_version}"
+  local archive_file="deckrd-${normalized_version}.zip"
+
+  if [ -d "$release_dir" ]; then
+    echo "Release directory already exists: $release_dir"
+    echo ""
+
+    if [ -f "${release_dir}/${archive_file}" ]; then
+      echo "Existing release found. Verifying checksum..."
+      echo ""
+      if verify_checksum "$normalized_version"; then
+        echo ""
+        echo "Release v${normalized_version} is valid."
+        exit 0
+      else
+        echo ""
+        echo "Error: Release verification failed. Please check the files manually." >&2
+        exit 1
+      fi
+    else
+      echo "Error: Release directory exists but archive not found: ${archive_file}" >&2
+      exit 1
+    fi
+  fi
+
   # Create temporary dist directory
   TEMP_DIST=$(create_temp_dist) || exit 1
   echo "Created temporary dist directory: $TEMP_DIST"
@@ -421,7 +484,6 @@ main() {
   # Set cleanup trap
 
   # Create release directory
-  local release_dir
   release_dir=$(create_release_directory "$normalized_version") || exit 1
 
   # Copy plugins/deckrd
@@ -441,6 +503,11 @@ main() {
 
   # Generate checksum
   generate_checksum "$normalized_version" || exit 1
+
+  # Verify the generated checksum
+  echo ""
+  echo "Verifying generated checksum..."
+  verify_checksum "$normalized_version" || exit 1
 }
 
 # ============================================================================
