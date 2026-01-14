@@ -2,9 +2,12 @@
 adr
 clippy
 deckrd
+idd
+markdownlintrc
 mypy
 pylint
 pytest
 rumdl
 Tera
 topo
+unmatch
