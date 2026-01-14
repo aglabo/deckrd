@@ -32,8 +32,8 @@ Created: "{{ DATE }}"
 
 ## 3. Design Decisions (Summary)
 
-| ID    | Decision               | Linked Record         |
-| ----- | ---------------------- | --------------------- |
+| ID    | Decision               | Linked Record            |
+| ----- | ---------------------- | ------------------------ |
 | DR-01 | {{DECISION_SUMMARY_1}} | decision-record.md#DR-01 |
 | DR-02 | {{DECISION_SUMMARY_2}} | decision-record.md#DR-02 |
 

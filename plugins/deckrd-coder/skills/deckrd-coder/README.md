@@ -8,11 +8,11 @@ Deckrd ワークフローの tasks.md から指定したタスク（例：`T01-0
 
 ## 特徴
 
-- **deckrd 前提**: deckrd ワークフローと完全統合
-- **Red-Green-Refactor 厳密実装**: テスト駆動開発の原則を厳守
-- **マルチ言語対応**: TypeScript/Vitest、Python/pytest など、任意の言語とテストフレームワークに対応
-- **TodoWrite 統合**: タスク進捗を自動追跡
-- **品質ゲート統合**: 型チェック、リント、テスト、ビルドの自動実行
+- deckrd 前提: deckrd ワークフローと完全統合
+- Red-Green-Refactor 厳密実装: テスト駆動開発の原則を厳守
+- マルチ言語対応: TypeScript/Vitest、Python/pytest など、任意の言語とテストフレームワークに対応
+- TodoWrite 統合: タスク進捗を自動追跡
+- 品質ゲート統合: 型チェック、リント、テスト、ビルドの自動実行
 
 ## 使用方法
 
@@ -34,11 +34,11 @@ Deckrd ワークフローの tasks.md から指定したタスク（例：`T01-0
 
 ### エージェント
 
-- **bdd-coder**: Red-Green-Refactor サイクルで実装を推進するエージェント
+- bdd-coder: Red-Green-Refactor サイクルで実装を推進するエージェント
 
 ### スキル
 
-- **deckrd-coder**: deckrd タスク解析と BDD 実装自動化スキル
+- deckrd-coder: deckrd タスク解析と BDD 実装自動化スキル
 
 ## インストール
 

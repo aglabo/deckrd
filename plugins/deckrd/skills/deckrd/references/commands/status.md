@@ -76,6 +76,7 @@ Workflow Progress:
 ```
 
 **Legend:**
+
 - `[✓]` = Completed
 - `[•]` = Current (in progress)
 - `[ ]` = Not started
@@ -152,11 +153,11 @@ The workflow follows this sequence:
 init → req → spec → impl → tasks
 ```
 
-- **init**: Directory structure created
-- **req**: Requirements defined
-- **spec**: Specifications written
-- **impl**: Implementation planned
-- **tasks**: Tasks broken down
+- init: Directory structure created
+- req: Requirements defined
+- spec: Specifications written
+- impl: Implementation planned
+- tasks: Tasks broken down
 
 ### Step Status Determination
 

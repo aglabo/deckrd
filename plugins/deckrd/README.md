@@ -45,10 +45,10 @@ The final output of deckrd is **tasks.md**—a document that serves as your **di
 
 Unlike planning documents that capture intent and reasoning, tasks.md is your actionable blueprint:
 
-- **Concrete Tasks**: Specific, prioritized development tasks derived from your implementation plan
-- **Acceptance Criteria**: Clear definitions of what "done" means for each task
-- **Implementation Constraints**: Technical decisions and patterns established during earlier phases
-- **Ready-to-Code Format**: Structured in a way that developers can immediately begin implementation
+- Concrete Tasks: Specific, prioritized development tasks derived from your implementation plan
+- Acceptance Criteria: Clear definitions of what "done" means for each task
+- Implementation Constraints: Technical decisions and patterns established during earlier phases
+- Ready-to-Code Format: Structured in a way that developers can immediately begin implementation
 
 This means when you finish the deckrd workflow, you're not just ready to start coding—you have a detailed roadmap that eliminates ambiguity and reduces rework. Each task in tasks.md flows directly into your development cycle.
 

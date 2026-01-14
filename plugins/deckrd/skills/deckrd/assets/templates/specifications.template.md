@@ -33,6 +33,7 @@ Implementation details are explicitly out of scope.
 
 - {{NON_GOAL_1}}
 - {{NON_GOAL_2}}
+
 <!-- Add more non-goals as needed -->
 
 ---
@@ -64,6 +65,7 @@ Evaluation MUST follow this order:
 |    3 | {{CONDITION_3}} | {{RESULT_3}} |
 
 <!-- Add or remove steps as required -->
+
 No reordering is permitted.
 
 ---

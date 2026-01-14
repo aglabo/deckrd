@@ -33,6 +33,7 @@ created: { { DATE } }
 
 - Option A: {{OPTION_A}}
 - Option B: {{OPTION_B}}
+
 <!-- Add more options as needed -->
 
 ### Rationale

@@ -10,9 +10,9 @@ Initialize module directory structure and session.
 
 ## Options
 
-| Option                | Default  | Description                                           |
-| --------------------- | -------- | ----------------------------------------------------- |
-| `--lang <lang>`       | `system` | Document language: `system`, `en`, `ja`               |
+| Option               | Default  | Description                                                      |
+| -------------------- | -------- | ---------------------------------------------------------------- |
+| `--lang <lang>`      | `system` | Document language: `system`, `en`, `ja`                          |
 | `--ai-model <model>` | `sonnet` | AI model: `gpt-*`, `o1-*`, `claude-*`, `haiku`, `sonnet`, `opus` |
 
 ## Example

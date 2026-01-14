@@ -55,7 +55,6 @@ You will receive:
   - Follow the **Decision Record template defined by this skill**
 - Order Decision Records by architectural impact (higher impact first), or by appearance order if impact is unclear.
 
-
 Do NOT:
 
 - Embed template definitions

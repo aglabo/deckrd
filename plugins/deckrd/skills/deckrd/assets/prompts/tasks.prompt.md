@@ -54,9 +54,9 @@ T-<TestTarget>-<Scenario>-<Case>
 
 Where:
 
-- **TestTarget**: 2-digit sequential number for the test target (01, 02, ...)
-- **Scenario**: 2-digit sequential number for Given/When scenario (01, 02, ...)
-- **Case**: 2-digit sequential number for specific test case (01, 02, ...)
+- TestTarget: 2-digit sequential number for the test target (01, 02, ...)
+- Scenario: 2-digit sequential number for Given/When scenario (01, 02, ...)
+- Case: 2-digit sequential number for specific test case (01, 02, ...)
 
 ### Examples
 
