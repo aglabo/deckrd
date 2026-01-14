@@ -6,11 +6,5 @@
     "name": "atsushifx",
     "email": "atsushifx@gmail.com"
   },
-  "skills": [
-    "./skills/deckrd/"
-  ],
-  "agents": [
-    "./agents/deckrd-info.md"
-  ],
   "license": "MIT"
 }

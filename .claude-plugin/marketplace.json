@@ -16,9 +16,6 @@
       "strict": true,
       "skills": [
         "./skills/deckrd"
-      ],
-      "agents": [
-        "./agents/deckrd-info.md"
       ]
     },
     {
