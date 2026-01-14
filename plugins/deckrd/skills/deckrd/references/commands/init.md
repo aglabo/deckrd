@@ -5,6 +5,10 @@ Initialize module directory structure and session.
 ## Usage
 
 ```bash
+# Base directory initialization only
+/deckrd init
+
+# Full module initialization
 /deckrd init [--lang <lang>] [--ai-model <model>] <namespace>/<module>
 ```
 
@@ -18,6 +22,9 @@ Initialize module directory structure and session.
 ## Example
 
 ```bash
+# Base directory only (no module)
+/deckrd init
+
 # Default settings (system language, sonnet model)
 /deckrd init AGTKind/isCollection
 
@@ -33,7 +40,23 @@ Initialize module directory structure and session.
 
 ## Actions
 
-1. Create directory structure:
+### Without module parameter (base initialization)
+
+1. Create base directory structure:
+
+   ```bash
+   docs/.deckrd/
+   ├── notes/
+   └── temp/
+   ```
+
+2. Copy template files from `assets/inits/` to `docs/.deckrd/`
+
+### With module parameter (full initialization)
+
+1. Create base directory structure (same as above)
+
+2. Create module directory structure:
 
    ```bash
    docs/.deckrd/<namespace>/<module>/
@@ -43,7 +66,7 @@ Initialize module directory structure and session.
    └── tasks/
    ```
 
-2. Initialize or update `.session.json`:
+3. Initialize or update `.session.json`:
 
    ```json
    {
@@ -67,6 +90,10 @@ Initialize module directory structure and session.
 Execute: [scripts/init-dirs.sh](../../scripts/init-dirs.sh)
 
 ```bash
+# Base initialization only
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/init-dirs.sh
+
+# Full module initialization
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/init-dirs.sh [--lang <lang>] [--ai-model <model>] <namespace>/<module>
 ```
 
@@ -75,4 +102,5 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/init-dirs.sh [--lang <lang>] [--ai-model <mod
 
 ## Next Step
 
-After init, prompt user for requirements input, then run `req`.
+- Without module: Base directory is ready. Run `init` again with module parameter to start a project.
+- With module: Prompt user for requirements input, then run `req`.

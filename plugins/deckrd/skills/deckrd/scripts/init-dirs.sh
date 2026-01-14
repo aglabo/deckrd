@@ -13,8 +13,8 @@
 #   Creates the standard DECKRD directory structure for a module
 #   and initializes/updates the session file.
 #
-#   When called without arguments, creates only the base directory
-#   (docs/.deckrd) and displays help.
+#   When called without arguments, creates the base directory
+#   (docs/.deckrd) with subdirectories and template files.
 #
 #   Created directories:
 #     docs/.deckrd/<namespace>/<module>/
@@ -24,7 +24,7 @@
 #       └── tasks/
 #
 # @example
-#   # Create base directory only and show help
+#   # Create base directory only (no module initialization)
 #   init_dirs.sh
 #
 #   # Initialize with default settings
@@ -220,6 +220,29 @@ parse_options() {
 }
 
 ##
+# @description Copy template files from source to destination (no overwrite)
+# @arg $1 string Source directory
+# @arg $2 string Destination directory
+# @stdout Copy status message
+# @return 0 Always succeeds
+copy_template_files() {
+  local src_dir="$1"
+  local dest_dir="$2"
+
+  # Skip if README.md already exists (indicates templates were already copied)
+  if [[ -f "${dest_dir}/README.md" ]]; then
+    echo "  Template files already copied."
+    return 0
+  fi
+
+  # Copy if source directory exists and is not empty
+  # Note: Use "/." to include hidden files (e.g., .gitignore)
+  if [[ -d "$src_dir" ]] && [[ -n "$(ls -A "$src_dir" 2>/dev/null)" ]]; then
+    cp -an "$src_dir"/. "$dest_dir/" 2>/dev/null && echo "  Copied template files" || true
+  fi
+}
+
+##
 # @description Initialize base directory only
 # @stdout Created directory message
 init_base_directory() {
@@ -232,10 +255,8 @@ init_base_directory() {
 
   echo "Created base directory: ${DECKRD_BASE}"
 
-  # Copy template files from inits directory if they don't exist
-  if [[ -d "$INITS_DIR" ]] && [[ -n "$(ls -A "$INITS_DIR" 2>/dev/null)" ]]; then
-    cp -n "$INITS_DIR"/* "$DECKRD_BASE/" 2>/dev/null && echo "  Copied template files" || true
-  fi
+  # Copy template files
+  copy_template_files "$INITS_DIR" "$DECKRD_BASE"
 }
 
 ##
@@ -413,9 +434,8 @@ init_base_directory
 
 # Validate module path and handle base-only mode
 if ! validate_module_path "$MODULE_PATH"; then
-  # No module path: show help and exit
-  echo ""
-  show_usage
+  # No module path: base directory initialized, exit normally
+  echo "Base initialization complete."
   exit 0
 fi
 
