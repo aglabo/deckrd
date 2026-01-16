@@ -77,3 +77,49 @@ The deckrd workflow transforms vague goals into concrete, executable tasks throu
 
 deckrd enforces a strict, stepwise workflow.
 Each step deepens understanding before moving forward.
+
+## Commands
+
+| Command                      | Description                                    |
+| ---------------------------- | ---------------------------------------------- |
+| `init`                       | Initialize `deckrd` direcory                   |
+| `init <ns>/<mod>`            | Initialize module directory and session        |
+| `req`                        | Derive requirements from goals                 |
+| `dr`                         | Manage Decision Records                        |
+| `dr --add`                   | Append a new Decision Record                   |
+| `spec`                       | Derive specifications from requirements        |
+| `impl`                       | Derive implementation plan from specifications |
+| `tasks`                      | Derive executable tasks from implementation    |
+| `status`                     | Display current workflow progress and status   |
+| `review`                     | Show review command usage                      |
+| `review <doc> [--phase <p>]` | Review document with phase-specific analysis   |
+
+## Review Command
+
+The `review` command supports document analysis with three review phases:
+
+### Usage
+
+```bash
+/deckrd review                    # Show usage
+/deckrd review req                # Review requirements (explore phase)
+/deckrd review req --phase harden # Review requirements (harden phase)
+/deckrd review spec --phase fix   # Review specifications (fix phase)
+```
+
+### Review Phases
+
+| Phase   | Persona                         | Purpose                            |
+| ------- | ------------------------------- | ---------------------------------- |
+| explore | Design Reviewer                 | Identify gaps, raise questions     |
+| harden  | Normative Requirements Reviewer | Promote to MUST/SHALL, generate DR |
+| fix     | Spec Auditor                    | Normalize, verify consistency      |
+
+### Document Phases
+
+| Doc Phase | Target Document                  |
+| --------- | -------------------------------- |
+| req       | requirements/requirements.md     |
+| spec      | specifications/specifications.md |
+| impl      | implementation/implementation.md |
+| tasks     | tasks/tasks.md                   |
