@@ -77,7 +77,12 @@ declare -A SHORT_TO_LONG=(
   [spec]="specifications"
   [impl]="implementation"
   [task]="tasks"
+  [review]="review"
 )
+
+##
+# @description Review phase (explore, harden, fix) - only for review command
+REVIEW_PHASE=""
 
 ##
 # @description Primary document types for display (derived from SHORT_TO_LONG values)
@@ -201,6 +206,7 @@ Document Types:
   spec            Generate specification document
   tasks           Generate task breakdown
   impl            Generate implementation guide
+  review          Review existing document (requires --phase)
 
 Options:
   --ai-model <model>  AI model name (default: loaded from session, or gpt-5.2)
@@ -211,6 +217,8 @@ Options:
   --output <file>     Output file path relative to DECKRD_BASE (default: stdout)
                       Example: --output requirements/requirements.md
                       → writes to \${DECKRD_BASE}/requirements/requirements.md
+  --phase <phase>     Review phase (only for review command)
+                      Values: explore, harden, fix (default: explore)
   -h, --help          Show this help message
 
 Session Configuration:
@@ -285,6 +293,28 @@ parse_options() {
         OUTPUT_FILE="${1#*=}"
         shift
         ;;
+      --phase)
+        if [[ -z "${2:-}" ]]; then
+          echo "Error: --phase requires a value (explore|harden|fix)" >&2
+          exit 1
+        fi
+        if [[ ! "$2" =~ ^(explore|harden|fix)$ ]]; then
+          echo "Error: Invalid review phase: $2" >&2
+          echo "  Valid phases: explore, harden, fix" >&2
+          exit 1
+        fi
+        REVIEW_PHASE="$2"
+        shift 2
+        ;;
+      --phase=*)
+        REVIEW_PHASE="${1#*=}"
+        if [[ ! "$REVIEW_PHASE" =~ ^(explore|harden|fix)$ ]]; then
+          echo "Error: Invalid review phase: $REVIEW_PHASE" >&2
+          echo "  Valid phases: explore, harden, fix" >&2
+          exit 1
+        fi
+        shift
+        ;;
       -*)
         echo "Error: Unknown option: $1" >&2
         show_usage
@@ -300,7 +330,7 @@ parse_options() {
           show_usage
           exit 1
         fi
-        ((positional_count++))
+        positional_count=$((positional_count + 1))
         shift
         ;;
     esac
@@ -370,7 +400,14 @@ resolve_doc_paths() {
   local doc_type="$1"
 
   local prompt_path="${ASSETS_DIR}/prompts/${doc_type}.prompt.md"
-  local template_path="${ASSETS_DIR}/templates/${doc_type}.template.md"
+
+  # review タイプの場合はフェーズ別テンプレートを選択
+  local template_path
+  if [[ "$doc_type" == "review" && -n "$REVIEW_PHASE" ]]; then
+    template_path="${ASSETS_DIR}/templates/${doc_type}-${REVIEW_PHASE}.template.md"
+  else
+    template_path="${ASSETS_DIR}/templates/${doc_type}.template.md"
+  fi
 
   if [[ ! -f "$prompt_path" ]]; then
     echo "Error: Prompt file not found: $prompt_path" >&2
@@ -436,6 +473,9 @@ build_ai_input() {
 
   echo "===== PARAMETERS ====="
   echo "LANG: ${lang}"
+  if [[ -n "$REVIEW_PHASE" ]]; then
+    echo "PHASE: ${REVIEW_PHASE}"
+  fi
   echo ""
 
   if [[ -n "$context" ]]; then
@@ -520,6 +560,11 @@ fi
 
 DOC_TYPE=$(validate_doc_type "$DOC_TYPE")
 
+# Set default review phase for review command
+if [[ "$DOC_TYPE" == "review" && -z "$REVIEW_PHASE" ]]; then
+  REVIEW_PHASE="explore"
+fi
+
 paths=$(resolve_doc_paths "$DOC_TYPE")
 PROMPT_PATH=$(echo "$paths" | head -1)
 TEMPLATE_PATH=$(echo "$paths" | tail -1)
@@ -537,6 +582,9 @@ echo "Prompt: $PROMPT_PATH" >&2
 echo "Template: $TEMPLATE_PATH" >&2
 echo "Language: $LANG_OPT" >&2
 echo "Model: $AI_MODEL" >&2
+if [[ -n "$REVIEW_PHASE" ]]; then
+  echo "Review Phase: $REVIEW_PHASE" >&2
+fi
 echo "" >&2
 
 result=$(execute_prompt "$PROMPT_PATH" "$TEMPLATE_PATH" "$LANG_OPT" "$CONTEXT_INPUT")

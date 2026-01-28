@@ -14,14 +14,6 @@
         "."
       ]
     },
-    "codex-mcp": {
-      "type": "stdio",
-      "command": "codex",
-      "args": [
-        "mcp-server"
-      ],
-      "env": {}
-    },
     "lsmcp": {
       "type": "stdio",
       "command": "lsmcp",

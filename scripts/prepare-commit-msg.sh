@@ -80,11 +80,11 @@ FLAG_OUTPUT_TO_STDOUT=true
 
 ##
 # @description AI model name for commit message generation (default: sonnet)
-DEFAULT_AI_MODEL="gpt-5.2"
+DEFAULT_AI_MODEL="sonnet"
 
 ###
 # @description AI model name for commit message generation (default: sonnet)
-AI_MODEL="gpt-5.2"
+AI_MODEL="sonnet"
 
 ##
 # @description Path to commit message generator template
@@ -218,6 +218,7 @@ has_existing_message() {
 #   context=$(make_context_block)
 #   echo "$context" | claude -p
 make_context_block() {
+  echo ""
   echo "===== GIT LOGS ====="
   git log --oneline -10 || echo "No logs available."
   echo ""
@@ -267,7 +268,8 @@ get_model_command() {
 
     # Anthropic (Claude) models
     claude-* | haiku | sonnet | opus)
-      AI_COMMAND=("claude" "-p" "--model" "${model}")
+      # execute claude with no-mcp, accept edits permission
+      AI_COMMAND=("claude" "-p" "--permission-mode" "acceptEdits" "--strict-mcp-config" "--mcp-config" '{"mcpServers":{}}' "--model" "${model}")
       ;;
 
     # Copilot models (copilot/model format)
@@ -334,14 +336,17 @@ generate_commit_message() {
 
   # Set up AI command for the configured model
   get_model_command "${AI_MODEL}" || return 1
+  local diff_output
+
+  diff_output=$({
+    cat .claude/agents/commit-message-generator.md
+    echo ""
+    make_context_block
+  })
 
   local full_output
-  full_output=$({
-    cat .claude/agents/commit-message-generator.md
-    echo
-    make_context_block
-  } | "${AI_COMMAND[@]}"
-  )
+
+  full_output=$(echo "$diff_output" | "${AI_COMMAND[@]}" )
 
   # Extract the commit message from AI response
   # Skip context output and extract only the message between markers
