@@ -17,16 +17,19 @@ Deckrd enables documentation to function as a practical engine for action, not j
 
 ## Commands
 
-| Command           | Description                                    |
-| ----------------- | ---------------------------------------------- |
-| `init <ns>/<mod>` | Initialize module directory and session        |
-| `req`             | Derive requirements from goals                 |
-| `dr`              | Manage Decision Records (req step only)        |
-| `dr --add`        | Append a new Decision Record                   |
-| `spec`            | Derive specifications from requirements        |
-| `impl`            | Derive implementation plan from specifications |
-| `tasks`           | Derive executable tasks from implementation    |
-| `status`          | Display current workflow progress and status   |
+| Command                      | Description                                    |
+| ---------------------------- | ---------------------------------------------- |
+| `init`                       | initialize `deckrd` directory                  |
+| `init <ns>/<mod>`            | Initialize module directory and session        |
+| `req`                        | Derive requirements from goals                 |
+| `dr`                         | Manage Decision Records (req step only)        |
+| `dr --add`                   | Append a new Decision Record                   |
+| `spec`                       | Derive specifications from requirements        |
+| `impl`                       | Derive implementation plan from specifications |
+| `tasks`                      | Derive executable tasks from implementation    |
+| `status`                     | Display current workflow progress and status   |
+| `review`                     | Show review command usage                      |
+| `review <doc> [--phase <p>]` | Review document with phase-specific analysis   |
 
 ## Session Resolution
 
@@ -40,13 +43,14 @@ Session state is stored in `docs/.deckrd/.session.json`.
 
 **Reference selection:**
 
-| Current State  | Next Command | Load Reference                                    |
-| -------------- | ------------ | ------------------------------------------------- |
-| (none)         | init         | [commands/init.md](references/commands/init.md)   |
-| init completed | req          | [commands/req.md](references/commands/req.md)     |
-| req completed  | spec         | [commands/spec.md](references/commands/spec.md)   |
-| spec completed | impl         | [commands/impl.md](references/commands/impl.md)   |
-| impl completed | tasks        | [commands/tasks.md](references/commands/tasks.md) |
+| Current State  | Next Command | Load Reference                                      |
+| -------------- | ------------ | --------------------------------------------------- |
+| (none)         | init         | [commands/init.md](references/commands/init.md)     |
+| init completed | req          | [commands/req.md](references/commands/req.md)       |
+| req completed  | spec         | [commands/spec.md](references/commands/spec.md)     |
+| spec completed | impl         | [commands/impl.md](references/commands/impl.md)     |
+| impl completed | tasks        | [commands/tasks.md](references/commands/tasks.md)   |
+| any            | review       | [commands/review.md](references/commands/review.md) |
 
 **For workflow overview:** [workflow.md](references/workflow.md)
 **For session management details:** [session.md](references/session.md)

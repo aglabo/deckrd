@@ -31,10 +31,63 @@ Implementation details are explicitly out of scope.
 
 ### 2.3 Non-Goals
 
-- {{NON_GOAL_1}}
-- {{NON_GOAL_2}}
+> **Derivation**: All items below originate from REQUIREMENTS Section "Out of Scope".
 
-<!-- Add more non-goals as needed -->
+- {{NON_GOAL_1}} ← REQ: Out of Scope #1
+- {{NON_GOAL_2}} ← REQ: Out of Scope #2
+
+<!-- If REQUIREMENTS has no Out of Scope section: -->
+<!-- > "No Non-Goals defined in source REQUIREMENTS." -->
+
+### 2.4 Behavioral Design Decisions
+
+| ID    | Decision | Rationale | Affected Rules | Status           |
+| ----- | -------- | --------- | -------------- | ---------------- |
+| DD-01 | ...      | ...       | Rule 4.x       | Active           |
+
+> **Note**: Decisions listed here derive from REQUIREMENTS Design Decisions.
+> If promoting to formal Decision Record, use `/deckrd dr --add`.
+
+**Status Values:**
+
+- `Active` — Currently in effect within this specification
+- `Promoted → DR-xx` — Elevated to formal Decision Record (see Section 2.5)
+
+<!-- If no DD exists in REQUIREMENTS: -->
+<!-- > "No Design Decisions defined in source REQUIREMENTS." -->
+
+### 2.5 Related Decision Records
+
+> **Reference**: This section lists formal DRs that affect this specification.
+> DRs are maintained in `decision-records.md` and are authoritative.
+
+| DR-ID | Title        | Phase | Impact on This Spec    |
+| ----- | ------------ | ----- | ---------------------- |
+| DR-xx | {{DR_TITLE}} | spec  | {{IMPACT_DESCRIPTION}} |
+
+<!-- If no related DRs: -->
+<!-- > "No Decision Records currently affect this specification." -->
+
+### 2.6 DD to DR Promotion Criteria
+
+> **Purpose**: Guidelines for determining when a DD should be promoted to a formal DR.
+> Promotion is a **human judgment** — these criteria inform, not automate.
+
+**Consider promoting a DD when:**
+
+1. **Cross-specification Impact** — The decision affects multiple specifications or modules
+2. **Architectural Significance** — The decision constrains future design choices
+3. **Non-trivial Alternatives** — Multiple viable options existed
+4. **Stakeholder Visibility Required** — The decision should be reviewable by external parties
+
+**Keep as DD when:**
+
+- Decision is local to this specification only
+- No significant alternatives existed
+- Rationale is self-evident from context
+
+> **Action**: To promote, run `/deckrd dr --add` with the DD context,
+> then update DD Status to `Promoted → DR-xx`.
 
 ---
 
@@ -88,9 +141,15 @@ No reordering is permitted.
 
 ---
 
-## 7. Open Questions (Optional)
+## 7. Open Questions
 
-- {{OPEN_QUESTION_1}}
+> **Status**: [COMPLETE | INCOMPLETE]
+
+| #   | Question            | Source  | Impact       |
+| --- | ------------------- | ------- | ------------ |
+| 1   | {{OPEN_QUESTION_1}} | {{REF}} | {{IMPACT_1}} |
+
+<!-- If none: "None identified - all requirements are unambiguous." -->
 
 ---
 

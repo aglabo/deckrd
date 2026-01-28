@@ -9,7 +9,7 @@
 // type check for typescript
 
 // commit lint common configs
-const baseConfig = {
+module.exports = {
   extends: ['@commitlint/config-conventional'],
   rules: {
     'type-enum': [2, 'always', [
@@ -35,6 +35,3 @@ const baseConfig = {
     'header-max-length': [2, 'always', 72],
   },
 };
-
-// export
-export default baseConfig;
