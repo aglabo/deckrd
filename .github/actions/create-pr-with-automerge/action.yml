@@ -1,0 +1,168 @@
+# src: ./.github/actions/create-pr-with-automerge/action.yml
+# @(#) : Composite action to create PRs with auto-merge enabled
+#
+# Copyright (c) 2025 atsushifx <https://github.com/atsushifx>
+#
+# This software is released under the MIT License.
+# https://opensource.org/licenses/MIT
+
+name: Create PR with Auto-Merge
+description: Create or update a Pull Request with labels and auto-merge enabled
+author: atsushifx
+
+inputs:
+  branch-prefix:
+    description: "Prefix for PR branch (e.g., auto-chmod)"
+    required: true
+  source-branch:
+    description: "Source branch name (base for PR)"
+    required: true
+  pr-title:
+    description: "Pull request title"
+    required: true
+  pr-body:
+    description: "Pull request body/description"
+    required: true
+  labels:
+    description: "Comma-separated list of labels to add"
+    required: false
+    default: ""
+  merge-method:
+    description: "Auto-merge method (merge, squash, rebase)"
+    required: false
+    default: "squash"
+  github-token:
+    description: "GitHub token for operations"
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  pr-number:
+    description: "Created/updated PR number"
+    value: ${{ steps.create_pr.outputs.pr_number }}
+  pr-url:
+    description: "Pull request URL"
+    value: ${{ steps.create_pr.outputs.pr_url }}
+  pr-operation:
+    description: "Operation performed (created, updated, none)"
+    value: ${{ steps.create_pr.outputs.operation }}
+
+runs:
+  using: composite
+  steps:
+    - name: Create PR branch
+      id: create_branch
+      shell: bash
+      run: |
+        # Define PR branch name based on source branch
+        SOURCE_BRANCH="${{ inputs.source-branch }}"
+        PR_BRANCH="${{ inputs.branch-prefix }}/${SOURCE_BRANCH}"
+
+        echo "Source branch: $SOURCE_BRANCH"
+        echo "PR branch: $PR_BRANCH"
+        echo "pr_branch=$PR_BRANCH" >> $GITHUB_OUTPUT
+
+        # Check if PR branch already exists remotely
+        if git ls-remote --heads origin "$PR_BRANCH" | grep -q "$PR_BRANCH"; then
+          echo "PR branch already exists, will update it"
+          git fetch origin "$PR_BRANCH"
+          git checkout -B "$PR_BRANCH" "origin/$PR_BRANCH"
+        else
+          echo "Creating new PR branch"
+          git checkout -b "$PR_BRANCH"
+        fi
+
+    - name: Commit changes
+      id: commit
+      shell: bash
+      run: |
+        git config --local user.name "github-actions[bot]"
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+
+        # Use the PR title as the commit message with additional metadata
+        git commit -m "${{ inputs.pr-title }}
+
+        Auto-generated commit from GitHub Actions workflow.
+
+        Co-Authored-By: github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+
+    - name: Push PR branch
+      id: push
+      shell: bash
+      run: |
+        PR_BRANCH="${{ inputs.branch-prefix }}/${{ inputs.source-branch }}"
+
+        # Force push to update existing branch if it exists
+        git push -f origin "$PR_BRANCH"
+
+        echo "✓ Pushed to $PR_BRANCH"
+
+    - name: Create or update Pull Request
+      id: create_pr
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: |
+        SOURCE_BRANCH="${{ inputs.source-branch }}"
+        PR_BRANCH="${{ inputs.branch-prefix }}/${SOURCE_BRANCH}"
+
+        # Check if PR already exists from PR branch to source branch
+        EXISTING_PR=$(gh pr list --head "$PR_BRANCH" --base "$SOURCE_BRANCH" --json number --jq '.[0].number' || echo "")
+
+        if [ -n "$EXISTING_PR" ]; then
+          echo "PR #$EXISTING_PR already exists and has been updated with force push"
+          echo "pr_number=$EXISTING_PR" >> $GITHUB_OUTPUT
+          echo "operation=updated" >> $GITHUB_OUTPUT
+
+          # Get PR URL
+          PR_URL=$(gh pr view "$EXISTING_PR" --json url --jq '.url')
+          echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+        else
+          echo "Creating new Pull Request"
+
+          PR_URL=$(gh pr create \
+            --base "$SOURCE_BRANCH" \
+            --head "$PR_BRANCH" \
+            --title "${{ inputs.pr-title }}" \
+            --body "${{ inputs.pr-body }}")
+
+          echo "✓ Created PR: $PR_URL"
+
+          # Extract PR number from URL
+          PR_NUMBER=$(echo "$PR_URL" | grep -oP '\d+$')
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+          echo "operation=created" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Set PR labels and auto-merge
+      id: configure_pr
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: |
+        PR_NUMBER="${{ steps.create_pr.outputs.pr_number }}"
+
+        # Add labels if provided
+        if [ -n "${{ inputs.labels }}" ]; then
+          # Split labels by comma and create/add each one
+          IFS=',' read -ra LABEL_ARRAY <<< "${{ inputs.labels }}"
+
+          for label in "${LABEL_ARRAY[@]}"; do
+            # Trim whitespace
+            label=$(echo "$label" | xargs)
+
+            # Create label if it doesn't exist (using default colors)
+            gh label create "$label" --force || true
+          done
+
+          # Add all labels to the PR
+          gh pr edit "$PR_NUMBER" --add-label "${{ inputs.labels }}"
+          echo "✓ Added labels: ${{ inputs.labels }}"
+        fi
+
+        # Enable auto-merge with specified method
+        gh pr merge "$PR_NUMBER" --auto --${{ inputs.merge-method }}
+        echo "✓ Enabled auto-merge (${{ inputs.merge-method }})"
+
+        echo "Note: PR will auto-merge once all required checks pass and approvals are received"
