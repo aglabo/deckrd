@@ -45,23 +45,39 @@ jobs:
             scripts:
               - '**/*.sh'
 
+      # Check and fix permissions only for executable scripts (with shebang)
+      # Library/source files without shebang are skipped
       - name: Check and fix shell script permissions
         id: chmod
-        if: steps.changed-files.outputs.scripts == 'true'
+        if: steps.changed-files.outputs.scripts_files != ''
         run: |
           sh_files="${{ steps.changed-files.outputs.scripts_files }}"
 
           echo "Changed shell scripts to check:"
-          echo "$sh_files" | tr ' ' '\n'
+          printf '%s\n' $sh_files
 
-          changed=false
+          changed=0
           changed_files=""
           changed_count=0
+          skipped_count=0
 
           # Check each file's permissions in git index
           for file in $sh_files; do
             # Get file mode from git index (format: 100644 or 100755)
             mode=$(git ls-files -s "$file" | awk '{print $1}')
+
+            if [ -z "$mode" ]; then
+              echo "⚠️ Skipping $file (no git index entry)"
+              skipped_count=$((skipped_count + 1))
+              continue
+            fi
+
+            # Check if file has shebang (executable script indicator)
+            if ! head -n1 "$file" 2>/dev/null | grep -q '^#!'; then
+              echo "ℹ️ Skipping $file (no shebang - likely a library/source file)"
+              skipped_count=$((skipped_count + 1))
+              continue
+            fi
 
             if [ "$mode" = "100644" ]; then
               echo "Setting +x on $file (was $mode)"
@@ -75,16 +91,20 @@ jobs:
               fi
 
               changed_count=$((changed_count + 1))
-              changed=true
+              changed=1
             elif [ "$mode" = "100755" ]; then
               echo "✓ $file already executable"
             fi
           done
 
           # Output results
-          echo "changed=$changed" >> $GITHUB_OUTPUT
+          if [ $changed -eq 1 ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
 
-          if [ "$changed" = "true" ]; then
+          if [ $changed -eq 1 ]; then
             {
               echo "changed_files<<EOF"
               echo "$changed_files"
@@ -92,124 +112,37 @@ jobs:
             } >> $GITHUB_OUTPUT
             echo "changed_count=$changed_count" >> $GITHUB_OUTPUT
             echo "✓ Fixed permissions on $changed_count shell script(s)"
+            [ $skipped_count -gt 0 ] && echo "ℹ️ Skipped $skipped_count file(s) (no shebang or no index entry)"
           else
             echo "✓ All changed shell scripts already have correct permissions"
+            [ $skipped_count -gt 0 ] && echo "ℹ️ Skipped $skipped_count file(s) (no shebang or no index entry)"
           fi
 
-      - name: Create PR branch
-        id: create_branch
+      # Bot-generated PR with auto-merge enabled (squash method)
+      # PR will auto-merge once all required checks pass
+      - name: Create Pull Request with auto-merge
         if: steps.chmod.outputs.changed == 'true'
-        run: |
-          # Define PR branch name based on source branch
-          SOURCE_BRANCH="${{ github.ref_name }}"
-          PR_BRANCH="auto-chmod/${SOURCE_BRANCH}"
+        uses: ./.github/actions/create-pr-with-automerge
+        with:
+          branch-prefix: "auto-chmod"
+          source-branch: ${{ github.ref_name }}
+          pr-title: "[Chmod] ci(scripts): Fix shell script permissions"
+          pr-body: |
+            ## Auto-generated PR: Shell Script Permission Fix
 
-          echo "Source branch: $SOURCE_BRANCH"
-          echo "PR branch: $PR_BRANCH"
-          echo "pr_branch=$PR_BRANCH" >> $GITHUB_OUTPUT
+            This PR automatically fixes executable permissions on shell scripts that were modified in `${{ github.ref_name }}`.
 
-          # Check if PR branch already exists remotely
-          if git ls-remote --heads origin "$PR_BRANCH" | grep -q "$PR_BRANCH"; then
-            echo "PR branch already exists, will update it"
-            git fetch origin "$PR_BRANCH"
-            git checkout -B "$PR_BRANCH" "origin/$PR_BRANCH"
-          else
-            echo "Creating new PR branch"
-            git checkout -b "$PR_BRANCH"
-          fi
+            ### Changes
+            - Sets `+x` (executable) permission on `.sh` files with mode `100644`
+            - Uses `git update-index --chmod=+x` to update git index
 
-      - name: Commit permission fixes
-        id: commit
-        if: steps.chmod.outputs.changed == 'true'
-        run: |
-          git config --local user.name "github-actions[bot]"
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+            ### Files Modified
+            ```
+            ${{ steps.chmod.outputs.changed_files }}
+            ```
 
-          file_count="${{ steps.chmod.outputs.changed_count }}"
-
-          git commit -m "[Bot] ci(scripts): auto-fix permissions on changed shell scripts
-
-          Automatically set executable permissions on shell scripts modified in ${{ github.ref_name }}.
-
-          Changed files: ${file_count} script(s)
-
-          Co-Authored-By: github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
-
-      - name: Push PR branch
-        id: push
-        if: steps.chmod.outputs.changed == 'true'
-        run: |
-          PR_BRANCH="auto-chmod/${{ github.ref_name }}"
-
-          # Force push to update existing branch if it exists
-          git push -f origin "$PR_BRANCH"
-
-          echo "✓ Pushed to $PR_BRANCH"
-
-      - name: Create or update Pull Request
-        id: create_pr
-        if: steps.chmod.outputs.changed == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          SOURCE_BRANCH="${{ github.ref_name }}"
-          PR_BRANCH="auto-chmod/${SOURCE_BRANCH}"
-
-          sh_files="${{ steps.chmod.outputs.changed_files }}"
-
-          # Check if PR already exists from PR branch to source branch
-          EXISTING_PR=$(gh pr list --head "$PR_BRANCH" --base "$SOURCE_BRANCH" --json number --jq '.[0].number' || echo "")
-
-          if [ -n "$EXISTING_PR" ]; then
-            echo "PR #$EXISTING_PR already exists and has been updated with force push"
-            echo "pr_number=$EXISTING_PR" >> $GITHUB_OUTPUT
-          else
-            echo "Creating new Pull Request"
-
-            PR_URL=$(gh pr create \
-              --base "$SOURCE_BRANCH" \
-              --head "$PR_BRANCH" \
-              --title "[Chmod] ci(scripts): Fix shell script permissions" \
-              --body "## Auto-generated PR: Shell Script Permission Fix
-
-          This PR automatically fixes executable permissions on shell scripts that were modified in \`$SOURCE_BRANCH\`.
-
-          ### Changes
-          - Sets \`+x\` (executable) permission on \`.sh\` files with mode \`100644\`
-          - Uses \`git update-index --chmod=+x\` to update git index
-
-          ### Files Modified
-          \`\`\`
-          $sh_files
-          \`\`\`
-
-          ---
-          🤖 Auto-generated by [GitHub Actions](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})")
-
-            echo "✓ Created PR: $PR_URL"
-
-            # Extract PR number from URL
-            PR_NUMBER=$(echo "$PR_URL" | grep -oP '\d+$')
-            echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Set PR labels and auto-merge
-        id: configure_pr
-        if: steps.chmod.outputs.changed == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          PR_NUMBER="${{ steps.create_pr.outputs.pr_number }}"
-
-          # Add labels (create them if they don't exist)
-          gh label create "automated" --description "Auto-generated by GitHub Actions" --color "0e8a16" --force || true
-          gh label create "chore" --description "Maintenance tasks" --color "fef2c0" --force || true
-
-          gh pr edit "$PR_NUMBER" --add-label "automated,chore"
-          echo "✓ Added labels: automated, chore"
-
-          # Enable auto-merge (squash merge by default)
-          gh pr merge "$PR_NUMBER" --auto --squash
-          echo "✓ Enabled auto-merge (squash)"
-
-          echo "Note: PR will auto-merge once all required checks pass and approvals are received"
+            ---
+            🤖 Auto-generated by [GitHub Actions](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          labels: "automated,chore"
+          merge-method: "squash"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
