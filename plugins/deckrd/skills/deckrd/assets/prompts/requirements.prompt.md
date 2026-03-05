@@ -18,6 +18,8 @@ from structured user input.
 3. **DECISION RECORD TEMPLATE**
 4. **PARAMETERS**
 5. **USER INPUT**
+6. **CODEBASE CONTEXT** (optional): summary of existing codebase and prior requirements
+7. **HEARING NOTES** (optional): accumulated answers from the interactive hearing loop
 
 ---
 
@@ -28,6 +30,7 @@ from structured user input.
 - No explanations or meta commentary
 - Ready for direct commit
 - Don't use `- **xx**:` in lists, use `- xx:` as the bullet point.
+- **Always include Section 7 (User Stories), Section 8 (Acceptance Criteria), and Section 9 (Open Questions)**
 
 ---
 
@@ -49,6 +52,16 @@ from structured user input.
 | other  | Use literally                                         |
 
 - RFC 2119 keywords apply to requirements.md only.
+
+---
+
+## Step 0: Absorb Codebase Context
+
+If **CODEBASE CONTEXT** is provided:
+
+- Identify the target module and its existing state
+- Note any prior requirements that this document revises
+- Carry forward relevant constraints and design decisions already recorded
 
 ---
 
@@ -110,3 +123,49 @@ If `GENERATE_DECISION_RECORDS==true` or `DR==true`:
 - Assign IDs: DR-01, DR-02, ...
 - Use **DECISION RECORD TEMPLATE**
 - Link Decision Records from requirements.md
+
+---
+
+## Step 4: Generate Open Questions
+
+Collect unresolved items from USER INPUT and HEARING NOTES:
+
+- Items the user explicitly marked as undecided
+- Contradictions or ambiguities detected during analysis
+- Decisions deferred to later phases
+
+Format as a table: Question | Type | Impact Area | Owner
+
+Include in **Section 9** of requirements.md.
+
+---
+
+## Step 5: Generate User Stories
+
+Derive 3–7 User Stories from the Functional Requirements:
+
+- Format: "As a \<role\>, I want \<goal\>. Because \<reason\>."
+- Cover the primary stakeholders identified in Step 1
+- Each story must map to at least one FR
+
+Include in **Section 7** of requirements.md.
+
+---
+
+## Step 6: Generate Acceptance Criteria
+
+Write Acceptance Criteria in Gherkin format for the top functional requirements:
+
+- 3 main scenarios (happy path)
+- 2 exception/edge-case scenarios
+
+Format:
+
+```gherkin
+Scenario: <title>
+  Given <precondition>
+  When  <action>
+  Then  <expected result>
+```
+
+Include in **Section 8** of requirements.md.
