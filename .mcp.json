@@ -1,34 +1,12 @@
 {
   "mcpServers": {
-    "serena-mcp": {
+    "cocoindex-code": {
       "type": "stdio",
-      "command": "uvx",
-      "args": [
-        "--from",
-        "git+https://github.com/oraios/serena",
-        "serena",
-        "start-mcp-server",
-        "--context",
-        "ide-assistant",
-        "--project",
-        "."
-      ]
+      "command": "cocoindex-code"
     },
-    "codex-mcp": {
+    "fossil-mcp": {
       "type": "stdio",
-      "command": "codex",
-      "args": [
-        "mcp-server"
-      ],
-      "env": {}
-    },
-    "lsmcp": {
-      "type": "stdio",
-      "command": "lsmcp",
-      "args": [
-        "-p",
-        "typescript"
-      ]
+      "command": "fossil-mcp"
     }
   }
 }

@@ -1,7 +1,7 @@
 # src: .gitignore
-# @(#) : typescript compile settings
+# @(#) : mainly ignored files and directories
 #
-# Copyright (c) 2025 atsushifx <http://github.com/atsushifx>
+# Copyright (c) 2025- atsushifx <http://github.com/atsushifx>
 #
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
@@ -27,46 +27,53 @@ thumbs.db
 $~*
 ~*
 *~
+*tmp
 *swp
 *lock
-# temp files
-*tmp
-tmp**
-**/*tmp
-**/tmp*
 
+# session files
+*session.json
+*session
+**/*session.json
+**/*session
 
 # .env files
 .env*
 .env.*
 
-## Build & Release
-/dist/
-/release/*
-/releases/*
-.version
+## Development tools (installed locally)
+.tools/
 
+## Worktrees
+# worktree base dir
+.worktrees/
 
 ## AI generated files
+
 ## Coding AI depended
 # SDD (Spec-Driven Development) files
 **/.cc-sdd/
-**/.deckrd/
 
-# claude code settings
+# claude code setting
 .claude/*
 
-# add claude skills
-!.claude/skills/
-!.claude/skills/*
+# agents can tracking
+!.claude/agents/
+!.claude/agents/**
 
 # MCP server dependency files
+.cocoindex_code/
 .serena/
 .lsmcp/
 
-## Temporary Directory
+## Temporary directories are never tracked
 temp/
 tmp/
+**/temp/
+**/tmp/
+
+# lock file
+pnpm*lock.yaml
 
 
 ##  Editor
