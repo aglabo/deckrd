@@ -1,7 +1,7 @@
-# src: shared/configs/secretlint.config.base.yaml
-# @(#) : editorconfig base configs (templates)
+# src: .editorconfig
+# @(#) : editorconfig for voift
 #
-# Copyright (c) 2025- atsushifx <https://github.com/atsushifx>
+# Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
@@ -20,6 +20,10 @@ indent_size = 2
 tab_width = 2
 
 # ─────────────────────────────
+# Source Code Files
+# ─────────────────────────────
+
+# ─────────────────────────────
 # Documents
 # ─────────────────────────────
 [*.md]
@@ -27,36 +31,30 @@ indent_style = space
 indent_size = 2
 tab_width = 2
 
+
 # ─────────────────────────────
-# JSON
+# configuration files
 # ─────────────────────────────
 [*.json]
 indent_style = space
 indent_size = 2
 tab_width = 2
 
-# ─────────────────────────────
-# YAML
-# ─────────────────────────────
 [*.{yaml,yml}]
 indent_style = space
 indent_size = 2
 tab_width = 2
 
-# ─────────────────────────────
-# INI / TOML
-# ─────────────────────────────
 [*.ini]
-indent_style = tab
+indent_style = space
+indent_size = 4
 tab_width = 4
 
 [*.toml]
-indent_style = tab
-tab_width = 4
+indent_style = space
+indent_size = 2
+tab_width = 2
 
-# ─────────────────────────────
-# rc Files
-# ─────────────────────────────
 [*rc]
 indent_style = space
 indent_size = 2
@@ -83,19 +81,19 @@ tab_width = 4
 indent_style = tab
 tab_width = 4
 
-[**/git/*]
-indent_style = tab
-tab_width = 4
-
 # ─────────────────────────────
 # Special Files (e.g. Dockerfile, LICENSE)
 # ─────────────────────────────
+[{Makefile,*.mk}]
+indent_style = tab
+indent_size = 4
+tab_width = 4
+
 # ignore files
 [**/*ignore]
 indent_style = space
 indent_size = 2
 tab_width = 2
-
 
 # [Dockerfile]
 # indent_style = space
