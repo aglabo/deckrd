@@ -37,8 +37,14 @@ $~*
 **/*session.json
 **/*session
 
+<<<<<<< HEAD
 # deckrd local config (project-local, not for repository)
 .local/deckrd/
+||||||| parent of 518f6b5 (chore(gitignore): update ignore rules and remove lock file entry)
+=======
+# deckrd project profile (project-local, not for repository)
+.deckrd/
+>>>>>>> 518f6b5 (chore(gitignore): update ignore rules and remove lock file entry)
 
 # .env files
 .env*
