@@ -28,7 +28,7 @@ Active Module: AGTKind/isCollection
 Current Step:  spec
 Completed:     init, req
 
-Module Path:   docs/.deckrd/AGTKind/isCollection
+Module Path:   docs/.deckrd/AGTKind/isCollection  (DECKRD_DOCS default)
 
 Configuration:
   Language:    ja
