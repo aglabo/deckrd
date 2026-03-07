@@ -71,7 +71,7 @@ deckrd/
 **Main Plugin** (`plugins/deckrd/`):
 
 - Commands: `/deckrd` (init, req, dr, spec, impl, tasks, status)
-- Session: `docs/.deckrd/.session.json`
+- Session: `.local/deckrd/session.json`
 
 **External Plugin** (IDD Framework):
 
@@ -199,7 +199,7 @@ git commit -m "type(scope): description"
 
 - deckrd project: `~/workspaces/develop/deckrd`
 - IDD framework: `~/.claude/plugins/marketplaces/claude-idd-framework-marketplace\plugins/claude-idd-framework`
-- Session files: `docs/.deckrd/.session.json`
+- Session files: `.local/deckrd/session.json`
 - Temp files: `temp/idd/`
 
 ---
