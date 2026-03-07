@@ -15,6 +15,7 @@
 #
 #   When called without arguments, creates the base directory
 #   (docs/.deckrd) with subdirectories and template files.
+#   Session file is stored in .local/deckrd/session.json.
 #
 #   Created directories:
 #     docs/.deckrd/<namespace>/<module>/
@@ -66,13 +67,23 @@ REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 readonly REPO_ROOT
 
 ##
-# @description DECKRD base directory
-DECKRD_BASE="${REPO_ROOT}/docs/.deckrd"
+# @description DECKRD docs directory (overridable via DECKRD_DOCS)
+DECKRD_DOCS="${DECKRD_DOCS:-${REPO_ROOT}/docs/.deckrd}"
+readonly DECKRD_DOCS
+
+##
+# @description DECKRD base directory (document output root)
+DECKRD_BASE="$DECKRD_DOCS"
 readonly DECKRD_BASE
 
 ##
+# @description DECKRD local config directory (profile.json / session.json)
+DECKRD_LOCAL="${REPO_ROOT}/.local/deckrd"
+readonly DECKRD_LOCAL
+
+##
 # @description Session file path
-SESSION_FILE="${DECKRD_BASE}/.session.json"
+SESSION_FILE="${DECKRD_LOCAL}/session.json"
 readonly SESSION_FILE
 
 ##
@@ -135,7 +146,7 @@ Created directories:
     └── tasks/
 
 Session file:
-  docs/.deckrd/.session.json
+  .local/deckrd/session.json
 EOF
 }
 
@@ -246,6 +257,7 @@ copy_template_files() {
 # @description Initialize base directory only
 # @stdout Created directory message
 init_base_directory() {
+  mkdir -p "$DECKRD_LOCAL"
   mkdir -p "$DECKRD_BASE"
 
   # Create base subdirectories
