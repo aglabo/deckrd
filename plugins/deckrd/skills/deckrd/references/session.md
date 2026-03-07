@@ -3,8 +3,11 @@
 ## Session File Location
 
 ```bash
-docs/.deckrd/.session.json
+.local/deckrd/session.json
 ```
+
+> **Note**: The `DECKRD_LOCAL` environment variable overrides the default location.
+> Default: `<repo-root>/.local/deckrd`
 
 ## Session Schema
 
@@ -102,10 +105,10 @@ Or resume existing module:
 For the active module, documents are located at:
 
 ```bash
-docs/.deckrd/<namespace>/<module>/<document-type>/<filename>
+${DECKRD_DOCS}/<namespace>/<module>/<document-type>/<filename>
 ```
 
-Example:
+Default (`DECKRD_DOCS` = `<repo-root>/docs/.deckrd`):
 
 ```bash
 docs/.deckrd/AGTKind/isCollection/requirements/requirements.md
