@@ -11,7 +11,7 @@
 # @brief Display DECKRD session status
 # @description
 #   Displays the current status of the active module and workflow progress.
-#   Reads from docs/.deckrd/.session.json
+#   Reads from .local/deckrd/session.json
 #
 # @example
 #   status.sh
@@ -29,7 +29,12 @@ set -eo pipefail
 # Configuration
 # ============================================================================
 
-readonly SESSION_FILE="docs/.deckrd/.session.json"
+DECKRD_LOCAL="${DECKRD_LOCAL:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.local/deckrd}"
+readonly DECKRD_LOCAL
+DECKRD_DOCS="${DECKRD_DOCS:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)/docs/.deckrd}"
+readonly DECKRD_DOCS
+SESSION_FILE="${DECKRD_LOCAL}/session.json"
+readonly SESSION_FILE
 readonly WORKFLOW_STEPS=(init req spec impl tasks)
 
 # ============================================================================
@@ -40,7 +45,7 @@ readonly WORKFLOW_STEPS=(init req spec impl tasks)
 check_session() {
   if [[ ! -f "$SESSION_FILE" ]]; then
     echo "Error: No session file found."
-    echo "  Expected: $SESSION_FILE"
+    echo "  Expected: ${SESSION_FILE}"
     echo ""
     echo "Run 'deckrd init <namespace>/<module>' to initialize."
     exit 1
@@ -103,7 +108,7 @@ main() {
   echo "Current Step:  $current_step"
   echo "Completed:     $completed"
   echo ""
-  echo "Module Path:   docs/.deckrd/$active"
+  echo "Module Path:   ${DECKRD_DOCS}/$active"
   echo ""
   echo "Configuration:"
   echo "  Language:    $lang"
