@@ -37,8 +37,8 @@ $~*
 **/*session.json
 **/*session
 
-# deckrd project profile (project-local, not for repository)
-.deckrd/
+# deckrd local config (project-local, not for repository)
+.local/deckrd/
 
 # .env files
 .env*
