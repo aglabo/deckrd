@@ -1,7 +1,8 @@
 # req Command
 
-<!-- textlint-disable ja-technical-writing/no-exclamation-question-mark -->
-<!-- textlint-disable ja-technical-writing/max-comma -->
+<!-- textlint-disable
+    ja-technical-writing/no-exclamation-question-mark,
+    ja-technical-writing/max-comma -->
 <!-- markdownlint-disable line-length -->
 
 Derive a normative requirements document from the user's goals, ideas, and constraints.
@@ -17,19 +18,36 @@ Derive a normative requirements document from the user's goals, ideas, and const
 - Session must exist with active module
 - `init` must be completed for active module
 
+## Commitment Declaration (REQUIRED)
+
+Before Phase 0, YOU MUST output:
+
+> "I am executing /deckrd req for module [MODULE_NAME].
+> I will complete phases in order: 0 -> 1 -> 2 -> 3 -> 4. I will NOT skip phases."
+
+---
+
 ## Execution Flow
 
-### Phase 0: Codebase Investigation
+### Phase 0: Codebase Investigation (explore-agent 委譲)
 
-Before collecting user input, investigate the codebase context:
+Before collecting user input, delegate codebase investigation to explore-agent:
+
+<!-- textlint-disable ja-technical-writing/sentence-length -->
 
 1. Read `docs/.deckrd/.session.json` to confirm the active module
 2. Check for existing `requirements.md` under the active module path
    - If found: treat this session as a **revision** of existing requirements
-3. Use `Glob` and `Read` to survey:
-   - Module directory structure
-   - Existing documentation files
-4. Summarize findings as **CODEBASE CONTEXT** (≤ 200 words) for use in Phase 3
+3. Spawn **explore-agent** with:
+   - `scope`: `codebase-survey`
+   - `directory`: project root
+   - `focus`: module name and feature keywords from user input (if available)
+   - Agent definition: [`plugins/deckrd/agents/explore-agent.md`](../../../../agents/explore-agent.md)
+4. The agent writes findings to `temp/deckrd-work/codebase-context.md`
+5. Read the **Summary** returned by the agent and store as **CODEBASE CONTEXT** for Phase 3
+6. Proceed to Phase 1 immediately — do NOT wait for the agent to complete Phase 0 before starting Phase 1
+
+<!-- textlint-enable ja-technical-writing/sentence-length -->
 
 ### Phase 1: Initial Input Collection
 
@@ -47,7 +65,9 @@ Conduct an interactive Q&A loop to fill information gaps.
 
 **Rules**:
 
-- Ask **at most 3 questions per round**
+- Ask EXACTLY 1 question per round. No exceptions.
+- YOU MUST wait for the user's answer before asking the next question.
+- Asking multiple questions simultaneously = violation. Ask 1 question.
 - Prefer Yes/No or multiple-choice (A/B/C) questions over open-ended ones
 - Accumulate answers as **HEARING NOTES**
 
