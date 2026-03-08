@@ -1,5 +1,7 @@
 # Implementation Plan Generation Prompt
 
+<!-- textlint-disable ja-technical-writing/sentence-length -->
+
 You are an implementation planner.
 Generate an `implementation-<n>.md` document recording the implementation plan
 confirmed through the interactive wall-hitting workflow.

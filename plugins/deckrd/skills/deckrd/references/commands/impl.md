@@ -1,5 +1,8 @@
 # impl Command
 
+<!-- textlint-disable ja-technical-writing/sentence-length,
+  ja-technical-writing/no-exclamation-question-mark,
+  ja-technical-writing/max-comma -->
 <!-- markdownlint-disable line-length -->
 
 Derive an implementation plan (phase decomposition and commit decomposition)
@@ -8,8 +11,6 @@ from specifications through an interactive wall-hitting workflow.
 ```bash
 DECKRD_ROOT="./docs/"
 ```
-
-<!-- textlint-disable ja-technical-writing/no-exclamation-question-mark -->
 
 ## Usage
 
@@ -28,7 +29,7 @@ DECKRD_ROOT="./docs/"
 
 ## Execution Flow
 
-```
+```text
 Phase A: Spec Reading & Codebase Investigation
 Phase B: PoC / Reference PR Check
 Phase C: Implementation Direction Drafting
@@ -54,19 +55,19 @@ and extract:
 
 Store extracted summary as **SPEC SUMMARY**.
 
-#### Step A-2: Investigate Codebase
+#### Step A-2: Investigate Codebase (explore-agent 委譲)
 
-Use `Glob`, `Read`, and `Grep` to survey the codebase:
+Spawn **explore-agent** (non-blocking) with:
 
-1. Locate modules and directories related to the feature
-2. Identify existing patterns and conventions:
-   - File/module structure
-   - Naming conventions
-   - Error handling style
-3. Find code already partially implementing the feature
-4. Map integration points the new feature must connect with
+- `scope`: `codebase-survey`
+- `directory`: project root
+- `focus`: feature keywords from SPEC SUMMARY
+- Agent definition: [`plugins/deckrd/agents/explore-agent.md`](../../../../agents/explore-agent.md)
 
-Store findings as **CODEBASE CONTEXT**:
+The agent writes findings to `temp/deckrd-work/codebase-context.md`.
+Proceed to Phase B immediately in parallel — do NOT wait for this agent.
+
+Store the agent Summary as **CODEBASE CONTEXT** when it completes:
 
 ```text
 CODEBASE CONTEXT:
@@ -78,16 +79,18 @@ CODEBASE CONTEXT:
 
 ---
 
-### Phase B: PoC / Reference PR Check
+### Phase B: PoC / Reference PR Check (explore-agent 委譲)
 
-Search for prior art before planning:
+Spawn **explore-agent** (non-blocking, parallel with A-2) with:
 
-1. Check `temp/`, `docs/`, `examples/` for PoC or prototype code
-2. Run `git log --oneline --all` to find branches with related work
-3. If a GitHub repository is accessible, search for related PRs or issues
-4. Note any decisions already made in prior experiments
+- `scope`: `prior-art`
+- `directory`: project root
+- `focus`: feature keywords from SPEC SUMMARY
+- Agent definition: [`plugins/deckrd/agents/explore-agent.md`](../../../../agents/explore-agent.md)
 
-Store findings as **PRIOR ART**:
+The agent writes findings to `temp/deckrd-work/prior-art.md`.
+
+Store the agent Summary as **PRIOR ART** when it completes:
 
 ```text
 PRIOR ART:
@@ -97,6 +100,8 @@ PRIOR ART:
 ```
 
 If nothing is found, record `PRIOR ART: none` and continue.
+
+> **Note**: Proceed to Phase C only after **both** A-2 and B agents have completed.
 
 ---
 
@@ -133,7 +138,7 @@ Present the IMPLEMENTATION DRAFT to the user and collect feedback.
 
 Show a structured summary:
 
-```
+```text
 [Implementation Review]
 
 Implementation units:
@@ -162,11 +167,15 @@ If the user provides feedback:
 - Update IMPLEMENTATION DRAFT with confirmed changes
 - Return to Step D-1
 
-**Termination condition** (no round limit):
+**Termination conditions** (no round limit):
 
-User declares "十分", "以上です", "OK", "承認", "done", or equivalent.
+1. User declares "十分", "以上です", "OK", "承認", "done", or equivalent.
+2. Stagnation detection: If 2 consecutive rounds produce no changes to IMPLEMENTATION DRAFT,
+   YOU MUST ask: "No new changes detected for 2 rounds. Do you approve the current draft? (Y / feedback)"
+   This forced confirmation prevents infinite loops.
+
 Unlike spec Phase D (max 3 rounds), this loop continues **without limit**
-until the user explicitly approves.
+until the user explicitly approves or stagnation is detected.
 
 Store final user-confirmed state as **CONFIRMED IMPLEMENTATION**.
 
@@ -186,7 +195,7 @@ Break CONFIRMED IMPLEMENTATION into implementation phases using these criteria:
 
 Present as:
 
-```
+```text
 [Phase Decomposition]
 
 Phase 1: <title>
@@ -206,7 +215,7 @@ If the user provides feedback:
 - Return to Step E-1
 
 **Termination condition**: User approves with "Y", "OK", "承認", "done",
-or equivalent.
+or equivalent。
 
 Store confirmed phases as **PHASE PLAN**.
 
@@ -226,7 +235,7 @@ Break each phase into commits using these criteria:
 
 Present as:
 
-```
+```text
 [Commit Decomposition] Phase 1: <title>
 
 Commit 1: <commit message>
@@ -249,7 +258,7 @@ If the user provides feedback on any phase's commits:
 - Re-present the revised phase
 
 **Termination condition per phase**: User approves with "Y", "OK",
-"承認", "done", or equivalent.
+"承認", "done", or equivalent。
 
 Store confirmed commits for all phases as **COMMIT PLAN**.
 
@@ -261,8 +270,8 @@ Store confirmed commits for all phases as **COMMIT PLAN**.
 
 Determine whether the implementation should be split into multiple files:
 
-- **Single file** (default): Use `implementation.md` (no number suffix)
-- **Multiple files**: Use `implementation-<n>.md` only when the specification
+- Single file (default): Use `implementation.md` (no number suffix)
+- Multiple files: Use `implementation-<n>.md` only when the specification
   is large and the implementation must be split across multiple files.
   In that case, number sequentially: `implementation-1.md`, `implementation-2.md`, ...
 
