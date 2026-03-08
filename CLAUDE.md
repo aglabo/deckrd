@@ -6,8 +6,11 @@ authors:
 changed: 2026-01-14 dev-docに分離
 ---
 
-<!-- textlint-disable ja-technical-writing/sentence-length -->
-<!-- textlint-disable ja-technical-writing/max-comma -->
+<!-- textlint-disable
+  ja-technical-writing/sentence-length,
+  ja-technical-writing/max-comma -->
+
+<!-- markdownlint-disable line-length -->
 
 ## Core Principles
 
