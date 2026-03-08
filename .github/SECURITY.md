@@ -1,13 +1,15 @@
 # Security Policy
 
+<!-- markdownlint-disable line-length -->
+
 ## Supported Versions
 
 The following versions of this project are currently being supported with security updates:
 
 | Release Channel     | Supported | Status              |
 | ------------------- | --------- | ------------------- |
-| Stable version      | ✅        | Actively maintained |
-| Development version | ❌        | Under development   |
+| Stable version      | Yes       | Actively maintained |
+| Development version | No        | Under development   |
 
 ## Reporting a Vulnerability
 
