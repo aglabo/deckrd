@@ -2,7 +2,11 @@
 adr
 clippy
 deckrd
+gofmt
+goimports
+golangci
 idd
+implementational
 markdownlintrc
 mypy
 pylint
