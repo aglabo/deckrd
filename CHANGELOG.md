@@ -1,5 +1,7 @@
 # CHANGELOG
 
+<!-- textlint-disable ja-technical-writing/sentence-length -->
+
 ## [0.0.4] - 2026-01-14
 
 ### 🚀 Features
