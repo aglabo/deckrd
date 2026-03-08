@@ -17,19 +17,19 @@ Deckrd enables documentation to function as a practical engine for action, not j
 
 ## Commands
 
-| Command                      | Description                                    |
-| ---------------------------- | ---------------------------------------------- |
-| `init`                       | initialize `deckrd` directory                  |
-| `init <ns>/<mod>`            | Initialize module directory and session        |
-| `req`                        | Derive requirements from goals                 |
-| `dr`                         | Manage Decision Records (req step only)        |
-| `dr --add`                   | Append a new Decision Record                   |
-| `spec`                       | Derive specifications from requirements        |
-| `impl`                       | Derive implementation plan from specifications |
-| `tasks`                      | Derive executable tasks from implementation    |
-| `status`                     | Display current workflow progress and status   |
-| `review`                     | Show review command usage                      |
-| `review <doc> [--phase <p>]` | Review document with phase-specific analysis   |
+| Command                                      | Description                                        |
+| -------------------------------------------- | -------------------------------------------------- |
+| `init`                                       | initialize `deckrd` directory                      |
+| `init <ns>/<mod>`                            | Initialize module directory and session            |
+| `req`                                        | Derive requirements from goals                     |
+| `dr`                                         | Manage Decision Records (req step only)            |
+| `dr --add`                                   | Append a new Decision Record                       |
+| `spec`                                       | Derive specifications from requirements            |
+| `impl`                                       | Derive implementation plan from specifications     |
+| `tasks`                                      | Derive executable tasks from implementation        |
+| `status`                                     | Display current workflow progress and status       |
+| `review`                                     | Show review command usage                          |
+| `review <doc> [--phase <p>]`                 | Review document with phase-specific analysis       |
 | `profile --project <name> --language <lang>` | Configure project profile (language, project name) |
 
 ## Session Resolution
