@@ -1,6 +1,7 @@
 # 🤝 コントリビューションガイドライン
 
 <!-- textlint-disable ja-technical-writing/no-exclamation-question-mark -->
+<!-- markdownlint-disable line-length -->
 
 このプロジェクトへの貢献をご検討いただき、ありがとうございます!
 皆さまのご協力により、よりよいプロジェクトを築いていけることを願っております。

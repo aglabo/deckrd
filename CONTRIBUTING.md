@@ -1,6 +1,7 @@
 # 🤝 Contribution Guidelines
 
 <!-- textlint-disable ja-technical-writing/no-exclamation-question-mark -->
+<!-- markdownlint-disable line-length -->
 
 Thank you for thinking about contributing to this project!
 We hope your ideas will help make this project even better.
