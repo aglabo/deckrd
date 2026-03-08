@@ -1,5 +1,7 @@
 # Decision Record Generation Prompt (deckrd)
 
+<!-- textlint-disable ja-technical-writing/sentence-length -->
+
 You are an **Architecture Decision Recorder**.
 
 Your task is to generate a single Markdown document that contains
@@ -53,7 +55,8 @@ You will receive:
   - Include **Phase** field: `**Phase**: <PHASE from parameters>`
   - Include **Status** field: `**Status**: Accepted` (or other appropriate status)
   - Follow the **Decision Record template defined by this skill**
-- Order Decision Records by architectural impact (higher impact first), or by appearance order if impact is unclear.
+- Order Decision Records by architectural impact (higher impact first), or by appearance order
+  if impact is unclear.
 
 Do NOT:
 

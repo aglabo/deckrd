@@ -1,5 +1,6 @@
 ---
 title: WORKFLOW - 内部フロー詳細
+description:内部フロー
 ---
 
 <!-- textlint-disable ja-technical-writing/max-comma -->
@@ -51,34 +52,55 @@ Phase 6: ワークフロー終了
 
 ---
 
-## Phase 0: 初期化フェーズ (開発環境把握)
+## Before You Begin (MANDATORY — runs BEFORE Phase 0)
 
-コーディングセッション開始時に、リポジトリルート (モノレポの場合はサブパッケージのルート) で開発環境を把握・確認します。
+Read the target task in tasks.md. Then ask ALL unclear items NOW:
 
-### Step 0-1: プロジェクトプロファイルの読み込み
+<!-- textlint-disable ja-technical-writing/no-exclamation-question-mark -->
 
-`.deckrd/profile.json` が存在する場合、プロジェクト設定を読み込む:
+1. Is the Target function/class/method unambiguous?
+2. Are Given/When/Then conditions fully specified?
+3. Are there dependencies on unimplemented tasks?
 
-- `project`: プロジェクト名
-- `language`: 開発言語
+<!-- textlint-enable ja-technical-writing/no-exclamation-question-mark -->
 
-言語が取得できた場合、対応する言語ルールファイルを読み込む:
-`plugins/deckrd-coder/skills/deckrd-coder/assets/languages/<language>.md`
+Ask all unclear questions in a SINGLE message before Phase 0 begins.
+Once Phase 0 starts, YOU MUST NOT ask about scope. It is too late.
 
-### Step 0-2: 開発環境の確認 (動的検出)
+---
 
-プロファイルが存在しない場合、または補完情報が必要な場合:
+## Phase 0: 初期化フェーズ (開発環境把握) (explore-agent 委譲)
 
-- リポジトリルート / サブパッケージルートを特定
-- 開発言語を確認 (`package.json`, `Cargo.toml`, `setup.py` など)
-- 開発ツール設定を取得 (Build, Run, Lint, 型チェック, テスト, フォーマッター)
-- 実行コマンドを記録・整理
+コーディングセッション開始時に、**explore-agent** へ環境検出を委譲します。
 
-プロファイルの言語情報を優先し、動的検出で補完する。
+### Step 0-1: explore-agent の起動
+
+Spawn **explore-agent** with:
+
+- `scope`: `pattern-detection`
+- `directory`: repository root (or sub-package root for monorepos)
+- `focus`: `test-framework,build-tools,lint,type-check`
+- Agent definition: [`plugins/deckrd-coder/agents/explore-agent.md`](../../../../agents/explore-agent.md)
+
+The agent:
+
+1. Reads `.deckrd/profile.json` if present (`project`, `language`)
+2. Loads the language rule file if language is found:
+   `plugins/deckrd-coder/skills/deckrd-coder/assets/languages/<language>.md`
+3. Detects language from manifest files
+   (`package.json`, `Cargo.toml`, `setup.py`, etc.)
+4. Identifies tool commands (build, run, lint, type-check, test, formatter)
+5. Writes the environment profile to `temp/deckrd-work/env-profile.md`
+
+### Step 0-2: 環境プロファイルの取得
+
+Read the **Commands table** returned by the agent.
+Store as **ENV PROFILE** for use in Phase 4 (quality gate)
+and Phase 5 (completion check).
 
 出力:
 
-- 開発言語、利用ツール一覧、実行コマンド
+- 開発言語、利用ツール一覧、実行コマンド (`temp/deckrd-work/env-profile.md`)
 
 ---
 
@@ -155,9 +177,9 @@ Red-Green-Refactor サイクルで実装タスクを完了します。
 
 実行内容:
 
-- 全テスト PASS 確認
-- 型エラーなし確認
-- 実装タスクリストがすべてチェック済み確認
+- 全テスト PASS 確認: Run[test command], read FULL output
+- 型エラーなし確認: Run[type check command], read FULL output
+- 実装タスクリストがすべてチェック済み確認: Read implementation.md directly, count checked items
 - Refactor が完了したか確認
 
 出力:

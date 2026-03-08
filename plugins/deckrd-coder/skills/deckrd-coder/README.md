@@ -1,10 +1,11 @@
 # deckrd-coder
 
-deckrd マーケットプレイスの BDD コーディングプラグイン
+deckrd マーケットプレイスの BDD コーディングプラグインです。
 
 ## 概要
 
-Deckrd ワークフローの tasks.md から指定したタスク（例：`T01-02`）を読み込み、BDD（Behavior-Driven Development）厳格プロセスで実装を自動化するdeckrd専用プラグインです。
+Deckrd ワークフローの tasks.md から指定したタスク（例：`T01-02`）を読み込みます。
+BDD（Behavior-Driven Development）厳格プロセスで実装を自動化する deckrd 専用プラグインです。
 
 ## 特徴
 
@@ -53,7 +54,7 @@ Deckrd ワークフローの tasks.md から指定したタスク（例：`T01-0
 
 ## 構成
 
-```
+```text
 deckrd-coder/
 ├── SKILL.md                 # 実装スキル定義
 ├── manifest.json            # プラグインメタデータ
@@ -65,7 +66,7 @@ deckrd-coder/
 
 ## 実行フェーズ
 
-スキル内で以下のフェーズを自動管理：
+スキル内で以下のフェーズを自動管理します。
 
 1. **Phase 1**: セッション・タスク情報取得
    - deckrd session.json からアクティブセッション確認
@@ -76,11 +77,11 @@ deckrd-coder/
    - project_overview.md で技術スタック・プロジェクト構造確認
 
 3. **Phase 3**: Red-Green-Refactor サイクル実装（各テストケースごとに繰り返し）
-   - [Red] テストを書く
+   - [Red]テストを書く
    - テスト失敗確認（エラーメッセージを確認）
-   - [Green] 最小限の実装追加
+   - [Green]最小限の実装追加
    - テスト成功確認
-   - [Refactor] 必要に応じてコード整理
+   - [Refactor]コード品質を改善する場合はコード整理を実施
    - Todo を更新
    - 次のテストケースへ
 
@@ -106,6 +107,6 @@ MIT License - Copyright (c) 2025 atsushifx
 
 ## サポート
 
-問題報告や機能リクエストは以下をご利用ください：
+問題報告や機能リクエストは以下をご利用ください。
 
-- GitHub Issues: https://github.com/atsushifx/deckrd/issues
+- GitHub Issues: <https://github.com/atsushifx/deckrd/issues>

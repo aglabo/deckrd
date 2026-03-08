@@ -1,5 +1,9 @@
 # Document Review Prompt (deckrd)
 
+<!-- textlint-disable ja-technical-writing/sentence-length,
+      ja-technical-writing/no-exclamation-question-mark,
+      ja-technical-writing/max-comma -->
+
 You are executing a **Document Review** with phase-specific analysis.
 
 Your task is to review an existing deckrd document (requirements, specifications, etc.)
@@ -10,12 +14,12 @@ specified review phase.
 
 ## Inputs You Will Receive
 
-1. **PROMPT** (this file)
-2. **REVIEW TEMPLATE**
-3. **PARAMETERS**
+1. PROMPT (this file)
+2. REVIEW TEMPLATE
+3. PARAMETERS
    - `PHASE`: explore | harden | fix
    - `LANG`: system | en | ja | other
-4. **DOCUMENT TO REVIEW** (the target document content)
+4. DOCUMENT TO REVIEW (the target document content)
 
 ---
 
@@ -24,7 +28,7 @@ specified review phase.
 - Output **only Markdown**
 - No explanations or meta commentary
 - Ready for direct use
-- Don't use `- **xx**:` in lists, use `- xx:` as the bullet point.
+- Avoid bolding `xx` in lists; instead use a normal bullet like `- xx:`.
 
 ---
 
@@ -112,30 +116,30 @@ You are a **Normative Requirements Reviewer**.
 
 Sources for WHEN conditions (in priority order):
 
-1. **Explicit in source**: Conditions already stated but not formatted as WHEN
-2. **Implicit in context**: Conditions inferable from surrounding requirements
-3. **Domain knowledge**: Standard conditions for the requirement type
+1. Explicit in source: Conditions already stated but not formatted as WHEN
+2. Implicit in context: Conditions inferable from surrounding requirements
+3. Domain knowledge: Standard conditions for the requirement type
 
 Boundaries:
 
-- **ALLOWED**: Reformatting existing conditions, making implicit conditions explicit
-- **PROHIBITED**: Inventing conditions not derivable from source or domain
+- ALLOWED: Reformatting existing conditions, making implicit conditions explicit
+- PROHIBITED: Inventing conditions not derivable from source or domain
 - Each extraction MUST cite its source (explicit/implicit/domain)
 
 **Decision Records:**
 
-- **REQUIRED** for each requirement promotion
-- **REQUIRED** for each gap filled
-- **REQUIRED** for each significant clarification
+- REQUIRED for each requirement promotion
+- REQUIRED for each gap filled
+- REQUIRED for each significant clarification
 - Use standard DR format with DR-XX numbering
 
 **DR Granularity Guidelines:**
 
 To prevent DR explosion, consolidate related decisions:
 
-- **Consolidate**: Group related promotions into a single DR (e.g., "Promote all input validation to MUST")
-- **Threshold**: Only create DR for decisions affecting system behavior or architecture
-- **Skip DR for**: Trivial clarifications, obvious domain constraints, editorial WHEN extractions
+- Consolidate: Group related promotions into a single DR (e.g., "Promote all input validation to MUST")
+- Threshold: Only create DR for decisions affecting system behavior or architecture
+- Skip DR for: Trivial clarifications, obvious domain constraints, editorial WHEN extractions
 
 Target: 1-5 DRs per review session for typical documents
 
@@ -182,10 +186,10 @@ What constitutes "changing meaning" (PROHIBITED):
 
 What is NOT semantic change (ALLOWED):
 
-- **Testability rewording**: "fast" → "responds within 100ms" (adds measurability)
-- **Subject completion**: "should be validated" → "input should be validated"
-- **Ambiguity resolution**: "appropriate" → "as specified in Section 3.2" (reference addition)
-- **Passive to active**: "errors are logged" → "the system logs errors"
+- Testability rewording "fast" → "responds within 100ms" (adds measurability)
+- Subject completion: "should be validated" → "input should be validated"
+- Ambiguity resolution: "appropriate" → "as specified in Section 3.2" (reference addition)
+- Passive to active: "errors are logged" → "the system logs errors"
 
 Rule of thumb: If the change could affect test cases, it's semantic → defer to harden phase
 
@@ -241,21 +245,21 @@ Read the target document and identify:
 
 Based on `PHASE`, apply the appropriate review lens:
 
-### For explore:
+### For explore
 
 - List questions and concerns
 - Identify ambiguous terms
 - Suggest alternatives to explore
 - Note implicit assumptions
 
-### For harden:
+### For harden
 
 - Identify SHOULD statements that should be MUST
 - Extract WHEN conditions
 - Fill gaps with new requirements
 - Generate DR for each decision
 
-### For fix:
+### For fix
 
 - Check terminology consistency
 - Verify testability
@@ -272,9 +276,9 @@ Use the **REVIEW TEMPLATE** to structure your output.
 
 Follow the structure defined in the phase-specific REVIEW TEMPLATE:
 
-- **explore**: Questions, Ambiguous Terms, Alternatives, Assumptions, Gaps
-- **harden**: Promotions, WHEN Extractions, Gap-Filling Requirements, Decision Records
-- **fix**: Terminology, Testability, Structure, Cross-References, Typos
+- explore: Questions, Ambiguous Terms, Alternatives, Assumptions, Gaps
+- harden: Promotions, WHEN Extractions, Gap-Filling Requirements, Decision Records
+- fix: Terminology, Testability, Structure, Cross-References, Typos
 
 Each phase template defines the exact sections and format to use.
 

@@ -1,6 +1,8 @@
 # dr Command
 
-<!-- textlint-disable ja-technical-writing/sentence-length -->
+<!-- textlint-disable
+  ja-technical-writing/sentence-length,
+  ja-technical-writing/max-comma -->
 <!-- markdownlint-disable line-length -->
 
 Manage Decision Records (DR) for the active module.

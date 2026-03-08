@@ -32,15 +32,47 @@ Deckrd enables documentation to function as a practical engine for action, not j
 | `review <doc> [--phase <p>]`                 | Review document with phase-specific analysis       |
 | `profile --project <name> --language <lang>` | Configure project profile (language, project name) |
 
+## Skill Announcement (REQUIRED)
+
+YOU MUST announce at the start of every command execution:
+
+> "I am executing /deckrd [COMMAND] for module [MODULE_NAME]."
+
+No announcement = violation. Restart with announcement.
+
+---
+
 ## Session Resolution
 
 Session state is stored in `docs/.deckrd/.session.json`.
 
-**Before executing any command:**
+```text
+Goals/Ideas
+     |
+     v
+[/deckrd req] -> requirements.md
+     |
+     v
+[/deckrd spec] -> specifications.md
+     |
+     v
+[/deckrd impl] -> implementation.md
+     |
+     v
+[/deckrd tasks] -> tasks.md
+     |
+     v
+[/deckrd-coder TX-XX] -> Implementation
 
-1. Read `.session.json` to get active module and current step
-2. Validate the command matches expected workflow progression
-3. Load the appropriate reference from `references/commands/`
+Gate Rule: Each command REQUIRES the previous command's document.
+           YOU MUST NOT skip commands. No exceptions.
+```
+
+YOU MUST execute ALL of the following before every command:
+
+1. Read `.session.json` — YOU MUST confirm active module and current step
+2. Validate command order — if out of order, STOP and report
+3. Load the reference — NEVER proceed without loading it
 
 > **Note**: The `profile` command is project-scoped and does not interact with session state.
 > It can be run at any time, before or after `init`.

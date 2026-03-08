@@ -1,5 +1,7 @@
 # Tasks Generation Prompt (deckrd)
 
+<!-- textlint-disable ja-technical-writing/sentence-length -->
+
 You are a **BDD Task Generator**.
 
 Your task is to generate executable implementation tasks
@@ -48,7 +50,7 @@ You will receive:
 
 Task IDs follow a hierarchical structure:
 
-```
+```text
 T-<TestTarget>-<Scenario>-<Case>
 ```
 
@@ -60,7 +62,7 @@ Where:
 
 ### Examples
 
-```
+```text
 T-01-01-01  → TestTarget 01, Scenario 01, Case 01
 T-01-02-03  → TestTarget 01, Scenario 02, Case 03
 T-02-01-01  → TestTarget 02, Scenario 01, Case 01
@@ -144,13 +146,13 @@ Each task MUST include:
 
 ---
 
-## Do NOT
+## NEVER
 
-- Include implementation code in tasks
-- Include BDD sample/reference implementation sections
-- Include progress tracking tables
-- Create overly granular tasks (combine related assertions)
-- Skip error handling scenarios
-- Omit edge case coverage
-- **Use function/method names from specifications if they differ from implementation.md**
-- **Ignore implementation.md when naming test targets**
+- NEVER include implementation code in tasks
+- NEVER include BDD sample/reference implementation sections
+- NEVER include progress tracking tables
+- NEVER create overly granular tasks (combine related assertions)
+- NEVER skip error handling scenarios
+- NEVER omit edge case coverage
+- NEVER use function/method names from specifications if they differ from implementation.md
+- NEVER ignore implementation.md when naming test targets

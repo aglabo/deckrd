@@ -15,6 +15,28 @@ Each task corresponds to a single unit test case (`it()` block) in a BDD-style t
 - `spec` must be completed for active module
 - `specifications.md` must exist
 
+## Execution Flow
+
+### Phase 0: Codebase Investigation (explore-agent 委譲)
+
+Before generating tasks, delegate document reading to explore-agent:
+
+1. Spawn **explore-agent** with:
+   - `scope`: `codebase-survey`
+   - `directory`: project root
+   - `focus`: `specifications,implementation`
+   - Agent definition: [`plugins/deckrd/agents/explore-agent.md`](../../../../agents/explore-agent.md)
+2. The agent reads `specifications/specifications.md` and `implementation/implementation.md`.
+   Then writes a summary to `temp/deckrd-work/codebase-context.md`
+3. Read the **Summary** returned by the agent
+4. Proceed to task generation using the summary as context
+
+### Phase 1: Task Generation
+
+Using the explore-agent summary, generate tasks.md via the prompt script.
+
+---
+
 ## Input
 
 Read: `docs/.deckrd/<namespace>/<module>/specifications/specifications.md`
@@ -126,6 +148,24 @@ source: specifications.md
 - [ ] **T-01-03-01**: <Edge case description>
       ...
 ```
+
+---
+
+## Verification Gate (REQUIRED before Session Update)
+
+YOU MUST verify tasks.md by reading it directly — not from memory.
+
+Check each item by reading the file:
+
+| Check                                  | Method                          | Pass Criteria            |
+| -------------------------------------- | ------------------------------- | ------------------------ |
+| Task IDs are unique                    | Scan all T-XX-YY-ZZ IDs in file | No duplicates            |
+| Each task has Target/Scenario/Expected | Read each entry                 | All 3 fields present     |
+| Normal / Error / Edge cases all exist  | Count by category               | >=1 each                 |
+| Tasks trace to specifications          | Cross-ref spec sections         | Each task maps to a spec |
+
+If any check fails: YOU MUST regenerate the failing section. No partial approval.
+ONLY after all checks pass: proceed to Session Update.
 
 ---
 

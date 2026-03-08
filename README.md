@@ -1,8 +1,14 @@
-<!-- markdownlint-disable first-line-h1 -->
+---
+title: deckrd - "Your Goals to Task" framework
+description: A document-driven workflow for progressively documenting and organizing requirements through implementation decisions.
+---
+
+<!-- textlint-disable ja-technical-writing/sentence-length -->
+<!-- markdownlint-disable line-length -->
 
 |English|[日本語](README.ja.md)|
 
-# deckrd - "Your Goals to Task" framework
+## deckrd - "Your Goals to Task" framework
 
 ## About deckrd
 
@@ -39,7 +45,7 @@ claude plugin install deckrd@deckrd
 
 ### Workflow
 
-```
+```text
 Goals / Ideas
     ↓
 requirements (Define requirements)
@@ -133,9 +139,9 @@ git commit
 
 ### Important Notes
 
-- **Prerequisites**: deckrd's `tasks.md` is required. Run deckrd first.
-- **Implementation Flow**: Automatically executes Red-Green-Refactor cycle (test → implement → refactor)
-- **Quality Gates**: Automatically validates tests, linting, and type checking
-- **Commit**: Execute manually (not automatic)
+- Prerequisites: deckrd's `tasks.md` is required. Run deckrd first.
+- Implementation Flow: Automatically executes Red-Green-Refactor cycle (test → implement → refactor)
+- Quality Gates: Automatically validates tests, linting, and type checking
+- Commit: Execute manually (not automatic)
 
 > For details, see [deckrd-coder plugin](plugins/deckrd-coder/README.md)

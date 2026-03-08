@@ -10,7 +10,9 @@ implementational
 markdownlintrc
 mypy
 pylint
+pyproject
 pytest
+Resumability
 rumdl
 Tera
 topo

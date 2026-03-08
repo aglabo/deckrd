@@ -7,7 +7,7 @@ meta:
 
 <!-- textlint-disable ja-technical-writing/sentence-length -->
 <!-- textlint-disable ja-technical-writing/no-exclamation-question-mark -->
-<!-- markdownlint-disable line-length  -->
+<!-- markdownlint-disable line-length -->
 
 # deckrd
 

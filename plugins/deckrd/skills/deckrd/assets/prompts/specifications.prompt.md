@@ -1,5 +1,10 @@
 # Specifications Document Generation Prompt
 
+<!-- textlint-disable
+  ja-technical-writing/sentence-length,
+  ja-technical-writing/max-comma -->
+<!-- markdownlint-disable line-length -->
+
 You are a software architect.
 Generate a `specifications.md` document from requirements.
 
