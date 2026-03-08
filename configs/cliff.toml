@@ -1,5 +1,10 @@
-# git-cliff ~ configuration file
-# https://git-cliff.org/docs/configuration
+# src: ./configs/gitcliff.toml
+# @(#) : git-cliff configuration file
+#
+# Copyright (c) 2025- atsushifx <https://github.com/atsushifx>
+#
+# This software is released under the MIT License.
+# https://opensource.org/licenses/MIT
 
 
 [changelog]
@@ -7,17 +12,17 @@
 # See https://keats.github.io/tera/docs/#introduction
 body = """
 {% if version %}\
-    ## [{{ version | trim_start_matches(pat="v") }}] - {{ timestamp | date(format="%Y-%m-%d") }}
+	## [{{ version | trim_start_matches(pat="v") }}] - {{ timestamp | date(format="%Y-%m-%d") }}
 {% else %}\
-    ## [unreleased]
+	## [unreleased]
 {% endif %}\
 {% for group, commits in commits | group_by(attribute="group") %}
-    ### {{ group | striptags | trim | upper_first }}
-    {% for commit in commits %}
-        - {% if commit.scope %}*({{ commit.scope }})* {% endif %}\
-            {% if commit.breaking %}[**breaking**] {% endif %}\
-            {{ commit.message | upper_first }}\
-    {% endfor %}
+	### {{ group | striptags | trim | upper_first }}
+	{% for commit in commits %}
+		- {% if commit.scope %}*({{ commit.scope }})* {% endif %}\
+			{% if commit.breaking %}[**breaking**] {% endif %}\
+			{{ commit.message | upper_first }}\
+	{% endfor %}
 {% endfor %}
 """
 # Remove leading and trailing whitespaces from the changelog's body.
@@ -26,8 +31,8 @@ trim = true
 render_always = true
 # An array of regex based postprocessors to modify the changelog.
 postprocessors = [
-    # Replace the placeholder <REPO> with a URL.
-    #{ pattern = '<REPO>', replace = "https://github.com/orhun/git-cliff" },
+	# Replace the placeholder <REPO> with a URL.
+	#{ pattern = '<REPO>', replace = "https://github.com/orhun/git-cliff" },
 ]
 # render body even when there are no releases to process
 # render_always = true
@@ -48,13 +53,13 @@ split_commits = false
 # An array of regex based parsers to modify commit messages prior to further processing.
 commit_preprocessors = [
 	# Strip GitHub squash-merge prefix: "merge (#xx): "
-    { pattern = "^merge \\(#\\d+\\):\\s*", replace = "" },
+	{ pattern = "^merge \\(#\\d+\\):\\s*", replace = "" },
 
-    # Replace issue numbers with link templates to be updated in `changelog.postprocessors`.
-    #{ pattern = '\((\w+\s)?#([0-9]+)\)', replace = "([#${2}](<REPO>/issues/${2}))"},
-    # Check spelling of the commit message using https://github.com/crate-ci/typos.
-    # If the spelling is incorrect, it will be fixed automatically.
-    #{ pattern = '.*', replace_command = 'typos --write-changes -' },
+	# Replace issue numbers with link templates to be updated in `changelog.postprocessors`.
+	#{ pattern = '\((\w+\s)?#([0-9]+)\)', replace = "([#${2}](<REPO>/issues/${2}))"},
+	# Check spelling of the commit message using https://github.com/crate-ci/typos.
+	# If the spelling is incorrect, it will be fixed automatically.
+	#{ pattern = '.*', replace_command = 'typos --write-changes -' },
 ]
 # Prevent commits that are breaking from being excluded by commit parsers.
 protect_breaking_commits = false
@@ -67,21 +72,21 @@ commit_parsers = [
 	{ message = "dependabot", skip = true },
 
 	## default parsers:
-    { message = "^feat", group = "<!-- 0 -->🚀 Features" },
-    { message = "^fix", group = "<!-- 1 -->🐛 Bug Fixes" },
-    { message = "^doc", group = "<!-- 3 -->📚 Documentation" },
-    { message = "^perf", group = "<!-- 4 -->⚡ Performance" },
-    { message = "^refactor", group = "<!-- 2 -->🚜 Refactor" },
-    { message = "^style", group = "<!-- 5 -->🎨 Styling" },
-    { message = "^test", group = "<!-- 6 -->🧪 Testing" },
-    { message = "^chore\\(release\\): prepare for", skip = true },
-    { message = "^chore\\(deps.*\\)", skip = true },
-    { message = "^chore\\(pr\\)", skip = true },
-    { message = "^chore\\(pull\\)", skip = true },
-    { message = "^chore|^ci", group = "<!-- 7 -->⚙️ Miscellaneous Tasks" },
-    { body = ".*security", group = "<!-- 8 -->🛡️ Security" },
-    { message = "^revert", group = "<!-- 9 -->◀️ Revert" },
-    { message = ".*", group = "<!-- 10 -->💼 Other" },
+	{ message = "^feat", group = "<!-- 0 -->��}~ Features" },
+	{ message = "^fix", group = "<!-- 1 -->��xсBug Fixes" },
+	{ message = "^doc", group = "<!-- 3 -->��z9 Documentation" },
+	{ message = "^perf", group = "<!-- 4 -->����Performance" },
+	{ message = "^refactor", group = "<!-- 2 -->��}ӁRefactor" },
+	{ message = "^style", group = "<!-- 5 -->���� Styling" },
+	{ message = "^test", group = "<!-- 6 -->���� Testing" },
+	{ message = "^chore\\(release\\): prepare for", skip = true },
+	{ message = "^chore\\(deps.*\\)", skip = true },
+	{ message = "^chore\\(pr\\)", skip = true },
+	{ message = "^chore\\(pull\\)", skip = true },
+	{ message = "^chore|^ci", group = "<!-- 7 -->��}�칁Miscellaneous Tasks" },
+	{ body = ".*security", group = "<!-- 8 -->��~@�x?Security" },
+	{ message = "^revert", group = "<!-- 9 -->��p�칁Revert" },
+	{ message = ".*", group = "<!-- 10 -->��y�� Other" },
 ]
 # Exclude commits that are not matched by any commit parser.
 filter_commits = false

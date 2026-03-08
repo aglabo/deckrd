@@ -2,7 +2,7 @@
 # src: ./scripts/create-release.sh
 # @(#) : Create release archive with normalized version
 #
-# Copyright (c) 2025 atsushifx <http://github.com/atsushifx>
+# Copyright (c) 2025- atsushifx <http://github.com/atsushifx>
 #
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT

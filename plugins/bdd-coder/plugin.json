@@ -1,0 +1,7 @@
+{
+  "name": "bdd-coder",
+  "source": "./plugins/bdd-coder",
+  "agents": [
+    "./agents/bdd-coder.md"
+  ]
+}
