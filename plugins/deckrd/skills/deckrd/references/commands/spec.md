@@ -1,6 +1,7 @@
 # spec Command
 
 <!-- textlint-disable ja-technical-writing/no-exclamation-question-mark -->
+<!-- textlint-disable ja-technical-writing/max-comma -->
 <!-- markdownlint-disable line-length -->
 
 Derive technically verifiable behavioral goals and constraints from requirements.
@@ -19,7 +20,7 @@ Derive technically verifiable behavioral goals and constraints from requirements
 
 ## Execution Flow
 
-```
+```bash
 Phase A: Requirements Reading & Codebase Investigation
 Phase B: PoC / Reference PR Check
 Phase C: Design Direction Drafting
@@ -125,7 +126,7 @@ Present the DESIGN DRAFT to the user and collect feedback.
 
 Show a structured summary:
 
-```
+```bash
 [Design Review]
 
 Feature decomposition:
@@ -178,7 +179,7 @@ For each behavioral unit in CONFIRMED DESIGN, reason through:
 
 For each unit, define the external contract:
 
-```
+```bash
 Unit: <name>
   Pre-conditions:  <what must be true before invocation>
   Post-conditions: <what is guaranteed after successful invocation>
@@ -243,7 +244,7 @@ For each candidate, ask the user to confirm or decide:
 
 Example question patterns:
 
-```
+```bash
 [External API] The requirements mention sending email notifications.
 Q1. Which service will you use?
     A) SendGrid  B) AWS SES  C) SMTP (self-hosted)  D) Not decided yet
@@ -275,7 +276,7 @@ API DECISIONS:
 
 ### Phase 0-F: Public Function Interface Decision Loop (max 3 rounds)
 
-Before generating specifications, identify and confirm the public functions
+Before generating specifications, identify and confirm the public functions.
 this module exposes as its external API.
 
 #### Step 0-F-1: Extract Public Function Candidates
@@ -299,7 +300,7 @@ For each candidate, ask the user to confirm or decide:
 
 Example question patterns:
 
-```
+```bash
 [Function Interface] The spec identifies one main entry point for processing.
 Q1. What should the public function be named?
     A) process_input  B) run  C) execute  D) Let me name it myself
@@ -354,7 +355,7 @@ From `requirements.md` count:
 
 **When asking the user (8–14 range)**:
 
-```
+```bash
 [Split Assessment] This spec covers 10 FRs across 3 feature areas.
 Recommended split:
   A) Single file  specifications.md  (all 10 FRs)
@@ -403,25 +404,25 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/run-prompt.sh specifications \
   --output "specifications/<filename>"
 ```
 
-Pass all accumulated context so the AI can produce a specification grounded in
-the actual codebase and confirmed design decisions.
+Pass all accumulated context so the AI can produce a well-grounded specification.
+This ensures the output reflects the actual codebase and confirmed design decisions.
 
 ---
 
 ### Phase 3: External Spec Review & Cleanup (max 2 rounds)
 
-After all specification files are written, review each file to ensure it
-contains **only external specification content**.
+After all specification files are written, review each file.
+Ensure each file contains **only external specification content**.
 
 #### Step 3-1: Self-Scan
 
 Read each generated file and flag every passage that matches a removal criterion:
 
-| Criterion | Examples | Action |
-| --------- | -------- | ------ |
-| Implementation detail | Function names, type signatures, file paths, class names | Remove or rewrite |
-| Requirements restatement | Sentences copied verbatim from `requirements.md`; FR/NFR bullet re-listing | Remove |
-| Notes / impl hints | `<!-- impl: ... -->`, `> Note for impl:` comments | **Keep** (pass-through to `impl`) |
+| Criterion                | Examples                                                                   | Action                            |
+| ------------------------ | -------------------------------------------------------------------------- | --------------------------------- |
+| Implementation detail    | Function names, type signatures, file paths, class names                   | Remove or rewrite                 |
+| Requirements restatement | Sentences copied verbatim from `requirements.md`; FR/NFR bullet re-listing | Remove                            |
+| Notes / impl hints       | `<!-- impl: ... -->`, `> Note for impl:` comments                          | **Keep** (pass-through to `impl`) |
 
 **Do NOT remove:**
 
@@ -435,7 +436,7 @@ Read each generated file and flag every passage that matches a removal criterion
 
 For each flagged passage, present a concise diff-style summary:
 
-```
+```bash
 [Spec Review] specifications-auth.md
 
 REMOVE (implementation detail):
@@ -451,7 +452,7 @@ REMOVE (requirements restatement):
 
 If no issues found:
 
-```
+```bash
 [Spec Review] No external-spec violations found in <filename>.
 ```
 
@@ -461,11 +462,14 @@ For each accepted removal or rewrite:
 
 1. Edit the file in-place
 2. If a passage was rewritten, append the original as an impl note:
-   ```
+
+   ```yaml
    <!-- impl-note: original said "calls authenticate() function" -->
    ```
+
 3. After all files are cleaned, show a final summary:
-   ```
+
+   ```bash
    [Cleanup Complete]
    - specifications-auth.md: 2 removed, 1 rewritten
    - specifications-notify.md: no changes
@@ -496,19 +500,19 @@ specifications @requirements/requirements.md
 
 **Single file** (≤ 7 FRs):
 
-```
+```bash
 docs/.deckrd/<namespace>/<module>/specifications/specifications.md
 ```
 
 **Split files** (≥ 8 FRs or user choice):
 
-```
+```bash
 docs/.deckrd/<namespace>/<module>/specifications/specifications-<area>.md
 ```
 
 An index file is always created when split:
 
-```
+```bash
 docs/.deckrd/<namespace>/<module>/specifications/specifications-index.md
 ```
 
@@ -553,8 +557,8 @@ After Phase 3 cleanup is approved, update `.session.json`:
 }
 ```
 
-When split, record the index file as the `specifications` entry and list each
-split file under `specifications_files`:
+When split, record the index file as the `specifications` entry.
+List each split file under `specifications_files`:
 
 ```json
 {

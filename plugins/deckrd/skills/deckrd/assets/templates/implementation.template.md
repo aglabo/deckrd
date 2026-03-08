@@ -42,6 +42,6 @@ Status: Draft
 
 ## 3. Change History
 
-| Date       | Version | Description                  |
-| ---------- | ------- | ---------------------------- |
-| {{DATE}}   | 1.0     | Initial implementation plan  |
+| Date     | Version | Description                 |
+| -------- | ------- | --------------------------- |
+| {{DATE}} | 1.0     | Initial implementation plan |

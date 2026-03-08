@@ -28,7 +28,7 @@ Active Module: AGTKind/isCollection
 Current Step:  spec
 Completed:     init, req
 
-Module Path:   docs/.deckrd/AGTKind/isCollection
+Module Path:   docs/.deckrd/AGTKind/isCollection  (DECKRD_DOCS default)
 
 Configuration:
   Language:    ja
@@ -54,11 +54,11 @@ Workflow Progress:
 
 ## Error Messages
 
-| Error | Cause | Solution |
-|-------|-------|----------|
-| No session file found | Session not initialized | Run `deckrd init <namespace>/<module>` |
-| No active module set | Session exists but no active module | Run `deckrd init <namespace>/<module>` |
-| jq is not installed | jq command not available | Install jq |
+| Error                 | Cause                               | Solution                               |
+| --------------------- | ----------------------------------- | -------------------------------------- |
+| No session file found | Session not initialized             | Run `deckrd init <namespace>/<module>` |
+| No active module set  | Session exists but no active module | Run `deckrd init <namespace>/<module>` |
+| jq is not installed   | jq command not available            | Install jq                             |
 
 ## Script
 

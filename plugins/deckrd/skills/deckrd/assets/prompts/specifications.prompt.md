@@ -229,12 +229,12 @@ The document must be implementation-agnostic.
 The generated document will be reviewed in Phase 3 for external-spec compliance.
 To minimize cleanup, follow these rules during generation:
 
-| Allowed | Not Allowed |
-| ------- | ----------- |
-| "the operation accepts a user identifier and returns an access token" | "calls `login(userId: string): Token`" |
-| "when input is empty, the system returns an error state" | "throws `ValidationError` if input is null" |
-| "the component reads from the shared data store" | "queries PostgreSQL via `UserRepository.findById()`" |
-| `<!-- impl-note: consider using a queue here -->` | inline code blocks with implementation logic |
+| Allowed                                                               | Not Allowed                                          |
+| --------------------------------------------------------------------- | ---------------------------------------------------- |
+| "the operation accepts a user identifier and returns an access token" | "calls `login(userId: string): Token`"               |
+| "when input is empty, the system returns an error state"              | "throws `ValidationError` if input is null"          |
+| "the component reads from the shared data store"                      | "queries PostgreSQL via `UserRepository.findById()`" |
+| `<!-- impl-note: consider using a queue here -->`                     | inline code blocks with implementation logic         |
 
 **Self-check before output**: scan the draft for function names, type annotations,
 file paths, and verbatim FR/NFR copies. Rewrite or remove each before outputting.
@@ -255,14 +255,3 @@ When generating the index file (`specifications-index.md`):
 - List all split files with their FR coverage
 - Provide a one-sentence summary per file
 - Link each file with a relative Markdown link
-
-Example:
-
-```markdown
-## Specification Index
-
-| File | FR Coverage | Summary |
-| ---- | ----------- | ------- |
-| [specifications-auth.md](specifications-auth.md) | FR-01–04 | Authentication and session management |
-| [specifications-notify.md](specifications-notify.md) | FR-05–08 | Notification dispatch and retry |
-```

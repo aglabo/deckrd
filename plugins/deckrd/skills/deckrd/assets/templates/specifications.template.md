@@ -35,14 +35,14 @@ Implementation details are explicitly out of scope.
 
 #### Feature Decomposition
 
-| Unit | Responsibility | FR Coverage |
-| ---- | -------------- | ----------- |
+| Unit       | Responsibility       | FR Coverage  |
+| ---------- | -------------------- | ------------ |
 | {{UNIT_1}} | {{RESPONSIBILITY_1}} | {{FR_REF_1}} |
 | {{UNIT_2}} | {{RESPONSIBILITY_2}} | {{FR_REF_2}} |
 
 #### Unit Interaction Map
 
-```
+```bash
 {{UNIT_1}} → {{UNIT_2}}  : {{DATA_PASSED}}
 {{UNIT_2}} → {{UNIT_3}}  : {{DATA_PASSED}}
 ```
@@ -61,9 +61,9 @@ Implementation details are explicitly out of scope.
 
 ### 2.5 Behavioral Design Decisions
 
-| ID    | Decision | Rationale | Affected Rules | Status           |
-| ----- | -------- | --------- | -------------- | ---------------- |
-| DD-01 | ...      | ...       | Rule 4.x       | Active           |
+| ID    | Decision | Rationale | Affected Rules | Status |
+| ----- | -------- | --------- | -------------- | ------ |
+| DD-01 | ...      | ...       | Rule 4.x       | Active |
 
 > **Note**: Decisions listed here derive from REQUIREMENTS Design Decisions.
 > If promoting to formal Decision Record, use `/deckrd dr --add`.

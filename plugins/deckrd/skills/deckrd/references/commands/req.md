@@ -1,6 +1,7 @@
 # req Command
 
 <!-- textlint-disable ja-technical-writing/no-exclamation-question-mark -->
+<!-- textlint-disable ja-technical-writing/max-comma -->
 <!-- markdownlint-disable line-length -->
 
 Derive a normative requirements document from the user's goals, ideas, and constraints.
@@ -79,9 +80,8 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/run_prompt.sh requirements \
   --output "requirements/requirements.md"
 ```
 
-Pass `CODEBASE CONTEXT` and `HEARING NOTES` as additional context so the AI
-generates richer output including User Stories, Acceptance Criteria, and Open
-Questions.
+Pass `CODEBASE CONTEXT` and `HEARING NOTES` as additional context so the AI.
+generates richer output including User Stories, Acceptance Criteria, and Open Questions.
 
 ### Phase 4: Review Loop (max 3 rounds)
 
@@ -91,16 +91,16 @@ After `requirements.md` is generated, conduct a review loop before finalizing.
 
 Read the generated `requirements.md` and evaluate against the following checklist:
 
-| Check Item                                  | Pass Criteria                                        |
-| ------------------------------------------- | ---------------------------------------------------- |
-| Purpose is clearly stated                   | One sentence, unambiguous                            |
-| Scope and Out-of-Scope are explicit         | Both present, no overlap                             |
-| Functional Requirements are normative       | Each uses SHALL / SHOULD / MAY; no vague verbs       |
-| Non-Functional Requirements are measurable  | Quantified where possible (e.g., response < 2 s)    |
-| User Stories cover all stakeholders         | 3–7 stories; each maps to at least one FR            |
-| Acceptance Criteria are testable            | 5 Gherkin scenarios; Given/When/Then are concrete    |
-| Open Questions are catalogued               | All unresolved items listed with owner and impact    |
-| No contradictions between sections          | FR ↔ NFR ↔ User Stories are consistent               |
+| Check Item                                 | Pass Criteria                                     |
+| ------------------------------------------ | ------------------------------------------------- |
+| Purpose is clearly stated                  | One sentence, unambiguous                         |
+| Scope and Out-of-Scope are explicit        | Both present, no overlap                          |
+| Functional Requirements are normative      | Each uses SHALL / SHOULD / MAY; no vague verbs    |
+| Non-Functional Requirements are measurable | Quantified where possible (e.g., response < 2 s)  |
+| User Stories cover all stakeholders        | 3–7 stories; each maps to at least one FR         |
+| Acceptance Criteria are testable           | 5 Gherkin scenarios; Given/When/Then are concrete |
+| Open Questions are catalogued              | All unresolved items listed with owner and impact |
+| No contradictions between sections         | FR ↔ NFR ↔ User Stories are consistent            |
 
 #### Step 4-2: Present Review Findings
 
@@ -108,7 +108,7 @@ Present findings to the user in one of two ways:
 
 **If issues found**: List each issue with a suggested fix, asking the user to confirm or override:
 
-```
+```toml
 [Review Finding]
 - FR-02 uses vague verb "handle" → Suggest: "SHALL process X and return Y within Z ms"
   Accept suggestion? (Y/n/custom)
@@ -119,7 +119,7 @@ Present findings to the user in one of two ways:
 
 **If no issues**: Show a summary and ask for final approval:
 
-```
+```toml
 [Review Summary] No critical issues found.
 - 5 FRs, 2 NFRs, 4 User Stories, 5 Acceptance Criteria, 2 Open Questions
 Approve requirements.md? (Y/revise)

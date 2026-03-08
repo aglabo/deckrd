@@ -40,7 +40,8 @@ set -eo pipefail
 
 ##
 # @description Session file path
-SESSION_FILE="docs/.deckrd/.session.json"
+DECKRD_LOCAL="${DECKRD_LOCAL:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.local/deckrd}"
+SESSION_FILE="${DECKRD_LOCAL}/session.json"
 
 ##
 # @description deckrd base path - DECKRD_BASE may point to module root when session is active
@@ -150,7 +151,8 @@ load_session_config() {
   fi
 
   if [[ -n "$active" ]]; then
-    DECKRD_BASE="docs/.deckrd/${active}"
+    local deckrd_docs="${DECKRD_DOCS:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)/docs/.deckrd}"
+    DECKRD_BASE="${deckrd_docs}/${active}"
     export DECKRD_BASE
   fi
 
@@ -223,7 +225,7 @@ Options:
 
 Session Configuration:
   Default values for --ai-model and --lang are loaded from:
-    docs/.deckrd/.session.json
+    .local/deckrd/session.json
 
 File Resolution:
   requirements  →  prompts/requirements.prompt.md
@@ -533,7 +535,7 @@ load_session_config
 
 # Set default if not loaded
 if [[ -z "${DECKRD_BASE}" ]]; then
-  DECKRD_BASE="docs/.deckrd"
+  DECKRD_BASE="${DECKRD_DOCS:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)/docs/.deckrd}"
   export DECKRD_BASE
 fi
 

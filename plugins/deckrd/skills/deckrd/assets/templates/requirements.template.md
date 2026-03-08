@@ -62,11 +62,11 @@ Created: "{{ DATE }}"
 
 ## 7. User Stories
 
-| ID    | Role        | Goal                   | Reason                |
-| ----- | ----------- | ---------------------- | --------------------- |
-| US-01 | {{ROLE_1}}  | {{GOAL_1}}             | {{REASON_1}}          |
-| US-02 | {{ROLE_2}}  | {{GOAL_2}}             | {{REASON_2}}          |
-| US-03 | {{ROLE_3}}  | {{GOAL_3}}             | {{REASON_3}}          |
+| ID    | Role       | Goal       | Reason       |
+| ----- | ---------- | ---------- | ------------ |
+| US-01 | {{ROLE_1}} | {{GOAL_1}} | {{REASON_1}} |
+| US-02 | {{ROLE_2}} | {{GOAL_2}} | {{REASON_2}} |
+| US-03 | {{ROLE_3}} | {{GOAL_3}} | {{REASON_3}} |
 
 ## 8. Acceptance Criteria
 
@@ -99,7 +99,7 @@ Scenario: {{EXCEPTION_SCENARIO_TITLE_2}}
 
 ## 9. Open Questions
 
-| Question         | Type              | Impact Area      | Owner       |
-| ---------------- | ----------------- | ---------------- | ----------- |
-| {{QUESTION_1}}   | {{TYPE_1}}        | {{IMPACT_1}}     | {{OWNER_1}} |
-| {{QUESTION_2}}   | {{TYPE_2}}        | {{IMPACT_2}}     | {{OWNER_2}} |
+| Question       | Type       | Impact Area  | Owner       |
+| -------------- | ---------- | ------------ | ----------- |
+| {{QUESTION_1}} | {{TYPE_1}} | {{IMPACT_1}} | {{OWNER_1}} |
+| {{QUESTION_2}} | {{TYPE_2}} | {{IMPACT_2}} | {{OWNER_2}} |
