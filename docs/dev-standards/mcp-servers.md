@@ -17,6 +17,7 @@ status: "published"
 ---
 
 <!-- textlint-disable  ja-technical-writing/sentence-length -->
+<!-- markdownlint-disable line-length -->
 
 ## MCP Server Configuration
 

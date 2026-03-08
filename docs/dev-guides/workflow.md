@@ -16,8 +16,8 @@ copyright:
 status: "published"
 ---
 
-<!-- textlint-disable ja-technical-writing/sentence-length -->
-<!-- markdownlint-disable no-duplicate-heading -->
+<!-- textlint-disable ja-technical-writing/sentence-length,
+  no-duplicate-heading -->
 
 ## Development Workflow Guide
 
