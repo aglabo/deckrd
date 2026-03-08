@@ -1,6 +1,9 @@
 ---
 title: IMPLEMENTATION - 厳格な実装フロー
+description: 実装フロー:
 ---
+
+<!-- textlint-disable ja-technical-writing/no-exclamation-question-mark -->
 
 ## IMPLEMENTATION - 厳格な実装フロー
 
@@ -142,7 +145,7 @@ Step 8: 完了判定
    - エラーの種類・箇所を特定
    - 対応方法を検討・修正
    - 修正後、Step 5 を再実行
-   - 必要に応じて Step 7 (Refactor フェーズ) へ戻る
+   - Refactor が必要な場合は Step 7 (Refactor フェーズ) へ戻る
    - 3 回以上失敗時: ユーザーに相談
 
 チェックリスト:
@@ -221,6 +224,26 @@ Step 8: 完了判定
 
 目的: 実装が完了したことを確認。
 
+### ⚠️ DO NOT trust your own reports
+
+BEFORE claiming completion:
+
+- DO NOT: Say "I implemented X" based on your memory
+- DO: Read the actual code file and verify X exists
+- DO NOT: Assume tests passed because you wrote them
+- DO: Run the test command and read the FULL output
+
+### Verification Gate (REQUIRED before claiming complete)
+
+BEFORE marking as complete, YOU MUST run each command and read the full output:
+
+1. IDENTIFY: What command proves each criterion?
+2. RUN: Execute each command
+3. READ: Full output — not a summary
+4. ONLY THEN: Update the checklist
+
+Claiming completion without running commands = false completion.
+
 実行内容:
 以下の条件をすべて満たしているか確認:
 
@@ -255,7 +278,8 @@ Step 8: 完了判定
 
 ## 核心原則 (まとめ)
 
-1. ステップ順序の厳密性: 1→2→3→4→5→6→7→8 の順序でスキップ不可
+1. ステップ順序の厳密性: YOU MUST execute steps 1→2→3→4→5→6→7→8 in order.
+   Skipping ANY step = protocol violation = restart from Step 1.
 2. 単一タスク原則: deckrd-bdd-coder は 1 タスク専用 (並行実行禁止)
 3. 最小実装の遵守: Green フェーズは過剰実装禁止
 4. 品質ゲート必須: ステップ 5 実施は必須 (3回以上失敗時、ユーザーに相談)
