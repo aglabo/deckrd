@@ -2,7 +2,7 @@
 # src: ./scripts/github-publish.sh
 # @(#) : Publish release files to GitHub
 #
-# Copyright (c) 2025 atsushifx <http://github.com/atsushifx>
+# Copyright (c) 202-5 atsushifx <http://github.com/atsushifx>
 #
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
