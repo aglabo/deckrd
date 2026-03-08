@@ -284,7 +284,7 @@ deckrd/assets/
 Each review phase uses a dedicated template:
 
 | Phase   | Template File                        |
-|---------|--------------------------------------|
+| ------- | ------------------------------------ |
 | explore | templates/review-explore.template.md |
 | harden  | templates/review-harden.template.md  |
 | fix     | templates/review-fix.template.md     |
