@@ -29,7 +29,27 @@ Implementation details are explicitly out of scope.
 
 {{DESIGN_ASSUMPTIONS}}
 
-### 2.3 Non-Goals
+### 2.3 External Design Summary
+
+> **Source**: Derived from the external design dialogue (Phase E) and user-confirmed design direction (Phase D).
+
+#### Feature Decomposition
+
+| Unit | Responsibility | FR Coverage |
+| ---- | -------------- | ----------- |
+| {{UNIT_1}} | {{RESPONSIBILITY_1}} | {{FR_REF_1}} |
+| {{UNIT_2}} | {{RESPONSIBILITY_2}} | {{FR_REF_2}} |
+
+#### Unit Interaction Map
+
+```
+{{UNIT_1}} → {{UNIT_2}}  : {{DATA_PASSED}}
+{{UNIT_2}} → {{UNIT_3}}  : {{DATA_PASSED}}
+```
+
+<!-- If no cross-unit interaction: "Units are independent; no ordering constraints." -->
+
+### 2.4 Non-Goals
 
 > **Derivation**: All items below originate from REQUIREMENTS Section "Out of Scope".
 
@@ -39,7 +59,7 @@ Implementation details are explicitly out of scope.
 <!-- If REQUIREMENTS has no Out of Scope section: -->
 <!-- > "No Non-Goals defined in source REQUIREMENTS." -->
 
-### 2.4 Behavioral Design Decisions
+### 2.5 Behavioral Design Decisions
 
 | ID    | Decision | Rationale | Affected Rules | Status           |
 | ----- | -------- | --------- | -------------- | ---------------- |
@@ -51,12 +71,12 @@ Implementation details are explicitly out of scope.
 **Status Values:**
 
 - `Active` — Currently in effect within this specification
-- `Promoted → DR-xx` — Elevated to formal Decision Record (see Section 2.5)
+- `Promoted → DR-xx` — Elevated to formal Decision Record (see Section 2.6)
 
 <!-- If no DD exists in REQUIREMENTS: -->
 <!-- > "No Design Decisions defined in source REQUIREMENTS." -->
 
-### 2.5 Related Decision Records
+### 2.6 Related Decision Records
 
 > **Reference**: This section lists formal DRs that affect this specification.
 > DRs are maintained in `decision-records.md` and are authoritative.
@@ -68,7 +88,7 @@ Implementation details are explicitly out of scope.
 <!-- If no related DRs: -->
 <!-- > "No Decision Records currently affect this specification." -->
 
-### 2.6 DD to DR Promotion Criteria
+### 2.7 DD to DR Promotion Criteria
 
 > **Purpose**: Guidelines for determining when a DD should be promoted to a formal DR.
 > Promotion is a **human judgment** — these criteria inform, not automate.

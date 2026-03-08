@@ -66,7 +66,7 @@ Initialize module directory structure and session.
    └── tasks/
    ```
 
-3. Initialize or update `.session.json`:
+3. Initialize or update `.local/deckrd/session.json`:
 
    ```json
    {

@@ -1,4 +1,4 @@
-/deckrdDeckrd# Deckrd Workflow
+# Deckrd Workflow
 
 ## Overview
 

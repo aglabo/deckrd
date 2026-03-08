@@ -30,6 +30,7 @@ Deckrd enables documentation to function as a practical engine for action, not j
 | `status`                     | Display current workflow progress and status   |
 | `review`                     | Show review command usage                      |
 | `review <doc> [--phase <p>]` | Review document with phase-specific analysis   |
+| `profile --project <name> --language <lang>` | Configure project profile (language, project name) |
 
 ## Session Resolution
 
@@ -40,6 +41,10 @@ Session state is stored in `docs/.deckrd/.session.json`.
 1. Read `.session.json` to get active module and current step
 2. Validate the command matches expected workflow progression
 3. Load the appropriate reference from `references/commands/`
+
+> **Note**: The `profile` command is project-scoped and does not interact with session state.
+> It can be run at any time, before or after `init`.
+> Reference: [commands/profile.md](references/commands/profile.md)
 
 **Reference selection:**
 
