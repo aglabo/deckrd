@@ -1,11 +1,7 @@
 ---
 name: deckrd-coder
 description: An agent that codes tasks in BDD-style. Automatically does not commit.
-allowed-tools: Task, Bash, Read, Grep, Glob
 license: MIT
-meta:
-  author: atsushifx
-  version: 0.0.4
 ---
 
 <!-- textlint-disable ja-technical-writing/no-exclamation-question-mark -->
@@ -13,6 +9,16 @@ meta:
 # /deckrd-coder スキル - Deckrd タスク実装ガイド
 
 **このスキルは、Deckrd セッションで定義されたタスクを BDD 厳格プロセスに従って実装します。**
+
+---
+
+## Skill Announcement (REQUIRED)
+
+YOU MUST announce before executing any phase:
+
+> "I am executing /deckrd-coder [TASK_ID] — Phase [N]: [Phase Name]."
+
+No exceptions. Announcing creates commitment and prevents phase skipping.
 
 ---
 
@@ -64,6 +70,21 @@ Deckrd セッションで定義されたタスクを、**BDD (Behavior-Driven De
 
 ---
 
+## Before You Begin (MANDATORY)
+
+YOU MUST raise ALL questions BEFORE writing any code.
+
+Ask NOW if any of the following are unclear:
+
+- Task scope or acceptance criteria
+- Ambiguous specifications in tasks.md
+- Implementation approach or dependencies
+
+Once Phase 3 (BDD Implementation) begins, YOU MUST NOT stop to ask scope questions.
+Questions after Phase 3 starts = Before You Begin was skipped = restart from top.
+
+---
+
 ## 基本的な使い方
 
 ### コマンド形式
@@ -96,18 +117,49 @@ Deckrd セッションで定義されたタスクを、**BDD (Behavior-Driven De
 
 ### 6 つの Phase で構成
 
-```bash
-Phase 0: 開発環境の初期化
-    ↓
-Phase 1: deckrd セッション・タスク情報の取得
-    ↓
-Phase 2: 実装タスクリスト (細分化) の作成
-    ↓
-Phase 3: Red-Green-Refactor による実装
-    ↓
-Phase 4: 品質ゲート (Lint・型チェック・テスト) の実行
-    ↓
-Phase 5: 完了確認
+```text
++---------------------------+
+|  /deckrd-coder [TASK_ID]  |
++---------------------------+
+          |
+          v
++---------------------------+
+|  Before You Begin         |  <- 質問を全部出し切る
+|  Ask ALL questions now    |
++---------------------------+
+          |
+          v
++---------------------------+
+|  Phase 0: 環境初期化      |
++---------------------------+
+          |
+          v
++---------------------------+
+|  Phase 1: タスク情報取得  |
++---------------------------+
+          |
+          v
++---------------------------+
+|  Phase 2: タスク細分化    |
++---------------------------+
+          |
+          v
++---------------------------+
+|  Phase 3: BDD 実装ループ  |
+|  Red -> Green -> Refactor |
++---------------------------+
+          |
+          v
++---------------------------+
+|  Phase 4: 品質ゲート      |
+|  MUST pass. No exceptions.|
++---------------------------+
+          |
+          v
++---------------------------+
+|  Phase 5: 完了確認        |
+|  verification gate        |  <- 実行して確認
++---------------------------+
 ```
 
 ### 各 Phase の概要
