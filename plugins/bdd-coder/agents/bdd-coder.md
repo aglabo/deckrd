@@ -25,8 +25,9 @@ config:
   bdd-coder:todo-path: temp/bdd-coder/bdd-todo.md
 ---
 
-<!-- textlint-disable ja-technical-writing/sentence-length -->
-<!-- textlint-disable ja-technical-writing/max-comma -->
+<!-- textlint-disable
+  ja-technical-writing/sentence-length,
+  ja-technical-writing/max-comma -->
 
 ## Core Principles
 
