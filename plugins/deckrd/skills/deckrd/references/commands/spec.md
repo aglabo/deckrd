@@ -1,7 +1,8 @@
 # spec Command
 
-<!-- textlint-disable ja-technical-writing/no-exclamation-question-mark -->
-<!-- textlint-disable ja-technical-writing/max-comma -->
+<!-- textlint-disable
+    ja-technical-writing/no-exclamation-question-mark,
+    ja-technical-writing/max-comma -->
 <!-- markdownlint-disable line-length -->
 
 Derive technically verifiable behavioral goals and constraints from requirements.
@@ -49,19 +50,19 @@ Read `requirements/requirements.md` in full and extract:
 
 Store extracted summary as **REQ SUMMARY**.
 
-#### Step A-2: Investigate Codebase
+#### Step A-2: Investigate Codebase (explore-agent 委譲)
 
-Use `Glob`, `Read`, and `Grep` to survey the codebase:
+Spawn **explore-agent** (non-blocking) with:
 
-1. Locate modules and directories related to the feature
-2. Identify existing patterns and conventions:
-   - File/module structure
-   - Error handling style
-   - Interface and abstraction patterns
-3. Find any code already partially implementing the feature
-4. Map related components that the new feature must integrate with
+- `scope`: `codebase-survey`
+- `directory`: project root
+- `focus`: feature keywords from REQ SUMMARY
+- Agent definition: [`plugins/deckrd/agents/explore-agent.md`](../../../../agents/explore-agent.md)
 
-Store findings as **CODEBASE CONTEXT**:
+The agent writes findings to `temp/deckrd-work/codebase-context.md`.
+Proceed to Phase B immediately in parallel — do NOT wait for this agent.
+
+Store the agent Summary as **CODEBASE CONTEXT** when it completes:
 
 ```text
 CODEBASE CONTEXT:
@@ -73,16 +74,18 @@ CODEBASE CONTEXT:
 
 ---
 
-### Phase B: PoC / Reference PR Check
+### Phase B: PoC / Reference PR Check (explore-agent 委譲)
 
-Search for prior art before designing:
+Spawn **explore-agent** (non-blocking, parallel with A-2) with:
 
-1. Check `temp/`, `docs/`, `examples/` for PoC or prototype code
-2. Run `git log --oneline --all` to find branches with related work
-3. If a GitHub repository is accessible, search for related PRs or issues
-4. Note any decisions already made in prior experiments
+- `scope`: `prior-art`
+- `directory`: project root
+- `focus`: feature keywords from REQ SUMMARY
+- Agent definition: [`plugins/deckrd/agents/explore-agent.md`](../../../../agents/explore-agent.md)
 
-Store findings as **PRIOR ART**:
+The agent writes findings to `temp/deckrd-work/prior-art.md`.
+
+Store the agent Summary as **PRIOR ART** when it completes:
 
 ```text
 PRIOR ART:
@@ -92,6 +95,8 @@ PRIOR ART:
 ```
 
 If nothing is found, record `PRIOR ART: none` and continue.
+
+> **Note**: Proceed to Phase C only after **both** A-2 and B agents have completed.
 
 ---
 
@@ -148,7 +153,7 @@ Does this direction look correct? (Y / feedback)
 If the user provides feedback:
 
 - Identify which part of DESIGN DRAFT needs revision
-- Ask targeted clarifying questions (max 3 per round)
+- Ask EXACTLY 1 clarifying question per round. No exceptions.
 - Update DESIGN DRAFT with confirmed changes
 - Return to Step D-1
 
