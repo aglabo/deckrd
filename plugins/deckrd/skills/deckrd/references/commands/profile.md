@@ -18,7 +18,7 @@ Configure project profile (project name and development language).
 | `--language <lang>`, `--lang` | No       | Development language (default: `typescript`): `go`, `typescript`, `python`, `rust` |
 | `-h`, `--help`                | No       | Show usage information                                                             |
 
-<!-- markdownlint-disable enable -->
+<!-- markdownlint-enable -->
 
 ## Actions
 
@@ -33,11 +33,15 @@ Configure project profile (project name and development language).
 ```json
 {
   "project": "<project-name>",
+  "project_type": "<project-type>",
   "language": "<language>",
+  "ai_model": "<ai-model>",
   "created_at": "<ISO8601 timestamp>",
   "updated_at": "<ISO8601 timestamp>"
 }
 ```
+
+> **Note**: `project_type` and `ai_model` are set by `/deckrd init` and updated by `/deckrd profile`.
 
 ## Output
 
@@ -61,10 +65,14 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/profile.sh --project <name> --language <lang>
 
 ## Error Messages
 
+<!-- markdownlint-disable line-length -->
+
 | Error Message                                             | Cause                        | Solution                                         |
 | --------------------------------------------------------- | ---------------------------- | ------------------------------------------------ |
 | `Error: --project is required`                            | `--project` not specified    | Add `--project <name>`                           |
 | `Error: Unsupported language: <lang>. Supported: go, ...` | Language not in allowed list | Use one of: `go`, `typescript`, `python`, `rust` |
+
+<!-- markdownlint-enable -->
 
 ## Notes
 
