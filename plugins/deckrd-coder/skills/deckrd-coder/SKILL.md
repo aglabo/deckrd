@@ -90,13 +90,18 @@ Questions after Phase 3 starts = Before You Begin was skipped = restart from top
 ### コマンド形式
 
 ```bash
-# 単一タスク実装 (推奨)
+# 単一タスク実装 (推奨) — デフォルトチェックリスト使用
 /deckrd-coder T01-02
+
+# チェックリストファイルを明示指定
+/deckrd-coder T01-02 --checklist <path>
 ```
 
-> 注意
->
-> オプションは現在のところ実装していません。
+### オプション
+
+| オプション           | デフォルト値                        | 説明                                       |
+| -------------------- | ----------------------------------- | ------------------------------------------ |
+| `--checklist <path>` | `tasks/implementation-checklist.md` | 参照するチェックリストファイルのパスを指定 |
 
 ### Task ID 指定形式
 

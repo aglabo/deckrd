@@ -1,9 +1,9 @@
 ---
 title: "Requirements: {{FEATURE_NAME}}"
-Module: "{{ MODULE_OR_DOMAIN }}"
-Status: Draft
-Version: 1.0
-Created: "{{ DATE }}"
+module: "{{ MODULE_OR_DOMAIN }}"
+status: Draft
+version: 1.0
+created: "{{ DATE }}"
 ---
 
 > **Normative Statement**
@@ -21,8 +21,7 @@ Created: "{{ DATE }}"
 
 {{IN_SCOPE}}
 
-**Out of Scope**:
-{{OUT_OF_SCOPE}}
+**Out of Scope**: {{OUT_OF_SCOPE}}
 
 ## 2. Context
 
@@ -39,67 +38,102 @@ Created: "{{ DATE }}"
 
 ## 4. Functional Requirements
 
-- FR-01: SHALL {{REQUIREMENT_1}}
-- FR-02: SHALL {{REQUIREMENT_2}}
+<!--
+REQ-ID format:
+  REQ-F-NNN  Functional Requirement
+  REQ-NF-NNN Non-Functional Requirement
+  REQ-C-NNN  Constraint
+-->
+
+### REQ-F-001: {{REQUIREMENT_TITLE_1}}
+
+SHALL {{REQUIREMENT_STATEMENT_1}}
+
+**Rationale**: {{RATIONALE_1}}
+
+**Acceptance Criteria**:
+
+| AC ID  | Scenario                |
+| ------ | ----------------------- |
+| AC-001 | {{AC_SCENARIO_TITLE_1}} |
+| AC-002 | {{AC_SCENARIO_TITLE_2}} |
+
+### REQ-F-002: {{REQUIREMENT_TITLE_2}}
+
+SHALL {{REQUIREMENT_STATEMENT_2}}
+
+**Rationale**: {{RATIONALE_2}}
+
+**Acceptance Criteria**:
+
+| AC ID  | Scenario                |
+| ------ | ----------------------- |
+| AC-003 | {{AC_SCENARIO_TITLE_3}} |
 
 ## 5. Non-Functional Requirements
 
-### 5.1 Quality
+### REQ-NF-001: Maintainability
 
-- Maintainability
-- Testability
-- Portability
+Implementation SHOULD be maintainable.
 
-### 5.2 Constraints
+### REQ-NF-002: Testability
 
-{{CONSTRAINTS}}
+Implementation MUST be testable.
 
-## 6. Change History
+### REQ-NF-003: Portability
 
-| Date     | Version | Description     |
-| -------- | ------- | --------------- |
-| {{DATE}} | 1.0     | Initial release |
+Implementation MUST support UTF-8 input.
 
-## 7. User Stories
+## 6. Constraints
 
-| ID    | Role       | Goal       | Reason       |
-| ----- | ---------- | ---------- | ------------ |
-| US-01 | {{ROLE_1}} | {{GOAL_1}} | {{REASON_1}} |
-| US-02 | {{ROLE_2}} | {{GOAL_2}} | {{REASON_2}} |
-| US-03 | {{ROLE_3}} | {{GOAL_3}} | {{REASON_3}} |
+### REQ-C-001: {{CONSTRAINT_TITLE_1}}
 
-## 8. Acceptance Criteria
+{{CONSTRAINT_STATEMENT_1}}
+
+## 7. Acceptance Criteria
 
 ```gherkin
-Scenario: {{SCENARIO_TITLE_1}}
+# AC-001: {{AC_SCENARIO_TITLE_1}}
+# Requirement: REQ-F-001
+Scenario: {{AC_SCENARIO_TITLE_1}}
   Given {{PRECONDITION_1}}
   When  {{ACTION_1}}
   Then  {{EXPECTED_RESULT_1}}
 
-Scenario: {{SCENARIO_TITLE_2}}
+# AC-002: {{AC_SCENARIO_TITLE_2}}
+# Requirement: REQ-F-001
+Scenario: {{AC_SCENARIO_TITLE_2}}
   Given {{PRECONDITION_2}}
   When  {{ACTION_2}}
   Then  {{EXPECTED_RESULT_2}}
 
-Scenario: {{SCENARIO_TITLE_3}}
+# AC-003: {{AC_SCENARIO_TITLE_3}}
+# Requirement: REQ-F-002
+Scenario: {{AC_SCENARIO_TITLE_3}}
   Given {{PRECONDITION_3}}
   When  {{ACTION_3}}
   Then  {{EXPECTED_RESULT_3}}
-
-Scenario: {{EXCEPTION_SCENARIO_TITLE_1}}
-  Given {{EXCEPTION_PRECONDITION_1}}
-  When  {{EXCEPTION_ACTION_1}}
-  Then  {{EXCEPTION_EXPECTED_RESULT_1}}
-
-Scenario: {{EXCEPTION_SCENARIO_TITLE_2}}
-  Given {{EXCEPTION_PRECONDITION_2}}
-  When  {{EXCEPTION_ACTION_2}}
-  Then  {{EXCEPTION_EXPECTED_RESULT_2}}
 ```
+
+## 8. Traceability
+
+| REQ ID     | AC IDs         | Type           |
+| ---------- | -------------- | -------------- |
+| REQ-F-001  | AC-001, AC-002 | Functional     |
+| REQ-F-002  | AC-003         | Functional     |
+| REQ-NF-001 | —              | Non-Functional |
+| REQ-NF-002 | —              | Non-Functional |
+| REQ-NF-003 | —              | Non-Functional |
+| REQ-C-001  | —              | Constraint     |
 
 ## 9. Open Questions
 
 | Question       | Type       | Impact Area  | Owner       |
 | -------------- | ---------- | ------------ | ----------- |
 | {{QUESTION_1}} | {{TYPE_1}} | {{IMPACT_1}} | {{OWNER_1}} |
-| {{QUESTION_2}} | {{TYPE_2}} | {{IMPACT_2}} | {{OWNER_2}} |
+
+## 10. Change History
+
+| Date     | Version | Description     |
+| -------- | ------- | --------------- |
+| {{DATE}} | 1.0     | Initial release |

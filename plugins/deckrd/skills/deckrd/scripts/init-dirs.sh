@@ -1,50 +1,37 @@
 #!/usr/bin/env bash
 # src: ./skills/deckrd/scripts/init-dirs.sh
-# @(#) : deckrd ディレクトリ初期化スクリプト
+# @(#) : deckrd プロジェクト初期化スクリプト
 #
 # Copyright (c) 2025 atsushifx <https://github.com/atsushifx>
 #
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 #
-# @file init_dirs.sh
-# @brief Initialize DECKRD documentation directory structure and session
+# @file init-dirs.sh
+# @brief Bootstrap and initialize DECKRD project structure
 # @description
-#   Creates the standard DECKRD directory structure for a module
-#   and initializes/updates the session file.
+#   1. Bootstrap: copy deckrd-rules to .claude/rules/ and docs templates
+#      to docs/.deckrd/ (no overwrite)
+#   2. Create docs/.deckrd/ base directory structure
+#   3. Write .local/deckrd/profile.json with project settings
+#   4. Initialize .local/deckrd/session.json
 #
-#   When called without arguments, creates the base directory
-#   (docs/.deckrd) with subdirectories and template files.
-#   Session file is stored in .local/deckrd/session.json.
-#
-#   Created directories:
-#     docs/.deckrd/<namespace>/<module>/
-#       ├── requirements/
-#       ├── specifications/
-#       ├── implementation/
-#       └── tasks/
+# @usage
+#   init-dirs.sh <project> <project-type> [OPTIONS]
 #
 # @example
-#   # Create base directory only (no module initialization)
-#   init_dirs.sh
-#
-#   # Initialize with default settings
-#   init_dirs.sh AGTKind/isCollection
-#
-#   # Initialize with Japanese language
-#   init_dirs.sh AGTKind/isCollection --lang ja
-#
-#   # Initialize with specific AI model
-#   init_dirs.sh AGTKind/isCollection --ai-model claude-sonnet-4-5
+#   init-dirs.sh myapp webapp
+#   init-dirs.sh myapp webapp --language go
+#   init-dirs.sh myapp lib --language typescript --ai-model claude-sonnet-4-5
 #
 # @exitcode 0 Success
 # @exitcode 1 Error during execution
 #
 # @author atsushifx
-# @version 2.0.0
+# @version 3.0.0
 # @license MIT
 
-# don't use  -u for checking error by Agent
+# don't use -u for checking error by Agent
 set -eo pipefail
 
 # ============================================================================
@@ -57,9 +44,19 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly SCRIPT_DIR
 
 ##
-# @description Assets inits directory (template files for base directory)
+# @description Assets inits directory
 INITS_DIR="${SCRIPT_DIR}/../assets/inits"
 readonly INITS_DIR
+
+##
+# @description Bootstrap source: deckrd-rules
+RULES_SRC_DIR="${INITS_DIR}/deckrd-rules"
+readonly RULES_SRC_DIR
+
+##
+# @description Bootstrap source: docs templates
+DOCS_SRC_DIR="${INITS_DIR}/docs"
+readonly DOCS_SRC_DIR
 
 ##
 # @description Repository root directory
@@ -67,19 +64,24 @@ REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 readonly REPO_ROOT
 
 ##
-# @description DECKRD docs directory (overridable via DECKRD_DOCS)
+# @description Bootstrap destination: .claude/rules/
+CLAUDE_RULES_DIR="${REPO_ROOT}/.claude/rules"
+readonly CLAUDE_RULES_DIR
+
+##
+# @description DECKRD docs directory
 DECKRD_DOCS="${DECKRD_DOCS:-${REPO_ROOT}/docs/.deckrd}"
 readonly DECKRD_DOCS
 
 ##
-# @description DECKRD base directory (document output root)
-DECKRD_BASE="$DECKRD_DOCS"
-readonly DECKRD_BASE
-
-##
-# @description DECKRD local config directory (profile.json / session.json)
+# @description DECKRD local config directory
 DECKRD_LOCAL="${REPO_ROOT}/.local/deckrd"
 readonly DECKRD_LOCAL
+
+##
+# @description Profile file path
+PROFILE_FILE="${DECKRD_LOCAL}/profile.json"
+readonly PROFILE_FILE
 
 ##
 # @description Session file path
@@ -87,32 +89,29 @@ SESSION_FILE="${DECKRD_LOCAL}/session.json"
 readonly SESSION_FILE
 
 ##
-# @description Default AI model
-DEFAULT_AI_MODEL="sonnet"
-
-##
-# @description Base subdirectories to create in DECKRD_BASE
+# @description Base subdirectories to create under DECKRD_DOCS
 BASE_SUBDIRS=("notes" "temp")
 
 ##
-# @description Module subdirectories to create
-SUBDIRS=("requirements" "specifications" "implementation" "tasks")
+# @description Supported programming languages
+SUPPORTED_LANGUAGES=(typescript go python rust)
+readonly SUPPORTED_LANGUAGES
 
 ##
-# @description Module path (namespace/module format)
-MODULE_PATH=""
+# @description Project name (positional arg 1)
+PROJECT_NAME=""
 
 ##
-# @description Document language (system, en, ja, etc.)
-LANG_OPT="system"
+# @description Project type (positional arg 2)
+PROJECT_TYPE=""
 
 ##
-# @description AI model for session
-AI_MODEL=""
+# @description Programming language (default: typescript)
+LANGUAGE="typescript"
 
 ##
-# @description Force new session creation (ignore existing)
-FORCE_INIT=false
+# @description AI model (default: sonnet)
+AI_MODEL="sonnet"
 
 # ============================================================================
 # Functions
@@ -122,51 +121,55 @@ FORCE_INIT=false
 # @description Show usage information
 show_usage() {
   cat <<EOF
-Usage: init_dirs.sh [OPTIONS] <namespace>/<module>
+Usage: init-dirs.sh <project> <project-type> [OPTIONS]
 
-Initialize DECKRD documentation directory structure and session.
+Bootstrap and initialize a DECKRD project.
 
 Arguments:
-  <namespace>/<module>  Path in format "Namespace/ModuleName"
-                        Example: AGTKind/isCollection
+  <project>       Project name (e.g. myapp)
+  <project-type>  Project type (e.g. webapp, lib, cli, api)
 
 Options:
-  --lang <lang>         Document language (default: system)
-                        Values: system, en, ja, or any language name
-  --ai-model <model>    AI model for session (default: ${DEFAULT_AI_MODEL})
-                        Supported: gpt-*, o1-*, claude-*, haiku, sonnet, opus
-  --force               Force new session creation (ignore existing session)
-  -h, --help            Show this help message
+  --language <lang>, --lang   Programming language (default: typescript)
+                              Supported: ${SUPPORTED_LANGUAGES[*]}
+  --ai-model <model>          AI model (default: sonnet)
+                              Supported: gpt-*, o1-*, claude-*, haiku, sonnet, opus
+  -h, --help                  Show this help message
 
-Created directories:
-  docs/.deckrd/<namespace>/<module>/
-    ├── requirements/
-    ├── specifications/
-    ├── implementation/
-    └── tasks/
+Profile file:
+  .local/deckrd/profile.json
 
-Session file:
-  .local/deckrd/session.json
+Example:
+  init-dirs.sh myapp webapp
+  init-dirs.sh myapp lib --language go
+  init-dirs.sh voift webapp --language typescript --ai-model claude-sonnet-4-5
 EOF
+}
+
+##
+# @description Validate programming language against supported list
+# @arg $1 string Language to validate
+# @return 0 if valid, exits on invalid
+validate_language() {
+  local lang="$1"
+  for supported in "${SUPPORTED_LANGUAGES[@]}"; do
+    if [[ "$lang" == "$supported" ]]; then
+      return 0
+    fi
+  done
+  echo "Error: Unsupported language: ${lang}. Supported: ${SUPPORTED_LANGUAGES[*]}" >&2
+  exit 1
 }
 
 ##
 # @description Validate AI model name format
 # @arg $1 string AI model name
-# @return 0 if valid, exits on invalid format
+# @return 0 if valid, exits on invalid
 validate_ai_model() {
   local model="$1"
-
-  # Allow simple model name: letters, numbers, hyphens, underscores, dots
-  if [[ "$model" =~ ^[A-Za-z0-9_.-]+$ ]]; then
+  if [[ "$model" =~ ^[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)?$ ]]; then
     return 0
   fi
-
-  # Allow org/model format
-  if [[ "$model" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]; then
-    return 0
-  fi
-
   echo "Error: AI model must contain only letters, numbers, hyphens, underscores, and dots" >&2
   echo "  Allowed formats: 'model-name' or 'org/model-name'" >&2
   echo "  Invalid model: ${model}" >&2
@@ -174,42 +177,38 @@ validate_ai_model() {
 }
 
 ##
-# @description Parse command-line options
-parse_options() {
+# @description Parse command-line arguments and options
+parse_args() {
+  local positional=()
+
   while [[ $# -gt 0 ]]; do
     case "$1" in
       -h|--help)
         show_usage
         exit 0
         ;;
-      --lang)
+      --language|--lang)
         if [[ -z "${2:-}" ]]; then
-          echo "Error: --lang requires a value" >&2
+          echo "Error: ${1} requires a value" >&2
           exit 1
         fi
-        LANG_OPT="$2"
+        LANGUAGE="$2"
         shift 2
         ;;
-      --lang=*)
-        LANG_OPT="${1#*=}"
+      --language=*|--lang=*)
+        LANGUAGE="${1#*=}"
         shift
         ;;
       --ai-model)
         if [[ -z "${2:-}" ]]; then
-          echo "Error: --ai-model requires a model name" >&2
+          echo "Error: --ai-model requires a value" >&2
           exit 1
         fi
-        validate_ai_model "$2"
         AI_MODEL="$2"
         shift 2
         ;;
       --ai-model=*)
         AI_MODEL="${1#*=}"
-        validate_ai_model "$AI_MODEL"
-        shift
-        ;;
-      --force)
-        FORCE_INIT=true
         shift
         ;;
       -*)
@@ -218,243 +217,170 @@ parse_options() {
         exit 1
         ;;
       *)
-        if [[ -n "$MODULE_PATH" ]]; then
-          echo "Error: Multiple module paths specified" >&2
-          show_usage
-          exit 1
-        fi
-        MODULE_PATH="$1"
+        positional+=("$1")
         shift
         ;;
     esac
   done
+
+  PROJECT_NAME="${positional[0]:-}"
+  PROJECT_TYPE="${positional[1]:-}"
 }
 
 ##
-# @description Copy template files from source to destination (no overwrite)
+# @description Validate required positional arguments
+validate_args() {
+  if [[ -z "$PROJECT_NAME" ]]; then
+    echo "Error: <project> is required" >&2
+    show_usage
+    exit 1
+  fi
+  if [[ -z "$PROJECT_TYPE" ]]; then
+    echo "Error: <project-type> is required" >&2
+    show_usage
+    exit 1
+  fi
+}
+
+##
+# @description Bootstrap: copy files without overwriting existing ones
 # @arg $1 string Source directory
 # @arg $2 string Destination directory
-# @stdout Copy status message
-# @return 0 Always succeeds
-copy_template_files() {
+# @arg $3 string Label for display
+bootstrap_copy() {
   local src_dir="$1"
   local dest_dir="$2"
+  local label="$3"
 
-  # Skip if README.md already exists (indicates templates were already copied)
-  if [[ -f "${dest_dir}/README.md" ]]; then
-    echo "  Template files already copied."
+  if [[ ! -d "$src_dir" ]]; then
+    echo "  [bootstrap/${label}] source not found, skipping: ${src_dir}"
     return 0
   fi
 
-  # Copy if source directory exists and is not empty
-  # Note: Use "/." to include hidden files (e.g., .gitignore)
-  if [[ -d "$src_dir" ]] && [[ -n "$(ls -A "$src_dir" 2>/dev/null)" ]]; then
-    cp -an "$src_dir"/. "$dest_dir/" 2>/dev/null && echo "  Copied template files" || true
-  fi
+  mkdir -p "$dest_dir"
+
+  local copied=0 skipped=0
+  for src_file in "$src_dir"/*; do
+    [[ -e "$src_file" ]] || continue
+    local filename dest_file
+    filename="$(basename "$src_file")"
+    dest_file="${dest_dir}/${filename}"
+    if [[ -e "$dest_file" ]]; then
+      echo "  [bootstrap/${label}] skip (exists): ${filename}"
+      skipped=$((skipped + 1))
+    else
+      cp "$src_file" "$dest_file"
+      echo "  [bootstrap/${label}] copied: ${filename}"
+      copied=$((copied + 1))
+    fi
+  done
+
+  echo "  [bootstrap/${label}] done: ${copied} copied, ${skipped} skipped"
 }
 
 ##
-# @description Initialize base directory only
-# @stdout Created directory message
+# @description Bootstrap: install deckrd-rules and docs templates (no overwrite)
+bootstrap_project() {
+  echo "Bootstrap: installing deckrd assets..."
+  bootstrap_copy "$RULES_SRC_DIR" "$CLAUDE_RULES_DIR" "deckrd-rules"
+  bootstrap_copy "$DOCS_SRC_DIR"  "$DECKRD_DOCS"      "docs"
+  echo "Bootstrap complete."
+  echo ""
+}
+
+##
+# @description Create base directory structure under docs/.deckrd/
 init_base_directory() {
   mkdir -p "$DECKRD_LOCAL"
-  mkdir -p "$DECKRD_BASE"
-
-  # Create base subdirectories
+  mkdir -p "$DECKRD_DOCS"
   for subdir in "${BASE_SUBDIRS[@]}"; do
-    mkdir -p "${DECKRD_BASE}/${subdir}"
+    mkdir -p "${DECKRD_DOCS}/${subdir}"
   done
-
-  echo "Created base directory: ${DECKRD_BASE}"
-
-  # Copy template files
-  copy_template_files "$INITS_DIR" "$DECKRD_BASE"
+  echo "Base directory: ${DECKRD_DOCS}"
 }
 
 ##
-# @description Validate module path format
-# @arg $1 string Module path to validate
-# @return 0 if valid, 1 if empty (base-only mode), exits on invalid format
-validate_module_path() {
-  local path="$1"
-
-  # Empty path: base-only mode
-  if [[ -z "$path" ]]; then
-    return 1
-  fi
-
-  # Invalid format
-  if [[ "$path" != */* ]]; then
-    echo "Error: Path must be in format <namespace>/<module>" >&2
-    echo "  Example: AGTKind/isCollection" >&2
-    exit 1
-  fi
-
-  # Extract namespace and module
-  local namespace="${path%%/*}"
-  local module="${path#*/}"
-
-  # Validate namespace (only letters, numbers, hyphens, underscores)
-  if [[ ! "$namespace" =~ ^[A-Za-z0-9_-]+$ ]]; then
-    echo "Error: Namespace must contain only letters, numbers, hyphens, and underscores" >&2
-    echo "  Invalid namespace: ${namespace}" >&2
-    exit 1
-  fi
-
-  # Validate module (only letters, numbers, hyphens, underscores)
-  if [[ ! "$module" =~ ^[A-Za-z0-9_-]+$ ]]; then
-    echo "Error: Module must contain only letters, numbers, hyphens, and underscores" >&2
-    echo "  Invalid module: ${module}" >&2
-    exit 1
-  fi
-
-  return 0
-}
-
-##
-# @description Initialize directory structure
-# @arg $1 string Module path (namespace/module)
-init_directories() {
-  local path="$1"
-  local namespace module
-  namespace="${path%%/*}"
-  module="${path#*/}"
-
-  local base_path="${DECKRD_BASE}/${namespace}/${module}"
-
-  echo "Initializing DECKRD structure: ${namespace}/${module}"
-
-  # Create base directory
-  mkdir -p "$DECKRD_BASE"
-
-  for subdir in "${SUBDIRS[@]}"; do
-    local full_path="${base_path}/${subdir}"
-    mkdir -p "$full_path"
-    echo "  Created: ${subdir}/"
-  done
-
-  echo ""
-  echo "Base path: ${base_path}"
-}
-
-##
-# @description Create new session file
-# @arg $1 string Module path
-# @arg $2 string Timestamp
-# @arg $3 string Language
-# @arg $4 string AI model
-create_new_session() {
-  local path="$1"
-  local timestamp="$2"
-  local lang="$3"
-  local model="$4"
-
-  cat > "$SESSION_FILE" <<EOF
-{
-  "active": "${path}",
-  "lang": "${lang}",
-  "ai_model": "${model}",
-  "created_at": "${timestamp}",
-  "updated_at": "${timestamp}",
-  "modules": {
-    "${path}": {
-      "current_step": "init",
-      "completed": ["init"],
-      "documents": {}
-    }
-  }
-}
-EOF
-}
-
-##
-# @description Initialize or update session file
-# @arg $1 string Module path
-# @arg $2 string Language
-# @arg $3 string AI model
-init_session() {
-  local path="$1"
-  local lang="$2"
-  local model="$3"
+# @description Write profile.json with project settings
+write_profile() {
   local timestamp
   timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-  # Force mode: always create new session
-  if [[ "$FORCE_INIT" == true ]]; then
-    create_new_session "$path" "$timestamp" "$lang" "$model"
-    echo ""
-    echo "Session created (forced): ${SESSION_FILE}"
-    echo "  Active module: ${path}"
-    echo "  Language: ${lang}"
-    echo "  AI Model: ${model}"
-    return 0
-  fi
-
-  # check Execution environment
-  if ! command -v jq >/dev/null 2>&1; then
-    echo "Error: jq is not installed. Cannot update session file." >&2
-    return 1
-  fi
-
-  if [[ -f "$SESSION_FILE" ]]; then
-    # Check current active module
-    local current_active
-    current_active=$(jq -r '.active // empty' "$SESSION_FILE" 2>/dev/null || true)
-
-    if [[ "$current_active" == "$path" ]]; then
-      # Same module: preserve existing session
-      echo ""
-      echo "Session preserved (already active): ${SESSION_FILE}"
-      echo "  Active module: ${path}"
-      return 0
-    fi
-
-    # Different module: update session with jq
-    jq --arg path "$path" \
-       --arg lang "$lang" \
-       --arg model "$model" \
-       --arg timestamp "$timestamp" \
-       '.active = $path |
-        .lang = $lang |
-        .ai_model = $model |
-        .updated_at = $timestamp |
-        .modules[$path] = {
-          current_step: "init",
-          completed: ["init"],
-          documents: {}
-        }' "$SESSION_FILE" > "${SESSION_FILE}.tmp" && mv "${SESSION_FILE}.tmp" "$SESSION_FILE"
+  if [[ -f "$PROFILE_FILE" ]] && command -v jq >/dev/null 2>&1; then
+    local created_at
+    created_at=$(jq -r '.created_at // empty' "$PROFILE_FILE" 2>/dev/null || echo "$timestamp")
+    jq -n \
+      --arg project      "$PROJECT_NAME" \
+      --arg project_type "$PROJECT_TYPE" \
+      --arg language     "$LANGUAGE" \
+      --arg ai_model     "$AI_MODEL" \
+      --arg created_at   "$created_at" \
+      --arg updated_at   "$timestamp" \
+      '{
+        project:      $project,
+        project_type: $project_type,
+        language:     $language,
+        ai_model:     $ai_model,
+        created_at:   $created_at,
+        updated_at:   $updated_at
+      }' > "${PROFILE_FILE}.tmp" && mv "${PROFILE_FILE}.tmp" "$PROFILE_FILE"
   else
-    create_new_session "$path" "$timestamp" "$lang" "$model"
+    cat > "$PROFILE_FILE" <<EOF
+{
+  "project":      "${PROJECT_NAME}",
+  "project_type": "${PROJECT_TYPE}",
+  "language":     "${LANGUAGE}",
+  "ai_model":     "${AI_MODEL}",
+  "created_at":   "${timestamp}",
+  "updated_at":   "${timestamp}"
+}
+EOF
   fi
 
   echo ""
-  echo "Session updated: ${SESSION_FILE}"
-  echo "  Active module: ${path}"
-  echo "  Language: ${lang}"
-  echo "  AI Model: ${model}"
+  echo "Profile written: ${PROFILE_FILE}"
+  echo "  project:      ${PROJECT_NAME}"
+  echo "  project_type: ${PROJECT_TYPE}"
+  echo "  language:     ${LANGUAGE}"
+  echo "  ai_model:     ${AI_MODEL}"
+}
+
+##
+# @description Initialize session.json
+init_session() {
+  local timestamp
+  timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+  if [[ -f "$SESSION_FILE" ]] && command -v jq >/dev/null 2>&1; then
+    # Already exists: preserve as-is, just reset current_step
+    echo ""
+    echo "Session preserved: ${SESSION_FILE}"
+    return 0
+  fi
+
+  cat > "$SESSION_FILE" <<EOF
+{
+  "current_step": "init",
+  "completed": ["init"],
+  "documents": {},
+  "created_at": "${timestamp}",
+  "updated_at": "${timestamp}"
+}
+EOF
+
+  echo ""
+  echo "Session created: ${SESSION_FILE}"
 }
 
 # ============================================================================
 # Main Execution
 # ============================================================================
 
-# Parse command-line options
-parse_options "$@"
+parse_args "$@"
+validate_args
+validate_language "$LANGUAGE"
+validate_ai_model "$AI_MODEL"
 
-# Always create base directory structure (including temp, notes)
+bootstrap_project
 init_base_directory
-
-# Validate module path and handle base-only mode
-if ! validate_module_path "$MODULE_PATH"; then
-  # No module path: base directory initialized, exit normally
-  echo "Base initialization complete."
-  exit 0
-fi
-
-# Set default AI model if not specified
-if [[ -z "$AI_MODEL" ]]; then
-  AI_MODEL="$DEFAULT_AI_MODEL"
-fi
-
-init_directories "$MODULE_PATH"
-init_session "$MODULE_PATH" "$LANG_OPT" "$AI_MODEL"
+write_profile
+init_session

@@ -13,3 +13,6 @@
 
 # session filles
 *session.json
+
+# checklist
+**/*checklist.md
