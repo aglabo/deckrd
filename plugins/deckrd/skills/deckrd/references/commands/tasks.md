@@ -6,7 +6,8 @@ Each task corresponds to a single unit test case (`it()` block) in a BDD-style t
 ## Usage
 
 ```bash
-/deckrd tasks
+/deckrd tasks           # Generate tasks.md and implementation-checklist.md
+/deckrd tasks update    # Regenerate implementation-checklist.md from existing tasks.md
 ```
 
 ## Preconditions
@@ -15,9 +16,20 @@ Each task corresponds to a single unit test case (`it()` block) in a BDD-style t
 - `spec` must be completed for active module
 - `specifications.md` must exist
 
+## Subcommands
+
+| Subcommand | Description                                                          |
+| ---------- | -------------------------------------------------------------------- |
+| (none)     | Generate `tasks.md` then auto-generate `implementation-checklist.md` |
+| `update`   | Regenerate `implementation-checklist.md` from existing `tasks.md`    |
+
+---
+
 ## Execution Flow
 
-### Phase 0: Codebase Investigation (explore-agent 委譲)
+### `/deckrd tasks` (default)
+
+#### Phase 0: Codebase Investigation (explore-agent 委譲)
 
 Before generating tasks, delegate document reading to explore-agent:
 
@@ -31,9 +43,29 @@ Before generating tasks, delegate document reading to explore-agent:
 3. Read the **Summary** returned by the agent
 4. Proceed to task generation using the summary as context
 
-### Phase 1: Task Generation
+#### Phase 1: Task Generation
 
-Using the explore-agent summary, generate tasks.md via the prompt script.
+Using the explore-agent summary, generate `tasks.md` via the prompt script.
+
+#### Phase 2: Checklist Generation
+
+After `tasks.md` is verified, automatically generate `implementation-checklist.md`:
+
+1. Read the generated `tasks.md`
+2. Expand each test case into Red-Green-Refactor check items
+3. Assign unique task IDs with `-R`/`-G`/`-F` suffixes
+4. Add `-TF` (Test Refactor) per scenario and `-CF` (Code Refactor) per target
+5. Write `tasks/implementation-checklist.md`
+
+### `/deckrd tasks update`
+
+Regenerate `implementation-checklist.md` from the existing `tasks.md`:
+
+1. Verify `tasks.md` exists
+2. Read current `tasks.md`
+3. Regenerate `implementation-checklist.md` (overwrite)
+
+Use when `tasks.md` has been manually edited after initial generation.
 
 ---
 
@@ -43,16 +75,18 @@ Read: `docs/.deckrd/<namespace>/<module>/specifications/specifications.md`
 
 ## Output
 
-Create: `docs/.deckrd/<namespace>/<module>/tasks/tasks.md`
+| Subcommand | Creates                                                |
+| ---------- | ------------------------------------------------------ |
+| (none)     | `tasks/tasks.md` + `tasks/implementation-checklist.md` |
+| `update`   | `tasks/implementation-checklist.md` (overwrite only)   |
 
 ## Prompt & Template
-
-Use prompt and template for generating tasks:
 
 ```bash
 deckrd/assets/
        ├── prompts/tasks.prompt.md
-       └── templates/tasks.template.md
+       ├── templates/tasks.template.md
+       └── templates/implementation-checklist.template.md
 ```
 
 ## Task ID Strategy
@@ -153,9 +187,9 @@ source: specifications.md
 
 ## Verification Gate (REQUIRED before Session Update)
 
-YOU MUST verify tasks.md by reading it directly — not from memory.
+YOU MUST verify both output files by reading them directly — not from memory.
 
-Check each item by reading the file:
+### tasks.md checks
 
 | Check                                  | Method                          | Pass Criteria            |
 | -------------------------------------- | ------------------------------- | ------------------------ |
@@ -163,6 +197,14 @@ Check each item by reading the file:
 | Each task has Target/Scenario/Expected | Read each entry                 | All 3 fields present     |
 | Normal / Error / Edge cases all exist  | Count by category               | >=1 each                 |
 | Tasks trace to specifications          | Cross-ref spec sections         | Each task maps to a spec |
+
+### implementation-checklist.md checks
+
+| Check                                      | Method                   | Pass Criteria                        |
+| ------------------------------------------ | ------------------------ | ------------------------------------ |
+| Every task in tasks.md has R/G/F items     | Cross-ref task IDs       | No task missing any phase            |
+| TF exists per scenario, CF per test target | Scan -TF and -CF entries | Each scenario has TF, each target CF |
+| Task IDs are unique (including -R/-G/-F)   | Scan all IDs             | No duplicates                        |
 
 If any check fails: YOU MUST regenerate the failing section. No partial approval.
 ONLY after all checks pass: proceed to Session Update.
@@ -181,25 +223,36 @@ After completion, update `.session.json`:
     "requirements": "requirements.md",
     "specifications": "specifications.md",
     "implementation": "implementation.md",
-    "tasks": "tasks.md"
+    "tasks": "tasks.md",
+    "implementation-checklist": "implementation-checklist.md"
   }
 }
 ```
+
+> **Note**: `tasks update` does NOT change `current_step` or `completed`. It only regenerates `implementation-checklist.md`.
 
 ## Script
 
 Execute: [run_prompt.sh](../../scripts/run-prompt.sh)
 
+<!-- markdownlint-disable line-length -->
+
 ```bash
+# Default: generate both tasks.md and implementation-checklist.md
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/run_prompt.sh tasks [--lang <lang>] --output "tasks/tasks.md"
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/run_prompt.sh implementation-checklist [--lang <lang>] --input "tasks/tasks.md" --output "tasks/implementation-checklist.md"
+
+# Update: regenerate implementation-checklist.md only
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/run_prompt.sh implementation-checklist [--lang <lang>] --input "tasks/tasks.md" --output "tasks/implementation-checklist.md"
 ```
+
+<!-- markdownlint-enable -->
 
 ## Next Step
 
 Workflow complete.
 You can now execute tasks using:
 
+- `implementation-checklist.md` for BDD Red-Green-Refactor cycle tracking
 - TodoWrite tool for task tracking
 - BDD coding workflow for implementation
-
-You can program by BDD based on the generated tasks.
