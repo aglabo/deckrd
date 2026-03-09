@@ -1,7 +1,7 @@
 ---
 title: "Design Specification: {{FEATURE_NAME}}"
-Based on: requirements.md v{{REQ_VERSION}}
-Status: Draft
+based-on: requirements.md v{{REQ_VERSION}}
+status: Draft
 ---
 
 ## 1. Overview
@@ -35,16 +35,16 @@ Implementation details are explicitly out of scope.
 
 #### Feature Decomposition
 
-| Unit       | Responsibility       | FR Coverage  |
-| ---------- | -------------------- | ------------ |
-| {{UNIT_1}} | {{RESPONSIBILITY_1}} | {{FR_REF_1}} |
-| {{UNIT_2}} | {{RESPONSIBILITY_2}} | {{FR_REF_2}} |
+| Unit       | Responsibility       | REQ Coverage    |
+| ---------- | -------------------- | --------------- |
+| {{UNIT_1}} | {{RESPONSIBILITY_1}} | {{REQ_F_REF_1}} |
+| {{UNIT_2}} | {{RESPONSIBILITY_2}} | {{REQ_F_REF_2}} |
 
 #### Unit Interaction Map
 
-```bash
-{{UNIT_1}} → {{UNIT_2}}  : {{DATA_PASSED}}
-{{UNIT_2}} → {{UNIT_3}}  : {{DATA_PASSED}}
+```text
+{{UNIT_1}} → {{UNIT_2}}  : {{DATA_PASSED}}  (REQ: {{REQ_F_REF_1}})
+{{UNIT_2}} → {{UNIT_3}}  : {{DATA_PASSED}}  (REQ: {{REQ_F_REF_2}})
 ```
 
 <!-- If no cross-unit interaction: "Units are independent; no ordering constraints." -->
@@ -63,7 +63,7 @@ Implementation details are explicitly out of scope.
 
 | ID    | Decision | Rationale | Affected Rules | Status |
 | ----- | -------- | --------- | -------------- | ------ |
-| DD-01 | ...      | ...       | Rule 4.x       | Active |
+| DD-01 | ...      | ...       | R-01           | Active |
 
 > **Note**: Decisions listed here derive from REQUIREMENTS Design Decisions.
 > If promoting to formal Decision Record, use `/deckrd dr --add`.
@@ -129,15 +129,18 @@ Implementation details are explicitly out of scope.
 
 ## 4. Decision Rules
 
+<!--
+Rule ID format: R-NNN (sequential, stable)
+Rule IDs are referenced in Traceability and Edge Cases.
+-->
+
 Evaluation MUST follow this order:
 
-| Step | Condition       | Outcome      |
-| ---: | --------------- | ------------ |
-|    1 | {{CONDITION_1}} | {{RESULT_1}} |
-|    2 | {{CONDITION_2}} | {{RESULT_2}} |
-|    3 | {{CONDITION_3}} | {{RESULT_3}} |
-
-<!-- Add or remove steps as required -->
+| Rule ID | Step | Condition       | Outcome      |
+| ------- | ---: | --------------- | ------------ |
+| R-001   |    1 | {{CONDITION_1}} | {{RESULT_1}} |
+| R-002   |    2 | {{CONDITION_2}} | {{RESULT_2}} |
+| R-003   |    3 | {{CONDITION_3}} | {{RESULT_3}} |
 
 No reordering is permitted.
 
@@ -145,19 +148,20 @@ No reordering is permitted.
 
 ## 5. Edge Cases
 
-| Input      | Classification | Rationale |
-| ---------- | -------------- | --------- |
-| {{EDGE_1}} | {{RESULT_1}}   | {{WHY_1}} |
-| {{EDGE_2}} | {{RESULT_2}}   | {{WHY_2}} |
+| Input      | Classification | REQ           | Rationale |
+| ---------- | -------------- | ------------- | --------- |
+| {{EDGE_1}} | {{RESULT_1}}   | {{REQ_F_NNN}} | {{WHY_1}} |
+| {{EDGE_2}} | {{RESULT_2}}   | {{REQ_F_NNN}} | {{WHY_2}} |
 
 ---
 
 ## 6. Requirements Traceability
 
-| Requirement ID | Covered By        |
-| -------------- | ----------------- |
-| {{FR_1}}       | {{SECTION_REF_1}} |
-| {{FR_2}}       | {{SECTION_REF_2}} |
+| Requirement ID | Spec Rule | Notes      |
+| -------------- | --------- | ---------- |
+| {{REQ_F_001}}  | R-001     | {{NOTE_1}} |
+| {{REQ_F_002}}  | R-002     | {{NOTE_2}} |
+| {{REQ_F_003}}  | Edge 5.1  | {{NOTE_3}} |
 
 ---
 
