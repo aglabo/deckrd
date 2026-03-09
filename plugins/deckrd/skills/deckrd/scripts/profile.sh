@@ -60,8 +60,16 @@ readonly SUPPORTED_LANGUAGES
 PROJECT_NAME=""
 
 ##
-# @description Development language (default: typescript)
+# @description Project type
+PROJECT_TYPE=""
+
+##
+# @description Programming language (default: typescript)
 LANGUAGE="typescript"
+
+##
+# @description AI model (default: sonnet)
+AI_MODEL="sonnet"
 
 # ============================================================================
 # Functions
@@ -71,22 +79,24 @@ LANGUAGE="typescript"
 # @description Show usage information
 show_usage() {
   cat <<EOF
-Usage: profile.sh --project <name> --language <lang>
+Usage: profile.sh --project <name> [OPTIONS]
 
 Configure project profile for deckrd.
 
 Options:
   --project <name>              Project name (required)
-  --language <lang>, --lang     Development language (default: typescript)
-                                Supported: go, typescript, python, rust
-  -h, --help          Show this help message
+  --project-type <type>         Project type (e.g. webapp, lib, cli, api)
+  --language <lang>, --lang     Programming language (default: typescript)
+                                Supported: ${SUPPORTED_LANGUAGES[*]}
+  --ai-model <model>            AI model (default: sonnet)
+  -h, --help                    Show this help message
 
 Profile file:
   .local/deckrd/profile.json
 
 Example:
   profile.sh --project myapp --language go
-  profile.sh --project voift --language typescript
+  profile.sh --project voift --project-type webapp --language typescript --ai-model sonnet
 EOF
 }
 
@@ -126,6 +136,18 @@ parse_options() {
         PROJECT_NAME="${1#*=}"
         shift
         ;;
+      --project-type)
+        if [[ -z "${2:-}" ]]; then
+          echo "Error: --project-type requires a value" >&2
+          exit 1
+        fi
+        PROJECT_TYPE="$2"
+        shift 2
+        ;;
+      --project-type=*)
+        PROJECT_TYPE="${1#*=}"
+        shift
+        ;;
       --language|--lang)
         if [[ -z "${2:-}" ]]; then
           echo "Error: ${1} requires a value" >&2
@@ -136,6 +158,18 @@ parse_options() {
         ;;
       --language=*|--lang=*)
         LANGUAGE="${1#*=}"
+        shift
+        ;;
+      --ai-model)
+        if [[ -z "${2:-}" ]]; then
+          echo "Error: --ai-model requires a value" >&2
+          exit 1
+        fi
+        AI_MODEL="$2"
+        shift 2
+        ;;
+      --ai-model=*)
+        AI_MODEL="${1#*=}"
         shift
         ;;
       -*)
@@ -174,24 +208,37 @@ write_profile() {
   timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
   if [[ -f "$PROFILE_FILE" ]] && command -v jq >/dev/null 2>&1; then
-    # Update: preserve created_at
-    local created_at
+    # Update: preserve created_at, merge existing fields for omitted options
+    local created_at existing_type existing_model
     created_at=$(jq -r '.created_at // empty' "$PROFILE_FILE" 2>/dev/null || echo "$timestamp")
+    existing_type=$(jq -r '.project_type // empty' "$PROFILE_FILE" 2>/dev/null || true)
+    existing_model=$(jq -r '.ai_model // empty' "$PROFILE_FILE" 2>/dev/null || true)
+    [[ -z "$PROJECT_TYPE" ]] && PROJECT_TYPE="$existing_type"
+    [[ "$AI_MODEL" == "sonnet" ]] && [[ -n "$existing_model" ]] && AI_MODEL="$existing_model"
     jq -n \
-      --arg project "$PROJECT_NAME" \
-      --arg language "$LANGUAGE" \
-      --arg created_at "$created_at" \
-      --arg updated_at "$timestamp" \
-      '{project: $project, language: $language, created_at: $created_at, updated_at: $updated_at}' \
-      > "${PROFILE_FILE}.tmp" && mv "${PROFILE_FILE}.tmp" "$PROFILE_FILE"
+      --arg project      "$PROJECT_NAME" \
+      --arg project_type "$PROJECT_TYPE" \
+      --arg language     "$LANGUAGE" \
+      --arg ai_model     "$AI_MODEL" \
+      --arg created_at   "$created_at" \
+      --arg updated_at   "$timestamp" \
+      '{
+        project:      $project,
+        project_type: $project_type,
+        language:     $language,
+        ai_model:     $ai_model,
+        created_at:   $created_at,
+        updated_at:   $updated_at
+      }' > "${PROFILE_FILE}.tmp" && mv "${PROFILE_FILE}.tmp" "$PROFILE_FILE"
   else
-    # New file (also works without jq)
     cat > "$PROFILE_FILE" <<EOF
 {
-  "project": "${PROJECT_NAME}",
-  "language": "${LANGUAGE}",
-  "created_at": "${timestamp}",
-  "updated_at": "${timestamp}"
+  "project":      "${PROJECT_NAME}",
+  "project_type": "${PROJECT_TYPE}",
+  "language":     "${LANGUAGE}",
+  "ai_model":     "${AI_MODEL}",
+  "created_at":   "${timestamp}",
+  "updated_at":   "${timestamp}"
 }
 EOF
   fi
@@ -202,9 +249,11 @@ EOF
 display_result() {
   echo "Deckrd profile configured."
   echo ""
-  echo "Project : ${PROJECT_NAME}"
-  echo "Language: ${LANGUAGE}"
-  echo "Profile : .local/deckrd/profile.json"
+  echo "  project:      ${PROJECT_NAME}"
+  echo "  project_type: ${PROJECT_TYPE}"
+  echo "  language:     ${LANGUAGE}"
+  echo "  ai_model:     ${AI_MODEL}"
+  echo "  profile:      .local/deckrd/profile.json"
 }
 
 # ============================================================================
