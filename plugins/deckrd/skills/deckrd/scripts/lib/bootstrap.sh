@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# plugins/deckrd/skills/deckrd/scripts/lib/bootstrap.sh - Global directory variables for agent skills
+#
+# Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
+#
+# This software is released under the MIT License.
+# https://opensource.org/licenses/MIT
+#
+# USAGE: source this file, do NOT execute directly.
+#   source "$(dirname "${BASH_SOURCE[0]}")/scripts/lib/bootstrap.sh"
+
+# Guard: prevent re-sourcing
+if [[ -n "${_BOOTSTRAP_LOADED:-}" ]]; then
+  return 0
+fi
+readonly _BOOTSTRAP_LOADED=1
+
+# PROJECT_ROOT: env var > git > BASH_SOURCE fallback
+if [[ -z "${PROJECT_ROOT:-}" ]]; then
+  PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null \
+    || echo "$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../../.." && pwd)")"
+fi
+export PROJECT_ROOT
+
+SCRIPTS_DIR="${SCRIPTS_DIR:-${PROJECT_ROOT}/scripts}"
+export SCRIPTS_DIR
+
+PLUGINS_DIR="${PLUGINS_DIR:-${PROJECT_ROOT}/plugins}"
+export PLUGINS_DIR
+
+DECKRD_LIB_DIR="${DECKRD_LIB_DIR:-${PLUGINS_DIR}/deckrd/skills/deckrd/scripts/lib}"
+export DECKRD_LIB_DIR
+
+ASSETS_DIR="${ASSETS_DIR:-${PROJECT_ROOT}/.claude}"
+export ASSETS_DIR
+
+AGENTS_DIR="${AGENTS_DIR:-${ASSETS_DIR}/agents}"
+export AGENTS_DIR
