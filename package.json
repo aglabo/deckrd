@@ -1,0 +1,28 @@
+{
+  "name": "@aglabo/deckrd",
+  "version": "1.0.0",
+  "description": "Development environment for project-starter-template",
+  "private": true,
+  "keywords": [
+    "template",
+    "starter",
+    "oss",
+    "development"
+  ],
+  "author": "atsushifx",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aglabo/deckrd.git"
+  },
+  "scripts": {
+    "prepare": "bash ./scripts/setup-dev-env.sh",
+    "scan:secrets": "gitleaks dir --config ./configs/gitleaks.toml . && secretlint --secretlintrc ./configs/secretlint.config.yaml **/*",
+    "format:dprint": "dprint fmt",
+    "check:dprint": "dprint check",
+    "check:spells": "cspell  --config .vscode/cspell.json --cache --cache-location .cache/cspell/cSpellCache",
+    "lint:text": "bash runners/run-textlint.sh ",
+    "lint:markdown": "bash runners/run-markdownlint.sh ",
+    "test:sh": "bash runners/run-shellspec.sh "
+  }
+}
