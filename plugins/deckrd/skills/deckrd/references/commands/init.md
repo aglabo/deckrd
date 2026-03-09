@@ -1,106 +1,112 @@
 # init Command
 
-Initialize module directory structure and session.
+Bootstrap and initialize a DECKRD project.
 
 ## Usage
 
 ```bash
-# Base directory initialization only
-/deckrd init
-
-# Full module initialization
-/deckrd init [--lang <lang>] [--ai-model <model>] <namespace>/<module>
+/deckrd init <project> <project-type> [OPTIONS]
 ```
+
+## Arguments
+
+| Argument         | Required | Description                                       |
+| ---------------- | -------- | ------------------------------------------------- |
+| `<project>`      | Yes      | Project name (e.g. `myapp`)                       |
+| `<project-type>` | Yes      | Project type (e.g. `webapp`, `lib`, `cli`, `api`) |
 
 ## Options
 
-| Option               | Default  | Description                                                      |
-| -------------------- | -------- | ---------------------------------------------------------------- |
-| `--lang <lang>`      | `system` | Document language: `system`, `en`, `ja`                          |
-| `--ai-model <model>` | `sonnet` | AI model: `gpt-*`, `o1-*`, `claude-*`, `haiku`, `sonnet`, `opus` |
+<!-- markdownlint-disable line-length -->
+
+| Option                        | Default      | Description                                                      |
+| ----------------------------- | ------------ | ---------------------------------------------------------------- |
+| `--language <lang>`, `--lang` | `typescript` | Programming language: `typescript`, `go`, `python`, `rust`       |
+| `--ai-model <model>`          | `sonnet`     | AI model: `gpt-*`, `o1-*`, `claude-*`, `haiku`, `sonnet`, `opus` |
+| `-h`, `--help`                | —            | Show usage information                                           |
+
+<!-- markdownlint-enable line-length -->
 
 ## Example
 
 ```bash
-# Base directory only (no module)
-/deckrd init
+# Minimum (defaults: typescript, sonnet)
+/deckrd init myapp webapp
 
-# Default settings (system language, sonnet model)
-/deckrd init AGTKind/isCollection
+# Specify language
+/deckrd init myapp lib --language go
 
-# Specify Japanese language
-/deckrd init --lang ja AGTKind/isCollection
-
-# Specify AI model
-/deckrd init --ai-model claude-sonnet-4-5 AGTKind/isCollection
-
-# Specify both language and model
-/deckrd init --lang en --ai-model gpt-4o AGTKind/isCollection
+# Specify both language and AI model
+/deckrd init voift webapp --language typescript --ai-model claude-sonnet-4-5
 ```
 
 ## Actions
 
-### Without module parameter (base initialization)
+### Phase 0: Bootstrap (always runs, no overwrite)
 
-1. Create base directory structure:
+Copies deckrd assets into the project on first run. Existing files are never overwritten.
 
-   ```bash
-   docs/.deckrd/
-   ├── notes/
-   └── temp/
-   ```
-
-2. Copy template files from `assets/inits/` to `docs/.deckrd/`
-
-### With module parameter (full initialization)
-
-1. Create base directory structure (same as above)
-
-2. Create module directory structure:
+1. **deckrd-rules** → `.claude/rules/`
 
    ```bash
-   docs/.deckrd/<namespace>/<module>/
-   ├── requirements/
-   ├── specifications/
-   ├── implementation/
-   └── tasks/
+   assets/inits/deckrd-rules/*.md  →  .claude/rules/  (skip if exists)
    ```
 
-3. Initialize or update `.local/deckrd/session.json`:
+2. **docs templates** → `docs/.deckrd/`
 
-   ```json
-   {
-     "active": "<namespace>/<module>",
-     "lang": "system",
-     "ai_model": "sonnet",
-     "created_at": "<timestamp>",
-     "updated_at": "<timestamp>",
-     "modules": {
-       "<namespace>/<module>": {
-         "current_step": "init",
-         "completed": ["init"],
-         "documents": {}
-       }
-     }
-   }
+   ```bash
+   assets/inits/docs/*  →  docs/.deckrd/  (skip if exists)
    ```
+
+### Phase 1: Create base directory structure
+
+```bash
+docs/.deckrd/
+├── notes/
+└── temp/
+```
+
+### Phase 2: Write profile.json
+
+Creates or updates `.local/deckrd/profile.json`:
+
+```json
+{
+  "project": "<project>",
+  "project_type": "<project-type>",
+  "language": "<language>",
+  "ai_model": "<ai-model>",
+  "created_at": "<ISO8601>",
+  "updated_at": "<ISO8601>"
+}
+```
+
+- Existing file: `created_at` is preserved, all other fields updated.
+
+### Phase 3: Initialize session.json
+
+Creates `.local/deckrd/session.json` if it does not exist:
+
+```json
+{
+  "current_step": "init",
+  "completed": ["init"],
+  "documents": {},
+  "created_at": "<ISO8601>",
+  "updated_at": "<ISO8601>"
+}
+```
+
+- Existing session file is preserved as-is.
 
 ## Script
 
 Execute: [scripts/init-dirs.sh](../../scripts/init-dirs.sh)
 
 ```bash
-# Base initialization only
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/init-dirs.sh
-
-# Full module initialization
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/init-dirs.sh [--lang <lang>] [--ai-model <model>] <namespace>/<module>
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/init-dirs.sh <project> <project-type> [OPTIONS]
 ```
-
-> **Note**: `${CLAUDE_PLUGIN_ROOT}` resolves to the plugin installation directory.
-> For local projects, this is `.claude/skills/deckrd`.
 
 ## Next Step
 
-- Without module: Base directory is ready. Run `init` again with module parameter to start a project.
-- With module: Prompt user for requirements input, then run `req`.
+Profile and session are ready. Run `/deckrd req` to start requirements definition.
