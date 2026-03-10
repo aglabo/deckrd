@@ -5,6 +5,7 @@ deckrd
 gofmt
 goimports
 golangci
+googleai
 idd
 implementational
 markdownlintrc
