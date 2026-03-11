@@ -19,10 +19,10 @@
     "prepare": "bash ./scripts/setup-dev-env.sh",
     "scan:secrets": "gitleaks dir --config ./configs/gitleaks.toml . && secretlint --secretlintrc ./configs/secretlint.config.yaml **/*",
     "format:dprint": "dprint fmt",
+    "format:sh": "bash runners/ops/shell/format",
+    "check:sh": "bash runners/ops/shell/format --list",
     "check:dprint": "dprint check",
-    "check:spells": "cspell  --config .vscode/cspell.json --cache --cache-location .cache/cspell/cSpellCache",
-    "lint:text": "bash runners/run-textlint.sh ",
-    "lint:markdown": "bash runners/run-markdownlint.sh ",
-    "test:sh": "bash runners/run-shellspec.sh "
+    "lint:spells": "cspell  --config .vscode/cspell.json --cache --cache-location .cache/cspell/cSpellCache",
+    "test:sh": "bash runners/ops/shell/test"
   }
 }

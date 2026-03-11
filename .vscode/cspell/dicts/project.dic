@@ -5,10 +5,12 @@ deckrd
 gofmt
 goimports
 golangci
+googleai
 idd
 implementational
 markdownlintrc
 mypy
+pnpx
 pylint
 pyproject
 pytest
