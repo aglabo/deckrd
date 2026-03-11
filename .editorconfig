@@ -20,6 +20,15 @@ indent_size = 2
 tab_width = 2
 
 # ─────────────────────────────
+# Exclude directories/files
+# ─────────────────────────────
+[.tools/*]
+ignore = true
+
+[.local/*]
+ignore = true
+
+# ─────────────────────────────
 # Source Code Files
 # ─────────────────────────────
 
@@ -67,6 +76,11 @@ tab_width = 2
 indent_style = space
 indent_size = 2
 tab_width = 2
+# config for shfmt
+shfmt_case_indent = true
+shfmt_space_redirects = true
+shfmt_binary_ops = true
+shfmt_simplify = true
 
 # PowerShell
 [*.ps1]
@@ -98,3 +112,4 @@ tab_width = 2
 # [Dockerfile]
 # indent_style = space
 # indent_size = 2
+
