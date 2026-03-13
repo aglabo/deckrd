@@ -1,3 +1,8 @@
+---
+title: init Command
+description: Bootstrap and initialize a DECKRD project
+---
+
 # init Command
 
 Bootstrap and initialize a DECKRD project.
@@ -66,9 +71,9 @@ docs/.deckrd/
 └── temp/
 ```
 
-### Phase 2: Write profile.json
+### Phase 2: Write project.json
 
-Creates or updates `.local/deckrd/profile.json`:
+Creates or updates `.local/deckrd/project.json`:
 
 ```json
 {

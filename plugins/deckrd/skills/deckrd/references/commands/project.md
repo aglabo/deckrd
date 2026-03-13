@@ -1,11 +1,16 @@
-# profile Command
+---
+title: project Command
+description: Configure project settings including name and development language
+---
 
-Configure project profile (project name and development language).
+## project Command
+
+Configure project settings (project name and development language).
 
 ## Usage
 
 ```bash
-/deckrd profile --project <name> --language <lang>
+/deckrd project --project <name> --language <lang>
 ```
 
 ## Parameters
@@ -24,11 +29,11 @@ Configure project profile (project name and development language).
 
 1. Validate `--project` and `--language` parameters (exit 1 if missing or unsupported)
 2. Create `.local/deckrd/` directory if it does not exist
-3. Write or update `.local/deckrd/profile.json`:
+3. Write or update `.local/deckrd/project.json`:
    - New file: write all fields including `created_at` and `updated_at`
    - Existing file: preserve `created_at`, update `updated_at` only
 
-## Profile Schema
+## Project Schema
 
 ```json
 {
@@ -41,24 +46,24 @@ Configure project profile (project name and development language).
 }
 ```
 
-> **Note**: `project_type` and `ai_model` are set by `/deckrd init` and updated by `/deckrd profile`.
+> **Note**: `project_type` and `ai_model` are set by `/deckrd init` and updated by `/deckrd project`.
 
 ## Output
 
 ```bash
-Deckrd profile configured.
+Deckrd project configured.
 
 Project : <project>
 Language: <language>
-Profile : .local/deckrd/profile.json
+Project : .local/deckrd/project.json
 ```
 
 ## Script
 
-Execute: [scripts/profile.sh](../../scripts/profile.sh)
+Execute: [scripts/project.sh](../../scripts/project.sh)
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/profile.sh --project <name> --language <lang>
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/project.sh --project <name> --language <lang>
 ```
 
 > **Note**: `${CLAUDE_PLUGIN_ROOT}` resolves to the plugin installation directory.
@@ -76,7 +81,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/profile.sh --project <name> --language <lang>
 
 ## Notes
 
-- Profile is stored at `.local/deckrd/profile.json`, together with `.local/deckrd/session.json`
+- Project settings are stored at `.local/deckrd/project.json`, together with `.local/deckrd/session.json`
 - This command is project-scoped and does not interact with session state
 - Can be run at any time, before or after `init`
-- `deckrd-coder` reads this profile in Phase 0 to load language-specific rules
+- `deckrd-coder` reads this project settings in Phase 0 to load language-specific rules
