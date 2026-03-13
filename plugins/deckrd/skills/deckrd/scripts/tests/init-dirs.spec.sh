@@ -75,12 +75,12 @@ Describe "init-dirs.sh"
       The path "${DECKRD_DOCS}/temp" should be directory
     End
 
-    It "profile.json に project フィールドが含まれる"
+    It "project.json に project フィールドが含まれる"
       When run bash "$SCRIPT" myapp webapp
       The output should include "myapp"
     End
 
-    It "profile.json に project_type フィールドが含まれる"
+    It "project.json に project_type フィールドが含まれる"
       When run bash "$SCRIPT" myapp webapp
       The output should include "webapp"
     End

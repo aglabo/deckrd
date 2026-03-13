@@ -73,10 +73,10 @@ Describe "module.sh"
         The path "${DECKRD_DOCS}/myns/mymod/tasks" should be directory
       End
 
-      It ".profile.json を作成しない (legacy 動作)"
+      It ".project.json を作成しない (legacy 動作)"
         When run bash "$SCRIPT" myns/mymod
         The output should include "myns/mymod"
-        The path "${DECKRD_DOCS}/myns/mymod/.profile.json" should not be exist
+        The path "${DECKRD_DOCS}/myns/mymod/.project.json" should not be exist
       End
 
       It "大文字を小文字に正規化する"
@@ -140,22 +140,22 @@ Describe "module.sh"
         The output should include "myns/mymod"
       End
 
-      It ".profile.json を作成する"
+      It ".project.json を作成する"
         When run bash "$SCRIPT" create myns/mymod
-        The output should include "profile.json"
-        The path "${DECKRD_DOCS}/myns/mymod/.profile.json" should be exist
+        The output should include "project.json"
+        The path "${DECKRD_DOCS}/myns/mymod/.project.json" should be exist
       End
 
-      It ".profile.json に name フィールドが含まれる"
+      It ".project.json に name フィールドが含まれる"
         When run bash "$SCRIPT" create myns/mymod
-        The output should include "profile.json"
-        The contents of file "${DECKRD_DOCS}/myns/mymod/.profile.json" should include "mymod"
+        The output should include "project.json"
+        The contents of file "${DECKRD_DOCS}/myns/mymod/.project.json" should include "mymod"
       End
 
-      It ".profile.json に created_at フィールドが含まれる"
+      It ".project.json に created_at フィールドが含まれる"
         When run bash "$SCRIPT" create myns/mymod
-        The output should include "profile.json"
-        The contents of file "${DECKRD_DOCS}/myns/mymod/.profile.json" should include "created_at"
+        The output should include "project.json"
+        The contents of file "${DECKRD_DOCS}/myns/mymod/.project.json" should include "created_at"
       End
 
       It "Session updated メッセージを出力する"
@@ -181,9 +181,9 @@ Describe "module.sh"
         The output should include "myfeature"
       End
 
-      It ".profile.json を作成する"
+      It ".project.json を作成する"
         When run bash "$SCRIPT" create myfeature
-        The output should include "profile.json"
+        The output should include "project.json"
       End
     End
   End
