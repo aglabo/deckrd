@@ -15,8 +15,8 @@
 
 # Path to the scripts directory (relative to this spec_helper)
 # SHELLSPEC_PROJECT_ROOT is the project root set by shellspec
-_SPEC_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/plugins/deckrd/skills/deckrd/tests" && pwd)"
-SCRIPTS_DIR="${_SPEC_DIR}/../scripts"
+_SPEC_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/plugins/deckrd/skills/deckrd/scripts/tests" && pwd)"
+SCRIPTS_DIR="${_SPEC_DIR}/.."
 unset _SPEC_DIR
 
 # Helper: create an isolated temp directory and set DECKRD_DOCS / DECKRD_LOCAL
