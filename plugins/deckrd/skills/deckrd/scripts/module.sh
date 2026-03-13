@@ -94,7 +94,7 @@ Usage: module.sh <namespace>/<module> [--force]
 Initialize DECKRD module directory structure and update session.
 
 Subcommands:
-  create    Create module dirs and .profile.json (subdomain auto-resolved if omitted)
+  create    Create module dirs and .project.json (subdomain auto-resolved if omitted)
 
 Arguments:
   <namespace>/<module>  Module path (e.g. AGTKind/isCollection)
@@ -238,14 +238,14 @@ validate_and_normalize_create() {
 }
 
 ##
-# @description Create .profile.json for a module
+# @description Create .project.json for a module
 # @arg $1 string Normalized module path (namespace/module)
-create_module_profile() {
+create_module_project() {
   local path="$1"
   local namespace="${path%%/*}"
   local module="${path#*/}"
   local base="${DECKRD_DOCS}/${namespace}/${module}"
-  local profile_file="${base}/.profile.json"
+  local project_file="${base}/.project.json"
   local timestamp
   timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
@@ -256,13 +256,13 @@ create_module_profile() {
       --arg created_at  "$timestamp" \
       --arg updated_at  "$timestamp" \
       '{name: $name, description: $description, created_at: $created_at, updated_at: $updated_at}' \
-      > "$profile_file"
+      > "$project_file"
   else
     printf '{\n  "name": "%s",\n  "description": "",\n  "created_at": "%s",\n  "updated_at": "%s"\n}\n' \
-      "$module" "$timestamp" "$timestamp" > "$profile_file"
+      "$module" "$timestamp" "$timestamp" > "$project_file"
   fi
 
-  echo "  created: .profile.json"
+  echo "  created: .project.json"
 }
 
 ##
@@ -345,7 +345,7 @@ fi
 if [[ "$SUBCOMMAND" == "create" ]]; then
   NORMALIZED=$(validate_and_normalize_create "$MODULE_PATH")
   create_module_dirs "$NORMALIZED"
-  create_module_profile "$NORMALIZED"
+  create_module_project "$NORMALIZED"
   update_session "$NORMALIZED"
 else
   NORMALIZED=$(validate_and_normalize "$MODULE_PATH")
