@@ -1,4 +1,9 @@
-# .deckrd
+---
+title: Internal Design Directory
+description: Purpose and usage of the .deckrd internal design directory
+---
+
+## .deckrd
 
 This directory contains internal design and decision records
 used during development.

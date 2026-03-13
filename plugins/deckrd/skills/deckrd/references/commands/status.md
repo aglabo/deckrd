@@ -1,4 +1,9 @@
-# status Command
+---
+title: status Command
+description: Display current module status and workflow progress
+---
+
+## status Command
 
 Display the current status of the active module and workflow progress.
 
