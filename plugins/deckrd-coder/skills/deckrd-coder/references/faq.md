@@ -2,7 +2,8 @@
 title: FAQ - /deckrd-coder スキル よくある質問
 ---
 
-<!--textlint-disable ja-technical-writing/no-exclamation-question-mark -->
+<!--textlint-disable
+  ja-technical-writing/no-exclamation-question-mark -->
 
 ## Q1: 複数タスクを同時に実装できる？
 
@@ -18,8 +19,6 @@ title: FAQ - /deckrd-coder スキル よくある質問
 
 複数タスクを同時指定するとメモリ制約により品質が低下します。
 
----
-
 ## Q2: 実装完了後、コミットしてもいい？
 
 **A**: **いいえ。コミットはユーザーが手動で実施してください。**
@@ -31,8 +30,6 @@ title: FAQ - /deckrd-coder スキル よくある質問
 - コード品質
 
 このスキルは **実装までしか行いません**。
-
----
 
 ## Q3: Green フェーズで複数メンバー定義できる？
 
@@ -54,8 +51,6 @@ enum Status {
 
 過剰実装は Refactor フェーズで統合的に改善。詳細は [IMPLEMENTATION.md](./implementation.md#step-3-最小実装) を参照。
 
----
-
 ## Q4: Step 5 で品質ゲート失敗した。どこへ戻る？
 
 **A**: エラーの種類で判定:
@@ -69,8 +64,6 @@ enum Status {
 
 詳細は [TROUBLESHOOTING.md](./troubleshooting.md#逸脱-6-step-5-での失敗対応の混乱) の「逸脱 6: Step 5 での失敗対応の混乱」参照。
 
----
-
 ## Q5: Task ID の指定形式は？
 
 **A**: 以下の 2 形式が使用可能:
@@ -81,8 +74,6 @@ enum Status {
 | 詳細 ID       | `T01-02-01` | **非推奨** (テストケース詳細指定) |
 
 通常はセクション ID での指定を推奨します。
-
----
 
 ## Q6: bdd-coder エージェントは何をするの？
 
@@ -96,8 +87,6 @@ enum Status {
 
 詳細は [bdd-coder.md](../agents/bdd-coder.md) を参照。
 
----
-
 ## Q7: 品質ゲートコマンドは何？
 
 **A**: Lint、型チェック、テストを実行するコマンド:
@@ -108,8 +97,6 @@ enum Status {
 
 プロジェクトメモリ `suggested_commands` から自動取得されます。詳細は [IMPLEMENTATION.md](./implementation.md#step-1-品質ゲートコマンド取得) を参照。
 
----
-
 ## Q8: 3 回以上品質ゲート失敗したらどうする？
 
 **A**: ユーザーに相談し、以下の対応を検討:
@@ -119,8 +106,6 @@ enum Status {
 3. **ステップの見直し**: 実装タスクリストを再細分化
 
 詳細は [TROUBLESHOOTING.md](./troubleshooting.md) の「品質ゲート失敗への対応」参照。
-
----
 
 ## さらに詳しく
 
