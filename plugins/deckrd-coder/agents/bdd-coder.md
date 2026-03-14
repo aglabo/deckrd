@@ -72,8 +72,8 @@ When processing task `T<xx>-<yy>-<zz>`:
    ```markdown
    # T02-04-03 Implementation Breakdown
 
-   - [ ] testCase1: <description>  state: todo
-   - [ ] testCase2: <description>  state: todo
+   - [ ] testCase1: <description> state: todo
+   - [ ] testCase2: <description> state: todo
    ```
 
 3. State vocabulary: `todo` → `red` → `green` → `done`
@@ -116,9 +116,9 @@ Repeat steps 3.1–3.7 for each `state: todo` item:
 ### Phase 7: Quality Gates
 
 1. IDENTIFY — which command proves each criterion?
-2. RUN      — execute now
-3. READ     — full output, not a summary
-4. VERIFY   — criterion met?
+2. RUN — execute now
+3. READ — full output, not a summary
+4. VERIFY — criterion met?
 5. ONLY THEN — mark gate passed
 
 | Gate       | Must pass |

@@ -356,23 +356,23 @@ main() {
   # Parse arguments
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      -n|--dry-run)
-        DRY_RUN=true
-        shift
-        ;;
-      -h|--help)
-        show_usage
-        exit 0
-        ;;
-      -*)
-        echo "Error: Unknown option: $1" >&2
-        show_usage >&2
-        exit 1
-        ;;
-      *)
-        raw_version="$1"
-        shift
-        ;;
+    -n | --dry-run)
+      DRY_RUN=true
+      shift
+      ;;
+    -h | --help)
+      show_usage
+      exit 0
+      ;;
+    -*)
+      echo "Error: Unknown option: $1" >&2
+      show_usage >&2
+      exit 1
+      ;;
+    *)
+      raw_version="$1"
+      shift
+      ;;
     esac
   done
 

@@ -15,8 +15,6 @@ metadata:
   license: MIT
 ---
 
-<!-- markdownlint-disable line-length -->
-
 # deckrd-coder
 
 Implements one Deckrd task per call using strict BDD: Red → Green → Refactor.
@@ -51,14 +49,14 @@ Default checklist: `tasks/implementation-checklist.md`
 
 ## Execution Flow
 
-| Phase | Name          | What happens                                  |
-| ----- | ------------- | --------------------------------------------- |
+| Phase | Name          | What happens                                   |
+| ----- | ------------- | ---------------------------------------------- |
 | 0     | Environment   | Confirm test framework, lint, type-check setup |
-| 1     | Task Info     | Read session, tasks.md, checklist for task    |
-| 2     | Decomposition | Break task into minimal implementation steps  |
-| 3     | BDD Loop      | Red → Green → Refactor per step               |
-| 4     | Quality Gate  | All tests pass, lint and type-check pass      |
-| 5     | Done Check    | Confirm all checklist items complete          |
+| 1     | Task Info     | Read session, tasks.md, checklist for task     |
+| 2     | Decomposition | Break task into minimal implementation steps   |
+| 3     | BDD Loop      | Red → Green → Refactor per step                |
+| 4     | Quality Gate  | All tests pass, lint and type-check pass       |
+| 5     | Done Check    | Confirm all checklist items complete           |
 
 Gate Rule: phases must run in order. No skipping.
 
@@ -76,12 +74,14 @@ Do NOT commit after completion — user commits manually.
 ## Examples
 
 **Implement a single task:**
+
 > "Implement T01-02."
-→ `/deckrd-coder T01-02`
+> → `/deckrd-coder T01-02`
 
 **Explicit checklist:**
+
 > "Use the sprint checklist for T02-01."
-→ `/deckrd-coder T02-01 --checklist docs/.deckrd/my-project/sprint/tasks/implementation-checklist.md`
+> → `/deckrd-coder T02-01 --checklist docs/.deckrd/my-project/sprint/tasks/implementation-checklist.md`
 
 ## Troubleshooting
 
