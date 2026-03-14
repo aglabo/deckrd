@@ -1,77 +1,69 @@
 ---
 title: WORKFLOW - 内部フロー詳細
-description:内部フロー
+description: deckrd-coder マネジメント層の内部フロー
 ---
 
-<!-- textlint-disable ja-technical-writing/max-comma -->
+<!-- textlint-disable
+  ja-technical-writing/max-comma,
+  ja-technical-writing/no-exclamation-question-mark -->
 
-## WORKFLOW - 内部フロー詳細
+## WORKFLOW - deckrd-coder マネジメント層
 
-## 概要: 開発環境・コーディング状態の管理レイヤー
+deckrd-coder はオーケストレーション専用レイヤーです。
+BDD サイクル (テスト・実装・リファクタ) は bdd-coder エージェントに委譲します。
 
-このワークフローは、コーディングセッション全体における開発環境と実装状態を管理するメタレイヤーです。
-以下の責務を持ちます。
+deckrd-coder の責務:
 
-- 開発言語・開発環境の把握と管理 (build, run, lint などの開発ツール設定)
-- セッション・タスク情報の動的取得
-- プロジェクト規約・コード様式の参照
-- 実装状態の追跡と記録
-- 品質ゲートの実行と検証
-
----
+- 開発環境の把握と管理
+- チェックリストの読み込みとタスク管理
+- bdd-coder のディスパッチ (順次 or 並列)
+- ステータス収集と進捗記録
+- グローバル品質ゲートの実行
+- エスカレーション (BLOCKED 時のユーザー相談)
 
 ## ワークフロー全体マップ
 
-コーディングセッション全体は以下の 0-6 のフェーズで構成されます。
-
 ```bash
-Phase 0: 開発環境の取得、設定
+Phase 0: 開発環境の取得・設定 (explore-agent 委譲)
     ↓
-Phase 1: deckrd の active タスクからタスクリストを取得
+Phase 1: タスクリスト取得 (session + checklist 読み込み)
     ↓
-Phase 2: 呼び出し時のパラメータ、タスクリストから実装タスクリストを取得
+Phase 2: タスク分析・依存関係マッピング
     ↓
-Phase 3: 実装タスクリストに従って、コーディング (= Red-Green-Refactor 実装)
+Phase 3: bdd-coder ディスパッチ (独立タスクは並列実行可能)
     ↓
-Phase 4: 品質ゲート実行 (Lint, 型チェック, テスト)
+Phase 4: グローバル品質ゲート (Lint + 型チェック + テスト)
     ↓
-Phase 5: コーディング終了確認
+Phase 5: チェックリスト確認と完了判定
     ↓
 Phase 6: ワークフロー終了
 ```
 
-| Phase   | 目的                   | 出力                         |
-| ------- | ---------------------- | ---------------------------- |
-| Phase 0 | 開発言語・環境を把握   | 開発ツール設定、実行コマンド |
-| Phase 1 | アクティブタスクを特定 | タスクID、テストケース一覧   |
-| Phase 2 | 実装対象を細分化       | 実装タスクリスト             |
-| Phase 3 | コーディング実行       | テスト合格、実装コード       |
-| Phase 4 | 品質を検証             | 品質ゲート合格確認           |
-| Phase 5 | 完了状態を確認         | セッション終了前の最終確認   |
-| Phase 6 | セッション終了         | 開発ツール・状態をリセット   |
+| Phase   | 目的                 | 出力                           |
+| ------- | -------------------- | ------------------------------ |
+| Phase 0 | 開発言語・環境を把握 | ENV PROFILE (env-profile.md)   |
+| Phase 1 | 対象タスクを特定     | タスクID、Given/When/Then 一覧 |
+| Phase 2 | 依存関係を分析       | 実行グループ (直列 / 並列)     |
+| Phase 3 | bdd-coder に委譲     | 各タスクのステータスレポート   |
+| Phase 4 | 全体品質を検証       | 品質ゲート合格確認             |
+| Phase 5 | 完了状態を確認       | セッション終了前の最終確認     |
+| Phase 6 | セッション終了       | 開発ツール・状態をリセット     |
 
----
+## Before You Begin (MANDATORY — Phase 0 の前に実行)
 
-## Before You Begin (MANDATORY — runs BEFORE Phase 0)
+対象タスクの tasks.md を読む。
+以下が不明な場合:
 
-Read the target task in tasks.md. Then ask ALL unclear items NOW:
+1. 対象の関数/クラス/メソッドが明確か？
+2. Given/When/Then 条件がすべて定義されているか？
+3. 未実装の依存タスクが存在しないか？
 
-<!-- textlint-disable ja-technical-writing/no-exclamation-question-mark -->
+質問はすべて **1 メッセージにまとめて** Phase 0 開始前に行う。
+Phase 0 開始後はスコープ質問禁止。
 
-1. Is the Target function/class/method unambiguous?
-2. Are Given/When/Then conditions fully specified?
-3. Are there dependencies on unimplemented tasks?
+## Phase 0: 初期化フェーズ (explore-agent 委譲)
 
-<!-- textlint-enable ja-technical-writing/no-exclamation-question-mark -->
-
-Ask all unclear questions in a SINGLE message before Phase 0 begins.
-Once Phase 0 starts, YOU MUST NOT ask about scope. It is too late.
-
----
-
-## Phase 0: 初期化フェーズ (開発環境把握) (explore-agent 委譲)
-
-コーディングセッション開始時に、**explore-agent** へ環境検出を委譲します。
+**explore-agent** を起動して環境検出を委譲する。
 
 ### Step 0-1: explore-agent の起動
 
@@ -85,119 +77,148 @@ Spawn **explore-agent** with:
 The agent:
 
 1. Reads `.deckrd/profile.json` if present (`project`, `language`)
+
 2. Loads the language rule file if language is found:
    `plugins/deckrd-coder/skills/deckrd-coder/assets/languages/<language>.md`
+
 3. Detects language from manifest files
    (`package.json`, `Cargo.toml`, `setup.py`, etc.)
+
 4. Identifies tool commands (build, run, lint, type-check, test, formatter)
+
 5. Writes the environment profile to `temp/deckrd-work/env-profile.md`
 
-### Step 0-2: 環境プロファイルの取得
+### Step 0-2: ENV PROFILE の取得
 
 Read the **Commands table** returned by the agent.
-Store as **ENV PROFILE** for use in Phase 4 (quality gate)
-and Phase 5 (completion check).
+Store as **ENV PROFILE** for use in Phase 3 (bdd-coder への渡し), Phase 4, Phase 5。
 
-出力:
+出力: `temp/deckrd-work/env-profile.md`
 
-- 開発言語、利用ツール一覧、実行コマンド (`temp/deckrd-work/env-profile.md`)
+## Phase 1: タスクリスト取得
 
----
-
-## Phase 1: deckrd の active タスクからタスクリストを取得
-
-アクティブなセッション情報から、コーディング対象のタスク定義を取得します。
+アクティブなセッション情報から、コーディング対象のタスク定義を取得する。
 
 実行内容:
 
 - `docs/.deckrd/.session.json` の `active` フィールドから現在セッションを取得
 - 指定されたタスク ID のセクションを抽出
-- テストケース一覧、Given-When-Then 詳細を確認
+- チェックリストファイルを読み込み (`tasks/implementation-checklist.md` or `--checklist` 指定)
+- 未完了 (`[ ]`) の `-R` / `-G` / `-F` 項目を把握
 
-出力:
+出力: タスク ID、Given/When/Then 一覧、未完了チェックリスト項目。
 
-- タスク ID、テストケース一覧、テスト仕様
+## Phase 2: タスク分析・依存関係マッピング
 
----
-
-## Phase 2: 呼び出し時のパラメータ、タスクリストから実装タスクリストを取得
-
-ユーザーから受け取ったパラメータと Phase 1 で取得したタスク仕様から、実装対象を細分化します。
+deckrd-coder から bdd-coder エージェントへ効率的に情報を受け渡すため、タスク間の依存関係を分析する。
 
 実行内容:
 
-- ユーザーの要件 (呼び出しパラメータ) を分析
-- タスクを単一テストケース単位に分割
-- 実装タスクリストを作成・記録
+1. 各タスクが変更するファイルを特定
+2. ファイル競合の有無でタスクを分類:
+   - 直列実行グループ: 共有ファイルがある、または前段タスクの出力に依存する
+   - 並列実行グループ: 独立したファイル群を変更する (競合なし)
+3. 実行順序・グループを決定
 
-出力: 実装タスクリスト (テストケースごとのタスク)
+出力: 実行グループ定義 (例: Group-A: 並列[T-01-01, T-01-02], Group-B: 直列[T-01-03])
 
----
+## Phase 3: bdd-coder ディスパッチ
 
-## Phase 3: 実装タスクリストに従って、コーディング
+Phase 2 の実行グループに従って bdd-coder を起動する。
 
-Red-Green-Refactor サイクルで実装タスクを完了します。
+### ディスパッチ方式
+
+**直列実行 (依存関係あり) :**
+
+```bash
+bdd-coder(T-01-01) → 完了待ち → bdd-coder(T-01-02) → 完了待ち → ...
+```
+
+**並列実行 (独立タスク) :**
+
+```bash
+bdd-coder(T-01-01) ┐
+bdd-coder(T-01-02) ├→ 全完了待ち → 次グループへ
+bdd-coder(T-01-03) ┘
+```
+
+### bdd-coder に渡す情報 (Context Isolation)
+
+各 bdd-coder インスタンスに渡す情報:
+
+| 項目              | 内容                             |
+| ----------------- | -------------------------------- |
+| Task ID           | 例: `T-01-02-01`                 |
+| Task description  | tasks.md の Given/When/Then 全文 |
+| Quality gate cmds | ENV PROFILE のコマンド表         |
+| Checklist path    | チェックリストファイルパス       |
+
+**渡さないもの**: セッション全体コンテキスト、他タスクの情報、session.json。
+
+### ステータス収集
+
+各 bdd-coder から受け取ったレポートを記録:
+
+| Task ID    | Status             | Notes                   |
+| ---------- | ------------------ | ----------------------- |
+| T-01-02-01 | DONE               |                         |
+| T-01-02-02 | DONE_WITH_CONCERNS | 既存テスト 2 件が失敗中 |
+| T-01-02-03 | BLOCKED            | 型エラーが 3 回以上発生 |
+
+### BLOCKED 時のエスカレーション
+
+いずれかの bdd-coder が `BLOCKED` を報告した場合:
+
+1. 現在のグループの他タスクが完了している場合、それらを先に記録
+2. ユーザーに問題タスクと詳細を報告
+3. ユーザーの指示を待つ (先へ進まない)
+
+### DONE_WITH_CONCERNS 時の対応
+
+1. concerns の内容をユーザーに明示
+2. Phase 4 完了後に改めて報告
+3. ユーザーが続行可否を判断
+
+## Phase 4: グローバル品質ゲート
+
+全タスク完了後、プロジェクト全体の品質を検証する。
 
 実行内容:
 
-- **ステップ 1～8** に従い、厳密な BDD プロセスで実装
-- 各ステップで品質ゲート実行
-- タスク完了ごとに進捗を記録
+1. IDENTIFY — 各基準を証明するコマンドはどれか？
+2. RUN      — 今すぐ実行
+3. READ     — 完全な出力を読む (要約不可)
+4. VERIFY   — 出力が基準を満たしているか確認
+5. ONLY THEN — 品質ゲート合格とみなす
 
-詳細:
+チェック項目:
 
-- [implementation.md](./implementation.md) を参照
+- [ ] Lint チェック: 合格
+- [ ] 型チェック: 合格
+- [ ] テスト実行: すべてグリーン
 
-出力:
+失敗時:
 
-- テスト合格、実装コード完成
+- 失敗回数 1–2: 分析・修正・再実行
+- 失敗回数 3+: ユーザーに相談 (先へ進まない)
 
----
-
-## Phase 4: 品質ゲート実行
-
-全体的なコード品質を検証します。
-
-実行内容:
-
-- Lint チェック実行
-- 型チェック実行
-- テスト実行
-- すべてのチェックが合格することを確認
-
-出力:
-
-- 品質ゲート合格
-
----
-
-## Phase 5: コーディング終了確認
-
-セッション終了前に、実装が完了したことを確認します。
+## Phase 5: 完了確認
 
 実行内容:
 
 - 全テスト PASS 確認: Run[test command], read FULL output
 - 型エラーなし確認: Run[type check command], read FULL output
-- 実装タスクリストがすべてチェック済み確認: Read implementation.md directly, count checked items
-- Refactor が完了したか確認
+- チェックリストがすべて `[x]` 済み確認: Read checklist directly, count checked items
+- Refactor が完了したか確認 (Step 7 グローバルリファクタ)
 
-出力:
-
-- コーディング完了状態
-
----
+出力: コーディング完了状態。
 
 ## Phase 6: ワークフロー終了
-
-セッションを終了し、開発環境をリセットします。
 
 実行内容:
 
 - 開発ツール・状態をリセット
 - セッション情報をクリア
-- コミットはユーザーが手動実施
+- コミットはユーザーが手動実施 (deckrd-coder は git 操作禁止)
 
-出力:
-
-- セッション終了
+出力: セッション終了。

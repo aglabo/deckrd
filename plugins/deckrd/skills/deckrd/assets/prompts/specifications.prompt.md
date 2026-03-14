@@ -1,4 +1,9 @@
-# Specifications Document Generation Prompt
+---
+name: Specifications Generation Prompt
+description: AI prompt for generating specifications documents from requirements
+---
+
+## Specifications Document Generation Prompt
 
 <!-- textlint-disable
   ja-technical-writing/sentence-length,
@@ -150,6 +155,53 @@ Extract only:
 
 ---
 
+## Step 1-D: Generate ASCII Diagrams
+
+After completing Step 1, generate visual representations using ASCII art only.
+
+### Component Diagram
+
+For each set of behavioral units identified in Step 1, draw a component relationship diagram:
+
+```text
++----------+     +----------+
+|  Unit A  | --> |  Unit B  |
++----------+     +----------+
+      |
+      v
++----------+
+|  Unit C  |
++----------+
+```
+
+Rules:
+
+- Use `+--+` for box corners, `|` for vertical sides, `-` for horizontal sides
+- Use `-->` for directed data flow, `<--` for reverse flow
+- Label each box with the unit name
+- Add data labels on arrows where relevant
+
+### Data Flow Diagram
+
+Draw the input-to-output data flow for the primary behavior:
+
+```text
+[Input] --> [Process A] --> [Process B] --> [Output]
+               |
+               v
+           [Validation]
+```
+
+Rules:
+
+- Use `[Name]` for process nodes
+- Use `-->` for flow direction
+- Branch with `|` and `v` for sub-flows
+
+Store diagrams as **ASCII DIAGRAMS** for inclusion in Section 2.3 of the output.
+
+---
+
 ## Step 2: Generate Document
 
 Using the TEMPLATE:
@@ -228,6 +280,17 @@ Open Questions section is **MANDATORY** (not optional).
 Output ONLY the generated markdown document.
 Do not include explanations or meta-commentary.
 The document must be implementation-agnostic.
+
+### Diagram Rules
+
+- Diagrams MUST use ASCII art only.
+- Mermaid, PlantUML, SVG, and any other diagramming syntax are PROHIBITED.
+- ASCII diagram style guide:
+  - Component boxes: `+----------+` corners, `|  Name  |` body
+  - Directed arrows: `-->` (forward), `<--` (reverse), `<-->` (bidirectional)
+  - Vertical flow: `|` pipe then `v` arrow
+  - Process nodes in data flows: `[ProcessName]`
+  - Branching: indent sub-flows below the branch point
 
 ### External Spec Compliance
 

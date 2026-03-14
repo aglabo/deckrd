@@ -1,4 +1,9 @@
-# Deckrd Workflow
+---
+title: Deckrd Workflow
+description: Linear document derivation workflow from goals to executable tasks
+---
+
+## Deckrd Workflow
 
 ## Overview
 
@@ -102,8 +107,10 @@ docs/.deckrd/
         │   └── specifications.md
         ├── implementation/
         │   └── implementation.md
-        └── tasks/
-            └── tasks.md
+        ├── tasks/
+        │   └── tasks.md
+        └── quick/
+            └── quick-spec.md        # Created by /deckrd quick (lightweight path)
 ```
 
 ## Usage Example
@@ -132,3 +139,62 @@ docs/.deckrd/
 /deckrd tasks
 # → Reads specifications.md, creates tasks.md
 ```
+
+---
+
+## Alternative Workflow Paths
+
+### Reverse Engineering Path (existing code → documentation)
+
+Use when: existing code or PoC exists and documentation is missing.
+
+```bash
+# Start module
+/deckrd init my-project/legacy-module
+
+# Reverse-engineer requirements from code
+/deckrd rev --to req
+# → Analyzes codebase, creates requirements/requirements.md
+
+# Continue with standard flow from here
+/deckrd spec
+/deckrd impl
+/deckrd tasks
+```
+
+Or reverse-engineer directly to a later stage:
+
+```bash
+/deckrd rev --to spec   # → Skip req, generate spec from code
+/deckrd rev --to impl   # → Generate impl from code (req+spec must exist)
+```
+
+### Lightweight Path (small changes / bug fixes)
+
+Use when: the change is small (1–3 files), well-understood, and requires no new interfaces.
+
+```bash
+# Start module
+/deckrd init my-project/feature-x
+
+# Single combined req+spec document
+/deckrd quick "Fix the timeout handling in the retry loop"
+# → Creates quick/quick-spec.md
+
+# Implement directly
+/deckrd-coder quick-spec.md
+```
+
+Escalate to the full flow if the change grows beyond 3 files or introduces new interfaces.
+
+---
+
+## Workflow Selection Guide
+
+| Situation                                    | Recommended Path               |
+| -------------------------------------------- | ------------------------------ |
+| New feature from scratch                     | Standard flow                  |
+| Existing code, no documentation              | `rev` path                     |
+| Bug fix or minor change (1–3 files)          | `quick` path                   |
+| PoC completed, need production documentation | `rev --to req` + standard flow |
+| Complex change, new external interfaces      | Standard flow                  |

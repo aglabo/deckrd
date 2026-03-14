@@ -1,7 +1,13 @@
-# review Command
+---
+title: review Command
+description: Review documents with phase-specific analysis for design maturation
+---
 
-<!-- textlint-disable ja-technical-writing/no-exclamation-question-mark -->
-<!-- textlint-disable ja-technical-writing/sentence-length -->
+## review Command
+
+<!-- textlint-disable
+  ja-technical-writing/sentence-length,
+  ja-technical-writing/no-exclamation-question-mark -->
 <!-- markdownlint-disable line-length -->
 
 Review documents with phase-specific analysis for design maturation.
@@ -294,10 +300,10 @@ Each review phase uses a dedicated template:
 Deckrd commands rely on an AI interaction engine to derive documents
 from user input and interaction logs.
 
-Execute: [run-prompt.sh](../../scripts/run-prompt.sh)
+Execute: [generate-doc.sh](../../scripts/generate-doc.sh)
 
 For review mode:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/run-prompt.sh review @<document> --phase <phase> [--lang <lang>] [--output <file>]
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh review @<document> --phase <phase> [--lang <lang>] [--output <file>]
 ```

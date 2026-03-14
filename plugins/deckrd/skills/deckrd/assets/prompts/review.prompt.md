@@ -1,4 +1,9 @@
-# Document Review Prompt (deckrd)
+---
+name: Document Review Prompt
+description: AI prompt for phase-specific document review and analysis
+---
+
+## Document Review Prompt (deckrd)
 
 <!-- textlint-disable ja-technical-writing/sentence-length,
       ja-technical-writing/no-exclamation-question-mark,

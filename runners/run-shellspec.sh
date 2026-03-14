@@ -10,7 +10,7 @@
 set -euo pipefail
 
 # Project root and constants
-PROJECT_ROOT="${PROJECT_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || echo "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)")}"
+PROJECT_ROOT="${PROJECT_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || (cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd))}"
 SHELLSPEC="${SHELLSPEC:-${PROJECT_ROOT}/.tools/shellspec/shellspec}"
 
 #
@@ -31,7 +31,7 @@ main() {
 
   # Normalize path separators (\ → /) for Windows compatibility
   # Windows paths with backslashes need conversion for bash/Unix tools
-  # Using Bash array expansion to normalize all arguments in one pass (no need for multiple variable references)
+  # Bash の配列展開で全引数を一括変換（ﾙ恐[ﾌﾟv不要）
   local -a args=("$@")
   normalized_args=("${args[@]//\\//}")
 

@@ -1,4 +1,12 @@
-# req Command
+---
+title: req Command
+description: Derive a normative requirements document from goals and constraints
+---
+
+<!-- textlint-disable
+  ja-technical-writing/sentence-length -->
+
+## req Command
 
 <!-- textlint-disable
     ja-technical-writing/no-exclamation-question-mark,
@@ -59,9 +67,35 @@ Prompt the user:
 
 Accept free-form text. Store as **USER INPUT**.
 
+### Phase 1-D: Generate System Context Diagram
+
+After collecting USER INPUT, generate a system context diagram in ASCII art
+to visualize the system boundary and external relationships identified in Phase 1.
+
+```text
+[External Actor] --> +------------------+ --> [External System]
+                     |   Target System  |
+[External Actor] <-- +------------------+ <-- [External System]
+```
+
+Rules:
+
+- Use `+--+` for the system boundary box, `|` for vertical sides
+- Use `[Name]` for external actors and systems
+- Use `-->` for outgoing data/control flow, `<--` for incoming
+- ASCII diagrams ONLY — Mermaid, PlantUML, and SVG are PROHIBITED
+
+Present the diagram to the user during Phase 2 for confirmation.
+Add "Is the system boundary correct?" as a Hearing Loop question.
+
+Store as **CONTEXT DIAGRAM** for inclusion in requirements.md Section 2.
+
+---
+
 ### Phase 2: Hearing Loop (max 5 rounds)
 
 Conduct an interactive Q&A loop to fill information gaps.
+**Priority: fill missing EARS elements first**, then fill remaining scope gaps.
 
 **Rules**:
 
@@ -71,13 +105,24 @@ Conduct an interactive Q&A loop to fill information gaps.
 - Prefer Yes/No or multiple-choice (A/B/C) questions over open-ended ones
 - Accumulate answers as **HEARING NOTES**
 
+**Question priority order** (ask in this order, skip if already known):
+
+1. **EARS/GIVEN** — For each FR candidate, ask: "Under what condition does this apply?"
+   Example: "This behavior — is it available to all users, or only authenticated ones?"
+2. **EARS/type** — For each FR candidate without a type, ask which fits:
+   Example: "Does this trigger on a specific user action (WHEN), or hold continuously
+   during a system state (WHILE), or is it something the system must never do (NOT DO)?"
+3. **Scope** — In-scope vs out-of-scope boundary
+4. **Constraints** — Technical or business constraints
+5. **Stakeholders** — Who will use the system
+
 **Termination conditions** (stop as soon as either is met):
 
 1. User responds with "十分", "以上です", "OK", "done", or equivalent
-2. All 5 items below are confirmed:
+2. All items below are confirmed:
    1. Purpose (what problem to solve)
    2. Scope (in-scope and out-of-scope)
-   3. Key functional requirements (at least 3)
+   3. Key functional requirements (at least 3) — each with GIVEN and type confirmed
    4. Constraints (technical or business)
    5. Stakeholders (who will use it)
 
@@ -94,7 +139,7 @@ USER INPUT:       <Phase 1 initial text>
 Then execute:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/run_prompt.sh requirements \
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh requirements \
   "<USER_INPUT>" \
   [--lang <lang>] \
   --output "requirements/requirements.md"
@@ -111,16 +156,17 @@ After `requirements.md` is generated, conduct a review loop before finalizing.
 
 Read the generated `requirements.md` and evaluate against the following checklist:
 
-| Check Item                                 | Pass Criteria                                     |
-| ------------------------------------------ | ------------------------------------------------- |
-| Purpose is clearly stated                  | One sentence, unambiguous                         |
-| Scope and Out-of-Scope are explicit        | Both present, no overlap                          |
-| Functional Requirements are normative      | Each uses SHALL / SHOULD / MAY; no vague verbs    |
-| Non-Functional Requirements are measurable | Quantified where possible (e.g., response < 2 s)  |
-| User Stories cover all stakeholders        | 3–7 stories; each maps to at least one FR         |
-| Acceptance Criteria are testable           | 5 Gherkin scenarios; Given/When/Then are concrete |
-| Open Questions are catalogued              | All unresolved items listed with owner and impact |
-| No contradictions between sections         | FR ↔ NFR ↔ User Stories are consistent            |
+| Check Item                                 | Pass Criteria                                                    |
+| ------------------------------------------ | ---------------------------------------------------------------- |
+| Purpose is clearly stated                  | One sentence, unambiguous                                        |
+| Scope and Out-of-Scope are explicit        | Both present, no overlap                                         |
+| Functional Requirements use EARS syntax    | Each REQ-F has GIVEN + (WHEN/WHILE/NOT DO/WHERE) + THEN          |
+| EARS type is labeled per REQ-F             | Each REQ-F declares its EARS type (event/state/unwanted/feature) |
+| Non-Functional Requirements are measurable | Quantified where possible (e.g., response < 2 s)                 |
+| User Stories cover all stakeholders        | 3–7 stories; each maps to at least one FR                        |
+| Acceptance Criteria are testable           | 5 Gherkin scenarios; Given/When/Then are concrete                |
+| Open Questions are catalogued              | All unresolved items listed with owner and impact                |
+| No contradictions between sections         | FR ↔ NFR ↔ User Stories are consistent                           |
 
 #### Step 4-2: Present Review Findings
 
@@ -130,8 +176,16 @@ Present findings to the user in one of two ways:
 
 ```toml
 [Review Finding]
-- FR-02 uses vague verb "handle" → Suggest: "SHALL process X and return Y within Z ms"
+- REQ-F-002 missing EARS structure (plain SHALL statement) →
+  Suggest EARS rewrite:
+    GIVEN <condition>
+      WHEN <event>
+    THEN the system SHALL process X and return Y within Z ms.
   Accept suggestion? (Y/n/custom)
+
+- REQ-F-003 EARS type not labeled →
+  Suggest: add "EARS Type: event-driven" above the code block.
+  Accept? (Y/n/custom)
 
 - NFR: no measurable target for performance
   Suggested value: < 2 s for 95th percentile. Accept? (Y/n/custom)
@@ -182,10 +236,10 @@ deckrd/assets/
 
 ## Script
 
-Execute: [run_prompt.sh](../../scripts/run-prompt.sh)
+Execute: [generate-doc.sh](../../scripts/generate-doc.sh)
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/run_prompt.sh requirements <user_input> [--lang <lang>] --output "requirements/requirements.md"
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh requirements <user_input> [--lang <lang>] --output "requirements/requirements.md"
 ```
 
 ## Session Update

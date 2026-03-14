@@ -20,8 +20,44 @@ indent_size = 2
 tab_width = 2
 
 # ─────────────────────────────
+# Exclude directories/files
+# ─────────────────────────────
+[.tools/*]
+ignore = true
+
+[.local/*]
+ignore = true
+
+# ─────────────────────────────
 # Source Code Files
 # ─────────────────────────────
+
+# ─────────────────────────────
+# Shell Scripts
+# ─────────────────────────────
+[*.{sh,bash,zsh}]
+indent_style = space
+indent_size = 2
+tab_width = 2
+
+##  shell script foematter settings
+# --language-dialect
+shell_variant      = bash
+simplify           = true
+binary_next_line   = true
+# --case-indent
+switch_case_indent = true
+space_redirects    = true
+keep_padding       = true
+# --func-next-line
+function_next_line = true
+minify             = true
+
+# PowerShell
+[*.ps1]
+indent_style = space
+indent_size = 4
+tab_width = 4
 
 # ─────────────────────────────
 # Documents
@@ -30,7 +66,6 @@ tab_width = 2
 indent_style = space
 indent_size = 2
 tab_width = 2
-
 
 # ─────────────────────────────
 # configuration files
@@ -60,19 +95,6 @@ indent_style = space
 indent_size = 2
 tab_width = 2
 
-# ─────────────────────────────
-# Shell Scripts
-# ─────────────────────────────
-[*.{sh,bash,zsh}]
-indent_style = space
-indent_size = 2
-tab_width = 2
-
-# PowerShell
-[*.ps1]
-indent_style = space
-indent_size = 4
-tab_width = 4
 
 # ─────────────────────────────
 # Git Config Files
@@ -98,3 +120,4 @@ tab_width = 2
 # [Dockerfile]
 # indent_style = space
 # indent_size = 2
+

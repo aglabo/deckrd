@@ -1,4 +1,9 @@
-# impl Command
+---
+title: impl Command
+description: Derive an implementation plan from specifications via wall-hitting workflow
+---
+
+## impl Command
 
 <!-- textlint-disable ja-technical-writing/sentence-length,
   ja-technical-writing/no-exclamation-question-mark,
@@ -295,7 +300,7 @@ SPECIFICATIONS:            @specifications/specifications.md
 Execute:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/run-prompt.sh impl \
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh impl \
   @specifications/specifications.md \
   [--lang <lang>] \
   --output "implementation/implementation.md"
@@ -350,10 +355,10 @@ deckrd/assets/
 
 ## Script
 
-Execute: [run-prompt.sh](../../scripts/run-prompt.sh)
+Execute: [generate-doc.sh](../../scripts/generate-doc.sh)
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/run-prompt.sh impl @specifications/specifications.md [--lang <lang>] --output "implementation/implementation.md"
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh impl @specifications/specifications.md [--lang <lang>] --output "implementation/implementation.md"
 ```
 
 > **Note**: The `@` prefix resolves to the active module's document path:

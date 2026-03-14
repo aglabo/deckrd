@@ -1,101 +1,43 @@
 ---
 name: deckrd
-description: "Use when structuring requirements, specifications, or tasks. Enforces stepwise derivation and phase integrity."
+description: >
+  Document-driven framework that derives requirements, specifications, implementation plans,
+  and executable tasks from goals through structured AI dialogue.
+  Use when user says "write requirements", "create spec", "plan implementation",
+  "derive tasks", "structure this feature", "break down into tasks", or "document this module".
+  Also use for reverse engineering existing code into docs (/deckrd rev)
+  or for lightweight quick changes (/deckrd quick).
+  Do NOT use for direct code writing — use /deckrd-coder after tasks are generated.
+  Do NOT use when the user only wants to run or fix existing code without planning.
+metadata:
+  author: aglabo
+  version: 0.0.5
+  license: MIT
 ---
 
-<!-- textlint-disable
-  ja-technical-writing/sentence-length,
-  ja-technical-writing/max-comma -->
 <!-- markdownlint-disable line-length -->
 
-# Deckrd - Your Goals to Tasks framework
+# Deckrd
 
-Deckrd is a document-centered framework for structuring and refining ideas through iterative discussion with AI.
-It guides the creation of requirements, decisions, specifications, and implementation plans as derived documents, not final outputs.
-Each document captures reasoning at a specific stage, preserving context and intent.
-Through a strict, state-driven workflow, these documents are progressively shaped into executable development tasks.
-Deckrd enables documentation to function as a practical engine for action, not just description.
-
-## Commands
-
-| Command                                      | Description                                                                              |
-| -------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `init <project> <project-type>`              | Bootstrap project, write profile.json, init session                                      |
-| `module <ns>/<mod>`                          | Create module directories, set active module                                             |
-| `module <ns>/<mod> --force`                  | Re-initialize module (existing files preserved)                                          |
-| `module create <ns>/<mod>`                   | Create module with `.profile.json`, set active                                           |
-| `module create <mod>`                        | Same; subdomain auto-resolved from git remote name                                       |
-| `req`                                        | Derive requirements from goals                                                           |
-| `dr`                                         | Manage Decision Records (req step only)                                                  |
-| `dr --add`                                   | Append a new Decision Record                                                             |
-| `spec`                                       | Derive specifications from requirements                                                  |
-| `impl`                                       | Derive implementation plan from specifications                                           |
-| `tasks`                                      | Derive executable tasks from implementation; auto-generate `implementation-checklist.md` |
-| `tasks update`                               | Regenerate `implementation-checklist.md` from existing `tasks.md`                        |
-| `status`                                     | Display current workflow progress and status                                             |
-| `review`                                     | Show review command usage                                                                |
-| `review <doc> [--phase <p>]`                 | Review document with phase-specific analysis                                             |
-| `profile --project <name> --language <lang>` | Configure project profile (language, project name)                                       |
+Goals → Requirements → Specifications → Implementation → Tasks
 
 ## Skill Announcement (REQUIRED)
 
-YOU MUST announce at the start of every command execution:
+Before every command, YOU MUST output:
 
 > "I am executing /deckrd [COMMAND] for module [MODULE_NAME]."
 
 No announcement = violation. Restart with announcement.
 
----
+## Before Every Command (REQUIRED)
 
-## Session Resolution
-
-Session state is stored in `docs/.deckrd/.session.json`.
-
-```text
-[/deckrd init <project> <project-type>]
-     |  Bootstrap + profile.json + session.json
-     v
-[/deckrd module <ns>/<mod>]
-     |  Create module dirs, set active module
-     v
-Goals/Ideas
-     |
-     v
-[/deckrd req] -> requirements.md
-     |
-     v
-[/deckrd spec] -> specifications.md
-     |
-     v
-[/deckrd impl] -> implementation.md
-     |
-     v
-[/deckrd tasks] -> tasks.md
-     |              -> implementation-checklist.md (auto)
-     |
-     v
-[/deckrd tasks update] -> implementation-checklist.md (regenerate)
-     |
-     v
-[/deckrd-coder TX-XX] -> Implementation
-
-Gate Rule: Each command REQUIRES the previous command's document.
-           YOU MUST NOT skip commands. No exceptions.
-```
-
-YOU MUST execute ALL of the following before every command:
-
-1. Read `.session.json` — YOU MUST confirm active module and current step
+1. Read `.local/deckrd/session.json` — confirm active module and current step
 2. Validate command order — if out of order, STOP and report
-3. Load the reference — NEVER proceed without loading it
-
-> **Note**: The `profile` command is project-scoped and does not interact with session state.
-> It can be run at any time, before or after `init`.
-> Reference: [commands/profile.md](references/commands/profile.md)
+3. Load the reference listed below — NEVER proceed without it
 
 **Reference selection:**
 
-| Current State    | Next Command | Load Reference                                      |
+| Current State    | Next Command | Reference                                           |
 | ---------------- | ------------ | --------------------------------------------------- |
 | (none)           | init         | [commands/init.md](references/commands/init.md)     |
 | init completed   | module       | [commands/module.md](references/commands/module.md) |
@@ -104,7 +46,42 @@ YOU MUST execute ALL of the following before every command:
 | spec completed   | impl         | [commands/impl.md](references/commands/impl.md)     |
 | impl completed   | tasks        | [commands/tasks.md](references/commands/tasks.md)   |
 | any              | review       | [commands/review.md](references/commands/review.md) |
+| init completed   | rev          | [commands/rev.md](references/commands/rev.md)       |
 
-**For workflow overview:** [workflow.md](references/workflow.md)
-**For session management details:** [session.md](references/session.md)
-**For status command:** [commands/status.md](references/commands/status.md)
+Gate Rule: each command requires the previous command's document. No skipping.
+
+> `project` is project-scoped and can run any time. See [commands/project.md](references/commands/project.md).
+> Full command list: [commands/index.md](references/commands/index.md)
+> Workflow overview: [workflow.md](references/workflow.md)
+> Session management: [session.md](references/session.md)
+
+## Examples
+
+**New feature from goals:**
+
+> "I want to add a retry mechanism to the HTTP client."
+> → `/deckrd init my-project/http-retry` → `req` → `spec` → `impl` → `tasks`
+
+**Existing code, no docs:**
+
+> "This module has no documentation. Reverse-engineer it."
+> → `/deckrd rev --to req` → `spec` → `impl` → `tasks`
+
+**Small bug fix:**
+
+> "Fix the off-by-one error in the pagination logic."
+> → `/deckrd quick "Fix off-by-one in pagination"`
+
+## Troubleshooting
+
+**Session not found**
+Cause: `init` has not been run, or wrong directory.
+Solution: Run `/deckrd init <project> <project-type>` first.
+
+**Command out of order**
+Cause: Trying to run `spec` before `req`, etc.
+Solution: Check `/deckrd status` to see the current step, then run the correct next command.
+
+**Gate Rule violation**
+Cause: Required document from previous step is missing.
+Solution: Complete the missing step before proceeding. Use `/deckrd status` to confirm.

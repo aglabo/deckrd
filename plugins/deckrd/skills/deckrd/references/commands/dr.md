@@ -1,4 +1,9 @@
-# dr Command
+---
+title: dr Command
+description: Manage Decision Records for the active module
+---
+
+## dr Command
 
 <!-- textlint-disable
   ja-technical-writing/sentence-length,
@@ -239,10 +244,10 @@ from user input and interaction logs.
 The provided scripts invoke this engine and are required for normal
 Deckrd operation, rather than serving as optional reference implementations.
 
-Execute: [run-prompt.sh](../../scripts/run-prompt.sh)
+Execute: [generate-doc.sh](../../scripts/generate-doc.sh)
 
 For `--add` mode:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/run-prompt.sh decision-record <user_context> [--lang <lang>] --output "decision-records.md" --append
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh decision-record <user_context> [--lang <lang>] --output "decision-records.md" --append
 ```

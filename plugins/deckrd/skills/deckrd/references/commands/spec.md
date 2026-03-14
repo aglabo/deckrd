@@ -1,4 +1,9 @@
-# spec Command
+---
+title: spec Command
+description: Derive technically verifiable behavioral specifications from requirements
+---
+
+## spec Command
 
 <!-- textlint-disable
     ja-technical-writing/no-exclamation-question-mark,
@@ -109,6 +114,20 @@ Using REQ SUMMARY + CODEBASE CONTEXT + PRIOR ART, draft a design direction:
 3. **Interface design** — what inputs, outputs, and side effects each unit has
 4. **Constraint mapping** — which NFRs / DRs constrain the design
 5. **Risk / ambiguity list** — unclear points that need user input
+6. **ASCII diagram** — draw an initial component diagram showing unit relationships:
+
+   ```text
+   +----------+     +----------+
+   |  Unit A  | --> |  Unit B  |
+   +----------+     +----------+
+         |
+         v
+   +----------+
+   |  Unit C  |
+   +----------+
+   ```
+
+   ASCII diagrams ONLY — Mermaid, PlantUML, and SVG are PROHIBITED.
 
 Store as **DESIGN DRAFT**:
 
@@ -200,6 +219,24 @@ Identify how the units interact:
 - Ordering constraints (B must run after A)
 - Shared state or resources
 - Failure propagation (if A fails, what happens to B?)
+
+Express cross-unit interactions as an ASCII component diagram:
+
+```text
++----------+     +----------+     +----------+
+|  Unit A  | --> |  Unit B  | --> |  Unit C  |
++----------+     +----------+     +----------+
+                      |
+                      v
+                 +----------+
+                 |  Unit D  |
+                 +----------+
+```
+
+- Use `+--+` for box corners, `|` for vertical sides, `-` for horizontal sides
+- Use `-->` for directed data flow
+- Branch vertically with `|` pipe and `v` arrow
+- ASCII diagrams ONLY — Mermaid, PlantUML, and SVG are PROHIBITED
 
 #### E-4: Edge Case Enumeration
 
@@ -403,7 +440,7 @@ REQUIREMENTS:         @requirements/requirements.md
 For **each file** in SPLIT PLAN, execute:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/run-prompt.sh specifications \
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh specifications \
   @requirements/requirements.md \
   [--lang <lang>] \
   --output "specifications/<filename>"
@@ -537,10 +574,10 @@ deckrd/assets/
 
 ## Script
 
-Execute: [run-prompt.sh](../../scripts/run-prompt.sh)
+Execute: [generate-doc.sh](../../scripts/generate-doc.sh)
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/run-prompt.sh specifications @requirements/requirements.md [--lang <lang>] --output "specifications/specifications.md"
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh specifications @requirements/requirements.md [--lang <lang>] --output "specifications/specifications.md"
 ```
 
 > **Note**:
