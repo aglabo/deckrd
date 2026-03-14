@@ -13,13 +13,30 @@ The main session reads the summary and proceeds without holding raw file content
 
 ## Inputs
 
-| Parameter   | Values                                                | Description                             |
-| ----------- | ----------------------------------------------------- | --------------------------------------- |
-| `directory` | Path string                                           | Root directory to investigate           |
-| `scope`     | `codebase-survey` / `prior-art` / `pattern-detection` | Investigation mode                      |
-| `focus`     | Comma-separated keywords (optional)                   | Narrow the investigation to these areas |
+| Parameter   | Values                                                                        | Description                             |
+| ----------- | ----------------------------------------------------------------------------- | --------------------------------------- |
+| `directory` | Path string                                                                   | Root directory to investigate           |
+| `scope`     | `codebase-extraction` / `codebase-survey` / `prior-art` / `pattern-detection` | Investigation mode                      |
+| `focus`     | Comma-separated keywords (optional)                                           | Narrow the investigation to these areas |
 
 ## Scope Definitions
+
+### `codebase-extraction`
+
+Extract and analyze existing code for reverse engineering:
+
+1. Read `docs/.deckrd/.session.json` to confirm active module and namespace
+2. Use `Glob` to enumerate all source files, test files, and existing documentation
+3. Use `Read` to scan source files and extract behavioral patterns:
+   - Entry points and public interfaces
+   - Observable behaviors (inputs, outputs, side effects)
+   - Error handling patterns
+   - Configuration and constraints
+4. Use `Grep` to find patterns relevant to `focus` keywords across the codebase
+5. Use `Bash` (`git log --oneline`, `git diff --stat`) to identify historical change units
+6. Identify items that can be directly traced vs. items that must be inferred
+
+Output file: `temp/deckrd-work/codebase-extraction.md`
 
 ### `codebase-survey`
 
@@ -51,7 +68,7 @@ Detect development environment configuration (used by deckrd-coder):
 2. Detect language from manifest files
    (e.g., `package.json`, `Cargo.toml`, `setup.py`, `go.mod`)
 3. Identify tool configurations: build, lint, type-check, test, formatter
-4. Read `.deckrd/profile.json` if present
+4. Read `.deckrd/project.json` if present
 
 Output file: `temp/deckrd-work/env-profile.md`
 
