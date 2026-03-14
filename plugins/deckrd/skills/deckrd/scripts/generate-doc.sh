@@ -413,6 +413,7 @@ normalize_doc_type() {
     fi
   done
 
+  echo "Unknown doc-type: $input" >&2
   return 1
 }
 
