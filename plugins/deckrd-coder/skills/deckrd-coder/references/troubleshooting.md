@@ -2,15 +2,14 @@
 title: TROUBLESHOOTING - フロー逸脱時の対応ガイド
 ---
 
-<!-- textlint-disable ja-technical-writing/no-mix-dearu-desumasu -->
-<!-- textlint-disable ja-technical-writing/no-exclamation-question-mark -->
-<!-- markdownlint-disable line-length no-duplicate-heading -->
+<!-- textlint-disable
+  ja-technical-writing/no-exclamation-question-mark,
+  ja-technical-writing/no-mix-dearu-desumasu -->
+<!-- markdownlint-disable line-length -->
 
 ## TROUBLESHOOTING - フロー逸脱時の対応ガイド
 
 本ドキュメントは、`workflow.md` および `implementation.md` で定義されたフローから逸脱する場合の代表例と、それに対する具体的な対応を記述しています。
-
----
 
 ## WORKFLOW フロー逸脱時の対応
 
@@ -54,8 +53,6 @@ title: TROUBLESHOOTING - フロー逸脱時の対応ガイド
    - ヘルプオプション確認: `npm run lint --help` など
 
 4. **Phase 1 に進む**
-
----
 
 ### 逸脱 2: Phase 1 (アクティブタスク取得) の不完全実行
 
@@ -103,8 +100,6 @@ title: TROUBLESHOOTING - フロー逸脱時の対応ガイド
 
 5. **Phase 2 に進む**
 
----
-
 ### 逸脱 3: Phase 2 (実装タスクリスト作成) の細分化不足
 
 #### 症状
@@ -151,8 +146,6 @@ title: TROUBLESHOOTING - フロー逸脱時の対応ガイド
 
 4. **Phase 3 に戻る**
 
----
-
 ### 逸脱 4: Phase 3 (コーディング実行) 中の品質ゲート忘却
 
 #### 症状
@@ -182,8 +175,6 @@ title: TROUBLESHOOTING - フロー逸脱時の対応ガイド
 
 3. **Phase 4 へ進む前に全体品質ゲート確認**
    - すべてのタスクが品質ゲート合格していることを確認
-
----
 
 ### 逸脱 5: Phase 4 (品質ゲート実行) での失敗対応の混乱
 
@@ -241,8 +232,6 @@ title: TROUBLESHOOTING - フロー逸脱時の対応ガイド
    - 型チェック: **合格**
    - テスト: **すべてグリーン**
 
----
-
 ### 逸脱 6: Phase 5 (完了確認) のスキップ
 
 #### 症状
@@ -283,8 +272,6 @@ title: TROUBLESHOOTING - フロー逸脱時の対応ガイド
    - ユーザーが Refactor 内容に承認しているか確認
 
 4. **Phase 6 へ進む**
-
----
 
 ## IMPLEMENTATION ステップ逸脱時の対応
 
@@ -343,8 +330,6 @@ title: TROUBLESHOOTING - フロー逸脱時の対応ガイド
 
 4. **Step 2 に進む**
 
----
-
 ### 逸脱 2: Step 2 (実装タスクリスト作成) の不完全実行
 
 #### 症状
@@ -402,8 +387,6 @@ title: TROUBLESHOOTING - フロー逸脱時の対応ガイド
 
 4. **Step 3 に進む**
 
----
-
 ### 逸脱 3: Step 3 (BDD 実装) での複数タスク並行実装
 
 #### 症状
@@ -440,8 +423,6 @@ title: TROUBLESHOOTING - フロー逸脱時の対応ガイド
    - **エラー 3 回以上時: ユーザー相談 (巻き戻し判定)**
 
 3. **Step 4 (繰り返し判定) に進む**
-
----
 
 ### 逸脱 4: Step 3 (BDD 実装) での Green フェーズ過剰実装
 
@@ -494,8 +475,6 @@ title: TROUBLESHOOTING - フロー逸脱時の対応ガイド
 
 4. **Step 4 に進む**
 
----
-
 ### 逸脱 5: Step 4 (繰り返し判定) の判断ミス
 
 #### 症状
@@ -537,8 +516,6 @@ title: TROUBLESHOOTING - フロー逸脱時の対応ガイド
    未実装タスク なし
      → Step 5 へ進む (全体品質ゲート)
    ```
-
----
 
 ### 逸脱 6: Step 5 (品質ゲート実行) での失敗対応の混乱
 
@@ -590,8 +567,6 @@ title: TROUBLESHOOTING - フロー逸脱時の対応ガイド
 
 4. **Step 6 へ進む**
 
----
-
 ### 逸脱 7: Step 6 (進捗記録) の忘却
 
 #### 症状
@@ -630,8 +605,6 @@ title: TROUBLESHOOTING - フロー逸脱時の対応ガイド
    - ユーザーに報告
 
 4. **Step 7 へ進む**
-
----
 
 ### 逸脱 8: Step 7 (Refactor フェーズ) のスキップ
 
@@ -714,8 +687,6 @@ title: TROUBLESHOOTING - フロー逸脱時の対応ガイド
 
 5. **Step 8 へ進む**
 
----
-
 ### 逸脱 9: Step 8 (完了判定) での検証不足
 
 #### 症状
@@ -787,9 +758,7 @@ title: TROUBLESHOOTING - フロー逸脱時の対応ガイド
      → Step 7 へ戻って不足部分を対応
    ```
 
----
-
-## よくある質問と回答
+## FAQ
 
 ### Q: Step 3 で 3 回エラーが出た。どうすればいい？
 
@@ -805,8 +774,6 @@ title: TROUBLESHOOTING - フロー逸脱時の対応ガイド
    - 対応案を提示
    - ユーザーの指示を仰ぐ
 
----
-
 ### Q: 品質ゲートで Lint エラーが出た。Step 3 と Step 5 どちらで対応？
 
 **A:** エラーの種類で判定:
@@ -816,9 +783,7 @@ title: TROUBLESHOOTING - フロー逸脱時の対応ガイド
 | 個別タスク内の Lint エラー  | Step 3 内の品質ゲート確認 | タスク完了時点で検出すべき     |
 | Step 5 全体実行で初めて出現 | Step 5 で修正             | 複数タスク統合時の問題の可能性 |
 
----
-
-### Q: Phase 5 では何をするんですか？
+### Q: Phase 5 では何をしますか？
 
 **A:** Phase 5 (完了確認) は以下を実施します。
 
@@ -838,8 +803,6 @@ title: TROUBLESHOOTING - フロー逸脱時の対応ガイド
 
 この 4 つがすべて確認できたら Phase 6 へ進みます。
 
----
-
 ### Q: Refactor が必要ないケースもあるのでは？
 
 **A:** **いいえ。Refactor は常に必須です。**
@@ -854,8 +817,6 @@ title: TROUBLESHOOTING - フロー逸脱時の対応ガイド
 
 - 小規模タスク：軽微な変数名改善のみ
 - 大規模タスク：関数抽出、ロジック統合など
-
----
 
 ## トラブルシューティング判定ツリー
 
@@ -875,11 +836,9 @@ Phase / Step のどの段階で発生？
   → ロールバック・ユーザーに相談
 ```
 
----
-
 ## 参考資料
 
 - [WORKFLOW.md](./workflow.md) - Phase 0-6 詳細フロー
 - [IMPLEMENTATION.md](./implementation.md) - Step 1-8 詳細手順
-- `.claude/agents/bdd-coder.md` - BDD エージェント仕様
+- [bdd-coder.md](../agents/bdd-coder.md) - BDD エージェント仕様
 - `CLAUDE.md` - プロジェクトルール全般
