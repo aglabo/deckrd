@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# plugins/deckrd/skills/deckrd/scripts/lib/bootstrap.sh - Global directory variables for agent skills
+# plugins/deckrd/skills/deckrd/scripts/libs/bootstrap.sh - Global directory variables for agent skills
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #
@@ -7,7 +7,7 @@
 # https://opensource.org/licenses/MIT
 #
 # USAGE: source this file, do NOT execute directly.
-#   source "$(dirname "${BASH_SOURCE[0]}")/scripts/lib/bootstrap.sh"
+#   . "$(dirname "${BASH_SOURCE[0]}")/scripts/libs/bootstrap.sh"
 
 # Guard: prevent re-sourcing
 if [[ -n "${_BOOTSTRAP_LOADED:-}" ]]; then
@@ -28,7 +28,7 @@ export SCRIPTS_DIR
 PLUGINS_DIR="${PLUGINS_DIR:-${PROJECT_ROOT}/plugins}"
 export PLUGINS_DIR
 
-DECKRD_LIB_DIR="${DECKRD_LIB_DIR:-${PLUGINS_DIR}/deckrd/skills/deckrd/scripts/lib}"
+DECKRD_LIB_DIR="${DECKRD_LIB_DIR:-${PLUGINS_DIR}/deckrd/skills/deckrd/scripts/libs}"
 export DECKRD_LIB_DIR
 
 ASSETS_DIR="${ASSETS_DIR:-${PROJECT_ROOT}/.claude}"
