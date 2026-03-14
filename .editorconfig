@@ -33,13 +33,39 @@ ignore = true
 # ─────────────────────────────
 
 # ─────────────────────────────
+# Shell Scripts
+# ─────────────────────────────
+[*.{sh,bash,zsh}]
+indent_style = space
+indent_size = 2
+tab_width = 2
+
+##  shell script foematter settings
+# --language-dialect
+shell_variant      = bash
+simplify           = true
+binary_next_line   = true
+# --case-indent
+switch_case_indent = true
+space_redirects    = true
+keep_padding       = true
+# --func-next-line
+function_next_line = true
+minify             = true
+
+# PowerShell
+[*.ps1]
+indent_style = space
+indent_size = 4
+tab_width = 4
+
+# ─────────────────────────────
 # Documents
 # ─────────────────────────────
 [*.md]
 indent_style = space
 indent_size = 2
 tab_width = 2
-
 
 # ─────────────────────────────
 # configuration files
@@ -69,24 +95,6 @@ indent_style = space
 indent_size = 2
 tab_width = 2
 
-# ─────────────────────────────
-# Shell Scripts
-# ─────────────────────────────
-[*.{sh,bash,zsh}]
-indent_style = space
-indent_size = 2
-tab_width = 2
-# config for shfmt
-shfmt_case_indent = true
-shfmt_space_redirects = true
-shfmt_binary_ops = true
-shfmt_simplify = true
-
-# PowerShell
-[*.ps1]
-indent_style = space
-indent_size = 4
-tab_width = 4
 
 # ─────────────────────────────
 # Git Config Files
