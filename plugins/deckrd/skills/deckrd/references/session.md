@@ -1,4 +1,9 @@
-# Session Management
+---
+title: Session Management
+description: Session file location, schema, and state transition rules
+---
+
+## Session Management
 
 ## Session File Location
 

@@ -1,4 +1,9 @@
-# Deckrd Rule: Identifier System
+---
+title: "Deckrd Rule: Identifier System"
+description: Stable identifier formats for design artifacts
+---
+
+## Deckrd Rule: Identifier System
 
 Design artifacts must use stable identifiers.
 

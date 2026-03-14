@@ -1,4 +1,9 @@
-# Deckrd Rule: Document Naming
+---
+title: "Deckrd Rule: Document Naming"
+description: Standard naming convention for all deckrd documents
+---
+
+## Deckrd Rule: Document Naming
 
 All Deckrd documents must follow the naming convention:
 

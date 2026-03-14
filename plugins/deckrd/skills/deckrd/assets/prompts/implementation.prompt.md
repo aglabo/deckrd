@@ -1,4 +1,9 @@
-# Implementation Plan Generation Prompt
+---
+name: Implementation Plan Generation Prompt
+description: AI prompt for generating implementation plans from specifications
+---
+
+## Implementation Plan Generation Prompt
 
 <!-- textlint-disable ja-technical-writing/sentence-length -->
 

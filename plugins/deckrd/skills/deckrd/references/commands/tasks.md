@@ -1,4 +1,9 @@
-# tasks Command
+---
+title: tasks Command
+description: Derive executable BDD-style implementation tasks from specifications
+---
+
+## tasks Command
 
 Derive executable implementation tasks from specifications.
 Each task corresponds to a single unit test case (`it()` block) in a BDD-style testing workflow.
@@ -233,17 +238,17 @@ After completion, update `.session.json`:
 
 ## Script
 
-Execute: [run_prompt.sh](../../scripts/run-prompt.sh)
+Execute: [generate-doc.sh](../../scripts/generate-doc.sh)
 
 <!-- markdownlint-disable line-length -->
 
 ```bash
 # Default: generate both tasks.md and implementation-checklist.md
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/run_prompt.sh tasks [--lang <lang>] --output "tasks/tasks.md"
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/run_prompt.sh implementation-checklist [--lang <lang>] --input "tasks/tasks.md" --output "tasks/implementation-checklist.md"
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh tasks [--lang <lang>] --output "tasks/tasks.md"
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh implementation-checklist [--lang <lang>] --input "tasks/tasks.md" --output "tasks/implementation-checklist.md"
 
 # Update: regenerate implementation-checklist.md only
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/run_prompt.sh implementation-checklist [--lang <lang>] --input "tasks/tasks.md" --output "tasks/implementation-checklist.md"
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh implementation-checklist [--lang <lang>] --input "tasks/tasks.md" --output "tasks/implementation-checklist.md"
 ```
 
 <!-- markdownlint-enable -->

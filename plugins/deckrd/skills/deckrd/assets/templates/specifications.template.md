@@ -43,11 +43,28 @@ Implementation details are explicitly out of scope.
 #### Unit Interaction Map
 
 ```text
-{{UNIT_1}} → {{UNIT_2}}  : {{DATA_PASSED}}  (REQ: {{REQ_F_REF_1}})
-{{UNIT_2}} → {{UNIT_3}}  : {{DATA_PASSED}}  (REQ: {{REQ_F_REF_2}})
++------------+     +------------+
+|  {{UNIT_1}}| --> |  {{UNIT_2}}|
++------------+     +------------+
+      |                   |
+      v                   v
++------------+     +------------+
+|  {{UNIT_3}}|     |  {{UNIT_4}}|
++------------+     +------------+
 ```
 
 <!-- If no cross-unit interaction: "Units are independent; no ordering constraints." -->
+
+#### Data Flow Diagram
+
+```text
+[{{INPUT}}] --> [{{UNIT_1}}] --> [{{UNIT_2}}] --> [{{OUTPUT}}]
+                     |
+                     v
+                [{{VALIDATION}}]
+```
+
+<!-- ASCII diagrams only. Mermaid, PlantUML, and SVG are prohibited. -->
 
 ### 2.4 Non-Goals
 
@@ -169,9 +186,9 @@ No reordering is permitted.
 
 > **Status**: [COMPLETE | INCOMPLETE]
 
-| # | Question            | Source  | Impact       |
-| - | ------------------- | ------- | ------------ |
-| 1 | {{OPEN_QUESTION_1}} | {{REF}} | {{IMPACT_1}} |
+| #   | Question            | Source  | Impact       |
+| --- | ------------------- | ------- | ------------ |
+| 1   | {{OPEN_QUESTION_1}} | {{REF}} | {{IMPACT_1}} |
 
 <!-- If none: "None identified - all requirements are unambiguous." -->
 
@@ -181,4 +198,4 @@ No reordering is permitted.
 
 | Date     | Version | Description           |
 | -------- | ------- | --------------------- |
-| {{DATE}} | 1.0     | Initial specification |
+| {{DATE}} | 1.0.0   | Initial specification |
