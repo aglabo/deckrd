@@ -23,6 +23,6 @@
     "check:sh": "bash runners/ops/shell/format --list",
     "check:dprint": "dprint check",
     "lint:spells": "cspell  --config .vscode/cspell.json --cache --cache-location .cache/cspell/cSpellCache",
-    "test:sh": "bash runners/ops/shell/test"
+    "test:sh": "bash runners/run-shellspec.sh "
   }
 }
