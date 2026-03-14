@@ -16,8 +16,7 @@ set -euo pipefail
 main() {
   local -a targets=("$@")
 
-  pnpx markdownlint-cli2 --config "${XDG_CONFIG_HOME}/linters/markdownlint/.markdownlint-cli2.yaml" "${targets[@]+"${targets[@]}"}"
-  pnpx textlint --config "${XDG_CONFIG_HOME}/linters/textlint/textlintrc.yaml" "${targets[@]+"${targets[@]}"}"
+  textlint --config "${XDG_CONFIG_HOME}/linters/textlint/textlintrc.yaml" "${targets[@]+"${targets[@]}"}"
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
