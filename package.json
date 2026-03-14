@@ -18,11 +18,14 @@
   "scripts": {
     "prepare": "bash ./scripts/setup-dev-env.sh",
     "scan:secrets": "gitleaks dir --config ./configs/gitleaks.toml . && secretlint --secretlintrc ./configs/secretlint.config.yaml **/*",
-    "format:dprint": "dprint fmt",
-    "format:sh": "bash runners/ops/shell/format",
-    "check:sh": "bash runners/ops/shell/format --list",
+    "check:sh": "bash runners/run-shfmt.sh --list .",
     "check:dprint": "dprint check",
+    "format:dprint": "dprint fmt",
+    "format:sh": "bash runners/run-shfmt.sh --format .",
+    "lint:sh": "bash runners/run-shellcheck.sh ",
     "lint:spells": "cspell  --config .vscode/cspell.json --cache --cache-location .cache/cspell/cSpellCache",
+    "lint:text": "bash runners/run-textlint.sh ",
+    "lint:markdown": "bash runners/run-markdown.sh ",
     "test:sh": "bash runners/run-shellspec.sh "
   }
 }
