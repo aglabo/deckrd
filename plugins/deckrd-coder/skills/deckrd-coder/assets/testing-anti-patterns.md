@@ -16,6 +16,7 @@ The test cannot fail (Red phase is skipped). You lose the signal that your test
 actually verifies behavior. The test becomes a description, not a specification.
 
 **Red flag**:
+
 > "I'll write the implementation, then write tests to cover it."
 
 **Correct behavior**:
@@ -31,6 +32,7 @@ A test that cannot fail does not verify anything. Either the test is wrong,
 or the behavior is already implemented (and you should check why).
 
 **Red flag**:
+
 > Test passes instantly after writing it.
 
 **Correct behavior**:
@@ -46,6 +48,7 @@ You cannot run the Red-Green cycle properly. You end up guessing which test
 drives which implementation. Context grows and errors compound.
 
 **Red flag**:
+
 > "Let me write all the tests first, then implement."
 
 **Correct behavior**:
@@ -62,6 +65,7 @@ The next tests may pass trivially, skipping their Red phase. You lose the
 specification value of each test case. The refactor phase also becomes harder.
 
 **Red flag**:
+
 > "While I'm implementing X, I'll also add Y and Z since they're related."
 
 **Correct behavior**:
@@ -98,6 +102,7 @@ Memory is unreliable. The last run may have been on different code.
 A test may have been skipped. A file may not have been saved.
 
 **Red flag**:
+
 > "should work now" / "looks correct" / "I'm confident it passes"
 
 **Correct behavior**:
@@ -115,6 +120,7 @@ They tend to test what the code does rather than what it should do.
 They also tend to pass trivially, providing false confidence.
 
 **Red flag**:
+
 > "Implementation is done, now let me add tests for it."
 
 **Correct behavior**:
