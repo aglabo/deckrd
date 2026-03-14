@@ -48,7 +48,6 @@ No announcement = violation. Restart with announcement.
 | any              | review       | [commands/review.md](references/commands/review.md) |
 | init completed   | rev          | [commands/rev.md](references/commands/rev.md)       |
 
-
 Gate Rule: each command requires the previous command's document. No skipping.
 
 > `project` is project-scoped and can run any time. See [commands/project.md](references/commands/project.md).
@@ -59,16 +58,19 @@ Gate Rule: each command requires the previous command's document. No skipping.
 ## Examples
 
 **New feature from goals:**
+
 > "I want to add a retry mechanism to the HTTP client."
-→ `/deckrd init my-project/http-retry` → `req` → `spec` → `impl` → `tasks`
+> → `/deckrd init my-project/http-retry` → `req` → `spec` → `impl` → `tasks`
 
 **Existing code, no docs:**
+
 > "This module has no documentation. Reverse-engineer it."
-→ `/deckrd rev --to req` → `spec` → `impl` → `tasks`
+> → `/deckrd rev --to req` → `spec` → `impl` → `tasks`
 
 **Small bug fix:**
+
 > "Fix the off-by-one error in the pagination logic."
-→ `/deckrd quick "Fix off-by-one in pagination"`
+> → `/deckrd quick "Fix off-by-one in pagination"`
 
 ## Troubleshooting
 

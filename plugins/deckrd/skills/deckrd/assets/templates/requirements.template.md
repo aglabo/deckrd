@@ -29,6 +29,17 @@ created: "{{ DATE }}"
 - Related Components: {{RELATED_COMPONENTS}}
 - Assumptions: {{ASSUMPTIONS}}
 
+### System Context Diagram
+
+```text
+[{{EXTERNAL_ACTOR_1}}] --> +----------------------+ --> [{{EXTERNAL_SYSTEM_1}}]
+                           |   {{FEATURE_NAME}}   |
+[{{EXTERNAL_ACTOR_2}}] <-- +----------------------+ <-- [{{EXTERNAL_SYSTEM_2}}]
+```
+
+<!-- ASCII diagram only. Mermaid, PlantUML, and SVG are prohibited.
+     Replace placeholders with actual actors and systems from user input. -->
+
 ## 3. Design Decisions (Summary)
 
 | ID    | Decision               | Linked Record            |
@@ -43,11 +54,28 @@ REQ-ID format:
   REQ-F-NNN  Functional Requirement
   REQ-NF-NNN Non-Functional Requirement
   REQ-C-NNN  Constraint
+
+EARS Basic syntax (required for all REQ-F entries):
+  GIVEN <initial condition>
+    WHEN  <triggering event>        ← event-driven
+    WHILE <system state>            ← state-driven
+    NOT DO <unwanted behavior>      ← unwanted behavior
+    WHERE <feature/config>          ← feature/config-based
+  THEN <expected system response>
+
+Every REQ-F MUST have GIVEN and THEN.
+At least one of WHEN / WHILE / NOT DO / WHERE is required.
 -->
 
 ### REQ-F-001: {{REQUIREMENT_TITLE_1}}
 
-SHALL {{REQUIREMENT_STATEMENT_1}}
+- EARS Type: {{EARS_TYPE_1}}
+
+```text
+GIVEN {{GIVEN_CONDITION_1}}
+  WHEN {{TRIGGERING_EVENT_1}}
+THEN the system SHALL {{EXPECTED_RESPONSE_1}}.
+```
 
 **Rationale**: {{RATIONALE_1}}
 
@@ -60,7 +88,13 @@ SHALL {{REQUIREMENT_STATEMENT_1}}
 
 ### REQ-F-002: {{REQUIREMENT_TITLE_2}}
 
-SHALL {{REQUIREMENT_STATEMENT_2}}
+- EARS Type: {{EARS_TYPE_2}}
+
+```text
+GIVEN {{GIVEN_CONDITION_2}}
+  WHILE {{SYSTEM_STATE_2}}
+THEN the system SHALL {{EXPECTED_RESPONSE_2}}.
+```
 
 **Rationale**: {{RATIONALE_2}}
 
@@ -136,4 +170,4 @@ Scenario: {{AC_SCENARIO_TITLE_3}}
 
 | Date     | Version | Description     |
 | -------- | ------- | --------------- |
-| {{DATE}} | 1.0     | Initial release |
+| {{DATE}} | 1.0.0   | Initial release |

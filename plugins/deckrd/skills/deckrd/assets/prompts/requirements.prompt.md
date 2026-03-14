@@ -1,6 +1,12 @@
-# Requirements & Decision Records Generation Prompt (deckrd)
+---
+name: Requirements Generation Prompt
+description: AI prompt for generating requirements documents and decision records
+---
+
+## Requirements & Decision Records Generation Prompt (deckrd)
 
 <!-- textlint-disable ja-technical-writing/sentence-length -->
+<!-- markdownlint-disable line-length -->
 
 You are a **Requirements Analyst** and **Architecture Documenter**.
 
@@ -33,6 +39,9 @@ from structured user input.
 - Ready for direct commit
 - Don't use `- **xx**:` in lists, use `- xx:` as the bullet point.
 - **Always include Section 7 (User Stories), Section 8 (Acceptance Criteria), and Section 9 (Open Questions)**
+- Diagrams MUST use ASCII art only. Mermaid, PlantUML, SVG are PROHIBITED.
+- ASCII diagram style: `+--+` corners, `|` sides, `-->` arrows, `[Name]` for actors/systems
+- **All Functional Requirements MUST use EARS Basic syntax** (see EARS Rules below)
 
 ---
 
@@ -64,6 +73,73 @@ If **CODEBASE CONTEXT** is provided:
 - Identify the target module and its existing state
 - Note any prior requirements that this document revises
 - Carry forward relevant constraints and design decisions already recorded
+
+---
+
+## EARS Rules
+
+All Functional Requirements MUST be expressed in **EARS Basic syntax**.
+EARS (Easy Approach to Requirements Syntax) structures each requirement as:
+
+```text
+GIVEN <initial condition>
+  WHEN  <triggering event>   → event-driven requirement
+  WHILE <system state>       → state-driven requirement
+  NOT DO <unwanted behavior> → unwanted behavior requirement
+  WHERE <feature/config>     → feature/configuration requirement
+THEN <expected system response>
+```
+
+### EARS Keyword Definitions
+
+| Keyword | Type                 | Meaning                                               |
+| ------- | -------------------- | ----------------------------------------------------- |
+| GIVEN   | Initial Condition    | The precondition that must hold before the rule fires |
+| WHEN    | Event-driven         | A discrete triggering event                           |
+| WHILE   | State-driven         | A continuous system state during which the rule holds |
+| NOT DO  | Unwanted behavior    | A behavior the system must never perform              |
+| WHERE   | Feature/config-based | The configuration or feature flag that enables this   |
+| THEN    | System response      | The observable result the system must produce         |
+
+### EARS Combination Rules
+
+- Every requirement MUST have exactly one `GIVEN` and exactly one `THEN`.
+- `WHEN`, `WHILE`, `NOT DO`, `WHERE` are optional but at least one MUST appear.
+- Multiple keywords may combine in one requirement:
+  `GIVEN … WHILE … WHEN … THEN …`
+- `NOT DO` replaces `THEN` when the requirement prohibits an action.
+
+### EARS Examples
+
+```text
+# Event-driven (WHEN)
+GIVEN the user is authenticated
+  WHEN the user submits a search query
+THEN the system SHALL return results within 2 seconds.
+
+# State-driven (WHILE)
+GIVEN the system is in maintenance mode
+  WHILE a maintenance flag is active
+THEN the system SHALL reject all write operations.
+
+# Unwanted behavior (NOT DO)
+GIVEN any system state
+  NOT DO store plaintext passwords
+THEN the system SHALL hash credentials before persistence.
+
+# Feature-based (WHERE)
+GIVEN the user has the admin role
+  WHERE the multi-tenant feature is enabled
+  WHEN the user requests tenant data
+THEN the system SHALL scope results to the user's tenant only.
+```
+
+### EARS Anti-Patterns (PROHIBITED)
+
+- Vague verbs without EARS structure: "The system SHALL handle errors."
+- Missing `GIVEN`: "WHEN the user logs in THEN ..."
+- Missing `THEN`: "GIVEN authenticated user WHEN submitting form."
+- Combining multiple independent behaviors in one statement.
 
 ---
 
@@ -100,9 +176,52 @@ For each significant decision:
 
 ### D. Requirements
 
-- Functional requirements
-- Non-functional requirements
-- Explicit exclusions
+For each functional requirement, extract all four EARS elements explicitly.
+If any element is missing from USER INPUT or HEARING NOTES, mark it as `[MISSING]`
+and record it in Open Questions — do NOT infer or invent.
+
+| EARS Element            | Question to answer                             | Missing → action      |
+| ----------------------- | ---------------------------------------------- | --------------------- |
+| GIVEN                   | What precondition must hold before this fires? | Open Question (GIVEN) |
+| WHEN/WHILE/NOT DO/WHERE | What type of trigger or constraint?            | Open Question (type)  |
+| THEN                    | What must the system do in response?           | Open Question (THEN)  |
+
+For each FR, record:
+
+```text
+FR candidate: <behavior description from USER INPUT>
+  GIVEN : <extracted or [MISSING]>
+  Type  : WHEN | WHILE | NOT DO | WHERE | [MISSING]
+  Trigger: <extracted or [MISSING]>
+  THEN  : <extracted or [MISSING]>
+```
+
+Also extract:
+
+- Non-functional requirements (performance, security, maintainability)
+- Explicit exclusions (out-of-scope behaviors)
+
+---
+
+## Step 1-D: Generate System Context Diagram
+
+After completing Step 1, generate a system context diagram in ASCII art to visualize
+the target system's boundary and its relationships with external entities.
+
+```text
+[External Actor] --> +------------------+ --> [External System]
+                     |   Target System  |
+[External Actor] <-- +------------------+ <-- [External System]
+```
+
+Rules:
+
+- Use `+--+` for the system boundary box
+- Use `[Name]` for external actors and systems
+- Use `-->` for outgoing interactions, `<--` for incoming
+- Label each actor/system with the role identified in Step 1B (Context)
+
+Store the diagram as **CONTEXT DIAGRAM** for inclusion in Section 2 of requirements.md.
 
 ---
 
@@ -113,12 +232,15 @@ Using the **REQUIREMENTS TEMPLATE**, populate:
 - Overview
 - Context
 - Design Decisions (summary only)
-- Functional Requirements (normative)
+- Functional Requirements (normative, in EARS Basic syntax)
 - Non-Functional Requirements
 - Change History
 
 ⚠️ Requirements are **normative**.
 ⚠️ Examples are **non-prescriptive**.
+⚠️ Every Functional Requirement MUST use EARS Basic syntax.
+⚠️ Each REQ-F-NNN block MUST begin with `GIVEN`, include at least one of
+`WHEN` / `WHILE` / `NOT DO` / `WHERE`, and end with `THEN`.
 
 ---
 
@@ -140,6 +262,15 @@ Collect unresolved items from USER INPUT and HEARING NOTES:
 - Items the user explicitly marked as undecided
 - Contradictions or ambiguities detected during analysis
 - Decisions deferred to later phases
+- **Any EARS element marked `[MISSING]` in Step 1D** — promote each to an Open Question
+
+For each `[MISSING]` EARS element, generate one Open Question row:
+
+| Question                                                       | Type       | Impact Area | Owner |
+| -------------------------------------------------------------- | ---------- | ----------- | ----- |
+| REQ-F-NNN: GIVEN condition is not specified                    | EARS/GIVEN | FR scope    | TBD   |
+| REQ-F-NNN: trigger type (WHEN/WHILE/NOT DO/WHERE) is ambiguous | EARS/type  | FR behavior | TBD   |
+| REQ-F-NNN: expected system response (THEN) is not specified    | EARS/THEN  | FR outcome  | TBD   |
 
 Format as a table: Question | Type | Impact Area | Owner
 

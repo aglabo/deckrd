@@ -1,4 +1,9 @@
-# module Command
+---
+title: module Command
+description: Initialize a DECKRD module directory structure and set it as active
+---
+
+## module Command
 
 Initialize a DECKRD module directory structure and set it as the active module.
 
@@ -15,7 +20,7 @@ Initialize a DECKRD module directory structure and set it as the active module.
 | Subcommand | Description                                                   |
 | ---------- | ------------------------------------------------------------- |
 | (none)     | Create module dirs and update session (legacy form)           |
-| `create`   | Create module dirs, write `.profile.json`, and update session |
+| `create`   | Create module dirs, write `.project.json`, and update session |
 
 ## Arguments
 
@@ -72,13 +77,13 @@ Initialize a DECKRD module directory structure and set it as the active module.
    ├── specifications/
    ├── implementation/
    ├── tasks/
-   └── .profile.json
+   └── .project.json
    ```
 
    - Without `--force`: exits with error if directory already exists
    - With `--force`: recreates directories (existing files are preserved)
 
-4. Write `.profile.json`:
+4. Write `.project.json`:
 
    ```json
    {

@@ -186,9 +186,9 @@ No reordering is permitted.
 
 > **Status**: [COMPLETE | INCOMPLETE]
 
-| #   | Question            | Source  | Impact       |
-| --- | ------------------- | ------- | ------------ |
-| 1   | {{OPEN_QUESTION_1}} | {{REF}} | {{IMPACT_1}} |
+| # | Question            | Source  | Impact       |
+| - | ------------------- | ------- | ------------ |
+| 1 | {{OPEN_QUESTION_1}} | {{REF}} | {{IMPACT_1}} |
 
 <!-- If none: "None identified - all requirements are unambiguous." -->
 
