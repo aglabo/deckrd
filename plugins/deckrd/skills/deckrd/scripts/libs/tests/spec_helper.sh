@@ -15,5 +15,6 @@
 
 # bootstrap.sh を source して DECKRD_LIB_DIR などの変数を設定
 _LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck disable=SC1091
 . "${_LIB_DIR}/bootstrap.sh"
 unset _LIB_DIR
