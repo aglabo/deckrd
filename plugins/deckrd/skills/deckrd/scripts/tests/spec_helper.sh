@@ -16,6 +16,7 @@
 # Path to the scripts directory (relative to this spec_helper)
 # SHELLSPEC_PROJECT_ROOT is the project root set by shellspec
 _SPEC_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/plugins/deckrd/skills/deckrd/scripts/tests" && pwd)"
+# shellcheck disable=SC2034
 SCRIPTS_DIR="${_SPEC_DIR}/.."
 unset _SPEC_DIR
 

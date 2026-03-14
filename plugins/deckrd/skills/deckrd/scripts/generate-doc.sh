@@ -55,7 +55,6 @@ SESSION_AI_MODEL=""
 # @description Session language (set from session)
 SESSION_LANG=""
 
-
 # ============================================================================
 # Script Configuration
 # ============================================================================
@@ -91,7 +90,7 @@ REVIEW_PHASE=""
 ##
 # @description Primary document types for display (derived from SHORT_TO_LONG values)
 # Populated after SHORT_TO_LONG declaration to get unique long form values
-PRIMARY_TYPES=($(printf '%s\n' "${SHORT_TO_LONG[@]}" | sort -u))
+mapfile -t PRIMARY_TYPES < <(printf '%s\n' "${SHORT_TO_LONG[@]}" | sort -u)
 
 ##
 # @description Document type (requirements, spec, impl, tasks)
@@ -127,7 +126,7 @@ extract_json_value_fallback() {
 
   # Match: "key": "value" or "key":"value"
   # Handles whitespace variations and returns empty if not found
-  grep -o "\"${key}\"[[:space:]]*:[[:space:]]*\"[^\"]*\"" "$file" 2>/dev/null | \
+  grep -o "\"${key}\"[[:space:]]*:[[:space:]]*\"[^\"]*\"" "$file" 2>/dev/null |
     sed -E 's/[^:]*:[[:space:]]*"([^"]*)".*/\1/' || echo ""
 }
 
@@ -260,94 +259,94 @@ parse_options() {
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      -h|--help)
-        show_usage
-        exit 0
-        ;;
-      --ai-model)
-        if [[ -z "${2:-}" ]]; then
-          echo "Error: --ai-model requires a model name" >&2
-          exit 1
+    -h | --help)
+      show_usage
+      exit 0
+      ;;
+    --ai-model)
+      if [[ -z "${2:-}" ]]; then
+        echo "Error: --ai-model requires a model name" >&2
+        exit 1
+      fi
+      validate_ai_model "$2" || exit 1
+      AI_MODEL="$2"
+      shift 2
+      ;;
+    --ai-model=*)
+      AI_MODEL="${1#*=}"
+      validate_ai_model "$AI_MODEL" || exit 1
+      shift
+      ;;
+    --lang)
+      if [[ -z "${2:-}" ]]; then
+        echo "Error: --lang requires a value" >&2
+        exit 1
+      fi
+      LANG_OPT="$2"
+      shift 2
+      ;;
+    --lang=*)
+      LANG_OPT="${1#*=}"
+      shift
+      ;;
+    --output)
+      if [[ -z "${2:-}" ]]; then
+        echo "Error: --output requires a file path" >&2
+        exit 1
+      fi
+      OUTPUT_FILE="$2"
+      shift 2
+      ;;
+    --output=*)
+      OUTPUT_FILE="${1#*=}"
+      shift
+      ;;
+    --phase)
+      if [[ -z "${2:-}" ]]; then
+        echo "Error: --phase requires a value (explore|harden|fix)" >&2
+        exit 1
+      fi
+      if [[ ! "$2" =~ ^(explore|harden|fix)$ ]]; then
+        echo "Error: Invalid review phase: $2" >&2
+        echo "  Valid phases: explore, harden, fix" >&2
+        exit 1
+      fi
+      REVIEW_PHASE="$2"
+      shift 2
+      ;;
+    --phase=*)
+      REVIEW_PHASE="${1#*=}"
+      if [[ ! "$REVIEW_PHASE" =~ ^(explore|harden|fix)$ ]]; then
+        echo "Error: Invalid review phase: $REVIEW_PHASE" >&2
+        echo "  Valid phases: explore, harden, fix" >&2
+        exit 1
+      fi
+      shift
+      ;;
+    -*)
+      echo "Error: Unknown option: $1" >&2
+      show_usage
+      exit 1
+      ;;
+    *)
+      if [[ $positional_count -eq 0 ]]; then
+        if [[ "$1" == @* ]]; then
+          DOC_TYPE="${1:1}"
+          PROMPT_FILE_MODE=1
+        else
+          PROMPT_TEXT="$1"
+          PROMPT_FILE_MODE=0
         fi
-        validate_ai_model "$2" || exit 1
-        AI_MODEL="$2"
-        shift 2
-        ;;
-      --ai-model=*)
-        AI_MODEL="${1#*=}"
-        validate_ai_model "$AI_MODEL" || exit 1
-        shift
-        ;;
-      --lang)
-        if [[ -z "${2:-}" ]]; then
-          echo "Error: --lang requires a value" >&2
-          exit 1
-        fi
-        LANG_OPT="$2"
-        shift 2
-        ;;
-      --lang=*)
-        LANG_OPT="${1#*=}"
-        shift
-        ;;
-      --output)
-        if [[ -z "${2:-}" ]]; then
-          echo "Error: --output requires a file path" >&2
-          exit 1
-        fi
-        OUTPUT_FILE="$2"
-        shift 2
-        ;;
-      --output=*)
-        OUTPUT_FILE="${1#*=}"
-        shift
-        ;;
-      --phase)
-        if [[ -z "${2:-}" ]]; then
-          echo "Error: --phase requires a value (explore|harden|fix)" >&2
-          exit 1
-        fi
-        if [[ ! "$2" =~ ^(explore|harden|fix)$ ]]; then
-          echo "Error: Invalid review phase: $2" >&2
-          echo "  Valid phases: explore, harden, fix" >&2
-          exit 1
-        fi
-        REVIEW_PHASE="$2"
-        shift 2
-        ;;
-      --phase=*)
-        REVIEW_PHASE="${1#*=}"
-        if [[ ! "$REVIEW_PHASE" =~ ^(explore|harden|fix)$ ]]; then
-          echo "Error: Invalid review phase: $REVIEW_PHASE" >&2
-          echo "  Valid phases: explore, harden, fix" >&2
-          exit 1
-        fi
-        shift
-        ;;
-      -*)
-        echo "Error: Unknown option: $1" >&2
+      elif [[ $positional_count -eq 1 ]]; then
+        CONTEXT_INPUT="$1"
+      else
+        echo "Error: Too many positional arguments" >&2
         show_usage
         exit 1
-        ;;
-      *)
-        if [[ $positional_count -eq 0 ]]; then
-          if [[ "$1" == @* ]]; then
-            DOC_TYPE="${1:1}"
-            PROMPT_FILE_MODE=1
-          else
-            PROMPT_TEXT="$1"
-            PROMPT_FILE_MODE=0
-          fi
-        elif [[ $positional_count -eq 1 ]]; then
-          CONTEXT_INPUT="$1"
-        else
-          echo "Error: Too many positional arguments" >&2
-          show_usage
-          exit 1
-        fi
-        positional_count=$((positional_count + 1))
-        shift
-        ;;
+      fi
+      positional_count=$((positional_count + 1))
+      shift
+      ;;
     esac
   done
 }
@@ -513,19 +512,19 @@ get_model_command() {
   local model="${1:-sonnet}"
 
   case "$model" in
-    gpt-* | o1-*)
-      AI_COMMAND=("codex" "exec" "--model" "$model")
-      ;;
-    claude-* | haiku | sonnet | opus)
-      AI_COMMAND=("claude" "-p" "--model" "$model")
-      ;;
-    */*)
-      AI_COMMAND=("opencode" "run" "--model" "$model")
-      ;;
-    *)
-      echo "Error: Unsupported model: ${model}" >&2
-      return 1
-      ;;
+  gpt-* | o1-*)
+    AI_COMMAND=("codex" "exec" "--model" "$model")
+    ;;
+  claude-* | haiku | sonnet | opus)
+    AI_COMMAND=("claude" "-p" "--model" "$model")
+    ;;
+  */*)
+    AI_COMMAND=("opencode" "run" "--model" "$model")
+    ;;
+  *)
+    echo "Error: Unsupported model: ${model}" >&2
+    return 1
+    ;;
   esac
 
   return 0
@@ -595,7 +594,7 @@ output_result() {
     # Prepend DECKRD_BASE to output path
     local full_path="${DECKRD_BASE}/${output_file}"
     mkdir -p "$(dirname "$full_path")"
-    echo "$result" > "$full_path"
+    echo "$result" >"$full_path"
     echo "Output written to: $full_path" >&2
   fi
 }
@@ -618,7 +617,6 @@ main() {
     DECKRD_BASE="${DECKRD_DOCS:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)/docs/.deckrd}"
     export DECKRD_BASE
   fi
-
 
   ## Initialize command-line options
 

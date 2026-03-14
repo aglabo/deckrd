@@ -129,28 +129,28 @@ parse_args() {
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      -h|--help)
-        show_usage
-        exit 0
-        ;;
-      --force)
-        FORCE=true
-        shift
-        ;;
-      -*)
-        echo "Error: Unknown option: $1" >&2
+    -h | --help)
+      show_usage
+      exit 0
+      ;;
+    --force)
+      FORCE=true
+      shift
+      ;;
+    -*)
+      echo "Error: Unknown option: $1" >&2
+      show_usage
+      exit 1
+      ;;
+    *)
+      if [[ -n "$MODULE_PATH" ]]; then
+        echo "Error: Multiple module paths specified" >&2
         show_usage
         exit 1
-        ;;
-      *)
-        if [[ -n "$MODULE_PATH" ]]; then
-          echo "Error: Multiple module paths specified" >&2
-          show_usage
-          exit 1
-        fi
-        MODULE_PATH="$1"
-        shift
-        ;;
+      fi
+      MODULE_PATH="$1"
+      shift
+      ;;
     esac
   done
 }
@@ -215,7 +215,10 @@ get_repo_name() {
   repo_name="${repo_name##*:}"
   repo_name="${repo_name%.git}"
   repo_name="${repo_name,,}"
-  [[ -z "$repo_name" ]] && { echo "Error: Cannot extract repository name" >&2; exit 1; }
+  [[ -z "$repo_name" ]] && {
+    echo "Error: Cannot extract repository name" >&2
+    exit 1
+  }
   echo "$repo_name"
 }
 
@@ -251,15 +254,15 @@ create_module_project() {
 
   if command -v jq >/dev/null 2>&1; then
     jq -n \
-      --arg name        "$module" \
+      --arg name "$module" \
       --arg description "" \
-      --arg created_at  "$timestamp" \
-      --arg updated_at  "$timestamp" \
+      --arg created_at "$timestamp" \
+      --arg updated_at "$timestamp" \
       '{name: $name, description: $description, created_at: $created_at, updated_at: $updated_at}' \
-      > "$project_file"
+      >"$project_file"
   else
     printf '{\n  "name": "%s",\n  "description": "",\n  "created_at": "%s",\n  "updated_at": "%s"\n}\n' \
-      "$module" "$timestamp" "$timestamp" > "$project_file"
+      "$module" "$timestamp" "$timestamp" >"$project_file"
   fi
 
   echo "  created: .project.json"
@@ -302,18 +305,18 @@ update_session() {
 
   if [[ -f "$SESSION_FILE" ]] && command -v jq >/dev/null 2>&1; then
     # Update: set active module, add/reset module entry
-    jq --arg path      "$path" \
-       --arg timestamp "$timestamp" \
-       '.active       = $path |
+    jq --arg path "$path" \
+      --arg timestamp "$timestamp" \
+      '.active       = $path |
         .updated_at   = $timestamp |
         .current_step = "init" |
         .completed    = ["init"] |
         .documents    = {}' \
-       "$SESSION_FILE" > "${SESSION_FILE}.tmp" \
-    && mv "${SESSION_FILE}.tmp" "$SESSION_FILE"
+      "$SESSION_FILE" >"${SESSION_FILE}.tmp" &&
+      mv "${SESSION_FILE}.tmp" "$SESSION_FILE"
   else
     # Fallback: create/overwrite without jq
-    cat > "$SESSION_FILE" <<EOF
+    cat >"$SESSION_FILE" <<EOF
 {
   "active":       "${path}",
   "current_step": "init",

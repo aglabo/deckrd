@@ -29,24 +29,24 @@ resolve_ai_cli() {
   fi
 
   case "$model" in
-    anthropic/* | claude-* | default | sonnet | opus | haiku | sonnet-1m | opusplan)
-      echo "claude"
-      ;;
-    openai/* | gpt-* | o1-* | o3-*)
-      echo "codex"
-      ;;
-    googleai/* | google/* | gemini-*)
-      echo "gemini"
-      ;;
-    github/* | github-copilot/* | copilot/*)
-      echo "copilot"
-      ;;
-    opencode/*)
-      echo "opencode"
-      ;;
-    *)
-      return 1
-      ;;
+  anthropic/* | claude-* | default | sonnet | opus | haiku | sonnet-1m | opusplan)
+    echo "claude"
+    ;;
+  openai/* | gpt-* | o1-* | o3-*)
+    echo "codex"
+    ;;
+  googleai/* | google/* | gemini-*)
+    echo "gemini"
+    ;;
+  github/* | github-copilot/* | copilot/*)
+    echo "copilot"
+    ;;
+  opencode/*)
+    echo "opencode"
+    ;;
+  *)
+    return 1
+    ;;
   esac
 
   return 0
@@ -65,38 +65,38 @@ _build_ai_command() {
   local model="$2"
 
   case "$cli" in
-    claude)
-      # Claude aliases are passed as-is; claude CLI resolves them natively.
-      # Special handling: sonnet-1m adds --context-window, opusplan adds --thinking.
-      case "$model" in
-        default)   _AI_CMD=( "claude" "-p" ) ;;
-        sonnet-1m) _AI_CMD=( "claude" "--model" "sonnet" "-p" "--context-window" "1000000" ) ;;
-        opusplan)  _AI_CMD=( "claude" "--model" "opusplan" "-p" "--thinking" ) ;;
-        *)         _AI_CMD=( "claude" "--model" "$model" "-p" ) ;;
-      esac
+  claude)
+    # Claude aliases are passed as-is; claude CLI resolves them natively.
+    # Special handling: sonnet-1m adds --context-window, opusplan adds --thinking.
+    case "$model" in
+    default) _AI_CMD=("claude" "-p") ;;
+    sonnet-1m) _AI_CMD=("claude" "--model" "sonnet" "-p" "--context-window" "1000000") ;;
+    opusplan) _AI_CMD=("claude" "--model" "opusplan" "-p" "--thinking") ;;
+    *) _AI_CMD=("claude" "--model" "$model" "-p") ;;
+    esac
+    ;;
+  codex)
+    _AI_CMD=("codex" "exec" "--model" "$model")
+    ;;
+  gemini)
+    _AI_CMD=("gemini" "--model" "$model" "-p")
+    ;;
+  copilot)
+    # Extract model name after prefix (github/<model>, github-copilot/<model>, copilot/<model>)
+    local copilot_model="${model#*/}"
+    # Validate against supported copilot model families: claude-*, gpt-*, gemini-*, grok-*
+    case "$copilot_model" in
+    claude-* | gpt-* | gemini-* | grok-*)
+      _AI_CMD=("copilot" "suggest" "--model" "$copilot_model")
       ;;
-    codex)
-      _AI_CMD=( "codex" "exec" "--model" "$model" )
+    *)
+      return 1
       ;;
-    gemini)
-      _AI_CMD=( "gemini" "--model" "$model" "-p" )
-      ;;
-    copilot)
-      # Extract model name after prefix (github/<model>, github-copilot/<model>, copilot/<model>)
-      local copilot_model="${model#*/}"
-      # Validate against supported copilot model families: claude-*, gpt-*, gemini-*, grok-*
-      case "$copilot_model" in
-        claude-* | gpt-* | gemini-* | grok-*)
-          _AI_CMD=( "copilot" "suggest" "--model" "$copilot_model" )
-          ;;
-        *)
-          return 1
-          ;;
-      esac
-      ;;
-    opencode)
-      _AI_CMD=( "opencode" "run" "--model" "$model" )
-      ;;
+    esac
+    ;;
+  opencode)
+    _AI_CMD=("opencode" "run" "--model" "$model")
+    ;;
   esac
 }
 

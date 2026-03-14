@@ -33,6 +33,7 @@ set -eo pipefail
 ##
 # @description Script directory path
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC2034
 readonly SCRIPT_DIR
 
 ##
@@ -120,68 +121,68 @@ validate_language() {
 parse_options() {
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      -h|--help)
-        show_usage
-        exit 0
-        ;;
-      --project)
-        if [[ -z "${2:-}" ]]; then
-          echo "Error: --project requires a value" >&2
-          exit 1
-        fi
-        PROJECT_NAME="$2"
-        shift 2
-        ;;
-      --project=*)
-        PROJECT_NAME="${1#*=}"
-        shift
-        ;;
-      --project-type)
-        if [[ -z "${2:-}" ]]; then
-          echo "Error: --project-type requires a value" >&2
-          exit 1
-        fi
-        PROJECT_TYPE="$2"
-        shift 2
-        ;;
-      --project-type=*)
-        PROJECT_TYPE="${1#*=}"
-        shift
-        ;;
-      --language|--lang)
-        if [[ -z "${2:-}" ]]; then
-          echo "Error: ${1} requires a value" >&2
-          exit 1
-        fi
-        LANGUAGE="$2"
-        shift 2
-        ;;
-      --language=*|--lang=*)
-        LANGUAGE="${1#*=}"
-        shift
-        ;;
-      --ai-model)
-        if [[ -z "${2:-}" ]]; then
-          echo "Error: --ai-model requires a value" >&2
-          exit 1
-        fi
-        AI_MODEL="$2"
-        shift 2
-        ;;
-      --ai-model=*)
-        AI_MODEL="${1#*=}"
-        shift
-        ;;
-      -*)
-        echo "Error: Unknown option: $1" >&2
-        show_usage
+    -h | --help)
+      show_usage
+      exit 0
+      ;;
+    --project)
+      if [[ -z "${2:-}" ]]; then
+        echo "Error: --project requires a value" >&2
         exit 1
-        ;;
-      *)
-        echo "Error: Unexpected argument: $1" >&2
-        show_usage
+      fi
+      PROJECT_NAME="$2"
+      shift 2
+      ;;
+    --project=*)
+      PROJECT_NAME="${1#*=}"
+      shift
+      ;;
+    --project-type)
+      if [[ -z "${2:-}" ]]; then
+        echo "Error: --project-type requires a value" >&2
         exit 1
-        ;;
+      fi
+      PROJECT_TYPE="$2"
+      shift 2
+      ;;
+    --project-type=*)
+      PROJECT_TYPE="${1#*=}"
+      shift
+      ;;
+    --language | --lang)
+      if [[ -z "${2:-}" ]]; then
+        echo "Error: ${1} requires a value" >&2
+        exit 1
+      fi
+      LANGUAGE="$2"
+      shift 2
+      ;;
+    --language=* | --lang=*)
+      LANGUAGE="${1#*=}"
+      shift
+      ;;
+    --ai-model)
+      if [[ -z "${2:-}" ]]; then
+        echo "Error: --ai-model requires a value" >&2
+        exit 1
+      fi
+      AI_MODEL="$2"
+      shift 2
+      ;;
+    --ai-model=*)
+      AI_MODEL="${1#*=}"
+      shift
+      ;;
+    -*)
+      echo "Error: Unknown option: $1" >&2
+      show_usage
+      exit 1
+      ;;
+    *)
+      echo "Error: Unexpected argument: $1" >&2
+      show_usage
+      exit 1
+      ;;
     esac
   done
 }
@@ -216,12 +217,12 @@ write_project() {
     [[ -z "$PROJECT_TYPE" ]] && PROJECT_TYPE="$existing_type"
     [[ "$AI_MODEL" == "sonnet" ]] && [[ -n "$existing_model" ]] && AI_MODEL="$existing_model"
     jq -n \
-      --arg project      "$PROJECT_NAME" \
+      --arg project "$PROJECT_NAME" \
       --arg project_type "$PROJECT_TYPE" \
-      --arg language     "$LANGUAGE" \
-      --arg ai_model     "$AI_MODEL" \
-      --arg created_at   "$created_at" \
-      --arg updated_at   "$timestamp" \
+      --arg language "$LANGUAGE" \
+      --arg ai_model "$AI_MODEL" \
+      --arg created_at "$created_at" \
+      --arg updated_at "$timestamp" \
       '{
         project:      $project,
         project_type: $project_type,
@@ -229,9 +230,9 @@ write_project() {
         ai_model:     $ai_model,
         created_at:   $created_at,
         updated_at:   $updated_at
-      }' > "${PROJECT_FILE}.tmp" && mv "${PROJECT_FILE}.tmp" "$PROJECT_FILE"
+      }' >"${PROJECT_FILE}.tmp" && mv "${PROJECT_FILE}.tmp" "$PROJECT_FILE"
   else
-    cat > "$PROJECT_FILE" <<EOF
+    cat >"$PROJECT_FILE" <<EOF
 {
   "project":      "${PROJECT_NAME}",
   "project_type": "${PROJECT_TYPE}",
