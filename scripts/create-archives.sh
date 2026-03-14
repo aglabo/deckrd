@@ -270,7 +270,7 @@ copy_files_to_dist() {
   # Copy files for each pattern
   local copied=0
   for pattern in "${patterns[@]}"; do
-    if cp -fr "${src}"/${pattern} "$dist/" 2>/dev/null; then
+    if cp -fr "${src}/${pattern}" "$dist/" 2>/dev/null; then
       ((copied++)) || true
     fi
   done
@@ -311,7 +311,7 @@ copy_deckrd_json() {
   fi
 
   # Extract only required fields
-  if jq '{name, description, version, stage}' "$source_json" > "$dest_json"; then
+  if jq '{name, description, version, stage}' "$source_json" >"$dest_json"; then
     echo "Copied deckrd.json to dist/deckrd/deckrd.json"
   else
     echo "Error: Failed to copy deckrd.json" >&2
@@ -371,7 +371,7 @@ generate_checksum() {
     return 1
   fi
 
-  if (cd "$release_dir" && sha256sum -t "$archive_file" > "${archive_file}.sha256"); then
+  if (cd "$release_dir" && sha256sum -t "$archive_file" >"${archive_file}.sha256"); then
     echo "Generated checksum: ${archive_file}.sha256"
   else
     echo "Error: Failed to generate checksum" >&2
