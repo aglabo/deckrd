@@ -13,7 +13,7 @@
 #   1. Bootstrap: copy deckrd-rules to .claude/rules/ and docs templates
 #      to docs/.deckrd/ (no overwrite)
 #   2. Create docs/.deckrd/ base directory structure
-#   3. Write .local/deckrd/profile.json with project settings
+#   3. Write .local/deckrd/project.json with project settings
 #   4. Initialize .local/deckrd/session.json
 #
 # @usage
@@ -79,9 +79,9 @@ DECKRD_LOCAL="${REPO_ROOT}/.local/deckrd"
 readonly DECKRD_LOCAL
 
 ##
-# @description Profile file path
-PROFILE_FILE="${DECKRD_LOCAL}/profile.json"
-readonly PROFILE_FILE
+# @description Project file path
+PROJECT_FILE="${DECKRD_LOCAL}/project.json"
+readonly PROJECT_FILE
 
 ##
 # @description Session file path
@@ -136,8 +136,8 @@ Options:
                               Supported: gpt-*, o1-*, claude-*, haiku, sonnet, opus
   -h, --help                  Show this help message
 
-Profile file:
-  .local/deckrd/profile.json
+Project file:
+  .local/deckrd/project.json
 
 Example:
   init-dirs.sh myapp webapp
@@ -300,14 +300,14 @@ init_base_directory() {
 }
 
 ##
-# @description Write profile.json with project settings
-write_profile() {
+# @description Write project.json with project settings
+write_project() {
   local timestamp
   timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-  if [[ -f "$PROFILE_FILE" ]] && command -v jq >/dev/null 2>&1; then
+  if [[ -f "$PROJECT_FILE" ]] && command -v jq >/dev/null 2>&1; then
     local created_at
-    created_at=$(jq -r '.created_at // empty' "$PROFILE_FILE" 2>/dev/null || echo "$timestamp")
+    created_at=$(jq -r '.created_at // empty' "$PROJECT_FILE" 2>/dev/null || echo "$timestamp")
     jq -n \
       --arg project      "$PROJECT_NAME" \
       --arg project_type "$PROJECT_TYPE" \
@@ -322,9 +322,9 @@ write_profile() {
         ai_model:     $ai_model,
         created_at:   $created_at,
         updated_at:   $updated_at
-      }' > "${PROFILE_FILE}.tmp" && mv "${PROFILE_FILE}.tmp" "$PROFILE_FILE"
+      }' > "${PROJECT_FILE}.tmp" && mv "${PROJECT_FILE}.tmp" "$PROJECT_FILE"
   else
-    cat > "$PROFILE_FILE" <<EOF
+    cat > "$PROJECT_FILE" <<EOF
 {
   "project":      "${PROJECT_NAME}",
   "project_type": "${PROJECT_TYPE}",
@@ -337,7 +337,7 @@ EOF
   fi
 
   echo ""
-  echo "Profile written: ${PROFILE_FILE}"
+  echo "Project written: ${PROJECT_FILE}"
   echo "  project:      ${PROJECT_NAME}"
   echo "  project_type: ${PROJECT_TYPE}"
   echo "  language:     ${LANGUAGE}"
@@ -382,5 +382,5 @@ validate_ai_model "$AI_MODEL"
 
 bootstrap_project
 init_base_directory
-write_profile
+write_project
 init_session

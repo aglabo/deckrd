@@ -1,24 +1,24 @@
 #!/usr/bin/env bash
-# src: ./skills/deckrd/scripts/profile.sh
-# @(#) : deckrd プロジェクトプロファイル設定スクリプト
+# src: ./skills/deckrd/scripts/project.sh
+# @(#) : deckrd プロジェクト設定スクリプト
 #
 # Copyright (c) 2025 atsushifx <https://github.com/atsushifx>
 #
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 #
-# @file profile.sh
-# @brief Configure project profile (project name and language)
+# @file project.sh
+# @brief Configure project settings (project name and language)
 # @description
-#   Creates or updates .local/deckrd/profile.json with project settings.
+#   Creates or updates .local/deckrd/project.json with project settings.
 #   This enables deckrd-coder to load language-specific rules.
 #
 # @example
 #   # Configure project with Go language
-#   profile.sh --project myapp --language go
+#   project.sh --project myapp --language go
 #
 #   # Configure project with TypeScript
-#   profile.sh --project myapp --language typescript
+#   project.sh --project myapp --language typescript
 #
 # @exitcode 0 Success
 # @exitcode 1 Error during execution
@@ -46,9 +46,9 @@ DECKRD_DIR="${REPO_ROOT}/.local/deckrd"
 readonly DECKRD_DIR
 
 ##
-# @description Profile file path
-PROFILE_FILE="${DECKRD_DIR}/profile.json"
-readonly PROFILE_FILE
+# @description Project file path
+PROJECT_FILE="${DECKRD_DIR}/project.json"
+readonly PROJECT_FILE
 
 ##
 # @description Supported languages
@@ -79,24 +79,24 @@ AI_MODEL="sonnet"
 # @description Show usage information
 show_usage() {
   cat <<EOF
-Usage: profile.sh --project <name> [OPTIONS]
+Usage: project.sh --project <name> [OPTIONS]
 
-Configure project profile for deckrd.
+Configure project settings for deckrd.
 
 Options:
   --project <name>              Project name (required)
-  --project-type <type>         Project type (e.g. webapp, lib, cli, api)
+  --project-type <type>         Project type (e.g. lib, cli, api)
   --language <lang>, --lang     Programming language (default: typescript)
                                 Supported: ${SUPPORTED_LANGUAGES[*]}
   --ai-model <model>            AI model (default: sonnet)
   -h, --help                    Show this help message
 
-Profile file:
-  .local/deckrd/profile.json
+Project file:
+  .local/deckrd/project.json
 
 Example:
-  profile.sh --project myapp --language go
-  profile.sh --project voift --project-type webapp --language typescript --ai-model sonnet
+  project.sh --project myapp --language go
+  project.sh --project voift --project-type webapp --language typescript --ai-model sonnet
 EOF
 }
 
@@ -202,17 +202,17 @@ ensure_deckrd_dir() {
 }
 
 ##
-# @description Write profile JSON file
-write_profile() {
+# @description Write project JSON file
+write_project() {
   local timestamp
   timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-  if [[ -f "$PROFILE_FILE" ]] && command -v jq >/dev/null 2>&1; then
+  if [[ -f "$PROJECT_FILE" ]] && command -v jq >/dev/null 2>&1; then
     # Update: preserve created_at, merge existing fields for omitted options
     local created_at existing_type existing_model
-    created_at=$(jq -r '.created_at // empty' "$PROFILE_FILE" 2>/dev/null || echo "$timestamp")
-    existing_type=$(jq -r '.project_type // empty' "$PROFILE_FILE" 2>/dev/null || true)
-    existing_model=$(jq -r '.ai_model // empty' "$PROFILE_FILE" 2>/dev/null || true)
+    created_at=$(jq -r '.created_at // empty' "$PROJECT_FILE" 2>/dev/null || echo "$timestamp")
+    existing_type=$(jq -r '.project_type // empty' "$PROJECT_FILE" 2>/dev/null || true)
+    existing_model=$(jq -r '.ai_model // empty' "$PROJECT_FILE" 2>/dev/null || true)
     [[ -z "$PROJECT_TYPE" ]] && PROJECT_TYPE="$existing_type"
     [[ "$AI_MODEL" == "sonnet" ]] && [[ -n "$existing_model" ]] && AI_MODEL="$existing_model"
     jq -n \
@@ -229,9 +229,9 @@ write_profile() {
         ai_model:     $ai_model,
         created_at:   $created_at,
         updated_at:   $updated_at
-      }' > "${PROFILE_FILE}.tmp" && mv "${PROFILE_FILE}.tmp" "$PROFILE_FILE"
+      }' > "${PROJECT_FILE}.tmp" && mv "${PROJECT_FILE}.tmp" "$PROJECT_FILE"
   else
-    cat > "$PROFILE_FILE" <<EOF
+    cat > "$PROJECT_FILE" <<EOF
 {
   "project":      "${PROJECT_NAME}",
   "project_type": "${PROJECT_TYPE}",
@@ -247,13 +247,13 @@ EOF
 ##
 # @description Display result message
 display_result() {
-  echo "Deckrd profile configured."
+  echo "Deckrd project configured."
   echo ""
   echo "  project:      ${PROJECT_NAME}"
   echo "  project_type: ${PROJECT_TYPE}"
   echo "  language:     ${LANGUAGE}"
   echo "  ai_model:     ${AI_MODEL}"
-  echo "  profile:      .local/deckrd/profile.json"
+  echo "  project:      .local/deckrd/project.json"
 }
 
 # ============================================================================
@@ -264,5 +264,5 @@ parse_options "$@"
 validate_required_params
 validate_language "$LANGUAGE"
 ensure_deckrd_dir
-write_profile
+write_project
 display_result

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# profile.spec.sh - ShellSpec tests for profile.sh
+# project.spec.sh - ShellSpec tests for project.sh
 #
 # Copyright (c) 2025 atsushifx <https://github.com/atsushifx>
 #
@@ -8,9 +8,9 @@
 
 Include spec_helper.sh
 
-SCRIPT="${SCRIPTS_DIR}/profile.sh"
+SCRIPT="${SCRIPTS_DIR}/project.sh"
 
-Describe "profile.sh"
+Describe "project.sh"
 
   Before "setup_deckrd_tmpdir"
   After  "teardown_deckrd_tmpdir"
@@ -121,11 +121,11 @@ Describe "profile.sh"
     End
   End
 
-  Describe "既存の profile.json の更新"
-    Before "setup_existing_profile"
-    setup_existing_profile() {
+  Describe "既存の project.json の更新"
+    Before "setup_existing_project"
+    setup_existing_project() {
       mkdir -p "$DECKRD_LOCAL"
-      cat > "${DECKRD_LOCAL}/profile.json" <<'JSON'
+      cat > "${DECKRD_LOCAL}/project.json" <<'JSON'
 {
   "project": "oldapp",
   "language": "go",

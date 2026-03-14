@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# src: ./skills/deckrd/scripts/run-prompt.sh
+# src: ./skills/deckrd/scripts/generate-doc.sh
 # @(#) : deckrd script for executing AI prompts with configurable models
 #
 # Copyright (c) 2025 atsushifx <https://github.com/atsushifx>
@@ -8,7 +8,7 @@
 # https://opensource.org/licenses/MIT
 
 #
-# @file run-prompt.sh
+# @file generate-doc.sh
 # @brief Execute AI prompt with configurable model and language
 # @description
 #   Runs an AI prompt with auto-loaded prompt and template files.
@@ -19,10 +19,10 @@
 #
 # @example
 #   # Generate requirements in Japanese
-#   run-prompt.sh requirements "user input" --lang ja
+#   generate-doc.sh requirements "user input" --lang ja
 #
 #   # Generate spec with context from file
-#   run-prompt.sh spec @docs/input.md --model claude-sonnet-4-5 --lang en
+#   generate-doc.sh spec @docs/input.md --model claude-sonnet-4-5 --lang en
 #
 # @exitcode 0 Success
 # @exitcode 1 Error during execution
@@ -79,6 +79,9 @@ declare -A SHORT_TO_LONG=(
   [impl]="implementation"
   [task]="tasks"
   [review]="review"
+  [explore]="review-explore"
+  [harden]="review-harden"
+  [fix]="review-fix"
 )
 
 ##
@@ -93,6 +96,10 @@ PRIMARY_TYPES=($(printf '%s\n' "${SHORT_TO_LONG[@]}" | sort -u))
 ##
 # @description Document type (requirements, spec, impl, tasks)
 DOC_TYPE=""
+
+##
+# @description Prompt input mode (0 = doc-type, 1 = @<keyword> prompt-file)
+PROMPT_FILE_MODE=0
 
 ##
 # @description Context input (from stdin or argument)
@@ -187,14 +194,14 @@ validate_ai_model() {
   echo "Error: AI model must contain only letters, numbers, hyphens, underscores, and dots" >&2
   echo "  Allowed formats: 'model-name' or 'org/model-name'" >&2
   echo "  Invalid model: ${model}" >&2
-  exit 1
+  return 1
 }
 
 ##
 # @description Show usage information
 show_usage() {
   cat <<EOF
-Usage: run-prompt.sh <type> [context] [OPTIONS]
+Usage: generate-doc.sh <type> [context] [OPTIONS]
 
 Execute AI prompt with auto-loaded prompt and template files.
 
@@ -236,13 +243,13 @@ Execution Flow:
 
 Examples:
   # Generate requirements in Japanese
-  run-prompt.sh requirements "user input" --lang ja
+  generate-doc.sh requirements "user input" --lang ja
 
   # Generate spec with context from file
-  run-prompt.sh spec @docs/input.md --model claude-sonnet-4-5 --lang en
+  generate-doc.sh spec @docs/input.md --model claude-sonnet-4-5 --lang en
 
   # Read context from stdin
-  echo "My requirements" | run-prompt.sh requirements --lang ja
+  echo "My requirements" | generate-doc.sh requirements --lang ja
 EOF
 }
 
@@ -262,13 +269,13 @@ parse_options() {
           echo "Error: --ai-model requires a model name" >&2
           exit 1
         fi
-        validate_ai_model "$2"
+        validate_ai_model "$2" || exit 1
         AI_MODEL="$2"
         shift 2
         ;;
       --ai-model=*)
         AI_MODEL="${1#*=}"
-        validate_ai_model "$AI_MODEL"
+        validate_ai_model "$AI_MODEL" || exit 1
         shift
         ;;
       --lang)
@@ -324,7 +331,13 @@ parse_options() {
         ;;
       *)
         if [[ $positional_count -eq 0 ]]; then
-          DOC_TYPE="$1"
+          if [[ "$1" == @* ]]; then
+            DOC_TYPE="${1:1}"
+            PROMPT_FILE_MODE=1
+          else
+            PROMPT_TEXT="$1"
+            PROMPT_FILE_MODE=0
+          fi
         elif [[ $positional_count -eq 1 ]]; then
           CONTEXT_INPUT="$1"
         else
@@ -369,29 +382,95 @@ resolve_context() {
 }
 
 ##
-# @description Validate and normalize document type
-# @arg $1 string Document type (short or long form)
-# @stdout Normalized long form document type
-validate_doc_type() {
+# @description Normalize doc-type keyword to long form using SHORT_TO_LONG mapping
+# @arg $1 string Short or long form doc-type keyword
+# @stdout Normalized long form
+# @return 0  success
+# @return 1  unknown keyword
+normalize_doc_type() {
   local input="$1"
 
-  # Check if input is a short form
-  if [[ -v SHORT_TO_LONG[$input] ]]; then
-    echo "${SHORT_TO_LONG[$input]}"
+  declare -A _map=(
+    [req]="requirements"
+    [spec]="specifications"
+    [impl]="implementation"
+    [task]="tasks"
+    [review]="review"
+    [explore]="review-explore"
+    [harden]="review-harden"
+    [fix]="review-fix"
+  )
+
+  if [[ -v _map[$input] ]]; then
+    echo "${_map[$input]}"
     return 0
   fi
 
-  # Check if input is already a normalized long form
-  for long_form in "${PRIMARY_TYPES[@]}"; do
-    if [[ "$input" == "$long_form" ]]; then
+  local v
+  for v in "${_map[@]}"; do
+    if [[ "$input" == "$v" ]]; then
       echo "$input"
       return 0
     fi
   done
 
-  echo "Error: Unknown document type: $input" >&2
-  echo "Supported types: ${PRIMARY_TYPES[*]} (or short forms: req, spec, impl, task)" >&2
-  exit 1
+  return 1
+}
+
+##
+# @description Get prompt content from doc-type or detect prompt-file mode
+# @arg $1 string Raw first argument (doc-type name or @<keyword>)
+# @stdout Prompt content string
+# @return 0  doc-type mode: prompt content written to stdout
+# @return 1  prompt-file mode: caller should use cat on PROMPT_PATH
+get_prompt() {
+  local arg="$1"
+
+  if [[ "$arg" == @* ]]; then
+    # @<keyword> mode: caller uses cat on PROMPT_PATH
+    return 1
+  fi
+
+  # prompt-text mode: arg is the prompt string itself
+  echo "$arg"
+  return 0
+}
+
+##
+# @description Resolve doc type from @<keyword> argument
+# @arg $1 string Argument starting with @ (e.g. @requirements)
+# @stdout Normalized doc type string (e.g. requirements)
+# @return 0  success
+# @return 1  invalid argument (missing @, non-lowercase-alpha chars, or unsupported doctype)
+get_prompt_file() {
+  local arg="$1"
+
+  if [[ "$arg" != @* ]]; then
+    local msg="Error: argument must start with @"
+    echo "$msg"
+    echo "$msg" >&2
+    return 1
+  fi
+
+  local doc_type="${arg:1}"
+
+  if [[ ! "$doc_type" =~ ^[a-z]+$ ]]; then
+    local msg="Error: doc type must match ^[a-z]+$"
+    echo "$msg"
+    echo "$msg" >&2
+    return 1
+  fi
+
+  local normalized
+  normalized=$(normalize_doc_type "$doc_type") || {
+    local msg="Error: unsupported doctype: $doc_type"
+    echo "$msg"
+    echo "$msg" >&2
+    return 1
+  }
+
+  echo "$normalized"
+  return 0
 }
 
 ##
@@ -413,12 +492,12 @@ resolve_doc_paths() {
 
   if [[ ! -f "$prompt_path" ]]; then
     echo "Error: Prompt file not found: $prompt_path" >&2
-    exit 1
+    return 1
   fi
 
   if [[ ! -f "$template_path" ]]; then
     echo "Error: Template file not found: $template_path" >&2
-    exit 1
+    return 1
   fi
 
   echo "$prompt_path"
@@ -525,70 +604,85 @@ output_result() {
 # Main Execution
 # ============================================================================
 
-# check if jq is installed for session.json parsing
-command -v jq >/dev/null 2>&1 && CAN_USE_JQ=1 || CAN_USE_JQ=0
+main() {
+  # check if jq is installed for session.json parsing
+  command -v jq >/dev/null 2>&1 && CAN_USE_JQ=1 || CAN_USE_JQ=0
 
-## Initialize deckrd base and session config
+  ## Initialize deckrd base and session config
 
-# Initialize configuration from session
-load_session_config
+  # Initialize configuration from session
+  load_session_config
 
-# Set default if not loaded
-if [[ -z "${DECKRD_BASE}" ]]; then
-  DECKRD_BASE="${DECKRD_DOCS:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)/docs/.deckrd}"
-  export DECKRD_BASE
-fi
+  # Set default if not loaded
+  if [[ -z "${DECKRD_BASE}" ]]; then
+    DECKRD_BASE="${DECKRD_DOCS:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)/docs/.deckrd}"
+    export DECKRD_BASE
+  fi
 
 
-## Initialize command-line options
+  ## Initialize command-line options
 
-# @description AI model (loaded from session or default)
-# Can be overridden with --model option
-AI_MODEL="${SESSION_AI_MODEL:-sonnet}"
+  # @description AI model (loaded from session or default)
+  # Can be overridden with --model option
+  AI_MODEL="${SESSION_AI_MODEL:-sonnet}"
 
-##
-# @description Document language (loaded from session or default)
-# Can be overridden with --lang option
-LANG_OPT="${SESSION_LANG:-system}"
+  ##
+  # @description Document language (loaded from session or default)
+  # Can be overridden with --lang option
+  LANG_OPT="${SESSION_LANG:-system}"
 
-# Parse command-line options
-parse_options "$@"
+  # Parse command-line options
+  parse_options "$@"
 
-if [[ -z "$DOC_TYPE" ]]; then
-  echo "Error: Document type is required" >&2
-  show_usage
-  exit 1
-fi
+  if [[ -z "$PROMPT_TEXT" && -z "$DOC_TYPE" ]]; then
+    echo "Error: prompt or @keyword is required" >&2
+    show_usage
+    exit 1
+  fi
 
-DOC_TYPE=$(validate_doc_type "$DOC_TYPE")
+  # Determine prompt mode
+  if [[ "$PROMPT_FILE_MODE" -ne 1 ]]; then
+    PROMPT_TEXT=$(get_prompt "$PROMPT_TEXT")
+  fi
 
-# Set default review phase for review command
-if [[ "$DOC_TYPE" == "review" && -z "$REVIEW_PHASE" ]]; then
-  REVIEW_PHASE="explore"
-fi
+  # @keyword mode: resolve prompt/template paths from DOC_TYPE
+  if [[ "$PROMPT_FILE_MODE" -eq 1 ]]; then
+    if [[ "$DOC_TYPE" == "review" && -z "$REVIEW_PHASE" ]]; then
+      REVIEW_PHASE="explore"
+    fi
+    paths=$(resolve_doc_paths "$DOC_TYPE") || exit 1
+    PROMPT_PATH=$(echo "$paths" | head -1)
+    TEMPLATE_PATH=$(echo "$paths" | tail -1)
+  fi
 
-paths=$(resolve_doc_paths "$DOC_TYPE")
-PROMPT_PATH=$(echo "$paths" | head -1)
-TEMPLATE_PATH=$(echo "$paths" | tail -1)
+  if [[ -n "$CONTEXT_INPUT" ]]; then
+    CONTEXT_INPUT=$(resolve_context "$CONTEXT_INPUT") || exit 1
+  elif [[ ! -t 0 ]]; then
+    CONTEXT_INPUT=$(cat)
+  fi
 
-if [[ -n "$CONTEXT_INPUT" ]]; then
-  CONTEXT_INPUT=$(resolve_context "$CONTEXT_INPUT") || exit 1
-elif [[ ! -t 0 ]]; then
-  CONTEXT_INPUT=$(cat)
-fi
+  # Debug output
+  echo "DECKRD_BASE: $DECKRD_BASE" >&2
+  echo "Document type: $DOC_TYPE" >&2
+  echo "PROMPT_FILE_MODE: $PROMPT_FILE_MODE" >&2
+  echo "PROMPT_TEXT: $PROMPT_TEXT" >&2
+  echo "Prompt: $PROMPT_PATH" >&2
+  echo "Template: $TEMPLATE_PATH" >&2
+  echo "Language: $LANG_OPT" >&2
+  echo "Model: $AI_MODEL" >&2
+  if [[ -n "$REVIEW_PHASE" ]]; then
+    echo "Review Phase: $REVIEW_PHASE" >&2
+  fi
+  echo "" >&2
 
-# Debug output
-echo "DECKRD_BASE: $DECKRD_BASE" >&2
-echo "Document type: $DOC_TYPE" >&2
-echo "Prompt: $PROMPT_PATH" >&2
-echo "Template: $TEMPLATE_PATH" >&2
-echo "Language: $LANG_OPT" >&2
-echo "Model: $AI_MODEL" >&2
-if [[ -n "$REVIEW_PHASE" ]]; then
-  echo "Review Phase: $REVIEW_PHASE" >&2
-fi
-echo "" >&2
+  if [[ -z "$PROMPT_PATH" ]]; then
+    echo "Error: No prompt file resolved. Use @<type> to specify document type." >&2
+    exit 1
+  fi
 
-result=$(execute_prompt "$PROMPT_PATH" "$TEMPLATE_PATH" "$LANG_OPT" "$CONTEXT_INPUT")
+  result=$(execute_prompt "$PROMPT_PATH" "$TEMPLATE_PATH" "$LANG_OPT" "$CONTEXT_INPUT")
 
-output_result "$result" "$OUTPUT_FILE"
+  output_result "$result" "$OUTPUT_FILE"
+}
+
+[[ "${BASH_SOURCE[0]}" == "$0" ]] && main "$@"
