@@ -17,8 +17,8 @@ readonly _BOOTSTRAP_LOADED=1
 
 # PROJECT_ROOT: env var > git > BASH_SOURCE fallback
 if [[ -z "${PROJECT_ROOT:-}" ]]; then
-  PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null \
-    || echo "$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../../.." && pwd)")"
+  PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null ||
+    (cd "$(dirname "${BASH_SOURCE[0]}")/../../../../.." && pwd))"
 fi
 export PROJECT_ROOT
 

@@ -183,43 +183,43 @@ parse_args() {
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      -h|--help)
-        show_usage
-        exit 0
-        ;;
-      --language|--lang)
-        if [[ -z "${2:-}" ]]; then
-          echo "Error: ${1} requires a value" >&2
-          exit 1
-        fi
-        LANGUAGE="$2"
-        shift 2
-        ;;
-      --language=*|--lang=*)
-        LANGUAGE="${1#*=}"
-        shift
-        ;;
-      --ai-model)
-        if [[ -z "${2:-}" ]]; then
-          echo "Error: --ai-model requires a value" >&2
-          exit 1
-        fi
-        AI_MODEL="$2"
-        shift 2
-        ;;
-      --ai-model=*)
-        AI_MODEL="${1#*=}"
-        shift
-        ;;
-      -*)
-        echo "Error: Unknown option: $1" >&2
-        show_usage
+    -h | --help)
+      show_usage
+      exit 0
+      ;;
+    --language | --lang)
+      if [[ -z "${2:-}" ]]; then
+        echo "Error: ${1} requires a value" >&2
         exit 1
-        ;;
-      *)
-        positional+=("$1")
-        shift
-        ;;
+      fi
+      LANGUAGE="$2"
+      shift 2
+      ;;
+    --language=* | --lang=*)
+      LANGUAGE="${1#*=}"
+      shift
+      ;;
+    --ai-model)
+      if [[ -z "${2:-}" ]]; then
+        echo "Error: --ai-model requires a value" >&2
+        exit 1
+      fi
+      AI_MODEL="$2"
+      shift 2
+      ;;
+    --ai-model=*)
+      AI_MODEL="${1#*=}"
+      shift
+      ;;
+    -*)
+      echo "Error: Unknown option: $1" >&2
+      show_usage
+      exit 1
+      ;;
+    *)
+      positional+=("$1")
+      shift
+      ;;
     esac
   done
 
@@ -283,7 +283,7 @@ bootstrap_copy() {
 bootstrap_project() {
   echo "Bootstrap: installing deckrd assets..."
   bootstrap_copy "$RULES_SRC_DIR" "$CLAUDE_RULES_DIR" "deckrd-rules"
-  bootstrap_copy "$DOCS_SRC_DIR"  "$DECKRD_DOCS"      "docs"
+  bootstrap_copy "$DOCS_SRC_DIR" "$DECKRD_DOCS" "docs"
   echo "Bootstrap complete."
   echo ""
 }
@@ -309,12 +309,12 @@ write_project() {
     local created_at
     created_at=$(jq -r '.created_at // empty' "$PROJECT_FILE" 2>/dev/null || echo "$timestamp")
     jq -n \
-      --arg project      "$PROJECT_NAME" \
+      --arg project "$PROJECT_NAME" \
       --arg project_type "$PROJECT_TYPE" \
-      --arg language     "$LANGUAGE" \
-      --arg ai_model     "$AI_MODEL" \
-      --arg created_at   "$created_at" \
-      --arg updated_at   "$timestamp" \
+      --arg language "$LANGUAGE" \
+      --arg ai_model "$AI_MODEL" \
+      --arg created_at "$created_at" \
+      --arg updated_at "$timestamp" \
       '{
         project:      $project,
         project_type: $project_type,
@@ -322,9 +322,9 @@ write_project() {
         ai_model:     $ai_model,
         created_at:   $created_at,
         updated_at:   $updated_at
-      }' > "${PROJECT_FILE}.tmp" && mv "${PROJECT_FILE}.tmp" "$PROJECT_FILE"
+      }' >"${PROJECT_FILE}.tmp" && mv "${PROJECT_FILE}.tmp" "$PROJECT_FILE"
   else
-    cat > "$PROJECT_FILE" <<EOF
+    cat >"$PROJECT_FILE" <<EOF
 {
   "project":      "${PROJECT_NAME}",
   "project_type": "${PROJECT_TYPE}",
@@ -357,7 +357,7 @@ init_session() {
     return 0
   fi
 
-  cat > "$SESSION_FILE" <<EOF
+  cat >"$SESSION_FILE" <<EOF
 {
   "current_step": "init",
   "completed": ["init"],
