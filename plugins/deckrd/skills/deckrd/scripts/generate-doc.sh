@@ -35,6 +35,16 @@
 set -eo pipefail
 
 # ============================================================================
+# Library Dependencies
+# ============================================================================
+
+DECKRD_LIB_DIR="$(dirname "${BASH_SOURCE[0]}")/libs"
+readonly DECKRD_LIB_DIR
+
+# shellcheck disable=SC1091
+. "${DECKRD_LIB_DIR}/session.sh"
+
+# ============================================================================
 # deckrd Path Initialization
 # ============================================================================
 
@@ -116,57 +126,29 @@ declare -a AI_COMMAND
 # Functions
 # ============================================================================
 
-# @description Extract JSON value using grep/sed fallback
-# @arg $1 string JSON file path
-# @arg $2 string JSON key name
-# @stdout Extracted value (empty if not found)
-extract_json_value_fallback() {
-  local file="$1"
-  local key="$2"
-
-  # Match: "key": "value" or "key":"value"
-  # Handles whitespace variations and returns empty if not found
-  grep -o "\"${key}\"[[:space:]]*:[[:space:]]*\"[^\"]*\"" "$file" 2>/dev/null |
-    sed -E 's/[^:]*:[[:space:]]*"([^"]*)".*/\1/' || echo ""
-}
-
 ##
 # @description Load configuration from session.json
 # Reads "active", "ai_model", and "lang" fields from session
 load_session_config() {
-  if [[ ! -f "$SESSION_FILE" ]]; then
-    return 0
-  fi
+  session_load "$SESSION_FILE" || return 0
 
-  local active=""
-  local ai_model=""
-  local lang=""
-
-  if [[ CAN_USE_JQ -eq 1 ]]; then
-    # Preferred: use jq
-    active=$(jq -r '.active // empty' "$SESSION_FILE" 2>/dev/null || true)
-    ai_model=$(jq -r '.ai_model // empty' "$SESSION_FILE" 2>/dev/null || true)
-    lang=$(jq -r '.lang // empty' "$SESSION_FILE" 2>/dev/null || true)
-  else
-    # Fallback: use grep/sed
-    echo "Warning: session.json loaded via fallback; values may be incomplete" >&2
-
-    active=$(extract_json_value_fallback "$SESSION_FILE" "active")
-    ai_model=$(extract_json_value_fallback "$SESSION_FILE" "ai_model")
-    lang=$(extract_json_value_fallback "$SESSION_FILE" "lang")
-  fi
-
+  local active
+  active=$(session_get "active")
   if [[ -n "$active" ]]; then
     local deckrd_docs="${DECKRD_DOCS:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)/docs/.deckrd}"
     DECKRD_BASE="${deckrd_docs}/${active}"
     export DECKRD_BASE
   fi
 
+  local ai_model
+  ai_model=$(session_get "ai_model")
   if [[ -n "$ai_model" ]]; then
     SESSION_AI_MODEL="$ai_model"
     export SESSION_AI_MODEL
   fi
 
+  local lang
+  lang=$(session_get "lang")
   if [[ -n "$lang" ]]; then
     SESSION_LANG="$lang"
     export SESSION_LANG
@@ -605,9 +587,6 @@ output_result() {
 # ============================================================================
 
 main() {
-  # check if jq is installed for session.json parsing
-  command -v jq >/dev/null 2>&1 && CAN_USE_JQ=1 || CAN_USE_JQ=0
-
   ## Initialize deckrd base and session config
 
   # Initialize configuration from session
