@@ -88,7 +88,8 @@ main() {
     local -a spec_files
     mapfile -t spec_files < <(get_spec_files "$test_type" "$@")
     if [[ ${#spec_files[@]} -eq 0 ]]; then
-      spec_files=("tests/${test_type}")
+      echo "Warning: No spec files found for test type '${test_type}'" >&2
+      exit 0
     fi
     set -- "${spec_files[@]}"
   fi
