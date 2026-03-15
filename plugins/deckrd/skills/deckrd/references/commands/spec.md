@@ -440,7 +440,7 @@ REQUIREMENTS:         @requirements/requirements.md
 For **each file** in SPLIT PLAN, execute:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh specifications \
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh @specifications \
   @requirements/requirements.md \
   [--lang <lang>] \
   --output "specifications/<filename>"
@@ -577,7 +577,7 @@ deckrd/assets/
 Execute: [generate-doc.sh](../../scripts/generate-doc.sh)
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh specifications @requirements/requirements.md [--lang <lang>] --output "specifications/specifications.md"
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh @specifications @requirements/requirements.md [--lang <lang>] --output "specifications/specifications.md"
 ```
 
 > **Note**:
