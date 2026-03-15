@@ -48,7 +48,7 @@ readonly DECKRD_DIR
 
 ##
 # @description Project file path
-PROJECT_FILE="${DECKRD_DIR}/project.json"
+PROJECT_FILE="${DECKRD_DIR}/.project.json"
 readonly PROJECT_FILE
 
 ##
