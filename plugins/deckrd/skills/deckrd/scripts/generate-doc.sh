@@ -80,7 +80,7 @@ declare -A SHORT_TO_LONG=(
   [spec]="specifications"
   [impl]="implementation"
   [task]="tasks"
-  [review]="review"
+  [review]="review-explore"
   [explore]="review-explore"
   [harden]="review-harden"
   [fix]="review-fix"
@@ -113,7 +113,9 @@ Document Types:
   spec            Generate specification document
   tasks           Generate task breakdown
   impl            Generate implementation guide
-  review          Review existing document (requires --phase)
+  review-explore  Review: explore phase
+  review-harden   Review: harden phase
+  review-fix      Review: fix phase
 
 Options:
   --ai-model <model>  AI model name (default: loaded from session, or gpt-5.2)
@@ -124,8 +126,6 @@ Options:
   --output <file>     Output file path relative to DECKRD_BASE (default: stdout)
                       Example: --output requirements/requirements.md
                       → writes to \${DECKRD_BASE}/requirements/requirements.md
-  --phase <phase>     Review phase (only for review command)
-                      Values: explore, harden, fix (default: explore)
   -h, --help          Show this help message
 
 Session Configuration:
@@ -203,29 +203,6 @@ parse_options() {
       config_set "output_file" "${1#*=}"
       shift
       ;;
-    --phase)
-      if [[ -z "${2:-}" ]]; then
-        echo "Error: --phase requires a value (explore|harden|fix)" >&2
-        exit 1
-      fi
-      if [[ ! "$2" =~ ^(explore|harden|fix)$ ]]; then
-        echo "Error: Invalid review phase: $2" >&2
-        echo "  Valid phases: explore, harden, fix" >&2
-        exit 1
-      fi
-      config_set "review_phase" "$2"
-      shift 2
-      ;;
-    --phase=*)
-      local _phase="${1#*=}"
-      if [[ ! "$_phase" =~ ^(explore|harden|fix)$ ]]; then
-        echo "Error: Invalid review phase: $_phase" >&2
-        echo "  Valid phases: explore, harden, fix" >&2
-        exit 1
-      fi
-      config_set "review_phase" "$_phase"
-      shift
-      ;;
     -*)
       echo "Error: Unknown option: $1" >&2
       show_usage
@@ -297,7 +274,7 @@ normalize_doc_type() {
     [spec]="specifications"
     [impl]="implementation"
     [task]="tasks"
-    [review]="review"
+    [review]="review-explore"
     [explore]="review-explore"
     [harden]="review-harden"
     [fix]="review-fix"
@@ -382,18 +359,9 @@ get_prompt_file() {
 # @stdout Two lines: prompt path, template path
 resolve_doc_paths() {
   local doc_type="$1"
-  local review_phase
-  review_phase=$(config_get "review_phase")
 
   local prompt_path="${ASSETS_DIR}/prompts/${doc_type}.prompt.md"
-
-  # review タイプの場合はフェーズ別テンプレートを選択
-  local template_path
-  if [[ "$doc_type" == "review" && -n "$review_phase" ]]; then
-    template_path="${ASSETS_DIR}/templates/${doc_type}-${review_phase}.template.md"
-  else
-    template_path="${ASSETS_DIR}/templates/${doc_type}.template.md"
-  fi
+  local template_path="${ASSETS_DIR}/templates/${doc_type}.template.md"
 
   if [[ ! -f "$prompt_path" ]]; then
     echo "Error: Prompt file not found: $prompt_path" >&2
@@ -430,14 +398,8 @@ build_ai_input() {
   cat "$template_path"
   echo ""
 
-  local review_phase
-  review_phase=$(config_get "review_phase")
-
   echo "===== PARAMETERS ====="
   echo "LANG: ${lang}"
-  if [[ -n "$review_phase" ]]; then
-    echo "PHASE: ${review_phase}"
-  fi
   echo ""
 
   if [[ -n "$context" ]]; then
@@ -518,11 +480,6 @@ main() {
 
   # @keyword モード: prompt/template パスを解決
   if [[ "$prompt_mode" -eq 1 ]]; then
-    local review_phase
-    review_phase=$(config_get "review_phase")
-    if [[ "$doc_type" == "review" && -z "$review_phase" ]]; then
-      config_set "review_phase" "explore"
-    fi
     local paths
     paths=$(resolve_doc_paths "$doc_type") || exit 1
     config_set "prompt_path" "$(echo "$paths" | head -1)"
