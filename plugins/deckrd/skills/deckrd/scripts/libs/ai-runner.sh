@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# scripts/lib/ai-runner.sh - Run AI model with prompt and return response
+# scripts/libs/ai-runner.sh - Run AI model with prompt and return response
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #
@@ -56,30 +56,44 @@ resolve_ai_cli() {
 #
 # Prompt is passed via stdin (pipe). Do NOT include prompt in the array.
 #
-# @arg $1  string  CLI name (e.g. "claude", "codex")
-# @arg $2  string  AI model identifier
-# @set _AI_CMD  array  Command array ready for execution (stdin = prompt)
+# @arg $1  string   CLI name (e.g. "claude", "codex")
+# @arg $2  string   AI model identifier
+# @arg $3  nameref  Array variable to store the command (passed by name)
 # @exitcode 0  Success
+# @exitcode 1  Unknown CLI
 _build_ai_command() {
   local cli="$1"
   local model="$2"
+  local -n _cmd_ref="$3"
+  local _ai_options=()
 
   case "$cli" in
   claude)
     # Claude aliases are passed as-is; claude CLI resolves them natively.
     # Special handling: sonnet-1m adds --context-window, opusplan adds --thinking.
+
     case "$model" in
-    default) _AI_CMD=("claude" "-p") ;;
-    sonnet-1m) _AI_CMD=("claude" "--model" "sonnet" "-p" "--context-window" "1000000") ;;
-    opusplan) _AI_CMD=("claude" "--model" "opusplan" "-p" "--thinking") ;;
-    *) _AI_CMD=("claude" "--model" "$model" "-p") ;;
+    default)
+      _ai_options=()
+      ;;
+    sonnet-1m)
+      _ai_options=("--model" "sonnet" "--context-window" "1000000")
+      ;;
+    opusplan)
+      _ai_options=("--model" "opusplan" "--thinking")
+      ;;
+    *)
+      _ai_options=("--model" "$model")
+      ;;
     esac
+    _ai_options+=("--permission-mode" "acceptEdits" "--strict-mcp-config" "--mcp-config" '{"mcpServers":{}}')
+    _cmd_ref=("claude" "${_ai_options[@]}" "-p")
     ;;
   codex)
-    _AI_CMD=("codex" "exec" "--model" "$model")
+    _cmd_ref=("codex" "exec" "--model" "$model")
     ;;
   gemini)
-    _AI_CMD=("gemini" "--model" "$model" "-p")
+    _cmd_ref=("gemini" "--model" "$model" )
     ;;
   copilot)
     # Extract model name after prefix (github/<model>, github-copilot/<model>, copilot/<model>)
@@ -87,7 +101,7 @@ _build_ai_command() {
     # Validate against supported copilot model families: claude-*, gpt-*, gemini-*, grok-*
     case "$copilot_model" in
     claude-* | gpt-* | gemini-* | grok-*)
-      _AI_CMD=("copilot" "suggest" "--model" "$copilot_model")
+      _cmd_ref=("copilot" "--model" "$copilot_model")
       ;;
     *)
       return 1
@@ -95,7 +109,10 @@ _build_ai_command() {
     esac
     ;;
   opencode)
-    _AI_CMD=("opencode" "run" "--model" "$model")
+    _cmd_ref=("opencode" "run" "--model" "$model")
+    ;;
+  *)
+    return 1
     ;;
   esac
 }
@@ -139,7 +156,7 @@ run_ai() {
   fi
 
   local _AI_CMD=()
-  _build_ai_command "$cli" "$model" || {
+  _build_ai_command "$cli" "$model" _AI_CMD || {
     echo "Error: unsupported model for $cli: $model" >&2
     echo 1
     return 1
