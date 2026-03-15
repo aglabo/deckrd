@@ -244,11 +244,11 @@ Execute: [generate-doc.sh](../../scripts/generate-doc.sh)
 
 ```bash
 # Default: generate both tasks.md and implementation-checklist.md
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh tasks [--lang <lang>] --output "tasks/tasks.md"
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh implementation-checklist [--lang <lang>] --input "tasks/tasks.md" --output "tasks/implementation-checklist.md"
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh @tasks [--lang <lang>] --output "tasks/tasks.md"
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh @implementation-checklist [--lang <lang>] --input "tasks/tasks.md" --output "tasks/implementation-checklist.md"
 
 # Update: regenerate implementation-checklist.md only
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh implementation-checklist [--lang <lang>] --input "tasks/tasks.md" --output "tasks/implementation-checklist.md"
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh @implementation-checklist [--lang <lang>] --input "tasks/tasks.md" --output "tasks/implementation-checklist.md"
 ```
 
 <!-- markdownlint-enable -->
