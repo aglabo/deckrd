@@ -43,6 +43,7 @@ readonly DECKRD_LIB_DIR
 
 # shellcheck disable=SC1091
 . "${DECKRD_LIB_DIR}/session.sh"
+. "${DECKRD_LIB_DIR}/config.sh"
 
 # ============================================================================
 # deckrd Path Initialization
@@ -52,18 +53,6 @@ readonly DECKRD_LIB_DIR
 # @description Session file path
 DECKRD_LOCAL="${DECKRD_LOCAL:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.local/deckrd}"
 SESSION_FILE="${DECKRD_LOCAL}/session.json"
-
-##
-# @description deckrd base path - DECKRD_BASE may point to module root when session is active
-DECKRD_BASE=""
-
-##
-# @description Session AI model (set from session)
-SESSION_AI_MODEL=""
-
-##
-# @description Session language (set from session)
-SESSION_LANG=""
 
 # ============================================================================
 # Script Configuration
@@ -94,29 +83,9 @@ declare -A SHORT_TO_LONG=(
 )
 
 ##
-# @description Review phase (explore, harden, fix) - only for review command
-REVIEW_PHASE=""
-
-##
 # @description Primary document types for display (derived from SHORT_TO_LONG values)
 # Populated after SHORT_TO_LONG declaration to get unique long form values
 mapfile -t PRIMARY_TYPES < <(printf '%s\n' "${SHORT_TO_LONG[@]}" | sort -u)
-
-##
-# @description Document type (requirements, spec, impl, tasks)
-DOC_TYPE=""
-
-##
-# @description Prompt input mode (0 = doc-type, 1 = @<keyword> prompt-file)
-PROMPT_FILE_MODE=0
-
-##
-# @description Context input (from stdin or argument)
-CONTEXT_INPUT=""
-
-##
-# @description Output file path (empty = stdout)
-OUTPUT_FILE=""
 
 ##
 # @description AI command array (populated by get_model_command)
@@ -125,35 +94,6 @@ declare -a AI_COMMAND
 # ============================================================================
 # Functions
 # ============================================================================
-
-##
-# @description Load configuration from session.json
-# Reads "active", "ai_model", and "lang" fields from session
-load_session_config() {
-  session_load "$SESSION_FILE" || return 0
-
-  local active
-  active=$(session_get "active")
-  if [[ -n "$active" ]]; then
-    local deckrd_docs="${DECKRD_DOCS:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)/docs/.deckrd}"
-    DECKRD_BASE="${deckrd_docs}/${active}"
-    export DECKRD_BASE
-  fi
-
-  local ai_model
-  ai_model=$(session_get "ai_model")
-  if [[ -n "$ai_model" ]]; then
-    SESSION_AI_MODEL="$ai_model"
-    export SESSION_AI_MODEL
-  fi
-
-  local lang
-  lang=$(session_get "lang")
-  if [[ -n "$lang" ]]; then
-    SESSION_LANG="$lang"
-    export SESSION_LANG
-  fi
-}
 
 ##
 # @description Validate AI model name format
@@ -251,12 +191,13 @@ parse_options() {
         exit 1
       fi
       validate_ai_model "$2" || exit 1
-      AI_MODEL="$2"
+      config_set "ai_model" "$2"
       shift 2
       ;;
     --ai-model=*)
-      AI_MODEL="${1#*=}"
-      validate_ai_model "$AI_MODEL" || exit 1
+      local _model="${1#*=}"
+      validate_ai_model "$_model" || exit 1
+      config_set "ai_model" "$_model"
       shift
       ;;
     --lang)
@@ -264,11 +205,11 @@ parse_options() {
         echo "Error: --lang requires a value" >&2
         exit 1
       fi
-      LANG_OPT="$2"
+      config_set "lang" "$2"
       shift 2
       ;;
     --lang=*)
-      LANG_OPT="${1#*=}"
+      config_set "lang" "${1#*=}"
       shift
       ;;
     --output)
@@ -276,11 +217,11 @@ parse_options() {
         echo "Error: --output requires a file path" >&2
         exit 1
       fi
-      OUTPUT_FILE="$2"
+      config_set "output_file" "$2"
       shift 2
       ;;
     --output=*)
-      OUTPUT_FILE="${1#*=}"
+      config_set "output_file" "${1#*=}"
       shift
       ;;
     --phase)
@@ -293,16 +234,17 @@ parse_options() {
         echo "  Valid phases: explore, harden, fix" >&2
         exit 1
       fi
-      REVIEW_PHASE="$2"
+      config_set "review_phase" "$2"
       shift 2
       ;;
     --phase=*)
-      REVIEW_PHASE="${1#*=}"
-      if [[ ! "$REVIEW_PHASE" =~ ^(explore|harden|fix)$ ]]; then
-        echo "Error: Invalid review phase: $REVIEW_PHASE" >&2
+      local _phase="${1#*=}"
+      if [[ ! "$_phase" =~ ^(explore|harden|fix)$ ]]; then
+        echo "Error: Invalid review phase: $_phase" >&2
         echo "  Valid phases: explore, harden, fix" >&2
         exit 1
       fi
+      config_set "review_phase" "$_phase"
       shift
       ;;
     -*)
@@ -313,14 +255,14 @@ parse_options() {
     *)
       if [[ $positional_count -eq 0 ]]; then
         if [[ "$1" == @* ]]; then
-          DOC_TYPE="${1:1}"
-          PROMPT_FILE_MODE=1
+          config_set "doc_type" "${1:1}"
+          config_set "prompt_mode" "1"
         else
-          PROMPT_TEXT="$1"
-          PROMPT_FILE_MODE=0
+          config_set "doc_type" "$1"
+          config_set "prompt_mode" "0"
         fi
       elif [[ $positional_count -eq 1 ]]; then
-        CONTEXT_INPUT="$1"
+        config_set "context_input" "$1"
       else
         echo "Error: Too many positional arguments" >&2
         show_usage
@@ -461,13 +403,15 @@ get_prompt_file() {
 # @stdout Two lines: prompt path, template path
 resolve_doc_paths() {
   local doc_type="$1"
+  local review_phase
+  review_phase=$(config_get "review_phase")
 
   local prompt_path="${ASSETS_DIR}/prompts/${doc_type}.prompt.md"
 
   # review タイプの場合はフェーズ別テンプレートを選択
   local template_path
-  if [[ "$doc_type" == "review" && -n "$REVIEW_PHASE" ]]; then
-    template_path="${ASSETS_DIR}/templates/${doc_type}-${REVIEW_PHASE}.template.md"
+  if [[ "$doc_type" == "review" && -n "$review_phase" ]]; then
+    template_path="${ASSETS_DIR}/templates/${doc_type}-${review_phase}.template.md"
   else
     template_path="${ASSETS_DIR}/templates/${doc_type}.template.md"
   fi
@@ -534,10 +478,13 @@ build_ai_input() {
   cat "$template_path"
   echo ""
 
+  local review_phase
+  review_phase=$(config_get "review_phase")
+
   echo "===== PARAMETERS ====="
   echo "LANG: ${lang}"
-  if [[ -n "$REVIEW_PHASE" ]]; then
-    echo "PHASE: ${REVIEW_PHASE}"
+  if [[ -n "$review_phase" ]]; then
+    echo "PHASE: ${review_phase}"
   fi
   echo ""
 
@@ -557,7 +504,9 @@ execute_prompt() {
   local lang="$3"
   local context="$4"
 
-  get_model_command "${AI_MODEL}" || return 1
+  local ai_model
+  ai_model=$(config_get "ai_model")
+  get_model_command "$ai_model" || return 1
 
   # Execute AI command using array (no eval needed)
   build_ai_input "$prompt_path" "$template_path" "$lang" "$context" | "${AI_COMMAND[@]}"
@@ -587,80 +536,82 @@ output_result() {
 # ============================================================================
 
 main() {
-  ## Initialize deckrd base and session config
+  # セッションファイルパス
+  local session_file="${SESSION_FILE}"
 
-  # Initialize configuration from session
-  load_session_config
+  # config 初期化（デフォルト + セッション読込）
+  config_init "$session_file"
 
-  # Set default if not loaded
-  if [[ -z "${DECKRD_BASE}" ]]; then
-    DECKRD_BASE="${DECKRD_DOCS:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)/docs/.deckrd}"
-    export DECKRD_BASE
-  fi
-
-  ## Initialize command-line options
-
-  # @description AI model (loaded from session or default)
-  # Can be overridden with --model option
-  AI_MODEL="${SESSION_AI_MODEL:-sonnet}"
-
-  ##
-  # @description Document language (loaded from session or default)
-  # Can be overridden with --lang option
-  LANG_OPT="${SESSION_LANG:-system}"
-
-  # Parse command-line options
+  # コマンドライン引数の解析
   parse_options "$@"
 
-  if [[ -z "$PROMPT_TEXT" && -z "$DOC_TYPE" ]]; then
+  # DECKRD_BASE の解決（CONFIG 経由）
+  local deckrd_base
+  deckrd_base=$(config_get "deckrd_base")
+  if [[ -z "$deckrd_base" ]]; then
+    deckrd_base="${DECKRD_DOCS:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)/docs/.deckrd}"
+    config_set "deckrd_base" "$deckrd_base"
+  fi
+  export DECKRD_BASE="$deckrd_base"
+
+  # doc_type チェック
+  local doc_type prompt_mode
+  doc_type=$(config_get "doc_type")
+  prompt_mode=$(config_get "prompt_mode")
+
+  if [[ -z "$doc_type" ]]; then
     echo "Error: prompt or @keyword is required" >&2
     show_usage
     exit 1
   fi
 
-  # Determine prompt mode
-  if [[ "$PROMPT_FILE_MODE" -ne 1 ]]; then
-    PROMPT_TEXT=$(get_prompt "$PROMPT_TEXT")
-  fi
-
-  # @keyword mode: resolve prompt/template paths from DOC_TYPE
-  if [[ "$PROMPT_FILE_MODE" -eq 1 ]]; then
-    if [[ "$DOC_TYPE" == "review" && -z "$REVIEW_PHASE" ]]; then
-      REVIEW_PHASE="explore"
+  # @keyword モード: prompt/template パスを解決
+  if [[ "$prompt_mode" -eq 1 ]]; then
+    local review_phase
+    review_phase=$(config_get "review_phase")
+    if [[ "$doc_type" == "review" && -z "$review_phase" ]]; then
+      config_set "review_phase" "explore"
     fi
-    paths=$(resolve_doc_paths "$DOC_TYPE") || exit 1
-    PROMPT_PATH=$(echo "$paths" | head -1)
-    TEMPLATE_PATH=$(echo "$paths" | tail -1)
+    local paths
+    paths=$(resolve_doc_paths "$doc_type") || exit 1
+    config_set "prompt_path" "$(echo "$paths" | head -1)"
+    config_set "template_path" "$(echo "$paths" | tail -1)"
   fi
 
-  if [[ -n "$CONTEXT_INPUT" ]]; then
-    CONTEXT_INPUT=$(resolve_context "$CONTEXT_INPUT") || exit 1
+  # コンテキスト入力の解決
+  local context_input
+  context_input=$(config_get "context_input")
+  if [[ -n "$context_input" ]]; then
+    context_input=$(resolve_context "$context_input") || exit 1
+    config_set "context_input" "$context_input"
   elif [[ ! -t 0 ]]; then
-    CONTEXT_INPUT=$(cat)
+    config_set "context_input" "$(cat)"
   fi
 
-  # Debug output
-  echo "DECKRD_BASE: $DECKRD_BASE" >&2
-  echo "Document type: $DOC_TYPE" >&2
-  echo "PROMPT_FILE_MODE: $PROMPT_FILE_MODE" >&2
-  echo "PROMPT_TEXT: $PROMPT_TEXT" >&2
-  echo "Prompt: $PROMPT_PATH" >&2
-  echo "Template: $TEMPLATE_PATH" >&2
-  echo "Language: $LANG_OPT" >&2
-  echo "Model: $AI_MODEL" >&2
-  if [[ -n "$REVIEW_PHASE" ]]; then
-    echo "Review Phase: $REVIEW_PHASE" >&2
-  fi
+  # デバッグ出力
+  config_all >&2
   echo "" >&2
 
-  if [[ -z "$PROMPT_PATH" ]]; then
+  # prompt_path チェック
+  local prompt_path
+  prompt_path=$(config_get "prompt_path")
+  if [[ -z "$prompt_path" ]]; then
     echo "Error: No prompt file resolved. Use @<type> to specify document type." >&2
     exit 1
   fi
 
-  result=$(execute_prompt "$PROMPT_PATH" "$TEMPLATE_PATH" "$LANG_OPT" "$CONTEXT_INPUT")
+  # 実行
+  local template_path lang context
+  template_path=$(config_get "template_path")
+  lang=$(config_get "lang")
+  context=$(config_get "context_input")
 
-  output_result "$result" "$OUTPUT_FILE"
+  local result
+  result=$(execute_prompt "$prompt_path" "$template_path" "$lang" "$context")
+
+  local output_file
+  output_file=$(config_get "output_file")
+  output_result "$result" "$output_file"
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
