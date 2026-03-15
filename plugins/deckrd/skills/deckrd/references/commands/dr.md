@@ -249,5 +249,5 @@ Execute: [generate-doc.sh](../../scripts/generate-doc.sh)
 For `--add` mode:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh decision-record <user_context> [--lang <lang>] --output "decision-records.md" --append
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh @decision-record <user_context> [--lang <lang>] --output "decision-records.md" --append
 ```
