@@ -14,17 +14,15 @@ SCRIPT="${DECKRD_LIB_DIR}/ai-runner.sh"
 . "$SCRIPT"
 
 Describe "ai-runner.sh"
-
   Describe "_build_ai_command"
-
     Describe "Given: claude CLI とモデル名"
       Describe "When: _build_ai_command を呼ぶ"
         Parameters
-          "claude"  "claude-3-opus"  "--model"  "claude-3-opus"
-          "claude"  "sonnet"         "--model"  "sonnet"
-          "claude"  "opus"           "--model"  "opus"
-          "claude"  "haiku"          "--model"  "haiku"
-          "claude"  "opusplan"       "--model"  "opusplan"
+          "claude" "claude-3-opus" "--model" "claude-3-opus"
+          "claude" "sonnet" "--model" "sonnet"
+          "claude" "opus" "--model" "opus"
+          "claude" "haiku" "--model" "haiku"
+          "claude" "opusplan" "--model" "opusplan"
         End
 
         It "Then: [Normal] cmd に $3 $4 が含まれる"
@@ -84,7 +82,5 @@ Describe "ai-runner.sh"
         End
       End
     End
-
   End
-
 End

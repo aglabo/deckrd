@@ -14,7 +14,6 @@ SCRIPT="${DECKRD_LIB_DIR}/ai-runner.sh"
 . "$SCRIPT"
 
 Describe "ai-runner.sh"
-
   Describe "ai-runner.sh loading"
     Describe "When: スクリプトを読み込む"
       It "Then: [Normal] resolve_ai_cli 関数が存在する"
@@ -32,28 +31,27 @@ Describe "ai-runner.sh"
   End
 
   Describe "resolve_ai_cli"
-
     Describe "Given: provider プレフィックス付きモデル名"
       Describe "When: resolve_ai_cli を呼ぶ"
         Parameters
-          "anthropic/claude-3-5"              "claude"
-          "claude-3-opus"                     "claude"
-          "openai/gpt-4o"                     "codex"
-          "gpt-4-turbo"                       "codex"
-          "o1-preview"                        "codex"
-          "o3-mini"                           "codex"
-          "google/gemini-2.0"                 "gemini"
-          "gemini-1.5-pro"                    "gemini"
-          "googleai/gemini-3"                 "gemini"
-          "googleai/gemini-2.5"               "gemini"
-          "github/gpt-4.1"                    "copilot"
-          "github-copilot/gpt-5"              "copilot"
-          "github-copilot/claude-sonnet-4.6"  "copilot"
-          "github-copilot/grok-code-fast-1"   "copilot"
-          "copilot/gpt-4.1"                   "copilot"
-          "opencode/gpt-5"                    "opencode"
-          "opencode/claude-sonnet-4-6"        "opencode"
-          "opencode/big-pickle"               "opencode"
+          "anthropic/claude-3-5" "claude"
+          "claude-3-opus" "claude"
+          "openai/gpt-4o" "codex"
+          "gpt-4-turbo" "codex"
+          "o1-preview" "codex"
+          "o3-mini" "codex"
+          "google/gemini-2.0" "gemini"
+          "gemini-1.5-pro" "gemini"
+          "googleai/gemini-3" "gemini"
+          "googleai/gemini-2.5" "gemini"
+          "github/gpt-4.1" "copilot"
+          "github-copilot/gpt-5-mini" "copilot"
+          "github-copilot/claude-sonnet-4.6" "copilot"
+          "github-copilot/grok-code-fast-1" "copilot"
+          "copilot/gpt-4.1" "copilot"
+          "opencode/gpt-5" "opencode"
+          "opencode/claude-sonnet-4-6" "opencode"
+          "opencode/big-pickle" "opencode"
         End
 
         It "Then: [Normal] $1 -> $2 を返す"
@@ -67,12 +65,12 @@ Describe "ai-runner.sh"
     Describe "Given: エイリアスモデル名"
       Describe "When: resolve_ai_cli を呼ぶ"
         Parameters
-          "default"   "claude"
-          "sonnet"    "claude"
-          "opus"      "claude"
-          "haiku"     "claude"
+          "default" "claude"
+          "sonnet" "claude"
+          "opus" "claude"
+          "haiku" "claude"
           "sonnet-1m" "claude"
-          "opusplan"  "claude"
+          "opusplan" "claude"
         End
 
         It "Then: [Normal] $1 -> $2 を返す"
@@ -106,14 +104,14 @@ Describe "ai-runner.sh"
       Describe "When: resolve_ai_cli を呼ぶ"
         Describe "成功するケース"
           Parameters
-            "anthropic/"         "claude"
-            "openai/"            "codex"
-            "opencode/"          "opencode"
-            "copilot/"           "copilot"
-            "claude-"            "claude"
-            "o1-"                "codex"
-            "claude-3 5"         "claude"
-            "gpt-4;echo hacked"  "codex"
+            "anthropic/" "claude"
+            "openai/" "codex"
+            "opencode/" "opencode"
+            "copilot/" "copilot"
+            "claude-" "claude"
+            "o1-" "codex"
+            "claude-3 5" "claude"
+            "gpt-4;echo hacked" "codex"
           End
 
           It "Then: [Edge] $1 -> $2 を返す"
@@ -143,11 +141,9 @@ Describe "ai-runner.sh"
         End
       End
     End
-
   End
 
   Describe "validate_ai_model"
-
     Describe "ai-runner.sh loading"
       It "Then: [Normal] validate_ai_model 関数が存在する"
         When call type validate_ai_model
@@ -159,25 +155,25 @@ Describe "ai-runner.sh"
     Describe "Given: 有効なモデル識別子"
       Describe "When: validate_ai_model を呼ぶ"
         Parameters
-          "sonnet"                  "sonnet"
-          "opus"                    "opus"
-          "haiku"                   "haiku"
-          "default"                 "default"
-          "sonnet-1m"               "sonnet-1m"
-          "opusplan"                "opusplan"
-          "claude-3-opus"           "claude-3-opus"
-          "anthropic/claude-3-5"    "anthropic/claude-3-5"
-          "openai/gpt-4o"           "openai/gpt-4o"
-          "gpt-4-turbo"             "gpt-4-turbo"
-          "o1-preview"              "o1-preview"
-          "o3-mini"                 "o3-mini"
-          "gemini-1.5-pro"          "gemini-1.5-pro"
-          "googleai/gemini-3"       "googleai/gemini-3"
-          "google/gemini-2.0"       "google/gemini-2.0"
-          "github/gpt-4.1"          "github/gpt-4.1"
-          "github-copilot/gpt-5"    "github-copilot/gpt-5"
-          "copilot/gpt-4.1"         "copilot/gpt-4.1"
-          "opencode/big-pickle"     "opencode/big-pickle"
+          "sonnet" "sonnet"
+          "opus" "opus"
+          "haiku" "haiku"
+          "default" "default"
+          "sonnet-1m" "sonnet-1m"
+          "opusplan" "opusplan"
+          "claude-3-opus" "claude-3-opus"
+          "anthropic/claude-3-5" "anthropic/claude-3-5"
+          "openai/gpt-4o" "openai/gpt-4o"
+          "gpt-4-turbo" "gpt-4-turbo"
+          "o1-preview" "o1-preview"
+          "o3-mini" "o3-mini"
+          "gemini-1.5-pro" "gemini-1.5-pro"
+          "googleai/gemini-3" "googleai/gemini-3"
+          "google/gemini-2.0" "google/gemini-2.0"
+          "github/gpt-4.1" "github/gpt-4.1"
+          "github-copilot/gpt-5-mini" "github-copilot/gpt-5-mini"
+          "copilot/gpt-4.1" "copilot/gpt-4.1"
+          "opencode/big-pickle" "opencode/big-pickle"
         End
 
         It "Then: [Normal] $1 -> $2 を返す"
@@ -229,7 +225,5 @@ Describe "ai-runner.sh"
         End
       End
     End
-
   End
-
 End
