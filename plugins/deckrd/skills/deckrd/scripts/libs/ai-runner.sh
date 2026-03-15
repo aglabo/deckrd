@@ -93,7 +93,7 @@ _build_ai_command() {
     _cmd_ref=("codex" "exec" "--model" "$model")
     ;;
   gemini)
-    _cmd_ref=("gemini" "--model" "$model" "-p")
+    _cmd_ref=("gemini" "--model" "$model" )
     ;;
   copilot)
     # Extract model name after prefix (github/<model>, github-copilot/<model>, copilot/<model>)
@@ -101,7 +101,7 @@ _build_ai_command() {
     # Validate against supported copilot model families: claude-*, gpt-*, gemini-*, grok-*
     case "$copilot_model" in
     claude-* | gpt-* | gemini-* | grok-*)
-      _cmd_ref=("copilot" "suggest" "--model" "$copilot_model")
+      _cmd_ref=("copilot" "--model" "$copilot_model")
       ;;
     *)
       return 1
