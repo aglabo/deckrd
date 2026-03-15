@@ -52,6 +52,132 @@ resolve_ai_cli() {
   return 0
 }
 
+# validate_ai_model - Validate AI model identifier
+#
+# @arg $1  string  AI model identifier: "<org>/<model>" or "<model>"
+# @stdout  string  モデル識別子そのまま（有効な場合） / エラーメッセージ（無効な場合）
+# @exitcode 0  有効なモデル識別子
+# @exitcode 1  無効なモデル識別子 or 空引数
+validate_ai_model() {
+  local model="${1:-}"
+
+  if [[ -z "$model" ]]; then
+    echo "Error: AI model is required"
+    return 1
+  fi
+
+  # <provider>/ 形式（モデル部分が空）は無効
+  if [[ "$model" == */ ]]; then
+    echo "Error: unknown AI model: ${model}"
+    return 1
+  fi
+
+  if resolve_ai_cli "$model" >/dev/null 2>&1; then
+    echo "$model"
+    return 0
+  fi
+
+  echo "Error: unknown AI model: ${model}"
+  return 1
+}
+
+# resolve_ai_model - Validate and normalize AI model identifier per provider rules
+#
+# provider ごとにモデル名の形式を検証し、プレフィックスを除去した正規化モデル名を返す。
+# 形式不明な provider（copilot, opencode）はモデル部分をそのまま返す。
+#
+# @arg $1  string  AI model identifier: "<provider>/<model>" or "<model>"
+# @stdout  string  正規化されたモデル名（有効な場合） / エラーメッセージ（無効な場合）
+# @exitcode 0  有効
+# @exitcode 1  無効 or 空引数
+resolve_ai_model() {
+  local model="${1:-}"
+
+  if [[ -z "$model" ]]; then
+    echo "Error: AI model is required"
+    return 1
+  fi
+
+  # <provider>/ 形式（モデル部分が空）は無効
+  if [[ "$model" == */ ]]; then
+    local provider="${model%/}"
+    echo "Error: model name is required after provider: ${provider}"
+    return 1
+  fi
+
+  local raw_model
+  case "$model" in
+  anthropic/*)
+    raw_model="${model#anthropic/}"
+    case "$raw_model" in
+    claude-*) echo "$raw_model" ;;
+    *) echo "Error: invalid model for anthropic: ${raw_model}"; return 1 ;;
+    esac
+    ;;
+  claude-* | default | sonnet | opus | haiku | sonnet-1m | opusplan)
+    echo "$model"
+    ;;
+  openai/*)
+    raw_model="${model#openai/}"
+    case "$raw_model" in
+    gpt-* | o1-* | o3-*) echo "$raw_model" ;;
+    *) echo "Error: invalid model for openai: ${raw_model}"; return 1 ;;
+    esac
+    ;;
+  gpt-* | o1-* | o3-*)
+    echo "$model"
+    ;;
+  googleai/*)
+    raw_model="${model#googleai/}"
+    case "$raw_model" in
+    gemini-*) echo "$raw_model" ;;
+    *) echo "Error: invalid model for google: ${raw_model}"; return 1 ;;
+    esac
+    ;;
+  google/*)
+    raw_model="${model#google/}"
+    case "$raw_model" in
+    gemini-*) echo "$raw_model" ;;
+    *) echo "Error: invalid model for google: ${raw_model}"; return 1 ;;
+    esac
+    ;;
+  gemini-*)
+    echo "$model"
+    ;;
+  github/*)
+    raw_model="${model#github/}"
+    case "$raw_model" in
+    claude-* | gpt-* | gemini-* | grok-*) echo "$raw_model" ;;
+    *) echo "Error: invalid model for copilot: ${raw_model}"; return 1 ;;
+    esac
+    ;;
+  github-copilot/*)
+    raw_model="${model#github-copilot/}"
+    case "$raw_model" in
+    claude-* | gpt-* | gemini-* | grok-*) echo "$raw_model" ;;
+    *) echo "Error: invalid model for copilot: ${raw_model}"; return 1 ;;
+    esac
+    ;;
+  copilot/*)
+    raw_model="${model#copilot/}"
+    case "$raw_model" in
+    claude-* | gpt-* | gemini-* | grok-*) echo "$raw_model" ;;
+    *) echo "Error: invalid model for copilot: ${raw_model}"; return 1 ;;
+    esac
+    ;;
+  opencode/*)
+    raw_model="${model#opencode/}"
+    echo "$raw_model"
+    ;;
+  *)
+    echo "Error: unknown AI model: ${model}"
+    return 1
+    ;;
+  esac
+
+  return 0
+}
+
 # _build_ai_command - Build CLI command array for given CLI and model
 #
 # Prompt is passed via stdin (pipe). Do NOT include prompt in the array.
