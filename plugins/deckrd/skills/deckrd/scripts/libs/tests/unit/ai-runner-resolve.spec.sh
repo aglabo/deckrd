@@ -6,10 +6,10 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 
+# shellcheck disable=SC2287
 Include spec_helper.sh
 
 SCRIPT="${DECKRD_LIB_DIR}/ai-runner.sh"
-
 # shellcheck disable=SC1090
 . "$SCRIPT"
 
@@ -140,6 +140,92 @@ Describe "ai-runner.sh"
             When call resolve_ai_cli "$1"
             The status should equal 1
           End
+        End
+      End
+    End
+
+  End
+
+  Describe "validate_ai_model"
+
+    Describe "ai-runner.sh loading"
+      It "Then: [Normal] validate_ai_model 関数が存在する"
+        When call type validate_ai_model
+        The status should equal 0
+        The output should include "validate_ai_model"
+      End
+    End
+
+    Describe "Given: 有効なモデル識別子"
+      Describe "When: validate_ai_model を呼ぶ"
+        Parameters
+          "sonnet"                  "sonnet"
+          "opus"                    "opus"
+          "haiku"                   "haiku"
+          "default"                 "default"
+          "sonnet-1m"               "sonnet-1m"
+          "opusplan"                "opusplan"
+          "claude-3-opus"           "claude-3-opus"
+          "anthropic/claude-3-5"    "anthropic/claude-3-5"
+          "openai/gpt-4o"           "openai/gpt-4o"
+          "gpt-4-turbo"             "gpt-4-turbo"
+          "o1-preview"              "o1-preview"
+          "o3-mini"                 "o3-mini"
+          "gemini-1.5-pro"          "gemini-1.5-pro"
+          "googleai/gemini-3"       "googleai/gemini-3"
+          "google/gemini-2.0"       "google/gemini-2.0"
+          "github/gpt-4.1"          "github/gpt-4.1"
+          "github-copilot/gpt-5"    "github-copilot/gpt-5"
+          "copilot/gpt-4.1"         "copilot/gpt-4.1"
+          "opencode/big-pickle"     "opencode/big-pickle"
+        End
+
+        It "Then: [Normal] $1 -> $2 を返す"
+          When call validate_ai_model "$1"
+          The status should equal 0
+          The output should equal "$2"
+        End
+      End
+    End
+
+    Describe "Given: 無効なモデル識別子"
+      Describe "When: validate_ai_model を呼ぶ"
+        Parameters
+          "unknown/model"
+          "anthropic"
+          "gpt"
+          "gemini"
+          "12345"
+          "anthropic/"
+          "openai/"
+          "googleai/"
+          "google/"
+          "github/"
+          "github-copilot/"
+          "copilot/"
+          "opencode/"
+        End
+
+        It "Then: [Error] $1 は exit 1 を返す"
+          When call validate_ai_model "$1"
+          The status should equal 1
+          The output should include "Error:"
+        End
+      End
+    End
+
+    Describe "Given: 空引数"
+      Describe "When: validate_ai_model を呼ぶ"
+        It "Then: [Error] 引数なしは exit 1 を返す"
+          When call validate_ai_model
+          The status should equal 1
+          The output should include "Error:"
+        End
+
+        It "Then: [Error] 空文字列は exit 1 を返す"
+          When call validate_ai_model ""
+          The status should equal 1
+          The output should include "Error:"
         End
       End
     End
