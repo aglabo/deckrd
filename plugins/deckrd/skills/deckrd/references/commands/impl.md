@@ -300,7 +300,7 @@ SPECIFICATIONS:            @specifications/specifications.md
 Execute:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh impl \
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh @impl \
   @specifications/specifications.md \
   [--lang <lang>] \
   --output "implementation/implementation.md"
@@ -358,7 +358,7 @@ deckrd/assets/
 Execute: [generate-doc.sh](../../scripts/generate-doc.sh)
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh impl @specifications/specifications.md [--lang <lang>] --output "implementation/implementation.md"
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh @impl @specifications/specifications.md [--lang <lang>] --output "implementation/implementation.md"
 ```
 
 > **Note**: The `@` prefix resolves to the active module's document path:
