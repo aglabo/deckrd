@@ -305,5 +305,5 @@ Execute: [generate-doc.sh](../../scripts/generate-doc.sh)
 For review mode:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh review @<document> --phase <phase> [--lang <lang>] [--output <file>]
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh @review-<phase> @<document> [--lang <lang>] [--output <file>]
 ```
