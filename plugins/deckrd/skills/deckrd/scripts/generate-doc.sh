@@ -28,8 +28,9 @@
 # @exitcode 1 Error during execution
 #
 # @author atsushifx
-# @version 2.1.0
+# @version 2.2.0
 # @license MIT
+
 
 # don't use  -u for checking error by Agent
 set -eo pipefail
@@ -43,7 +44,10 @@ readonly DECKRD_LIB_DIR
 
 # shellcheck disable=SC1091
 . "${DECKRD_LIB_DIR}/session.sh"
+# shellcheck disable=SC1091
 . "${DECKRD_LIB_DIR}/config.sh"
+# shellcheck disable=SC1091
+. "${DECKRD_LIB_DIR}/ai-runner.sh"
 
 # ============================================================================
 # deckrd Path Initialization
@@ -87,36 +91,9 @@ declare -A SHORT_TO_LONG=(
 # Populated after SHORT_TO_LONG declaration to get unique long form values
 mapfile -t PRIMARY_TYPES < <(printf '%s\n' "${SHORT_TO_LONG[@]}" | sort -u)
 
-##
-# @description AI command array (populated by get_model_command)
-declare -a AI_COMMAND
-
 # ============================================================================
 # Functions
 # ============================================================================
-
-##
-# @description Validate AI model name format
-# @arg $1 string AI model name
-# @return 0 if valid, exits on invalid format
-validate_ai_model() {
-  local model="$1"
-
-  # Allow simple model name: letters, numbers, hyphens, underscores, dots
-  if [[ "$model" =~ ^[A-Za-z0-9_.-]+$ ]]; then
-    return 0
-  fi
-
-  # Allow org/model format
-  if [[ "$model" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]; then
-    return 0
-  fi
-
-  echo "Error: AI model must contain only letters, numbers, hyphens, underscores, and dots" >&2
-  echo "  Allowed formats: 'model-name' or 'org/model-name'" >&2
-  echo "  Invalid model: ${model}" >&2
-  return 1
-}
 
 ##
 # @description Show usage information
@@ -190,13 +167,15 @@ parse_options() {
         echo "Error: --ai-model requires a model name" >&2
         exit 1
       fi
-      validate_ai_model "$2" || exit 1
+      local _validated
+      _validated=$(validate_ai_model "$2") || { echo "$_validated" >&2; exit 1; }
       config_set "ai_model" "$2"
       shift 2
       ;;
     --ai-model=*)
       local _model="${1#*=}"
-      validate_ai_model "$_model" || exit 1
+      local _validated
+      _validated=$(validate_ai_model "$_model") || { echo "$_validated" >&2; exit 1; }
       config_set "ai_model" "$_model"
       shift
       ;;
@@ -431,33 +410,6 @@ resolve_doc_paths() {
 }
 
 ##
-# @description Set AI command array for specified AI model
-# @arg $1 string AI model name
-# @return 0 on success, 1 on unsupported model
-# @global AI_COMMAND array populated with command and arguments
-get_model_command() {
-  local model="${1:-sonnet}"
-
-  case "$model" in
-  gpt-* | o1-*)
-    AI_COMMAND=("codex" "exec" "--model" "$model")
-    ;;
-  claude-* | haiku | sonnet | opus)
-    AI_COMMAND=("claude" "-p" "--model" "$model")
-    ;;
-  */*)
-    AI_COMMAND=("opencode" "run" "--model" "$model")
-    ;;
-  *)
-    echo "Error: Unsupported model: ${model}" >&2
-    return 1
-    ;;
-  esac
-
-  return 0
-}
-
-##
 # @description Build combined input for AI
 # @arg $1 string Prompt file path
 # @arg $2 string Template file path
@@ -498,6 +450,7 @@ build_ai_input() {
 ##
 # @description Execute prompt with AI model
 # @stdout AI response
+# @see run_ai
 execute_prompt() {
   local prompt_path="$1"
   local template_path="$2"
@@ -506,10 +459,8 @@ execute_prompt() {
 
   local ai_model
   ai_model=$(config_get "ai_model")
-  get_model_command "$ai_model" || return 1
 
-  # Execute AI command using array (no eval needed)
-  build_ai_input "$prompt_path" "$template_path" "$lang" "$context" | "${AI_COMMAND[@]}"
+  build_ai_input "$prompt_path" "$template_path" "$lang" "$context" | run_ai "$ai_model" 300
 }
 
 ##
