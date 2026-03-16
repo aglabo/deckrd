@@ -240,6 +240,16 @@ validate_args() {
     show_usage
     exit 1
   fi
+  if [[ ! "$PROJECT_NAME" =~ ^${SYMBOL}$ ]]; then
+    echo "Error: project name '${PROJECT_NAME}' contains invalid characters" >&2
+    echo "  Allowed: a-z, hyphen (-), underscore (_)" >&2
+    exit 1
+  fi
+  if [[ ! "$PROJECT_TYPE" =~ ^${SYMBOL}$ ]]; then
+    echo "Error: project type '${PROJECT_TYPE}' contains invalid characters" >&2
+    echo "  Allowed: a-z, hyphen (-), underscore (_)" >&2
+    exit 1
+  fi
 }
 
 ##
