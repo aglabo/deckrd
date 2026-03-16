@@ -31,7 +31,6 @@
 # @version 2.2.0
 # @license MIT
 
-
 # don't use  -u for checking error by Agent
 set -eo pipefail
 
@@ -168,14 +167,20 @@ parse_options() {
         exit 1
       fi
       local _validated
-      _validated=$(validate_ai_model "$2") || { echo "$_validated" >&2; exit 1; }
+      _validated=$(validate_ai_model "$2") || {
+        echo "$_validated" >&2
+        exit 1
+      }
       config_set "ai_model" "$2"
       shift 2
       ;;
     --ai-model=*)
       local _model="${1#*=}"
       local _validated
-      _validated=$(validate_ai_model "$_model") || { echo "$_validated" >&2; exit 1; }
+      _validated=$(validate_ai_model "$_model") || {
+        echo "$_validated" >&2
+        exit 1
+      }
       config_set "ai_model" "$_model"
       shift
       ;;
