@@ -11,6 +11,9 @@ GWT
 idd
 implementational
 markdownlintrc
+myfeature
+mymod
+myns
 mypy
 pnpx
 pylint
