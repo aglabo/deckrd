@@ -34,6 +34,12 @@
 # don't use -u for checking error by Agent
 set -eo pipefail
 
+DECKRD_LIB_DIR="$(dirname "${BASH_SOURCE[0]}")/libs"
+# shellcheck disable=SC1091
+. "${DECKRD_LIB_DIR}/validate-env.sh"
+_validate_env_errmsg=$(validate_env) || { echo "$_validate_env_errmsg" >&2; exit 1; }
+unset _validate_env_errmsg
+
 # ============================================================================
 # Script Configuration
 # ============================================================================
@@ -315,36 +321,28 @@ write_project() {
   local timestamp
   timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-  if [[ -f "$PROJECT_FILE" ]] && command -v jq >/dev/null 2>&1; then
-    local created_at
+  local created_at
+  if [[ -f "$PROJECT_FILE" ]]; then
     created_at=$(jq -r '.created_at // empty' "$PROJECT_FILE" 2>/dev/null || echo "$timestamp")
-    jq -n \
-      --arg project "$PROJECT_NAME" \
-      --arg project_type "$PROJECT_TYPE" \
-      --arg language "$LANGUAGE" \
-      --arg ai_model "$AI_MODEL" \
-      --arg created_at "$created_at" \
-      --arg updated_at "$timestamp" \
-      '{
-        project:      $project,
-        project_type: $project_type,
-        language:     $language,
-        ai_model:     $ai_model,
-        created_at:   $created_at,
-        updated_at:   $updated_at
-      }' >"${PROJECT_FILE}.tmp" && mv "${PROJECT_FILE}.tmp" "$PROJECT_FILE"
   else
-    cat >"$PROJECT_FILE" <<EOF
-{
-  "project":      "${PROJECT_NAME}",
-  "project_type": "${PROJECT_TYPE}",
-  "language":     "${LANGUAGE}",
-  "ai_model":     "${AI_MODEL}",
-  "created_at":   "${timestamp}",
-  "updated_at":   "${timestamp}"
-}
-EOF
+    created_at="$timestamp"
   fi
+
+  jq -n \
+    --arg project "$PROJECT_NAME" \
+    --arg project_type "$PROJECT_TYPE" \
+    --arg language "$LANGUAGE" \
+    --arg ai_model "$AI_MODEL" \
+    --arg created_at "$created_at" \
+    --arg updated_at "$timestamp" \
+    '{
+      project:      $project,
+      project_type: $project_type,
+      language:     $language,
+      ai_model:     $ai_model,
+      created_at:   $created_at,
+      updated_at:   $updated_at
+    }' >"${PROJECT_FILE}.tmp" && mv "${PROJECT_FILE}.tmp" "$PROJECT_FILE"
 
   echo ""
   echo "Project written: ${PROJECT_FILE}"
@@ -360,7 +358,7 @@ init_session() {
   local timestamp
   timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-  if [[ -f "$SESSION_FILE" ]] && command -v jq >/dev/null 2>&1; then
+  if [[ -f "$SESSION_FILE" ]]; then
     # Already exists: preserve as-is, just reset current_step
     echo ""
     echo "Session preserved: ${SESSION_FILE}"

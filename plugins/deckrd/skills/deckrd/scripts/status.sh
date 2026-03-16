@@ -52,14 +52,6 @@ check_session() {
   fi
 }
 
-# Check if jq is available
-check_jq() {
-  if ! command -v jq >/dev/null 2>&1; then
-    echo "Error: jq is not installed."
-    exit 1
-  fi
-}
-
 # Display workflow progress
 display_progress() {
   local completed="$1"
@@ -80,7 +72,6 @@ display_progress() {
 # Main function
 main() {
   check_session
-  check_jq
 
   # Extract fields from session
   local active lang ai_model created updated current_step completed

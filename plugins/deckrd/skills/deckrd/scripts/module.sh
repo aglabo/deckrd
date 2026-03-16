@@ -246,18 +246,13 @@ create_module_project() {
   local timestamp
   timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-  if command -v jq >/dev/null 2>&1; then
-    jq -n \
-      --arg name "$module" \
-      --arg description "" \
-      --arg created_at "$timestamp" \
-      --arg updated_at "$timestamp" \
-      '{name: $name, description: $description, created_at: $created_at, updated_at: $updated_at}' \
-      >"$project_file"
-  else
-    printf '{\n  "name": "%s",\n  "description": "",\n  "created_at": "%s",\n  "updated_at": "%s"\n}\n' \
-      "$module" "$timestamp" "$timestamp" >"$project_file"
-  fi
+  jq -n \
+    --arg name "$module" \
+    --arg description "" \
+    --arg created_at "$timestamp" \
+    --arg updated_at "$timestamp" \
+    '{name: $name, description: $description, created_at: $created_at, updated_at: $updated_at}' \
+    >"$project_file"
 
   echo "  created: .project.json"
 }
@@ -297,7 +292,7 @@ update_session() {
 
   mkdir -p "$DECKRD_LOCAL"
 
-  if [[ -f "$SESSION_FILE" ]] && command -v jq >/dev/null 2>&1; then
+  if [[ -f "$SESSION_FILE" ]]; then
     # Update: set active module, add/reset module entry
     jq --arg path "$path" \
       --arg timestamp "$timestamp" \
@@ -309,17 +304,18 @@ update_session() {
       "$SESSION_FILE" >"${SESSION_FILE}.tmp" &&
       mv "${SESSION_FILE}.tmp" "$SESSION_FILE"
   else
-    # Fallback: create/overwrite without jq
-    cat >"$SESSION_FILE" <<EOF
-{
-  "active":       "${path}",
-  "current_step": "init",
-  "completed":    ["init"],
-  "documents":    {},
-  "created_at":   "${timestamp}",
-  "updated_at":   "${timestamp}"
-}
-EOF
+    # Create new session file
+    jq -n \
+      --arg path "$path" \
+      --arg timestamp "$timestamp" \
+      '{
+        active:       $path,
+        current_step: "init",
+        completed:    ["init"],
+        documents:    {},
+        created_at:   $timestamp,
+        updated_at:   $timestamp
+      }' >"$SESSION_FILE"
   fi
 
   echo ""

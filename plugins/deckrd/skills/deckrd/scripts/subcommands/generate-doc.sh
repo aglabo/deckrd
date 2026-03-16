@@ -38,7 +38,7 @@ set -eo pipefail
 # Library Dependencies
 # ============================================================================
 
-DECKRD_LIB_DIR="$(dirname "${BASH_SOURCE[0]}")/libs"
+DECKRD_LIB_DIR="${DECKRD_LIB_DIR:-$(dirname "${BASH_SOURCE[0]}")/../libs}"
 readonly DECKRD_LIB_DIR
 
 # shellcheck disable=SC1091

@@ -218,41 +218,33 @@ write_project() {
   local timestamp
   timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-  if [[ -f "$PROJECT_FILE" ]] && command -v jq >/dev/null 2>&1; then
+  local created_at existing_type existing_model
+  if [[ -f "$PROJECT_FILE" ]]; then
     # Update: preserve created_at, merge existing fields for omitted options
-    local created_at existing_type existing_model
     created_at=$(jq -r '.created_at // empty' "$PROJECT_FILE" 2>/dev/null || echo "$timestamp")
     existing_type=$(jq -r '.project_type // empty' "$PROJECT_FILE" 2>/dev/null || true)
     existing_model=$(jq -r '.ai_model // empty' "$PROJECT_FILE" 2>/dev/null || true)
     [[ -z "$PROJECT_TYPE" ]] && PROJECT_TYPE="$existing_type"
     [[ "$AI_MODEL" == "sonnet" ]] && [[ -n "$existing_model" ]] && AI_MODEL="$existing_model"
-    jq -n \
-      --arg project "$PROJECT_NAME" \
-      --arg project_type "$PROJECT_TYPE" \
-      --arg language "$LANGUAGE" \
-      --arg ai_model "$AI_MODEL" \
-      --arg created_at "$created_at" \
-      --arg updated_at "$timestamp" \
-      '{
-        project:      $project,
-        project_type: $project_type,
-        language:     $language,
-        ai_model:     $ai_model,
-        created_at:   $created_at,
-        updated_at:   $updated_at
-      }' >"${PROJECT_FILE}.tmp" && mv "${PROJECT_FILE}.tmp" "$PROJECT_FILE"
   else
-    cat >"$PROJECT_FILE" <<EOF
-{
-  "project":      "${PROJECT_NAME}",
-  "project_type": "${PROJECT_TYPE}",
-  "language":     "${LANGUAGE}",
-  "ai_model":     "${AI_MODEL}",
-  "created_at":   "${timestamp}",
-  "updated_at":   "${timestamp}"
-}
-EOF
+    created_at="$timestamp"
   fi
+
+  jq -n \
+    --arg project "$PROJECT_NAME" \
+    --arg project_type "$PROJECT_TYPE" \
+    --arg language "$LANGUAGE" \
+    --arg ai_model "$AI_MODEL" \
+    --arg created_at "$created_at" \
+    --arg updated_at "$timestamp" \
+    '{
+      project:      $project,
+      project_type: $project_type,
+      language:     $language,
+      ai_model:     $ai_model,
+      created_at:   $created_at,
+      updated_at:   $updated_at
+    }' >"${PROJECT_FILE}.tmp" && mv "${PROJECT_FILE}.tmp" "$PROJECT_FILE"
 }
 
 ##
