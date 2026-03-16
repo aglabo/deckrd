@@ -38,6 +38,15 @@
 # don't use -u for checking error by Agent
 set -eo pipefail
 
+_BOOTSTRAP_DIR="$(dirname "${BASH_SOURCE[0]}")/libs"
+# shellcheck disable=SC1091
+. "${_BOOTSTRAP_DIR}/bootstrap.sh"
+unset _BOOTSTRAP_DIR
+# shellcheck disable=SC1091
+. "${DECKRD_LIB_DIR}/validate-env.sh"
+_validate_env_errmsg=$(validate_env) || { echo "$_validate_env_errmsg" >&2; exit 1; }
+unset _validate_env_errmsg
+
 # ============================================================================
 # Script Configuration
 # ============================================================================
