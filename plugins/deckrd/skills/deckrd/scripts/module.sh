@@ -14,8 +14,8 @@
 #   under docs/.deckrd/<namespace>/<module>/ and updates session.json.
 #
 #   namespace and module names:
-#     - Allowed characters: alphabet (a-z, A-Z), digits (0-9), hyphen (-), underscore (_)
-#     - Case-insensitive: normalized to lowercase
+#     - Allowed characters: lowercase letters (a-z), hyphen (-), underscore (_)
+#     - Case-sensitive: uppercase letters and digits are not allowed
 #
 # @usage
 #   module.sh <namespace>/<module> [--force]
@@ -179,25 +179,19 @@ validate_and_normalize() {
     exit 1
   fi
 
-  # Validate characters (alphabet, digits, hyphen, underscore only)
-  local pattern='^[A-Za-z0-9_-]+$'
-  if [[ ! "$namespace" =~ $pattern ]]; then
+  # Validate characters using SYMBOL pattern (lowercase, hyphen, underscore only)
+  if [[ ! "$namespace" =~ ^${SYMBOL}$ ]]; then
     echo "Error: namespace '${namespace}' contains invalid characters" >&2
-    echo "  Allowed: a-z, A-Z, 0-9, hyphen (-), underscore (_)" >&2
+    echo "  Allowed: a-z, hyphen (-), underscore (_)" >&2
     exit 1
   fi
-  if [[ ! "$module" =~ $pattern ]]; then
+  if [[ ! "$module" =~ ^${SYMBOL}$ ]]; then
     echo "Error: module '${module}' contains invalid characters" >&2
-    echo "  Allowed: a-z, A-Z, 0-9, hyphen (-), underscore (_)" >&2
+    echo "  Allowed: a-z, hyphen (-), underscore (_)" >&2
     exit 1
   fi
 
-  # Normalize to lowercase
-  local ns_lower mod_lower
-  ns_lower="${namespace,,}"
-  mod_lower="${module,,}"
-
-  echo "${ns_lower}/${mod_lower}"
+  echo "${namespace}/${module}"
 }
 
 ##
