@@ -9,7 +9,7 @@
 
 Include spec_helper.sh
 
-SCRIPT="${SCRIPTS_DIR}/init-dirs.sh"
+SCRIPT="${SUBCOMMANDS_DIR}/init-dirs.sh"
 
 # ============================================================================
 # init-dirs.sh
