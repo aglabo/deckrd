@@ -36,3 +36,9 @@ export ASSETS_DIR
 
 AGENTS_DIR="${AGENTS_DIR:-${ASSETS_DIR}/agents}"
 export AGENTS_DIR
+
+# SYMBOL: valid character pattern for project names, namespaces, and domains
+# Allowed: lowercase letters (a-z), hyphens (-), underscores (_)
+# Usage: [[ "$value" =~ ^${SYMBOL}$ ]]  or  [[ "$path" =~ ^${SYMBOL}/${SYMBOL}$ ]]
+readonly SYMBOL='[a-z_-]+'
+export SYMBOL
