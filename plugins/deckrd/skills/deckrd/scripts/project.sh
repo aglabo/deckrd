@@ -194,6 +194,16 @@ validate_required_params() {
     echo "Error: --project is required" >&2
     exit 1
   fi
+  if [[ ! "$PROJECT_NAME" =~ ^${SYMBOL}$ ]]; then
+    echo "Error: project name '${PROJECT_NAME}' contains invalid characters" >&2
+    echo "  Allowed: a-z, hyphen (-), underscore (_)" >&2
+    exit 1
+  fi
+  if [[ -n "$PROJECT_TYPE" && ! "$PROJECT_TYPE" =~ ^${SYMBOL}$ ]]; then
+    echo "Error: project type '${PROJECT_TYPE}' contains invalid characters" >&2
+    echo "  Allowed: a-z, hyphen (-), underscore (_)" >&2
+    exit 1
+  fi
 }
 
 ##

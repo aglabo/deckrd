@@ -103,15 +103,14 @@ The path "${DECKRD_DOCS}/myns/mymod/.project.json" should not be exist
 End
 End
 
-Describe "When: run with uppercase 'MyNS/MyMod'"
-It "[Edge] Should: normalize to lowercase and create 'myns/mymod' directory"
-When run bash "$SCRIPT" MyNS/MyMod
-The output should include "myns/mymod"
-The path "${DECKRD_DOCS}/myns/mymod/requirements" should be directory
-End
-End
-
-End
+    Describe "When: run with uppercase 'MyNS/MyMod'"
+      It "[Edge] Should: exit with status 1 and output 'invalid characters' error"
+        When run bash "$SCRIPT" MyNS/MyMod
+        The status should eq 1
+        The stderr should include "invalid characters"
+      End
+    End
+  End
 
 # --------------------------------------------------------------------------
 # Given: invalid legacy format argument
