@@ -11,7 +11,6 @@ Include spec_helper.sh
 SCRIPT="${DECKRD_LIB_DIR}/bootstrap.sh"
 
 Describe "bootstrap.sh"
-
   Describe "bootstrap.sh loading"
     Describe "When: bootstrap.sh を source する"
       It "Then: [Normal] ステータス 0 で終了する"
@@ -23,7 +22,6 @@ Describe "bootstrap.sh"
   End
 
   Describe "PROJECT_ROOT"
-
     Describe "Given: PROJECT_ROOT が未設定"
       Describe "When: bootstrap.sh を source する"
         It "Then: [Normal] PROJECT_ROOT が空でない"
@@ -63,11 +61,9 @@ Describe "bootstrap.sh"
         End
       End
     End
-
   End
 
   Describe "SCRIPTS_DIR"
-
     Describe "Given: SCRIPTS_DIR が未設定"
       Describe "When: bootstrap.sh を source する"
         It "Then: [Normal] SCRIPTS_DIR が /scripts で終わる"
@@ -97,11 +93,9 @@ Describe "bootstrap.sh"
         End
       End
     End
-
   End
 
   Describe "PLUGINS_DIR"
-
     Describe "Given: PLUGINS_DIR が未設定"
       Describe "When: bootstrap.sh を source する"
         It "Then: [Normal] PLUGINS_DIR が /plugins で終わる"
@@ -131,11 +125,9 @@ Describe "bootstrap.sh"
         End
       End
     End
-
   End
 
   Describe "DECKRD_LIB_DIR"
-
     Describe "Given: DECKRD_LIB_DIR が未設定"
       Describe "When: bootstrap.sh を source する"
         It "Then: [Normal] DECKRD_LIB_DIR が /deckrd/skills/deckrd/scripts/libs で終わる"
@@ -165,11 +157,9 @@ Describe "bootstrap.sh"
         End
       End
     End
-
   End
 
   Describe "ASSETS_DIR"
-
     Describe "Given: ASSETS_DIR が未設定"
       Describe "When: bootstrap.sh を source する"
         It "Then: [Normal] ASSETS_DIR が /.claude で終わる"
@@ -199,11 +189,9 @@ Describe "bootstrap.sh"
         End
       End
     End
-
   End
 
   Describe "AGENTS_DIR"
-
     Describe "Given: AGENTS_DIR が未設定"
       Describe "When: bootstrap.sh を source する"
         It "Then: [Normal] AGENTS_DIR が /.claude/agents で終わる"
@@ -233,11 +221,9 @@ Describe "bootstrap.sh"
         End
       End
     End
-
   End
 
   Describe "冪等性"
-
     Describe "Given: bootstrap.sh が既に source 済み"
       Describe "When: 再度 bootstrap.sh を source する"
         It "Then: [Normal] PROJECT_ROOT が変化しない"
@@ -277,7 +263,5 @@ Describe "bootstrap.sh"
         End
       End
     End
-
   End
-
 End

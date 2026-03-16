@@ -38,8 +38,8 @@ main() {
   fi
   targets=("${targets[@]//\\//}")
   case "$mode" in
-  list) (cd "$PROJECT_ROOT" && shfmt -i 2 -ln bash -l -- "${targets[@]}") ;;
-  format) (cd "$PROJECT_ROOT" && shfmt -i 2 -ln bash -w -- "${targets[@]}") ;;
+  list) (cd "$PROJECT_ROOT" && shfmt -ln bash -i 2 -l -- "${targets[@]}") ;;
+  format) (cd "$PROJECT_ROOT" && shfmt -ln bash -i 2 -w -- "${targets[@]}") ;;
   esac
 }
 if [[ ${BASH_SOURCE[0]} == "$0" ]]; then

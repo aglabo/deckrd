@@ -55,10 +55,10 @@ get_spec_files() {
   else
     filter="tests/${test_type}"
   fi
-  local project_root_unix="${PROJECT_ROOT//\\//}"
-  rg --files -g "*.spec.sh" "$@" \
-    | tr '\\' '/' \
-    | rg "${filter}"
+  # shellcheck disable=SC1003
+  rg --files -g "*.spec.sh" "$@" |
+    tr '\\' '/' |
+    rg "${filter}"
 }
 
 #

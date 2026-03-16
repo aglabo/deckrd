@@ -14,7 +14,6 @@ SCRIPT="${DECKRD_LIB_DIR}/session.sh"
 . "$SCRIPT"
 
 Describe "session.sh"
-
   Describe "session.sh loading"
     Describe "When: スクリプトを読み込む"
       It "Then: [Normal] session_load 関数が存在する"
@@ -44,7 +43,6 @@ Describe "session.sh"
   End
 
   Describe "session_get / session_set"
-
     Describe "Given: SESSION 配列にキーをセットした状態"
       Before "SESSION=(); SESSION[key1]=value1"
 
@@ -90,11 +88,9 @@ Describe "session.sh"
         End
       End
     End
-
   End
 
   Describe "session_load"
-
     Describe "Given: セッションファイルが存在しない"
       Before "SESSION=()"
 
@@ -163,11 +159,9 @@ Describe "session.sh"
         End
       End
     End
-
   End
 
   Describe "session_save"
-
     Describe "Given: SESSION にデータがセットされた状態"
       Before "setup_deckrd_tmpdir; SESSION=()"
       After "teardown_deckrd_tmpdir"
@@ -199,7 +193,9 @@ Describe "session.sh"
           SESSION["ai_model"]="claude-3-5"
           SESSION["lang"]="ja"
           session_save "${DECKRD_LOCAL}/session.json"
-          SESSION=()
+          unset SESSION
+          # shellcheck disable=SC2034
+          declare -gA SESSION
           session_load "${DECKRD_LOCAL}/session.json"
           When call session_get "active"
           The status should equal 0
@@ -207,7 +203,5 @@ Describe "session.sh"
         End
       End
     End
-
   End
-
 End

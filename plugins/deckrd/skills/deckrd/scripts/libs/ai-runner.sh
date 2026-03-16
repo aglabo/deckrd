@@ -111,7 +111,10 @@ resolve_ai_model() {
     raw_model="${model#anthropic/}"
     case "$raw_model" in
     claude-*) echo "$raw_model" ;;
-    *) echo "Error: invalid model for anthropic: ${raw_model}"; return 1 ;;
+    *)
+      echo "Error: invalid model for anthropic: ${raw_model}"
+      return 1
+      ;;
     esac
     ;;
   claude-* | default | sonnet | opus | haiku | sonnet-1m | opusplan)
@@ -121,7 +124,10 @@ resolve_ai_model() {
     raw_model="${model#openai/}"
     case "$raw_model" in
     gpt-* | o1-* | o3-*) echo "$raw_model" ;;
-    *) echo "Error: invalid model for openai: ${raw_model}"; return 1 ;;
+    *)
+      echo "Error: invalid model for openai: ${raw_model}"
+      return 1
+      ;;
     esac
     ;;
   gpt-* | o1-* | o3-*)
@@ -131,14 +137,20 @@ resolve_ai_model() {
     raw_model="${model#googleai/}"
     case "$raw_model" in
     gemini-*) echo "$raw_model" ;;
-    *) echo "Error: invalid model for google: ${raw_model}"; return 1 ;;
+    *)
+      echo "Error: invalid model for google: ${raw_model}"
+      return 1
+      ;;
     esac
     ;;
   google/*)
     raw_model="${model#google/}"
     case "$raw_model" in
     gemini-*) echo "$raw_model" ;;
-    *) echo "Error: invalid model for google: ${raw_model}"; return 1 ;;
+    *)
+      echo "Error: invalid model for google: ${raw_model}"
+      return 1
+      ;;
     esac
     ;;
   gemini-*)
@@ -148,21 +160,30 @@ resolve_ai_model() {
     raw_model="${model#github/}"
     case "$raw_model" in
     claude-* | gpt-* | gemini-* | grok-*) echo "$raw_model" ;;
-    *) echo "Error: invalid model for copilot: ${raw_model}"; return 1 ;;
+    *)
+      echo "Error: invalid model for copilot: ${raw_model}"
+      return 1
+      ;;
     esac
     ;;
   github-copilot/*)
     raw_model="${model#github-copilot/}"
     case "$raw_model" in
     claude-* | gpt-* | gemini-* | grok-*) echo "$raw_model" ;;
-    *) echo "Error: invalid model for copilot: ${raw_model}"; return 1 ;;
+    *)
+      echo "Error: invalid model for copilot: ${raw_model}"
+      return 1
+      ;;
     esac
     ;;
   copilot/*)
     raw_model="${model#copilot/}"
     case "$raw_model" in
     claude-* | gpt-* | gemini-* | grok-*) echo "$raw_model" ;;
-    *) echo "Error: invalid model for copilot: ${raw_model}"; return 1 ;;
+    *)
+      echo "Error: invalid model for copilot: ${raw_model}"
+      return 1
+      ;;
     esac
     ;;
   opencode/*)
@@ -219,7 +240,7 @@ _build_ai_command() {
     _cmd_ref=("codex" "exec" "--model" "$model")
     ;;
   gemini)
-    _cmd_ref=("gemini" "--model" "$model" )
+    _cmd_ref=("gemini" "--model" "$model")
     ;;
   copilot)
     # Extract model name after prefix (github/<model>, github-copilot/<model>, copilot/<model>)

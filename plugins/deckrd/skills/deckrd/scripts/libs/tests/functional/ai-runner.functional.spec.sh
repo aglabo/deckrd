@@ -14,9 +14,7 @@ SCRIPT="${DECKRD_LIB_DIR}/ai-runner.sh"
 . "$SCRIPT"
 
 Describe "ai-runner.sh"
-
   Describe "run_ai"
-
     Describe "Given: 不正な引数"
       Describe "When: run_ai を呼ぶ"
         It "Then: [Error] モデル引数なしは exit 1 と 'model is required' を返す"
@@ -34,7 +32,5 @@ Describe "ai-runner.sh"
         End
       End
     End
-
   End
-
 End

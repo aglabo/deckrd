@@ -14,7 +14,6 @@ Include spec_helper.sh
 . "${DECKRD_LIB_DIR}/config.sh"
 
 Describe "config.sh"
-
   Describe "config.sh loading"
     Describe "When: スクリプトを読み込む"
       It "Then: [Normal] config_init 関数が存在する"
@@ -44,7 +43,6 @@ Describe "config.sh"
   End
 
   Describe "config_get / config_set"
-
     Describe "Given: CONFIG 配列にキーをセットした状態"
       Before "CONFIG=(); CONFIG[key1]=value1"
 
@@ -90,11 +88,9 @@ Describe "config.sh"
         End
       End
     End
-
   End
 
   Describe "config_all"
-
     Describe "Given: CONFIG に複数のキーがセットされた状態"
       Before "CONFIG=(); CONFIG[ai_model]=sonnet; CONFIG[lang]=ja"
 
@@ -112,11 +108,9 @@ Describe "config.sh"
         End
       End
     End
-
   End
 
   Describe "config_init"
-
     Describe "Given: セッションファイルなし（引数省略）"
       Before "CONFIG=()"
 
@@ -184,7 +178,5 @@ Describe "config.sh"
         End
       End
     End
-
   End
-
 End

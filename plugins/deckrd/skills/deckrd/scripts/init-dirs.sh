@@ -13,7 +13,7 @@
 #   1. Bootstrap: copy deckrd-rules to .claude/rules/ and docs templates
 #      to docs/.deckrd/ (no overwrite)
 #   2. Create docs/.deckrd/ base directory structure
-#   3. Write .local/deckrd/project.json with project settings
+#   3. Write .local/deckrd/.project.json with project settings
 #   4. Initialize .local/deckrd/session.json
 #
 # @usage
@@ -80,7 +80,7 @@ readonly DECKRD_LOCAL
 
 ##
 # @description Project file path
-PROJECT_FILE="${DECKRD_LOCAL}/project.json"
+PROJECT_FILE="${DECKRD_LOCAL}/.project.json"
 readonly PROJECT_FILE
 
 ##

@@ -14,14 +14,12 @@ SCRIPT="${DECKRD_LIB_DIR}/ai-runner.sh"
 . "$SCRIPT"
 
 Describe "ai-runner.sh"
-
   Describe "run_ai"
-
     # Common mock helper
     setup_mock_cli() {
       local name="$1"
       MOCK_BIN=$(mktemp -d)
-      printf '#!/usr/bin/env bash\necho "MOCK_%s:$*"\n' "${name^^}" > "$MOCK_BIN/$name"
+      printf '#!/usr/bin/env bash\necho "MOCK_%s:$*"\n' "${name^^}" >"$MOCK_BIN/$name"
       chmod +x "$MOCK_BIN/$name"
       PATH="$MOCK_BIN:$PATH"
     }
@@ -34,7 +32,7 @@ Describe "ai-runner.sh"
       local name="$1"
       local secs="${2:-10}"
       MOCK_BIN=$(mktemp -d)
-      printf '#!/usr/bin/env bash\nsleep %s\n' "$secs" > "$MOCK_BIN/$name"
+      printf '#!/usr/bin/env bash\nsleep %s\n' "$secs" >"$MOCK_BIN/$name"
       chmod +x "$MOCK_BIN/$name"
       PATH="$MOCK_BIN:$PATH"
     }
@@ -49,12 +47,12 @@ Describe "ai-runner.sh"
       PATH="$ORIG_PATH"
     }
 
-    setup_claude_mock()   { setup_mock_cli "claude"; }
-    setup_codex_mock()    { setup_mock_cli "codex"; }
-    setup_gemini_mock()   { setup_mock_cli "gemini"; }
-    setup_copilot_mock()  { setup_mock_cli "copilot"; }
+    setup_claude_mock() { setup_mock_cli "claude"; }
+    setup_codex_mock() { setup_mock_cli "codex"; }
+    setup_gemini_mock() { setup_mock_cli "gemini"; }
+    setup_copilot_mock() { setup_mock_cli "copilot"; }
     setup_opencode_mock() { setup_mock_cli "opencode"; }
-    setup_timeout_mock()  { setup_mock_cli_sleep "claude" 10; }
+    setup_timeout_mock() { setup_mock_cli_sleep "claude" 10; }
 
     Describe "Given: copilot 非対応モデル"
       Before 'setup_copilot_mock'
@@ -256,7 +254,6 @@ Describe "ai-runner.sh"
     End
 
     Describe "Given: ランタイムエラー条件"
-
       Describe "When: CLI が存在しない"
         Before 'setup_no_cli'
         After 'cleanup_no_cli'
@@ -303,9 +300,6 @@ Describe "ai-runner.sh"
           End
         End
       End
-
     End
-
   End
-
 End

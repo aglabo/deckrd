@@ -14,7 +14,6 @@ SCRIPT="${DECKRD_LIB_DIR}/ai-runner.sh"
 . "$SCRIPT"
 
 Describe "ai-runner.sh"
-
   Describe "実機テスト (claude)"
     Skip if "claude is not installed" ! command -v claude >/dev/null 2>&1
 
@@ -31,9 +30,9 @@ Describe "ai-runner.sh"
 
   Describe "実機テスト"
     Parameters
-      "codex"    "codex"    "gpt-5"          60
-      "gemini"   "gemini"   "gemini-2.5-pro" 60
-      "copilot"  "copilot"  "github/gpt-4.1" 60
+      "codex" "codex" "gpt-5" 60
+      "gemini" "gemini" "gemini-2.5-pro" 60
+      "copilot" "copilot" "github/gpt-4.1" 60
       "opencode" "opencode" "opencode/gpt-5" 60
     End
 
@@ -47,5 +46,4 @@ Describe "ai-runner.sh"
       The output should not equal ""
     End
   End
-
 End

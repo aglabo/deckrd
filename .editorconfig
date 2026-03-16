@@ -28,6 +28,9 @@ ignore = true
 [.local/*]
 ignore = true
 
+[**/*.spec.sh]
+ignore = true
+
 # ─────────────────────────────
 # Source Code Files
 # ─────────────────────────────

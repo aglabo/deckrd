@@ -86,7 +86,7 @@ Before "setup_deckrd_tmpdir"
 After "teardown_deckrd_tmpdir"
 
 Describe "When: run with 'myns/mymod'"
-It "[Normal] Should: exit with status 0, create all module directories, skip .profile.json, and output 'Session updated'"
+It "[Normal] Should: exit with status 0, create all module directories, skip .project.json, and output 'Session updated'"
 When run bash "$SCRIPT" myns/mymod
 The status should equal 0
 The output should include "myns/mymod"
@@ -99,7 +99,7 @@ The path "${DECKRD_DOCS}/myns/mymod/requirements" should be directory
 The path "${DECKRD_DOCS}/myns/mymod/specifications" should be directory
 The path "${DECKRD_DOCS}/myns/mymod/implementation" should be directory
 The path "${DECKRD_DOCS}/myns/mymod/tasks" should be directory
-The path "${DECKRD_DOCS}/myns/mymod/.profile.json" should not be exist
+The path "${DECKRD_DOCS}/myns/mymod/.project.json" should not be exist
 End
 End
 
@@ -184,15 +184,15 @@ Before "setup_deckrd_tmpdir"
 After "teardown_deckrd_tmpdir"
 
 Describe "When: run 'create myns/mymod'"
-It "[Normal] Should: exit with status 0, create .profile.json with name/created_at fields, and output 'Session updated'"
+It "[Normal] Should: exit with status 0, create .project.json with name/created_at fields, and output 'Session updated'"
 When run bash "$SCRIPT" create myns/mymod
 The status should equal 0
 The output should include "myns/mymod"
-The output should include "profile.json"
+The output should include "project.json"
 The output should include "Session updated"
-The path "${DECKRD_DOCS}/myns/mymod/.profile.json" should be exist
-The contents of file "${DECKRD_DOCS}/myns/mymod/.profile.json" should include "mymod"
-The contents of file "${DECKRD_DOCS}/myns/mymod/.profile.json" should include "created_at"
+The path "${DECKRD_DOCS}/myns/mymod/.project.json" should be exist
+The contents of file "${DECKRD_DOCS}/myns/mymod/.project.json" should include "mymod"
+The contents of file "${DECKRD_DOCS}/myns/mymod/.project.json" should include "created_at"
 End
 End
 
@@ -216,11 +216,11 @@ Before "setup_deckrd_tmpdir"
 After "teardown_deckrd_tmpdir"
 
 Describe "When: run 'create myfeature'"
-It "[Normal] Should: exit with status 0, output 'myfeature', and create .profile.json"
+It "[Normal] Should: exit with status 0, output 'myfeature', and create .project.json"
 When run bash "$SCRIPT" create myfeature
 The status should equal 0
 The output should include "myfeature"
-The output should include "profile.json"
+The output should include "project.json"
 End
 End
 
