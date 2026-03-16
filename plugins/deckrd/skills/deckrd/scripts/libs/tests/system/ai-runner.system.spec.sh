@@ -36,8 +36,8 @@ Describe "ai-runner.sh"
   Describe "実機テスト"
     Parameters
       "codex" "codex" "gpt-5" 60
-      "gemini" "gemini" "gemini-2.5-pro" 60
-      "copilot" "copilot" "github/gpt-4.1" 60
+      # "gemini" "gemini" "gemini-2.5-pro" 60   # quota limit
+      # "copilot" "copilot" "github/gpt-4.1" 60 # too many requests
       "opencode" "opencode" "opencode/gpt-5" 60
     End
 
