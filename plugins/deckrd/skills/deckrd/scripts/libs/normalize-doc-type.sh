@@ -15,6 +15,28 @@ if [[ -n "${_NORMALIZE_DOC_TYPE_LOADED:-}" ]]; then
 fi
 readonly _NORMALIZE_DOC_TYPE_LOADED=1
 
+# Short form aliases
+readonly -a SHORT_TYPES=(
+  "req"
+  "spec"
+  "impl"
+  "task"
+  "explore"
+  "harden"
+  "fix"
+)
+
+# Canonical long forms
+readonly -a LONG_TYPES=(
+  "implementation"
+  "requirements"
+  "review-explore"
+  "review-fix"
+  "review-harden"
+  "specifications"
+  "tasks"
+)
+
 # normalize_doc_type - Normalize short doc-type aliases to canonical long form
 #
 # @arg $1 string Doc-type (short or long form)
@@ -22,6 +44,16 @@ readonly _NORMALIZE_DOC_TYPE_LOADED=1
 # @return 0 on success, 1 on unknown doc-type
 normalize_doc_type() {
   local doc_type="${1:-}"
+
+  if [[ -z "${doc_type}" ]]; then
+    echo "Error: doc-type is required"
+    return 1
+  fi
+
+  if [[ ! "${doc_type}" =~ ^[a-z]([a-z-]*[a-z])?$ ]]; then
+    echo "Error: doc-type must match [a-z][a-z-]* ${doc_type}"
+    return 1
+  fi
 
   case "${doc_type}" in
   req)
@@ -52,7 +84,7 @@ normalize_doc_type() {
     echo "${doc_type}"
     ;;
   *)
-    echo "Unknown doc-type: ${doc_type}" >&2
+    echo "Unknown doc-type: ${doc_type}"
     return 1
     ;;
   esac
