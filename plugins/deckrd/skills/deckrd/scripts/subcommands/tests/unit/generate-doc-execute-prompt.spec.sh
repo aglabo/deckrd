@@ -9,7 +9,7 @@
 Include spec_helper.sh
 
 # shellcheck source=../generate-doc.sh
-. "${SCRIPTS_DIR}/generate-doc.sh"
+. "${SUBCOMMANDS_DIR}/generate-doc.sh"
 
 Describe "generate-doc.sh ai-runner.sh integration"
 
