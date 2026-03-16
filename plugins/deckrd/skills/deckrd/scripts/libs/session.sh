@@ -15,71 +15,72 @@ if [[ -n "${_SESSION_LOADED:-}" ]]; then
 fi
 readonly _SESSION_LOADED=1
 
+# Load kv-store as the backing implementation
 # shellcheck disable=SC1091
-. "$(dirname "${BASH_SOURCE[0]}")/validate-env.sh"
-_validate_env_errmsg=$(validate_env) || { echo "$_validate_env_errmsg" >&2; exit 1; }
-unset _validate_env_errmsg
+. "${DECKRD_LIB_DIR}/kv-store.sh"
 
-# Global associative array for session data
-declare -Ag SESSION
+# SESSION_SCHEMA - compatibility shim: exposes _KV_SCHEMA as SESSION_SCHEMA
+# This allows existing code that checks SESSION_SCHEMA[$buffer] to work.
+# We use a nameref alias to the same underlying array.
+declare -n SESSION_SCHEMA="_KV_SCHEMA"
 
-# session_load - Load session data from JSON file into SESSION array
+# session_init - Register schema for a buffer and initialize with defaults
+#
+# @arg $1 string Buffer name (store name)
+# @arg $2 string Schema string
+session_init() {
+  local buffer="$1"
+  local schema="$2"
+  kv_init "$buffer" "$schema"
+}
+
+# session_load - Load session from JSON file into buffer
 #
 # @arg $1 string JSON file path
-# @return 0 on success, 1 if file not found
+# @arg $2 string Buffer name (store name)
+# @return 0 on success (including file-not-found with default init), 1 on schema error
 session_load() {
   local file="$1"
+  local buffer="$2"
 
-  if [[ ! -f "$file" ]]; then
+  if [[ -z "${_KV_SCHEMA[$buffer]+set}" ]]; then
+    echo "Error: session_load: schema not registered for buffer '${buffer}'" >&2
     return 1
   fi
 
-  local keys=("active" "ai_model" "lang")
-  local key value
-
-  for key in "${keys[@]}"; do
-    value=$(jq -r ".${key} // empty" "$file" 2>/dev/null || true)
-    SESSION["$key"]="$value"
-  done
-
-  return 0
+  kv_load "$buffer" "$file"
 }
 
-# session_save - Save SESSION array to JSON file
+# session_save - Save buffer contents to JSON file
 #
 # @arg $1 string JSON file path
+# @arg $2 string Buffer name (store name)
 # @return 0 on success
 session_save() {
   local file="$1"
-
-  mkdir -p "$(dirname "$file")"
-
-  local json_obj="{}"
-  local key value
-  for key in "${!SESSION[@]}"; do
-    value="${SESSION[$key]}"
-    json_obj=$(echo "$json_obj" | jq --arg k "$key" --arg v "$value" '. + {($k): $v}')
-  done
-  echo "$json_obj" >"$file"
-
-  return 0
+  local buffer="$2"
+  kv_save "$buffer" "$file"
 }
 
-# session_get - Get value from SESSION array
+# session_get - Get value from buffer
 #
-# @arg $1 string Key name
-# @stdout Value (empty if key not found)
+# @arg $1 string Buffer name (store name)
+# @arg $2 string Key name
+# @stdout Value (empty string if key not found)
 session_get() {
-  local key="$1"
-  echo "${SESSION[$key]:-}"
+  local buffer="$1"
+  local key="$2"
+  kv_get "$buffer" "$key"
 }
 
-# session_set - Set value in SESSION array
+# session_set - Set value in buffer
 #
-# @arg $1 string Key name
-# @arg $2 string Value
+# @arg $1 string Buffer name (store name)
+# @arg $2 string Key name
+# @arg $3 string Value
 session_set() {
-  local key="$1"
-  local value="${2:-}"
-  SESSION["$key"]="$value"
+  local buffer="$1"
+  local key="$2"
+  local value="${3:-}"
+  kv_set "$buffer" "$key" "$value"
 }
