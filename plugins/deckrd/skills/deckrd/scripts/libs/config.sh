@@ -15,8 +15,30 @@ if [[ -n "${_CONFIG_LOADED:-}" ]]; then
 fi
 readonly _CONFIG_LOADED=1
 
-# Global associative array for configuration data
-declare -Ag CONFIG
+# Load kv-store as the backing implementation
+# shellcheck disable=SC1091
+. "${DECKRD_LIB_DIR}/kv-store.sh"
+
+# Config schema
+readonly _CONFIG_SCHEMA="
+ai_model|sonnet
+lang|system
+doc_type|
+prompt_mode|0
+review_phase|
+output_file|
+deckrd_base|
+context_input|
+prompt_path|
+template_path|
+"
+
+# Initialize the config store
+kv_init "config" "$_CONFIG_SCHEMA"
+
+# CONFIG - compatibility shim: exposes _KV_config as CONFIG
+# This allows existing code that accesses CONFIG[key] directly to work.
+declare -n CONFIG="_KV_config"
 
 # config_init - Initialize CONFIG with defaults and optionally load from session file
 #
@@ -25,70 +47,64 @@ declare -Ag CONFIG
 config_init() {
   local session_file="${1:-}"
 
-  # Set default values
-  CONFIG[ai_model]="sonnet"
-  CONFIG[lang]="system"
-  CONFIG[doc_type]=""
-  CONFIG[prompt_mode]="0"
-  CONFIG[review_phase]=""
-  CONFIG[output_file]=""
-  CONFIG[deckrd_base]=""
-  CONFIG[context_input]=""
-  CONFIG[prompt_path]=""
-  CONFIG[template_path]=""
+  # Re-initialize config store with defaults
+  kv_init "config" "$_CONFIG_SCHEMA"
 
   # Load from session file if provided and session_load is available
   if [[ -n "$session_file" ]] && declare -f session_load >/dev/null 2>&1; then
-    session_load "$session_file" || return 0
+    local _config_session_schema="
+active|
+ai_model|
+lang|
+"
+    session_init "_config_session" "$_config_session_schema"
+    session_load "$session_file" "_config_session" || true
 
     local ai_model
-    ai_model=$(session_get "ai_model")
+    ai_model=$(session_get "_config_session" "ai_model")
     if [[ -n "$ai_model" ]]; then
-      CONFIG[ai_model]="$ai_model"
+      kv_set "config" "ai_model" "$ai_model"
     fi
 
     local lang
-    lang=$(session_get "lang")
+    lang=$(session_get "_config_session" "lang")
     if [[ -n "$lang" ]]; then
-      CONFIG[lang]="$lang"
+      kv_set "config" "lang" "$lang"
     fi
 
     local active
-    active=$(session_get "active")
+    active=$(session_get "_config_session" "active")
     if [[ -n "$active" ]]; then
       local deckrd_docs="${DECKRD_DOCS:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)/docs/.deckrd}"
-      CONFIG[deckrd_base]="${deckrd_docs}/${active}"
+      kv_set "config" "deckrd_base" "${deckrd_docs}/${active}"
     fi
   fi
 
   return 0
 }
 
-# config_get - Get value from CONFIG array
+# config_get - Get value from CONFIG
 #
 # @arg $1 string Key name
 # @stdout Value (empty if key not found)
 config_get() {
   local key="$1"
-  echo "${CONFIG[$key]:-}"
+  kv_get "config" "$key"
 }
 
-# config_set - Set value in CONFIG array
+# config_set - Set value in CONFIG
 #
 # @arg $1 string Key name
 # @arg $2 string Value
 config_set() {
   local key="$1"
   local value="${2:-}"
-  CONFIG["$key"]="$value"
+  kv_set "config" "$key" "$value"
 }
 
 # config_all - Output all CONFIG entries as key=value lines
 #
 # @stdout All entries in "key=value" format
 config_all() {
-  local key
-  for key in "${!CONFIG[@]}"; do
-    echo "${key}=${CONFIG[$key]}"
-  done
+  kv_all "config"
 }
