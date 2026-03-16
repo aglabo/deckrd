@@ -25,15 +25,6 @@
 
 set -eo pipefail
 
-_BOOTSTRAP_DIR="$(dirname "${BASH_SOURCE[0]}")/libs"
-# shellcheck disable=SC1091
-. "${_BOOTSTRAP_DIR}/bootstrap.sh"
-unset _BOOTSTRAP_DIR
-# shellcheck disable=SC1091
-. "${DECKRD_LIB_DIR}/validate-env.sh"
-_validate_env_errmsg=$(validate_env) || { echo "$_validate_env_errmsg" >&2; exit 1; }
-unset _validate_env_errmsg
-
 # ============================================================================
 # Configuration
 # ============================================================================
@@ -61,14 +52,6 @@ check_session() {
   fi
 }
 
-# Check if jq is available
-check_jq() {
-  if ! command -v jq >/dev/null 2>&1; then
-    echo "Error: jq is not installed."
-    exit 1
-  fi
-}
-
 # Display workflow progress
 display_progress() {
   local completed="$1"
@@ -89,7 +72,6 @@ display_progress() {
 # Main function
 main() {
   check_session
-  check_jq
 
   # Extract fields from session
   local active lang ai_model created updated current_step completed
