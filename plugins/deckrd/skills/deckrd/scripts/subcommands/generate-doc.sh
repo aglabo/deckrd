@@ -53,6 +53,8 @@ readonly DECKRD_LIB_DIR
 . "${DECKRD_LIB_DIR}/config.sh"
 # shellcheck disable=SC1091
 . "${DECKRD_LIB_DIR}/ai-runner.sh"
+# shellcheck disable=SC1091
+. "${DECKRD_LIB_DIR}/normalize-doc-type.sh"
 
 # ============================================================================
 # deckrd Path Initialization
@@ -71,25 +73,6 @@ SESSION_FILE="${DECKRD_LOCAL_DATA}/session.json"
 ASSETS_DIR="${SCRIPT_DIR}/../assets"
 readonly ASSETS_DIR
 
-##
-# @description Document type mapping (short form -> normalized form)
-# Maps short aliases to their normalized file-matching form
-declare -A SHORT_TO_LONG=(
-  [req]="requirements"
-  [spec]="specifications"
-  [impl]="implementation"
-  [task]="tasks"
-  [review]="review-explore"
-  [explore]="review-explore"
-  [harden]="review-harden"
-  [fix]="review-fix"
-)
-
-##
-# @description Primary document types for display (derived from SHORT_TO_LONG values)
-# Populated after SHORT_TO_LONG declaration to get unique long form values
-mapfile -t PRIMARY_TYPES < <(printf '%s\n' "${SHORT_TO_LONG[@]}" | sort -u)
-
 # ============================================================================
 # Functions
 # ============================================================================
@@ -103,7 +86,7 @@ Usage: generate-doc.sh <type> [context] [OPTIONS]
 Execute AI prompt with auto-loaded prompt and template files.
 
 Arguments:
-  <type>            Document type (required): ${PRIMARY_TYPES[*]}
+  <type>            Document type (required): ${LONG_TYPES[*]}
   [context]         Context/input text or @filepath for file content
                     If starts with @, reads content from the specified file
 
@@ -266,43 +249,6 @@ resolve_context() {
 }
 
 ##
-# @description Normalize doc-type keyword to long form using SHORT_TO_LONG mapping
-# @arg $1 string Short or long form doc-type keyword
-# @stdout Normalized long form
-# @return 0  success
-# @return 1  unknown keyword
-normalize_doc_type() {
-  local input="$1"
-
-  declare -A _map=(
-    [req]="requirements"
-    [spec]="specifications"
-    [impl]="implementation"
-    [task]="tasks"
-    [review]="review-explore"
-    [explore]="review-explore"
-    [harden]="review-harden"
-    [fix]="review-fix"
-  )
-
-  if [[ -v _map[$input] ]]; then
-    echo "${_map[$input]}"
-    return 0
-  fi
-
-  local v
-  for v in "${_map[@]}"; do
-    if [[ "$input" == "$v" ]]; then
-      echo "$input"
-      return 0
-    fi
-  done
-
-  echo "Unknown doc-type: $input" >&2
-  return 1
-}
-
-##
 # @description Get prompt content from doc-type or detect prompt-file mode
 # @arg $1 string Raw first argument (doc-type name or @<keyword>)
 # @stdout Prompt content string
@@ -326,36 +272,20 @@ get_prompt() {
 # @arg $1 string Argument starting with @ (e.g. @requirements)
 # @stdout Normalized doc type string (e.g. requirements)
 # @return 0  success
-# @return 1  invalid argument (missing @, non-lowercase-alpha chars, or unsupported doctype)
+# @return 1  invalid argument (missing @, or unsupported doctype)
 get_prompt_file() {
   local arg="$1"
 
   if [[ "$arg" != @* ]]; then
-    local msg="Error: argument must start with @"
-    echo "$msg"
-    echo "$msg" >&2
+    echo "Error: argument must start with @"
     return 1
   fi
 
   local doc_type="${arg:1}"
-
-  if [[ ! "$doc_type" =~ ^[a-z]+$ ]]; then
-    local msg="Error: doc type must match ^[a-z]+$"
-    echo "$msg"
-    echo "$msg" >&2
-    return 1
-  fi
-
   local normalized
-  normalized=$(normalize_doc_type "$doc_type") || {
-    local msg="Error: unsupported doctype: $doc_type"
-    echo "$msg"
-    echo "$msg" >&2
-    return 1
-  }
+  normalized=$(normalize_doc_type "$doc_type") || return 1
 
   echo "$normalized"
-  return 0
 }
 
 ##
