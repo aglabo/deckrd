@@ -59,8 +59,36 @@ Describe "kv-store.sh"
     End
   End
 
+  Describe "_kv_file_path"
+    Describe "When: _kv_file_path を呼ぶ"
+      It "Then: [Normal] 拡張子なしのパスに .kv が付加される"
+        When call _kv_file_path "/foo/bar/session"
+        The status should equal 0
+        The output should equal "/foo/bar/session.kv"
+      End
+
+      It "Then: [Normal] .json 拡張子が .kv に置き換えられる"
+        When call _kv_file_path "/foo/bar/kv.json"
+        The status should equal 0
+        The output should equal "/foo/bar/kv.kv"
+      End
+
+      It "Then: [Normal] ディレクトリパスが保持される"
+        When call _kv_file_path "/path/to/dir/name"
+        The status should equal 0
+        The output should equal "/path/to/dir/name.kv"
+      End
+
+      It "Then: [Edge] 複数ドットのファイル名は最初のドット以降が除去される"
+        When call _kv_file_path "/foo/bar/my.store.json"
+        The status should equal 0
+        The output should equal "/foo/bar/my.kv"
+      End
+    End
+  End
+
   Describe "kv_init"
-    Describe "Given: スキーマを登録する"
+    Describe "Given: 複数キーのスキーマ"
       Describe "When: kv_init を呼ぶ"
         It "Then: [Normal] スキーマが登録される"
           kv_init "mystore" $'key1|val1\nkey2|val2'
@@ -82,26 +110,25 @@ Describe "kv-store.sh"
           The output should equal "val2"
         End
 
-        It "Then: [Normal] デフォルト値が空のキーは空文字になる"
+        It "Then: [Edge] デフォルト値が空のキーは空文字になる"
           kv_init "emptystore" $'key1|\nkey2|default2'
           When call kv_get "emptystore" "key1"
           The status should equal 0
           The output should equal ""
         End
-      End
-    End
 
-    Describe "Given: 空スキーマ"
-      Describe "When: kv_init を呼ぶ"
-        It "Then: [Normal] エラーにならず exit 0 を返す"
-          When call kv_init "emptyschema_store" ""
+        It "Then: [Edge] スペースを含むデフォルト値がそのまま設定される"
+          kv_init "space_store" "key1|hello world"
+          When call kv_get "space_store" "key1"
           The status should equal 0
+          The output should equal "hello world"
         End
 
-        It "Then: [Normal] スキーマが登録される (空でも)"
-          kv_init "emptyschema_store2" ""
-          When call test -n "${_KV_SCHEMA[emptyschema_store2]+set}"
+        It "Then: [Edge] = を含むデフォルト値がそのまま設定される"
+          kv_init "eq_store" "key1|a=b"
+          When call kv_get "eq_store" "key1"
           The status should equal 0
+          The output should equal "a=b"
         End
       End
     End
@@ -124,20 +151,17 @@ Describe "kv-store.sh"
       End
     End
 
-    Describe "Given: デフォルト値に特殊文字を含むスキーマ"
+    Describe "Given: 空スキーマ"
       Describe "When: kv_init を呼ぶ"
-        It "Then: [Normal] スペースを含むデフォルト値がそのまま設定される"
-          kv_init "space_store" "key1|hello world"
-          When call kv_get "space_store" "key1"
+        It "Then: [Edge] エラーにならず return 0 を返す"
+          When call kv_init "emptyschema_store" ""
           The status should equal 0
-          The output should equal "hello world"
         End
 
-        It "Then: [Normal] = を含むデフォルト値がそのまま設定される"
-          kv_init "eq_store" "key1|a=b"
-          When call kv_get "eq_store" "key1"
+        It "Then: [Edge] スキーマが登録される (空でも)"
+          kv_init "emptyschema_store2" ""
+          When call test -n "${_KV_SCHEMA[emptyschema_store2]+set}"
           The status should equal 0
-          The output should equal "a=b"
         End
       End
     End
@@ -174,37 +198,44 @@ Describe "kv-store.sh"
         The output should equal "alice"
       End
 
-      It "Then: [Normal] 存在しないキーは空文字を返す"
+      It "Then: [Normal] kv_set 後の値が返る"
+        kv_set "teststore" "name" "bob"
+        When call kv_get "teststore" "name"
+        The status should equal 0
+        The output should equal "bob"
+      End
+
+      It "Then: [Edge] 存在しないキーは空文字を返す"
         When call kv_get "teststore" "no_such_key"
         The status should equal 0
         The output should equal ""
       End
 
-      It "Then: [Normal] スキーマ外キーを kv_set 後に取得できる"
-        kv_set "teststore" "extra_key" "extra_val"
-        When call kv_get "teststore" "extra_key"
-        The status should equal 0
-        The output should equal "extra_val"
-      End
-
-      It "Then: [Normal] スキーマ外キーを未セットで呼ぶと空文字を返す"
-        When call kv_get "teststore" "undefined_extra"
-        The status should equal 0
-        The output should equal ""
-      End
-
-      It "Then: [Normal] スペースを含む値がそのまま返る"
+      It "Then: [Edge] スペースを含む値がそのまま返る"
         kv_set "teststore" "name" "hello world"
         When call kv_get "teststore" "name"
         The status should equal 0
         The output should equal "hello world"
       End
 
-      It "Then: [Normal] タブを含む値がそのまま返る"
+      It "Then: [Edge] タブを含む値がそのまま返る"
         kv_set "teststore" "name" $'hello\tworld'
         When call kv_get "teststore" "name"
         The status should equal 0
         The output should equal $'hello\tworld'
+      End
+
+      It "Then: [Edge] スキーマ外キーを kv_set 後に取得できる"
+        kv_set "teststore" "extra_key" "extra_val"
+        When call kv_get "teststore" "extra_key"
+        The status should equal 0
+        The output should equal "extra_val"
+      End
+
+      It "Then: [Edge] スキーマ外キーを未セットで呼ぶと空文字を返す"
+        When call kv_get "teststore" "undefined_extra"
+        The status should equal 0
+        The output should equal ""
       End
     End
 
@@ -223,60 +254,50 @@ Describe "kv-store.sh"
         The output should equal "bob"
       End
 
-      It "Then: [Normal] 空文字をセットできる"
+      It "Then: [Edge] 空文字をセットできる"
         kv_set "teststore" "name" ""
         When call kv_get "teststore" "name"
         The status should equal 0
         The output should equal ""
       End
 
-      It "Then: [Normal] スキーマ外の新規キーをセットすると kv_all 出力に含まれる"
-        kv_set "teststore" "extra_for_all" "extra_val"
-        When call kv_all "teststore"
-        The status should equal 0
-        The output should include "extra_for_all=extra_val"
-      End
-
-      It "Then: [Normal] スペースを含む値がセットできる"
-        kv_set "teststore" "age" "twenty five"
-        When call kv_get "teststore" "age"
-        The status should equal 0
-        The output should equal "twenty five"
-      End
-
-      It "Then: [Normal] パイプ文字を含む値がセットできる"
-        kv_set "teststore" "age" "a|b"
-        When call kv_get "teststore" "age"
-        The status should equal 0
-        The output should equal "a|b"
-      End
-
-      It "Then: [Normal] 値引数なしで呼ぶと空文字がセットされる"
+      It "Then: [Edge] 値引数なしで呼ぶと空文字がセットされる"
         # value=${3:-} の仕様: 引数省略 → 空文字
         kv_set "teststore" "name"
         When call kv_get "teststore" "name"
         The status should equal 0
         The output should equal ""
       End
+
+      It "Then: [Edge] スペースを含む値がセットできる"
+        kv_set "teststore" "age" "twenty five"
+        When call kv_get "teststore" "age"
+        The status should equal 0
+        The output should equal "twenty five"
+      End
+
+      It "Then: [Edge] パイプ文字を含む値がセットできる"
+        kv_set "teststore" "age" "a|b"
+        When call kv_get "teststore" "age"
+        The status should equal 0
+        The output should equal "a|b"
+      End
+
+      It "Then: [Edge] スキーマ外の新規キーをセットすると kv_all 出力に含まれる"
+        kv_set "teststore" "extra_for_all" "extra_val"
+        When call kv_all "teststore"
+        The status should equal 0
+        The output should include "extra_for_all=extra_val"
+      End
     End
   End
 
   Describe "kv_load"
-    Describe "Given: schema 未登録のストア"
-      Describe "When: kv_load を呼ぶ"
-        It "Then: [Error] exit 1 を返し Error: を stderr に出力する"
-          When call kv_load "noschema_store" "/tmp/any"
-          The status should equal 1
-          The stderr should include "Error:"
-        End
-      End
-    End
-
     Describe "Given: ファイルが存在しない"
       Before "kv_init 'loadstore' $'key1|default1\nkey2|default2'"
 
       Describe "When: kv_load を呼ぶ"
-        It "Then: [Normal] exit 0 を返しデフォルト値で初期化される"
+        It "Then: [Normal] return 0 を返しデフォルト値で初期化される"
           When call kv_load "loadstore" "/tmp/nonexistent_kvtest_$$_noext"
           The status should equal 0
         End
@@ -334,44 +355,24 @@ Describe "kv-store.sh"
       After "teardown_deckrd_tmpdir"
 
       Describe "When: kv_load を呼ぶ"
-        It "Then: [Normal] exit 0 を返す"
+        It "Then: [Edge] return 0 を返す"
           printf '{}' > "${DECKRD_LOCAL}/empty.kv"
           When call kv_load "emptyjson_store" "${DECKRD_LOCAL}/empty"
           The status should equal 0
         End
 
-        It "Then: [Normal] key1 はデフォルト値になる"
+        It "Then: [Edge] key1 はデフォルト値になる"
           printf '{}' > "${DECKRD_LOCAL}/empty.kv"
           kv_load "emptyjson_store" "${DECKRD_LOCAL}/empty"
           When call kv_get "emptyjson_store" "key1"
           The output should equal "def1"
         End
 
-        It "Then: [Normal] key2 はデフォルト値になる"
+        It "Then: [Edge] key2 はデフォルト値になる"
           printf '{}' > "${DECKRD_LOCAL}/empty.kv"
           kv_load "emptyjson_store" "${DECKRD_LOCAL}/empty"
           When call kv_get "emptyjson_store" "key2"
           The output should equal "def2"
-        End
-      End
-    End
-
-    Describe "Given: 不正な JSON ファイルが存在する"
-      Before "setup_deckrd_tmpdir; kv_init 'badjson_store' $'key1|def1\nkey2|def2'"
-      After "teardown_deckrd_tmpdir"
-
-      Describe "When: kv_load を呼ぶ"
-        It "Then: [Normal] exit 0 を返す (|| true で握りつぶす)"
-          printf 'not-json' > "${DECKRD_LOCAL}/bad.kv"
-          When call kv_load "badjson_store" "${DECKRD_LOCAL}/bad"
-          The status should equal 0
-        End
-
-        It "Then: [Normal] key1 はデフォルト値にフォールバックする"
-          printf 'not-json' > "${DECKRD_LOCAL}/bad.kv"
-          kv_load "badjson_store" "${DECKRD_LOCAL}/bad"
-          When call kv_get "badjson_store" "key1"
-          The output should equal "def1"
         End
       End
     End
@@ -381,7 +382,7 @@ Describe "kv-store.sh"
       After "teardown_deckrd_tmpdir"
 
       Describe "When: kv_load を呼ぶ"
-        It "Then: [Normal] 空文字値はデフォルト値にフォールバックする"
+        It "Then: [Edge] 空文字値はデフォルト値にフォールバックする"
           # 仕様: ${value:-${default}} で空文字 → デフォルト値が使われる
           printf '{"key1":""}' > "${DECKRD_LOCAL}/emptyval.kv"
           kv_load "emptyval_store" "${DECKRD_LOCAL}/emptyval"
@@ -396,14 +397,14 @@ Describe "kv-store.sh"
       After "teardown_deckrd_tmpdir"
 
       Describe "When: kv_load を呼ぶ"
-        It "Then: [Normal] スキーマ内キーは正しく読み込まれる"
+        It "Then: [Edge] スキーマ内キーは正しく読み込まれる"
           printf '{"key1":"loaded1","extra":"ignored"}' > "${DECKRD_LOCAL}/extra.kv"
           kv_load "extrakey_store" "${DECKRD_LOCAL}/extra"
           When call kv_get "extrakey_store" "key1"
           The output should equal "loaded1"
         End
 
-        It "Then: [Normal] スキーマ外キーは kv_get で取得できない (無視)"
+        It "Then: [Edge] スキーマ外キーは kv_get で取得できない (無視)"
           printf '{"key1":"loaded1","extra":"ignored"}' > "${DECKRD_LOCAL}/extra.kv"
           kv_load "extrakey_store" "${DECKRD_LOCAL}/extra"
           When call kv_get "extrakey_store" "extra"
@@ -411,19 +412,33 @@ Describe "kv-store.sh"
         End
       End
     End
-  End
 
-  Describe "kv_save"
     Describe "Given: schema 未登録のストア"
-      Describe "When: kv_save を呼ぶ"
-        It "Then: [Error] exit 1 を返し Error: を stderr に出力する"
-          When call kv_save "noschema_save_store" "/tmp/any"
+      Describe "When: kv_load を呼ぶ"
+        It "Then: [Error] return 1 を返し Error: を stdout に出力する"
+          When call kv_load "noschema_store" "/tmp/any"
           The status should equal 1
-          The stderr should include "Error:"
+          The output should include "Error:"
         End
       End
     End
 
+    Describe "Given: 不正な JSON ファイルが存在する"
+      Before "setup_deckrd_tmpdir; kv_init 'badjson_store' $'key1|def1\nkey2|def2'"
+      After "teardown_deckrd_tmpdir"
+
+      Describe "When: kv_load を呼ぶ"
+        It "Then: [Error] return 1 を返す (invalid JSON はエラー)"
+          printf 'not-json' > "${DECKRD_LOCAL}/bad.kv"
+          When call kv_load "badjson_store" "${DECKRD_LOCAL}/bad"
+          The status should equal 1
+          The output should include "Error"
+        End
+      End
+    End
+  End
+
+  Describe "kv_save"
     Describe "Given: データがセットされた状態"
       Before "setup_deckrd_tmpdir; kv_init 'savestore' $'key1|v1\nkey2|v2'"
       After "teardown_deckrd_tmpdir"
@@ -445,17 +460,40 @@ Describe "kv-store.sh"
       End
     End
 
+    Describe "Given: データがセットされた状態 (JSON 整形検証)"
+      Before "setup_deckrd_tmpdir; kv_init 'jsoncheck_store' $'key1|v1'"
+      After "teardown_deckrd_tmpdir"
+
+      Describe "When: kv_save 後に JSON 内容を検証する"
+        It "Then: [Normal] 保存されたファイルが有効な JSON である"
+          kv_set "jsoncheck_store" "key1" "myvalue"
+          kv_save "jsoncheck_store" "${DECKRD_LOCAL}/jsoncheck"
+          When call cat "${DECKRD_LOCAL}/jsoncheck.kv"
+          The status should equal 0
+          The output should equal '{"key1":"myvalue"}'
+        End
+
+        It "Then: [Normal] kv_load でキー値が正しく復元できる"
+          kv_set "jsoncheck_store" "key1" "myvalue"
+          kv_save "jsoncheck_store" "${DECKRD_LOCAL}/jsoncheck"
+          kv_load "jsoncheck_store" "${DECKRD_LOCAL}/jsoncheck"
+          When call kv_get "jsoncheck_store" "key1"
+          The output should equal "myvalue"
+        End
+      End
+    End
+
     Describe "Given: 空スキーマのストア"
       Before "setup_deckrd_tmpdir; kv_init 'emptysave_store' ''"
       After "teardown_deckrd_tmpdir"
 
       Describe "When: kv_save を呼ぶ"
-        It "Then: [Normal] ファイルが作成される"
+        It "Then: [Edge] ファイルが作成される"
           When call kv_save "emptysave_store" "${DECKRD_LOCAL}/empty_save"
           The status should equal 0
         End
 
-        It "Then: [Normal] 作成されたファイルの内容は {} になる"
+        It "Then: [Edge] 作成されたファイルの内容は {} になる"
           kv_save "emptysave_store" "${DECKRD_LOCAL}/empty_save"
           When call cat "${DECKRD_LOCAL}/empty_save.kv"
           The output should equal "{}"
@@ -467,14 +505,14 @@ Describe "kv-store.sh"
       Before "setup_deckrd_tmpdir; kv_init 'specialsave_store' $'key1|default'"
       After "teardown_deckrd_tmpdir"
 
-      Describe "When: スペースを含む値を kv_save → kv_load する"
-        It "Then: [Normal] ファイルが作成される"
+      Describe "When: スペースを含む値を kv_save する"
+        It "Then: [Edge] ファイルが作成される"
           kv_set "specialsave_store" "key1" "hello world"
           When call kv_save "specialsave_store" "${DECKRD_LOCAL}/special"
           The status should equal 0
         End
 
-        It "Then: [Normal] kv_load で正しく復元できる"
+        It "Then: [Edge] kv_load で正しく復元できる"
           kv_set "specialsave_store" "key1" "hello world"
           kv_save "specialsave_store" "${DECKRD_LOCAL}/special"
           kv_init "specialsave_store" $'key1|default'
@@ -484,14 +522,14 @@ Describe "kv-store.sh"
         End
       End
 
-      Describe "When: ダブルクォートを含む値を kv_save → kv_load する"
-        It "Then: [Normal] ファイルが作成される"
+      Describe "When: ダブルクォートを含む値を kv_save する"
+        It "Then: [Edge] ファイルが作成される"
           kv_set "specialsave_store" "key1" 'say "hello"'
           When call kv_save "specialsave_store" "${DECKRD_LOCAL}/dq"
           The status should equal 0
         End
 
-        It "Then: [Normal] kv_load で正しく復元できる"
+        It "Then: [Edge] kv_load で正しく復元できる"
           kv_set "specialsave_store" "key1" 'say "hello"'
           kv_save "specialsave_store" "${DECKRD_LOCAL}/dq"
           kv_init "specialsave_store" $'key1|default'
@@ -502,24 +540,12 @@ Describe "kv-store.sh"
       End
     End
 
-    Describe "Given: データがセットされた状態 (JSON 整形検証)"
-      Before "setup_deckrd_tmpdir; kv_init 'jsoncheck_store' $'key1|v1'"
-      After "teardown_deckrd_tmpdir"
-
-      Describe "When: kv_save 後に JSON 内容を検証する"
-        It "Then: [Normal] 保存されたファイルが有効な JSON である"
-          kv_set "jsoncheck_store" "key1" "myvalue"
-          kv_save "jsoncheck_store" "${DECKRD_LOCAL}/jsoncheck"
-          When call jq . "${DECKRD_LOCAL}/jsoncheck.kv"
-          The status should equal 0
-        End
-
-        It "Then: [Normal] jq でキー値が正しく取得できる"
-          kv_set "jsoncheck_store" "key1" "myvalue"
-          kv_save "jsoncheck_store" "${DECKRD_LOCAL}/jsoncheck"
-          When call jq -r .key1 "${DECKRD_LOCAL}/jsoncheck.kv"
-          The status should equal 0
-          The output should equal "myvalue"
+    Describe "Given: schema 未登録のストア"
+      Describe "When: kv_save を呼ぶ"
+        It "Then: [Error] return 1 を返し Error: を stdout に出力する"
+          When call kv_save "noschema_save_store" "/tmp/any"
+          The status should equal 1
+          The output should include "Error:"
         End
       End
     End
@@ -546,15 +572,15 @@ Describe "kv-store.sh"
       Before "kv_init 'emptyall_store' ''"
 
       Describe "When: kv_all を呼ぶ"
-        It "Then: [Normal] 出力が空になる"
+        It "Then: [Edge] return 0 を返す"
+          When call kv_all "emptyall_store"
+          The status should equal 0
+        End
+
+        It "Then: [Edge] 出力が空になる"
           When call kv_all "emptyall_store"
           The status should equal 0
           The lines of output should equal 0
-        End
-
-        It "Then: [Normal] exit 0 を返す"
-          When call kv_all "emptyall_store"
-          The status should equal 0
         End
       End
     End
@@ -563,39 +589,11 @@ Describe "kv-store.sh"
       Before "kv_init 'eqval_store' 'key1|a=b'"
 
       Describe "When: kv_all を呼ぶ"
-        It "Then: [Normal] key1=a=b が出力に含まれる"
+        It "Then: [Edge] key1=a=b が出力に含まれる"
           When call kv_all "eqval_store"
           The status should equal 0
           The output should include "key1=a=b"
         End
-      End
-    End
-  End
-
-  Describe "_kv_file_path"
-    Describe "When: _kv_file_path を呼ぶ"
-      It "Then: [Normal] .json 拡張子が .kv に置き換えられる"
-        When call _kv_file_path "/foo/bar/kv.json"
-        The status should equal 0
-        The output should equal "/foo/bar/kv.kv"
-      End
-
-      It "Then: [Normal] 拡張子なしのパスに .kv が付加される"
-        When call _kv_file_path "/foo/bar/session"
-        The status should equal 0
-        The output should equal "/foo/bar/session.kv"
-      End
-
-      It "Then: [Normal] 複数ドットのファイル名は最初のドット以降が除去される"
-        When call _kv_file_path "/foo/bar/my.store.json"
-        The status should equal 0
-        The output should equal "/foo/bar/my.kv"
-      End
-
-      It "Then: [Normal] ディレクトリパスが保持される"
-        When call _kv_file_path "/path/to/dir/name"
-        The status should equal 0
-        The output should equal "/path/to/dir/name.kv"
       End
     End
   End
