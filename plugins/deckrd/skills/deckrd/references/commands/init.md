@@ -106,10 +106,10 @@ Creates `.local/deckrd/session.json` if it does not exist:
 
 ## Script
 
-Execute: [scripts/init-dirs.sh](../../scripts/init-dirs.sh)
+Execute: [scripts/init.sh](../../scripts/init.sh)
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/init-dirs.sh <project> <project-type> [OPTIONS]
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/init.sh <project> <project-type> [OPTIONS]
 ```
 
 ## Next Step
