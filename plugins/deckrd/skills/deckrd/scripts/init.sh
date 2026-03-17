@@ -31,17 +31,16 @@
 # @version 3.0.0
 # @license MIT
 
+# shellcheck disable=SC1091
+
 # don't use -u for checking error by Agent
 set -eo pipefail
 
-_INIT_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 # Load bootstrap (defines SYMBOL, PROJECT_ROOT, DECKRD_LOCAL_DATA, DECKRD_LIB_DIR, etc.)
-# shellcheck source=libs/bootstrap.sh
+_INIT_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "${_INIT_SCRIPT_DIR}/libs/bootstrap.sh"
 unset _INIT_SCRIPT_DIR
 
-# shellcheck disable=SC1091
 . "${DECKRD_LIB_DIR}/validate-env.sh"
 _validate_env_errmsg=$(validate_env) || {
   echo "$_validate_env_errmsg" >&2
