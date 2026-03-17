@@ -38,28 +38,42 @@
 # don't use -u for checking error by Agent
 set -eo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPT_DIR
+
+# Load bootstrap (defines SYMBOL, REPO_ROOT, DECKRD_LIB_DIR, etc.)
+# shellcheck source=libs/bootstrap.sh
+. "${SCRIPT_DIR}/libs/bootstrap.sh"
+
+# Validate environment (requires jq)
+# shellcheck disable=SC1091
+. "${DECKRD_LIB_DIR}/validate-env.sh"
+_validate_env_errmsg=$(validate_env) || {
+  echo "$_validate_env_errmsg" >&2
+  exit 1
+}
+unset _validate_env_errmsg
+
 # ============================================================================
 # Script Configuration
 # ============================================================================
 
 ##
-# @description Repository root directory
-REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
-readonly REPO_ROOT
+# @description Project root directory
+readonly PROJECT_ROOT
 
 ##
 # @description DECKRD docs directory
-DECKRD_DOCS="${DECKRD_DOCS:-${REPO_ROOT}/docs/.deckrd}"
+DECKRD_DOCS="${DECKRD_DOCS:-${PROJECT_ROOT}/docs/.deckrd}"
 readonly DECKRD_DOCS
 
 ##
-# @description DECKRD local config directory
-DECKRD_LOCAL="${REPO_ROOT}/.local/deckrd"
-readonly DECKRD_LOCAL
+# @description DECKRD local data directory
+readonly DECKRD_LOCAL_DATA
 
 ##
 # @description Session file path
-SESSION_FILE="${DECKRD_LOCAL}/session.json"
+SESSION_FILE="${DECKRD_LOCAL_DATA}/session.json"
 readonly SESSION_FILE
 
 ##
@@ -290,7 +304,7 @@ update_session() {
   local timestamp
   timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-  mkdir -p "$DECKRD_LOCAL"
+  mkdir -p "$DECKRD_LOCAL_DATA"
 
   if [[ -f "$SESSION_FILE" ]]; then
     # Update: set active module, add/reset module entry
