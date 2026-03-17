@@ -150,33 +150,42 @@ Describe "config.sh"
       End
     End
 
-    Describe "Given: 有効な session.json が存在する"
+    Describe "Given: 有効な session.kv が存在する"
       Before "setup_deckrd_tmpdir; CONFIG=(); SESSION=()"
       After "teardown_deckrd_tmpdir"
 
       Describe "When: config_init をセッションファイルパスを指定して呼ぶ"
         It "Then: [Normal] セッションの ai_model が CONFIG に読み込まれる"
-          printf '{"active":"myproject","ai_model":"opus","lang":"ja"}' \
-            >"${DECKRD_LOCAL}/session.json"
-          config_init "${DECKRD_LOCAL}/session.json"
+          kv_init "_test_session" $'\nactive|\nai_model|\nlang|\n'
+          kv_set "_test_session" "active" "myproject"
+          kv_set "_test_session" "ai_model" "opus"
+          kv_set "_test_session" "lang" "ja"
+          kv_save "_test_session" "${DECKRD_LOCAL}/session"
+          config_init "${DECKRD_LOCAL}/session.kv"
           When call config_get "ai_model"
           The status should equal 0
           The output should equal "opus"
         End
 
         It "Then: [Normal] セッションの lang が CONFIG に読み込まれる"
-          printf '{"active":"myproject","ai_model":"opus","lang":"ja"}' \
-            >"${DECKRD_LOCAL}/session.json"
-          config_init "${DECKRD_LOCAL}/session.json"
+          kv_init "_test_session" $'\nactive|\nai_model|\nlang|\n'
+          kv_set "_test_session" "active" "myproject"
+          kv_set "_test_session" "ai_model" "opus"
+          kv_set "_test_session" "lang" "ja"
+          kv_save "_test_session" "${DECKRD_LOCAL}/session"
+          config_init "${DECKRD_LOCAL}/session.kv"
           When call config_get "lang"
           The status should equal 0
           The output should equal "ja"
         End
 
         It "Then: [Normal] セッションの active から deckrd_base が計算される"
-          printf '{"active":"myproject","ai_model":"opus","lang":"ja"}' \
-            >"${DECKRD_LOCAL}/session.json"
-          config_init "${DECKRD_LOCAL}/session.json"
+          kv_init "_test_session" $'\nactive|\nai_model|\nlang|\n'
+          kv_set "_test_session" "active" "myproject"
+          kv_set "_test_session" "ai_model" "opus"
+          kv_set "_test_session" "lang" "ja"
+          kv_save "_test_session" "${DECKRD_LOCAL}/session"
+          config_init "${DECKRD_LOCAL}/session.kv"
           When call config_get "deckrd_base"
           The status should equal 0
           The output should include "myproject"

@@ -185,8 +185,8 @@ Describe "session.sh"
       Describe "When: session_load を呼ぶ"
         It "Then: [Normal] active キーが読み込まれる"
           printf '{"active":"myproject","ai_model":"opus","lang":"ja"}' \
-            > "${DECKRD_LOCAL}/session.json"
-          session_load "${DECKRD_LOCAL}/session.json" BUF
+            > "${DECKRD_LOCAL}/session.kv"
+          session_load "${DECKRD_LOCAL}/session" BUF
           When call session_get BUF "active"
           The status should equal 0
           The output should equal "myproject"
@@ -194,8 +194,8 @@ Describe "session.sh"
 
         It "Then: [Normal] ai_model キーが読み込まれる"
           printf '{"active":"myproject","ai_model":"opus","lang":"ja"}' \
-            > "${DECKRD_LOCAL}/session.json"
-          session_load "${DECKRD_LOCAL}/session.json" BUF
+            > "${DECKRD_LOCAL}/session.kv"
+          session_load "${DECKRD_LOCAL}/session" BUF
           When call session_get BUF "ai_model"
           The status should equal 0
           The output should equal "opus"
@@ -203,8 +203,8 @@ Describe "session.sh"
 
         It "Then: [Normal] lang キーが読み込まれる"
           printf '{"active":"myproject","ai_model":"opus","lang":"ja"}' \
-            > "${DECKRD_LOCAL}/session.json"
-          session_load "${DECKRD_LOCAL}/session.json" BUF
+            > "${DECKRD_LOCAL}/session.kv"
+          session_load "${DECKRD_LOCAL}/session" BUF
           When call session_get BUF "lang"
           The status should equal 0
           The output should equal "ja"
@@ -212,8 +212,8 @@ Describe "session.sh"
 
         It "Then: [Normal] JSON に存在しないキーはデフォルト値になる"
           printf '{"active":"only-active"}' \
-            > "${DECKRD_LOCAL}/session.json"
-          session_load "${DECKRD_LOCAL}/session.json" BUF
+            > "${DECKRD_LOCAL}/session.kv"
+          session_load "${DECKRD_LOCAL}/session" BUF
           When call session_get BUF "ai_model"
           The status should equal 0
           The output should equal "sonnet"
@@ -230,15 +230,15 @@ Describe "session.sh"
       Describe "When: session_save を呼ぶ"
         It "Then: [Normal] ファイルが作成される"
           session_set BUF "active" "testproj"
-          session_save "${DECKRD_LOCAL}/session.json" BUF
-          When call test -f "${DECKRD_LOCAL}/session.json"
+          session_save "${DECKRD_LOCAL}/session" BUF
+          When call test -f "${DECKRD_LOCAL}/session.kv"
           The status should equal 0
         End
 
         It "Then: [Normal] ディレクトリが自動作成される"
           session_set BUF "active" "testproj"
-          session_save "${DECKRD_LOCAL}/nested/dir/session.json" BUF
-          When call test -f "${DECKRD_LOCAL}/nested/dir/session.json"
+          session_save "${DECKRD_LOCAL}/nested/dir/session" BUF
+          When call test -f "${DECKRD_LOCAL}/nested/dir/session.kv"
           The status should equal 0
         End
       End
@@ -253,11 +253,11 @@ Describe "session.sh"
           session_set BUF "active" "roundtrip-proj"
           session_set BUF "ai_model" "claude-3-5"
           session_set BUF "lang" "ja"
-          session_save "${DECKRD_LOCAL}/session.json" BUF
+          session_save "${DECKRD_LOCAL}/session" BUF
           unset BUF
           declare -gA BUF
           session_init BUF "$SESSION_SCHEMA_TEST"
-          session_load "${DECKRD_LOCAL}/session.json" BUF
+          session_load "${DECKRD_LOCAL}/session" BUF
           When call session_get BUF "active"
           The status should equal 0
           The output should equal "roundtrip-proj"
