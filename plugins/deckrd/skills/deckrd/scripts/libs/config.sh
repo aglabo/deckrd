@@ -50,30 +50,30 @@ config_init() {
   # Re-initialize config store with defaults
   kv_init "config" "$_CONFIG_SCHEMA"
 
-  # Load from session file if provided and session_load is available
-  if [[ -n "$session_file" ]] && declare -f session_load >/dev/null 2>&1; then
+  # Load from session file if provided
+  if [[ -n "$session_file" ]]; then
     local _config_session_schema="
 active|
 ai_model|
 lang|
 "
-    session_init "_config_session" "$_config_session_schema"
-    session_load "$session_file" "_config_session" || true
+    kv_init "_config_session" "$_config_session_schema"
+    kv_load "_config_session" "${session_file%.*}" || true
 
     local ai_model
-    ai_model=$(session_get "_config_session" "ai_model")
+    ai_model=$(kv_get "_config_session" "ai_model")
     if [[ -n "$ai_model" ]]; then
       kv_set "config" "ai_model" "$ai_model"
     fi
 
     local lang
-    lang=$(session_get "_config_session" "lang")
+    lang=$(kv_get "_config_session" "lang")
     if [[ -n "$lang" ]]; then
       kv_set "config" "lang" "$lang"
     fi
 
     local active
-    active=$(session_get "_config_session" "active")
+    active=$(kv_get "_config_session" "active")
     if [[ -n "$active" ]]; then
       local deckrd_docs="${DECKRD_DOCS:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)/docs/.deckrd}"
       kv_set "config" "deckrd_base" "${deckrd_docs}/${active}"

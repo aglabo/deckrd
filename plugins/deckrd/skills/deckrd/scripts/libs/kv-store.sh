@@ -112,7 +112,7 @@ kv_load() {
   file="$(_kv_file_path "$path")"
 
   if [[ -z "${_KV_SCHEMA[$store]+set}" ]]; then
-    echo "Error: kv_load: schema not registered for store '${store}'" >&2
+    echo "Error: kv_load: schema not registered for store '${store}'"
     return 1
   fi
 
@@ -127,17 +127,40 @@ kv_load() {
     return 0
   fi
 
+  # Validate JSON before loading
+  if ! jq empty "$file" 2>/dev/null; then
+    echo "Error: kv_load: invalid JSON file '${file}'"
+    return 1
+  fi
+
   # Load from JSON
   local _kv_load_key
   _kv_load_key() {
     local key="$1"
     local default="$2"
     local value
-    value=$(jq -r ".${key} // empty" "$file" 2>/dev/null || true)
+    value=$(jq -r ".${key} // empty" "$file" 2>/dev/null)
     _kv_buf["$key"]="${value:-${default}}"
   }
   _kv_schema_iter "$store" _kv_load_key
   unset -f _kv_load_key
+}
+
+# _kv_buf_to_json - Serialize an associative array to compact JSON
+#
+# @arg $1 string Store name (nameref target "_KV_<store>")
+# @stdout Compact JSON object (no trailing newline issues, CRLF-safe)
+_kv_buf_to_json() {
+  local store="$1"
+  # shellcheck disable=SC2178
+  local -n _kv_buf="_KV_${store}"
+
+  local json="{}"
+  local key
+  for key in "${!_kv_buf[@]}"; do
+    json=$(printf '%s' "$json" | jq --arg k "$key" --arg v "${_kv_buf[$key]}" '. + {($k): $v}')
+  done
+  printf '%s' "$json" | jq -c . | tr -d '\r'
 }
 
 # kv_save - Save store contents to file
@@ -152,22 +175,12 @@ kv_save() {
   file="$(_kv_file_path "$path")"
 
   if [[ -z "${_KV_SCHEMA[$store]+set}" ]]; then
-    echo "Error: kv_save: schema not registered for store '${store}'" >&2
+    echo "Error: kv_save: schema not registered for store '${store}'"
     return 1
   fi
 
-  # shellcheck disable=SC2178
-  local -n _kv_buf="_KV_${store}"
-
   mkdir -p "$(dirname "$file")"
-
-  local json_obj="{}"
-  local key value
-  for key in "${!_kv_buf[@]}"; do
-    value="${_kv_buf[$key]}"
-    json_obj=$(printf '%s' "$json_obj" | jq --arg k "$key" --arg v "$value" '. + {($k): $v}')
-  done
-  printf '%s\n' "$json_obj" >"$file"
+  _kv_buf_to_json "$store" >"$file"
 }
 
 # kv_all - Output all store entries as "key=value" lines

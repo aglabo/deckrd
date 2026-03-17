@@ -25,15 +25,21 @@
 
 set -eo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPT_DIR
+
+# Load bootstrap (defines SYMBOL, PROJECT_ROOT, DECKRD_LOCAL_DATA, etc.)
+# shellcheck source=libs/bootstrap.sh
+. "${SCRIPT_DIR}/libs/bootstrap.sh"
+
 # ============================================================================
 # Configuration
 # ============================================================================
 
-DECKRD_LOCAL="${DECKRD_LOCAL:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.local/deckrd}"
-readonly DECKRD_LOCAL
-DECKRD_DOCS="${DECKRD_DOCS:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)/docs/.deckrd}"
+readonly DECKRD_LOCAL_DATA
+DECKRD_DOCS="${DECKRD_DOCS:-${PROJECT_ROOT}/docs/.deckrd}"
 readonly DECKRD_DOCS
-SESSION_FILE="${DECKRD_LOCAL}/session.json"
+SESSION_FILE="${DECKRD_LOCAL_DATA}/session.json"
 readonly SESSION_FILE
 readonly WORKFLOW_STEPS=(init req spec impl tasks)
 

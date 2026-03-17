@@ -31,11 +31,16 @@
 # @version 3.0.0
 # @license MIT
 
+# shellcheck disable=SC1091
+
 # don't use -u for checking error by Agent
 set -eo pipefail
 
-DECKRD_LIB_DIR="$(dirname "${BASH_SOURCE[0]}")/libs"
-# shellcheck disable=SC1091
+# Load bootstrap (defines SYMBOL, PROJECT_ROOT, DECKRD_LOCAL_DATA, DECKRD_LIB_DIR, etc.)
+_INIT_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "${_INIT_SCRIPT_DIR}/libs/bootstrap.sh"
+unset _INIT_SCRIPT_DIR
+
 . "${DECKRD_LIB_DIR}/validate-env.sh"
 _validate_env_errmsg=$(validate_env) || {
   echo "$_validate_env_errmsg" >&2
@@ -69,32 +74,30 @@ readonly DOCS_SRC_DIR
 
 ##
 # @description Repository root directory
-REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
-readonly REPO_ROOT
+readonly PROJECT_ROOT
 
 ##
 # @description Bootstrap destination: .claude/rules/
-CLAUDE_RULES_DIR="${REPO_ROOT}/.claude/rules"
+CLAUDE_RULES_DIR="${PROJECT_ROOT}/.claude/rules"
 readonly CLAUDE_RULES_DIR
 
 ##
 # @description DECKRD docs directory
-DECKRD_DOCS="${DECKRD_DOCS:-${REPO_ROOT}/docs/.deckrd}"
+DECKRD_DOCS="${DECKRD_DOCS:-${PROJECT_ROOT}/docs/.deckrd}"
 readonly DECKRD_DOCS
 
 ##
 # @description DECKRD local config directory
-DECKRD_LOCAL="${REPO_ROOT}/.local/deckrd"
-readonly DECKRD_LOCAL
+readonly DECKRD_LOCAL_DATA
 
 ##
 # @description Project file path
-PROJECT_FILE="${DECKRD_LOCAL}/.project.json"
+PROJECT_FILE="${DECKRD_LOCAL_DATA}/.project.json"
 readonly PROJECT_FILE
 
 ##
 # @description Session file path
-SESSION_FILE="${DECKRD_LOCAL}/session.json"
+SESSION_FILE="${DECKRD_LOCAL_DATA}/session.json"
 readonly SESSION_FILE
 
 ##
@@ -310,7 +313,7 @@ bootstrap_project() {
 ##
 # @description Create base directory structure under docs/.deckrd/
 init_base_directory() {
-  mkdir -p "$DECKRD_LOCAL"
+  mkdir -p "$DECKRD_LOCAL_DATA"
   mkdir -p "$DECKRD_DOCS"
   for subdir in "${BASE_SUBDIRS[@]}"; do
     mkdir -p "${DECKRD_DOCS}/${subdir}"

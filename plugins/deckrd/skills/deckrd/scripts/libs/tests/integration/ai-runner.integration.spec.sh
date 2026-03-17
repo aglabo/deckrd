@@ -6,7 +6,12 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 
-Include spec_helper.sh
+_LIB_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/plugins/deckrd/skills/deckrd/scripts/libs" && pwd)"
+# shellcheck disable=SC1091
+. "${_LIB_DIR}/bootstrap.sh"
+unset _LIB_DIR
+
+Include ../spec_helper.sh
 
 SCRIPT="${DECKRD_LIB_DIR}/ai-runner.sh"
 
@@ -208,11 +213,10 @@ Describe "ai-runner.sh"
       After 'cleanup_mock'
 
       Describe "When: run_ai を呼ぶ"
-        It "Then: [Normal] github/gpt-4.1 は copilot suggest --model gpt-4.1 を渡す"
+        It "Then: [Normal] github/gpt-4.1 は copilot --model gpt-4.1 を渡す"
           When call run_ai "github/gpt-4.1"
           The status should equal 0
           The output should include "MOCK_COPILOT:"
-          The output should include "suggest"
           The output should include "--model"
           The output should include "gpt-4.1"
         End

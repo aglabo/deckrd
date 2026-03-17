@@ -6,7 +6,12 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 
-Include spec_helper.sh
+_LIB_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/plugins/deckrd/skills/deckrd/scripts/libs" && pwd)"
+# shellcheck disable=SC1091
+. "${_LIB_DIR}/bootstrap.sh"
+unset _LIB_DIR
+
+Include ../spec_helper.sh
 
 SCRIPT="${DECKRD_LIB_DIR}/ai-runner.sh"
 
@@ -31,8 +36,8 @@ Describe "ai-runner.sh"
   Describe "実機テスト"
     Parameters
       "codex" "codex" "gpt-5" 60
-      "gemini" "gemini" "gemini-2.5-pro" 60
-      "copilot" "copilot" "github/gpt-4.1" 60
+      # "gemini" "gemini" "gemini-2.5-pro" 60   # quota limit
+      # "copilot" "copilot" "github/gpt-4.1" 60 # too many requests
       "opencode" "opencode" "opencode/gpt-5" 60
     End
 

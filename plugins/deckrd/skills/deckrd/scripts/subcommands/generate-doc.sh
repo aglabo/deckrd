@@ -34,11 +34,17 @@
 # don't use  -u for checking error by Agent
 set -eo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPT_DIR
+
+# Load bootstrap (defines SYMBOL, PROJECT_ROOT, DECKRD_LOCAL_DATA, DECKRD_LIB_DIR, etc.)
+# shellcheck source=../libs/bootstrap.sh
+. "${SCRIPT_DIR}/../libs/bootstrap.sh"
+
 # ============================================================================
 # Library Dependencies
 # ============================================================================
 
-DECKRD_LIB_DIR="${DECKRD_LIB_DIR:-$(dirname "${BASH_SOURCE[0]}")/../libs}"
 readonly DECKRD_LIB_DIR
 
 # shellcheck disable=SC1091
@@ -56,17 +62,11 @@ readonly DECKRD_LIB_DIR
 
 ##
 # @description Session file path
-DECKRD_LOCAL="${DECKRD_LOCAL:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.local/deckrd}"
-SESSION_FILE="${DECKRD_LOCAL}/session.json"
+SESSION_FILE="${DECKRD_LOCAL_DATA}/session.json"
 
 # ============================================================================
 # Script Configuration
 # ============================================================================
-
-##
-# @description Script directory path
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly SCRIPT_DIR
 
 ##
 # @description deckrd assets directory

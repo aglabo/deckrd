@@ -7,7 +7,12 @@
 # https://opensource.org/licenses/MIT
 
 # shellcheck disable=SC2287
-Include spec_helper.sh
+_LIB_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/plugins/deckrd/skills/deckrd/scripts/libs" && pwd)"
+# shellcheck disable=SC1091
+. "${_LIB_DIR}/bootstrap.sh"
+unset _LIB_DIR
+
+Include ../spec_helper.sh
 
 SCRIPT="${DECKRD_LIB_DIR}/ai-runner.sh"
 # shellcheck disable=SC1090

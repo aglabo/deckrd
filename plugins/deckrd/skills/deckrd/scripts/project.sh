@@ -36,19 +36,26 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC2034
 readonly SCRIPT_DIR
 
-##
-# @description Repository root directory
-REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
-readonly REPO_ROOT
+# Load bootstrap (defines SYMBOL, REPO_ROOT, DECKRD_LIB_DIR, etc.)
+# shellcheck source=libs/bootstrap.sh
+. "${SCRIPT_DIR}/libs/bootstrap.sh"
+
+# Validate environment (requires jq)
+# shellcheck disable=SC1091
+. "${DECKRD_LIB_DIR}/validate-env.sh"
+_validate_env_errmsg=$(validate_env) || {
+  echo "$_validate_env_errmsg" >&2
+  exit 1
+}
+unset _validate_env_errmsg
 
 ##
-# @description Deckrd local config directory
-DECKRD_DIR="${REPO_ROOT}/.local/deckrd"
-readonly DECKRD_DIR
+# @description DECKRD local data directory
+readonly DECKRD_LOCAL_DATA
 
 ##
 # @description Project file path
-PROJECT_FILE="${DECKRD_DIR}/.project.json"
+PROJECT_FILE="${DECKRD_LOCAL_DATA}/.project.json"
 readonly PROJECT_FILE
 
 ##
@@ -209,7 +216,7 @@ validate_required_params() {
 ##
 # @description Ensure .deckrd directory exists
 ensure_deckrd_dir() {
-  mkdir -p "${DECKRD_DIR}"
+  mkdir -p "${DECKRD_LOCAL_DATA}"
 }
 
 ##
