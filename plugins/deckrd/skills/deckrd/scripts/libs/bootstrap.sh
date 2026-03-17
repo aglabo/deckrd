@@ -31,6 +31,15 @@ export PLUGINS_DIR
 DECKRD_LIB_DIR="${DECKRD_LIB_DIR:-${PLUGINS_DIR}/deckrd/skills/deckrd/scripts/libs}"
 export DECKRD_LIB_DIR
 
+REPO_ROOT="${REPO_ROOT:-${PROJECT_ROOT}}"
+export REPO_ROOT
+
+DECKRD_DATA_DIR="${DECKRD_DATA_DIR:-${XDG_DATA_HOME:-${HOME}/.local/share}/deckrd}"
+export DECKRD_DATA_DIR
+
+DECKRD_LOCAL_DATA="${DECKRD_LOCAL_DATA:-${PROJECT_ROOT}/.local/deckrd}"
+export DECKRD_LOCAL_DATA
+
 ASSETS_DIR="${ASSETS_DIR:-${PROJECT_ROOT}/.claude}"
 export ASSETS_DIR
 
