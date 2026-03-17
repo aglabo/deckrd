@@ -42,13 +42,12 @@ REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 readonly REPO_ROOT
 
 ##
-# @description Deckrd local config directory
-DECKRD_DIR="${REPO_ROOT}/.local/deckrd"
-readonly DECKRD_DIR
+# @description DECKRD local data directory
+readonly DECKRD_LOCAL_DATA
 
 ##
 # @description Project file path
-PROJECT_FILE="${DECKRD_DIR}/.project.json"
+PROJECT_FILE="${DECKRD_LOCAL_DATA}/.project.json"
 readonly PROJECT_FILE
 
 ##
@@ -209,7 +208,7 @@ validate_required_params() {
 ##
 # @description Ensure .deckrd directory exists
 ensure_deckrd_dir() {
-  mkdir -p "${DECKRD_DIR}"
+  mkdir -p "${DECKRD_LOCAL_DATA}"
 }
 
 ##
