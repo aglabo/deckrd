@@ -41,3 +41,9 @@
 
 # Don't treat warnings as failures (allow exit code 0 with warnings)
 --no-warning-as-failure
+
+# === Parallel Execution ===
+# Spec file 単位で並列実行（ﾌtｧ@ｲCﾙ虚ｪ割後に有効）
+# @note: Windows環境での安定性は未確認のため､ACI/CD で動作確認後に有効化すること
+--jobs 4
+
