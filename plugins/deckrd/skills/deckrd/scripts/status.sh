@@ -25,27 +25,25 @@
 
 set -eo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly SCRIPT_DIR
-
 # Load bootstrap (defines SYMBOL, PROJECT_ROOT, DECKRD_LOCAL_DATA, etc.)
-# shellcheck source=libs/bootstrap.sh
-. "${SCRIPT_DIR}/libs/bootstrap.sh"
-
-# ============================================================================
-# Configuration
-# ============================================================================
-
-readonly DECKRD_LOCAL_DATA
-DECKRD_DOCS="${DECKRD_DOCS:-${PROJECT_ROOT}/docs/.deckrd}"
-readonly DECKRD_DOCS
-SESSION_FILE="${DECKRD_LOCAL_DATA}/session.json"
-readonly SESSION_FILE
-readonly WORKFLOW_STEPS=(init req spec impl tasks)
+# Skip if already loaded (DECKRD_LIB_DIR is set by bootstrap)
+if [[ -z "${DECKRD_LIB_DIR:-}" ]]; then
+  _STATUS_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  # shellcheck source=libs/bootstrap.sh
+  . "${_STATUS_SCRIPT_DIR}/libs/bootstrap.sh"
+  unset _STATUS_SCRIPT_DIR
+fi
 
 # ============================================================================
 # Functions
 # ============================================================================
+
+# Initialize configuration variables (mock-friendly)
+init_vars() {
+  SESSION_FILE="${SESSION_FILE:-${DECKRD_LOCAL_DATA}/session.json}"
+  DECKRD_DOCS="${DECKRD_DOCS:-${PROJECT_ROOT}/docs/.deckrd}"
+  WORKFLOW_STEPS=(init req spec impl tasks)
+}
 
 # Check if session file exists
 check_session() {
@@ -54,7 +52,7 @@ check_session() {
     echo "  Expected: ${SESSION_FILE}"
     echo ""
     echo "Run 'deckrd init <namespace>/<module>' to initialize."
-    exit 1
+    return 1
   fi
 }
 
@@ -77,7 +75,8 @@ display_progress() {
 
 # Main function
 main() {
-  check_session
+  init_vars
+  check_session || exit 1
 
   # Extract fields from session
   local active lang ai_model created updated current_step completed
@@ -123,4 +122,4 @@ main() {
 # Entry Point
 # ============================================================================
 
-main "$@"
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then main "$@"; fi
