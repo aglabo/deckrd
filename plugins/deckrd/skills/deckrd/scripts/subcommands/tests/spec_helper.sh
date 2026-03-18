@@ -14,3 +14,6 @@ _HELPER_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/plugins/deckrd/skills/deckrd/script
 # shellcheck disable=SC1091
 . "${_HELPER_DIR}/spec_helper.sh"
 unset _HELPER_DIR
+
+SUBCOMMANDS_DIR="${SCRIPTS_DIR}/subcommands"
+export SUBCOMMANDS_DIR
