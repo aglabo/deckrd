@@ -40,6 +40,9 @@ export DECKRD_DATA_DIR
 DECKRD_LOCAL_DATA="${DECKRD_LOCAL_DATA:-${PROJECT_ROOT}/.local/deckrd}"
 export DECKRD_LOCAL_DATA
 
+DECKRD_DOCS_DIR="${DECKRD_DOCS_DIR:-${PROJECT_ROOT}/docs/.deckrd}"
+export DECKRD_DOCS_DIR
+
 ASSETS_DIR="${ASSETS_DIR:-${PROJECT_ROOT}/.claude}"
 export ASSETS_DIR
 
@@ -49,5 +52,8 @@ export AGENTS_DIR
 # SYMBOL: valid character pattern for project names, namespaces, and domains
 # Allowed: lowercase letters (a-z), hyphens (-), underscores (_)
 # Usage: [[ "$value" =~ ^${SYMBOL}$ ]]  or  [[ "$path" =~ ^${SYMBOL}/${SYMBOL}$ ]]
-readonly SYMBOL='[a-z_-]+'
+# Mock support: define SYMBOL before sourcing this file to override.
+if [[ -z "${SYMBOL:-}" ]]; then
+  readonly SYMBOL='[a-z_-]+'
+fi
 export SYMBOL
