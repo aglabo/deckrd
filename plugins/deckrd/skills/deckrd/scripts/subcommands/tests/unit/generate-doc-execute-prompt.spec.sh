@@ -6,7 +6,14 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 
-Include spec_helper.sh
+# shellcheck disable=SC1091
+
+_LIB_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/plugins/deckrd/skills/deckrd/scripts/libs" && pwd)"
+. "${_LIB_DIR}/bootstrap.sh"
+unset _LIB_DIR
+
+
+Include ../spec_helper.sh
 
 # shellcheck source=../generate-doc.sh
 . "${SUBCOMMANDS_DIR}/generate-doc.sh"
@@ -24,7 +31,7 @@ Describe "generate-doc.sh ai-runner.sh integration"
         The output should include "run_ai"
       End
 
-      It "Then: [Normal] validate_ai_model は ai-runner.sh 版（空引数でエラー出力）"
+      It "Then: [Normal] validate_ai_model は ai-runner.sh 版（空引数でｴGﾗ臆[出力）"
         When call validate_ai_model ""
         The status should equal 1
         The output should include "Error:"
@@ -34,7 +41,7 @@ Describe "generate-doc.sh ai-runner.sh integration"
 
   Describe "validate_ai_model (ai-runner.sh 版)"
 
-    Describe "Given: 有効なモデル識別子"
+    Describe "Given: 有効なﾓづﾞfﾙ去ｯ別子"
       Describe "When: validate_ai_model を呼ぶ"
         Parameters
           "sonnet"              "sonnet"
@@ -46,7 +53,7 @@ Describe "generate-doc.sh ai-runner.sh integration"
           "opencode/big-pickle" "opencode/big-pickle"
         End
 
-        It "Then: [Normal] $1 → exit 0、stdout に $2 を返す"
+        It "Then: [Normal] $1 → exit 0､Astdout に $2 を返す"
           When call validate_ai_model "$1"
           The status should equal 0
           The output should equal "$2"
@@ -54,7 +61,7 @@ Describe "generate-doc.sh ai-runner.sh integration"
       End
     End
 
-    Describe "Given: 独自版では通っていた不正なモデル識別子"
+    Describe "Given: 独自版では通っていた不正なﾓづﾞfﾙ去ｯ別子"
       Describe "When: validate_ai_model を呼ぶ"
         Parameters
           "12345"
@@ -63,7 +70,7 @@ Describe "generate-doc.sh ai-runner.sh integration"
           "openai/"
         End
 
-        It "Then: [Error] $1 → exit 1、stdout に Error: を含む"
+        It "Then: [Error] $1 → exit 1､Astdout に Error: を含む"
           When call validate_ai_model "$1"
           The status should equal 1
           The output should include "Error:"
@@ -86,7 +93,7 @@ Describe "generate-doc.sh ai-runner.sh integration"
     Before "setup_execute_prompt_tmpdir"
     After "teardown_deckrd_tmpdir"
 
-    Describe "When: run_ai をモックして execute_prompt を呼ぶ"
+    Describe "When: run_ai をﾓけbｸNして execute_prompt を呼ぶ"
       run_ai() {
         cat >/dev/null
         echo "MOCK_RUN_AI_CALLED:model=$1"
