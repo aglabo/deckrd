@@ -3,7 +3,7 @@ name: Tasks Generation Prompt
 description: AI prompt for generating BDD-style executable task lists
 ---
 
-## Tasks Generation Prompt (deckrd)
+# Tasks Generation Prompt (deckrd)
 
 <!-- textlint-disable ja-technical-writing/sentence-length -->
 

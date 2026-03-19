@@ -3,7 +3,7 @@ name: Reverse Engineering Prompt
 description: AI prompt for reverse-engineering code into deckrd artifacts
 ---
 
-## rev Prompt
+# rev Prompt
 
 <!-- textlint-disable ja-technical-writing/sentence-length,
   ja-technical-writing/max-comma -->
