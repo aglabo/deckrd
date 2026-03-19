@@ -20,6 +20,7 @@ SCRIPT="${DECKRD_LIB_DIR}/ai-runner.sh"
 
 Describe "ai-runner.sh"
   Describe "実機テスト (claude)"
+    Skip if "integration tests are disabled" [ "${SKIP_INTEGRATION_TESTS:-1}" = "1" ]
     Skip if "claude is not installed" ! command -v claude >/dev/null 2>&1
 
     It "sonnet エイリアスで実際に応答を返す"
@@ -34,6 +35,8 @@ Describe "ai-runner.sh"
   End
 
   Describe "実機テスト"
+    Skip if "integration tests are disabled" [ "${SKIP_INTEGRATION_TESTS:-1}" = "1" ]
+
     Parameters
       "codex" "codex" "gpt-5" 60
       # "gemini" "gemini" "gemini-2.5-pro" 60   # quota limit

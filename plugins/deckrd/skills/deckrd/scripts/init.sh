@@ -27,6 +27,9 @@
 # @exitcode 0 Success
 # @exitcode 1 Error during execution
 #
+# @stdout Machine-readable output only (currently empty)
+# @stderr User-visible logs, progress messages, usage, and error messages
+#
 # @author atsushifx
 # @version 3.0.0
 # @license MIT
@@ -34,7 +37,7 @@
 # shellcheck disable=SC1091
 
 # don't use -u for checking error by Agent
-set -eo pipefail
+set -o pipefail
 
 # Load bootstrap (defines SYMBOL, PROJECT_ROOT, DECKRD_LOCAL_DATA, DECKRD_LIB_DIR, etc.)
 _INIT_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -48,91 +51,38 @@ _validate_env_errmsg=$(validate_env) || {
 }
 unset _validate_env_errmsg
 
-# ============================================================================
-# Script Configuration
-# ============================================================================
-
-##
-# @description Script directory path
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly SCRIPT_DIR
-
-##
-# @description Assets inits directory
-INITS_DIR="${SCRIPT_DIR}/../assets/inits"
-readonly INITS_DIR
-
-##
-# @description Bootstrap source: deckrd-rules
-RULES_SRC_DIR="${INITS_DIR}/deckrd-rules"
-readonly RULES_SRC_DIR
-
-##
-# @description Bootstrap source: docs templates
-DOCS_SRC_DIR="${INITS_DIR}/docs"
-readonly DOCS_SRC_DIR
-
-##
-# @description Repository root directory
-readonly PROJECT_ROOT
-
-##
-# @description Bootstrap destination: .claude/rules/
-CLAUDE_RULES_DIR="${PROJECT_ROOT}/.claude/rules"
-readonly CLAUDE_RULES_DIR
-
-##
-# @description DECKRD docs directory
-DECKRD_DOCS="${DECKRD_DOCS:-${PROJECT_ROOT}/docs/.deckrd}"
-readonly DECKRD_DOCS
-
-##
-# @description DECKRD local config directory
-readonly DECKRD_LOCAL_DATA
-
-##
-# @description Project file path
-PROJECT_FILE="${DECKRD_LOCAL_DATA}/.project.json"
-readonly PROJECT_FILE
-
-##
-# @description Session file path
-SESSION_FILE="${DECKRD_LOCAL_DATA}/session.json"
-readonly SESSION_FILE
-
-##
-# @description Base subdirectories to create under DECKRD_DOCS
-BASE_SUBDIRS=("notes" "temp")
-
-##
-# @description Supported programming languages
-SUPPORTED_LANGUAGES=(typescript go python rust)
-readonly SUPPORTED_LANGUAGES
-
-##
-# @description Project name (positional arg 1)
-PROJECT_NAME=""
-
-##
-# @description Project type (positional arg 2)
-PROJECT_TYPE=""
-
-##
-# @description Programming language (default: typescript)
-LANGUAGE="typescript"
-
-##
-# @description AI model (default: sonnet)
-AI_MODEL="sonnet"
+. "${DECKRD_LIB_DIR}/ai-runner.sh"
 
 # ============================================================================
 # Functions
 # ============================================================================
 
 ##
+# @description Initialize script configuration variables
+# @description All variables use ${VAR:-default} to allow external override (mock)
+init_vars() {
+  SCRIPT_DIR="${SCRIPT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
+  INITS_DIR="${INITS_DIR:-${SCRIPT_DIR}/../assets/inits}"
+  RULES_SRC_DIR="${RULES_SRC_DIR:-${INITS_DIR}/deckrd-rules}"
+  DOCS_SRC_DIR="${DOCS_SRC_DIR:-${INITS_DIR}/docs}"
+  LOCAL_SRC_DIR="${LOCAL_SRC_DIR:-${INITS_DIR}/local-deckrd}"
+  CLAUDE_RULES_DIR="${CLAUDE_RULES_DIR:-${PROJECT_ROOT}/.claude/rules}"
+  DECKRD_DOCS="${DECKRD_DOCS:-${PROJECT_ROOT}/docs/.deckrd}"
+  PROJECT_FILE="${PROJECT_FILE:-${DECKRD_LOCAL_DATA}/.project.json}"
+  SESSION_FILE="${SESSION_FILE:-${DECKRD_LOCAL_DATA}/session.json}"
+  BASE_SUBDIRS=("notes" "temp")
+  SUPPORTED_LANGUAGES=(typescript go python rust)
+  PROJECT_NAME="${PROJECT_NAME:-}"
+  PROJECT_TYPE="${PROJECT_TYPE:-}"
+  LANGUAGE="${LANGUAGE:-typescript}"
+  AI_MODEL="${AI_MODEL:-sonnet}"
+}
+
+##
 # @description Show usage information
+# @stderr Usage text
 show_usage() {
-  cat <<EOF
+  cat >&2 <<EOF
 Usage: init-dirs.sh <project> <project-type> [OPTIONS]
 
 Bootstrap and initialize a DECKRD project.
@@ -161,7 +111,7 @@ EOF
 ##
 # @description Validate programming language against supported list
 # @arg $1 string Language to validate
-# @return 0 if valid, exits on invalid
+# @return 0 if valid, 1 if invalid (no output; caller handles error message)
 validate_language() {
   local lang="$1"
   for supported in "${SUPPORTED_LANGUAGES[@]}"; do
@@ -169,29 +119,16 @@ validate_language() {
       return 0
     fi
   done
-  echo "Error: Unsupported language: ${lang}. Supported: ${SUPPORTED_LANGUAGES[*]}" >&2
-  exit 1
-}
-
-##
-# @description Validate AI model name format
-# @arg $1 string AI model name
-# @return 0 if valid, exits on invalid
-validate_ai_model() {
-  local model="$1"
-  if [[ "$model" =~ ^[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)?$ ]]; then
-    return 0
-  fi
-  echo "Error: AI model must contain only letters, numbers, hyphens, underscores, and dots" >&2
-  echo "  Allowed formats: 'model-name' or 'org/model-name'" >&2
-  echo "  Invalid model: ${model}" >&2
-  exit 1
+  return 1
 }
 
 ##
 # @description Parse command-line arguments and options
+# @return 0 on success, 1 on error (no output; caller handles error message)
+# @var PARSE_ARGS_ERROR set to error description on failure
 parse_args() {
   local positional=()
+  PARSE_ARGS_ERROR=""
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -201,8 +138,8 @@ parse_args() {
       ;;
     --language | --lang)
       if [[ -z "${2:-}" ]]; then
-        echo "Error: ${1} requires a value" >&2
-        exit 1
+        PARSE_ARGS_ERROR="${1} requires a value"
+        return 1
       fi
       LANGUAGE="$2"
       shift 2
@@ -213,8 +150,8 @@ parse_args() {
       ;;
     --ai-model)
       if [[ -z "${2:-}" ]]; then
-        echo "Error: --ai-model requires a value" >&2
-        exit 1
+        PARSE_ARGS_ERROR="--ai-model requires a value"
+        return 1
       fi
       AI_MODEL="$2"
       shift 2
@@ -224,9 +161,8 @@ parse_args() {
       shift
       ;;
     -*)
-      echo "Error: Unknown option: $1" >&2
-      show_usage
-      exit 1
+      PARSE_ARGS_ERROR="Unknown option: $1"
+      return 1
       ;;
     *)
       positional+=("$1")
@@ -241,88 +177,89 @@ parse_args() {
 
 ##
 # @description Validate required positional arguments
+# @return 0 on success, 1 on error (no output; caller handles error message)
+# @var VALIDATE_ARGS_ERROR set to error description on failure
 validate_args() {
+  VALIDATE_ARGS_ERROR=""
+
   if [[ -z "$PROJECT_NAME" ]]; then
-    echo "Error: <project> is required" >&2
-    show_usage
-    exit 1
+    VALIDATE_ARGS_ERROR="<project> is required"
+    return 1
   fi
   if [[ -z "$PROJECT_TYPE" ]]; then
-    echo "Error: <project-type> is required" >&2
-    show_usage
-    exit 1
+    VALIDATE_ARGS_ERROR="<project-type> is required"
+    return 1
   fi
   if [[ ! "$PROJECT_NAME" =~ ^${SYMBOL}$ ]]; then
-    echo "Error: project name '${PROJECT_NAME}' contains invalid characters" >&2
-    echo "  Allowed: a-z, hyphen (-), underscore (_)" >&2
-    exit 1
+    VALIDATE_ARGS_ERROR="project name '${PROJECT_NAME}' contains invalid characters. Allowed: a-z, hyphen (-), underscore (_)"
+    return 1
   fi
   if [[ ! "$PROJECT_TYPE" =~ ^${SYMBOL}$ ]]; then
-    echo "Error: project type '${PROJECT_TYPE}' contains invalid characters" >&2
-    echo "  Allowed: a-z, hyphen (-), underscore (_)" >&2
-    exit 1
+    VALIDATE_ARGS_ERROR="project type '${PROJECT_TYPE}' contains invalid characters. Allowed: a-z, hyphen (-), underscore (_)"
+    return 1
   fi
 }
 
 ##
-# @description Bootstrap: copy files without overwriting existing ones
-# @arg $1 string Source directory
-# @arg $2 string Destination directory
-# @arg $3 string Label for display
-bootstrap_copy() {
-  local src_dir="$1"
-  local dest_dir="$2"
-  local label="$3"
-
-  if [[ ! -d "$src_dir" ]]; then
-    echo "  [bootstrap/${label}] source not found, skipping: ${src_dir}"
-    return 0
-  fi
+# @description Create directory and optionally copy assets without overwriting
+# @arg $1 string Destination directory
+# @arg $2 string Source directory (optional; if omitted, only creates dest dir)
+# @arg $3 string Label for display (optional; defaults to basename of dest dir)
+# @stderr Progress messages
+init_directory() {
+  local dest_dir="$1"
+  local src_dir="${2:-}"
+  local label="${3:-$(basename "$dest_dir")}"
 
   mkdir -p "$dest_dir"
 
+  if [[ -z "$src_dir" ]]; then
+    return 0
+  fi
+
+  if [[ ! -d "$src_dir" ]]; then
+    echo "  [init/${label}] source not found, skipping: ${src_dir}" >&2
+    return 0
+  fi
+
   local copied=0 skipped=0
-  for src_file in "$src_dir"/*; do
+  for src_file in "$src_dir"/* "$src_dir"/.*; do
     [[ -e "$src_file" ]] || continue
+    [[ "$(basename "$src_file")" == "." || "$(basename "$src_file")" == ".." ]] && continue
     local filename dest_file
     filename="$(basename "$src_file")"
     dest_file="${dest_dir}/${filename}"
     if [[ -e "$dest_file" ]]; then
-      echo "  [bootstrap/${label}] skip (exists): ${filename}"
+      echo "  [init/${label}] skip (exists): ${filename}" >&2
       skipped=$((skipped + 1))
     else
       cp "$src_file" "$dest_file"
-      echo "  [bootstrap/${label}] copied: ${filename}"
+      echo "  [init/${label}] copied: ${filename}" >&2
       copied=$((copied + 1))
     fi
   done
 
-  echo "  [bootstrap/${label}] done: ${copied} copied, ${skipped} skipped"
+  echo "  [init/${label}] done: ${copied} copied, ${skipped} skipped" >&2
 }
 
 ##
-# @description Bootstrap: install deckrd-rules and docs templates (no overwrite)
-bootstrap_project() {
-  echo "Bootstrap: installing deckrd assets..."
-  bootstrap_copy "$RULES_SRC_DIR" "$CLAUDE_RULES_DIR" "deckrd-rules"
-  bootstrap_copy "$DOCS_SRC_DIR" "$DECKRD_DOCS" "docs"
-  echo "Bootstrap complete."
-  echo ""
-}
-
-##
-# @description Create base directory structure under docs/.deckrd/
-init_base_directory() {
-  mkdir -p "$DECKRD_LOCAL_DATA"
-  mkdir -p "$DECKRD_DOCS"
+# @description Initialize all project directories and install assets
+# @stderr Progress messages
+init_directories() {
+  echo "Init: creating directories and installing assets..." >&2
+  init_directory "$CLAUDE_RULES_DIR" "$RULES_SRC_DIR" "deckrd-rules"
+  init_directory "$DECKRD_DOCS" "$DOCS_SRC_DIR" "docs"
+  init_directory "$DECKRD_LOCAL_DATA" "$LOCAL_SRC_DIR" "local-deckrd"
   for subdir in "${BASE_SUBDIRS[@]}"; do
-    mkdir -p "${DECKRD_DOCS}/${subdir}"
+    init_directory "${DECKRD_DOCS}/${subdir}"
   done
-  echo "Base directory: ${DECKRD_DOCS}"
+  echo "Init complete." >&2
+  echo "" >&2
 }
 
 ##
 # @description Write project.json with project settings
+# @stderr Progress messages
 write_project() {
   local timestamp
   timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
@@ -350,24 +287,25 @@ write_project() {
       updated_at:   $updated_at
     }' >"${PROJECT_FILE}.tmp" && mv "${PROJECT_FILE}.tmp" "$PROJECT_FILE"
 
-  echo ""
-  echo "Project written: ${PROJECT_FILE}"
-  echo "  project:      ${PROJECT_NAME}"
-  echo "  project_type: ${PROJECT_TYPE}"
-  echo "  language:     ${LANGUAGE}"
-  echo "  ai_model:     ${AI_MODEL}"
+  echo "" >&2
+  echo "Project written: ${PROJECT_FILE}" >&2
+  echo "  project:      ${PROJECT_NAME}" >&2
+  echo "  project_type: ${PROJECT_TYPE}" >&2
+  echo "  language:     ${LANGUAGE}" >&2
+  echo "  ai_model:     ${AI_MODEL}" >&2
 }
 
 ##
 # @description Initialize session.json
+# @stderr Progress messages
 init_session() {
   local timestamp
   timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
   if [[ -f "$SESSION_FILE" ]]; then
     # Already exists: preserve as-is, just reset current_step
-    echo ""
-    echo "Session preserved: ${SESSION_FILE}"
+    echo "" >&2
+    echo "Session preserved: ${SESSION_FILE}" >&2
     return 0
   fi
 
@@ -381,20 +319,49 @@ init_session() {
 }
 EOF
 
-  echo ""
-  echo "Session created: ${SESSION_FILE}"
+  echo "" >&2
+  echo "Session created: ${SESSION_FILE}" >&2
 }
 
 # ============================================================================
 # Main Execution
 # ============================================================================
 
-parse_args "$@"
-validate_args
-validate_language "$LANGUAGE"
-validate_ai_model "$AI_MODEL"
+main() {
+  init_vars
 
-bootstrap_project
-init_base_directory
-write_project
-init_session
+  parse_args "$@" || {
+    echo "Error: ${PARSE_ARGS_ERROR}" >&2
+    if [[ "$PARSE_ARGS_ERROR" == "Unknown option:"* ]]; then
+      show_usage
+    fi
+    exit 1
+  }
+
+  validate_args || {
+    echo "Error: ${VALIDATE_ARGS_ERROR}" >&2
+    if [[ "$VALIDATE_ARGS_ERROR" == *"is required" ]]; then
+      show_usage
+    fi
+    exit 1
+  }
+
+  validate_language "$LANGUAGE" || {
+    echo "Error: Unsupported language: ${LANGUAGE}. Supported: ${SUPPORTED_LANGUAGES[*]}" >&2
+    exit 1
+  }
+
+  _ai_model_errmsg=$(validate_ai_model "$AI_MODEL") || {
+    echo "$_ai_model_errmsg" >&2
+    exit 1
+  }
+  unset _ai_model_errmsg
+
+  init_directories
+  write_project
+  init_session
+}
+
+if [[  "${BASH_SOURCE[0]}" == "$0" ]]; then
+  main "$@"
+fi

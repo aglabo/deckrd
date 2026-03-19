@@ -12,7 +12,7 @@
 **/tmp/
 
 # session filles
-*session.json
+*kv
 
 # checklist
 **/*checklist.md

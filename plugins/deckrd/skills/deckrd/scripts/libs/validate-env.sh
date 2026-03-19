@@ -19,10 +19,14 @@ readonly _VALIDATE_ENV_LOADED=1
 #
 # @stdout Error message if validation fails
 # @return 0 if all requirements are met, 1 if jq is not installed
-validate_env() {
-  if ! command -v jq >/dev/null 2>&1; then
-    echo "Error: jq is required but not installed."
-    return 1
-  fi
-  return 0
-}
+#
+# Mock support: define validate_env before sourcing this file to override.
+if ! declare -f validate_env >/dev/null 2>&1; then
+  validate_env() {
+    if ! command -v jq >/dev/null 2>&1; then
+      echo "Error: jq is required but not installed."
+      return 1
+    fi
+    return 0
+  }
+fi

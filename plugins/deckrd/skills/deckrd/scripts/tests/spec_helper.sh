@@ -34,3 +34,13 @@ teardown_deckrd_tmpdir() {
   [[ -n "${DECKRD_TMPDIR:-}" && -d "$DECKRD_TMPDIR" ]] && rm -rf "$DECKRD_TMPDIR"
   unset DECKRD_TMPDIR DECKRD_DOCS DECKRD_LOCAL DECKRD_LOCAL_DATA
 }
+
+# Fixtures directory
+FIXTURES_DIR="${SHELLSPEC_PROJECT_ROOT}/plugins/deckrd/skills/deckrd/scripts/tests/fixtures"
+export FIXTURES_DIR
+
+# Helper: return the path to a fixture file
+fixture_path() { echo "${FIXTURES_DIR}/${1}"; }
+
+# Helper: return the contents of a fixture file
+load_fixture() { cat "${FIXTURES_DIR}/${1}"; }
