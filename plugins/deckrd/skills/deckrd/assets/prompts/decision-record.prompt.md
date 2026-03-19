@@ -3,7 +3,7 @@ name: Decision Record Generation Prompt
 description: AI prompt for generating architecture decision records
 ---
 
-## Decision Record Generation Prompt (deckrd)
+# Decision Record Generation Prompt (deckrd)
 
 <!-- textlint-disable ja-technical-writing/sentence-length -->
 

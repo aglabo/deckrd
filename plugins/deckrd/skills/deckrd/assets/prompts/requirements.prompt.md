@@ -3,9 +3,11 @@ name: Requirements Generation Prompt
 description: AI prompt for generating requirements documents and decision records
 ---
 
-## Requirements & Decision Records Generation Prompt (deckrd)
+# Requirements & Decision Records Generation Prompt (deckrd)
 
-<!-- textlint-disable ja-technical-writing/sentence-length -->
+<!-- textlint-disable
+  ja-technical-writing/sentence-length,
+  ja-technical-writing/no-exclamation-question-mark   -->
 <!-- markdownlint-disable line-length -->
 
 You are a **Requirements Analyst** and **Architecture Documenter**.
