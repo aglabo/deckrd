@@ -5,8 +5,7 @@ description: >
   and executable tasks from goals through structured AI dialogue.
   Use when user says "write requirements", "create spec", "plan implementation",
   "derive tasks", "structure this feature", "break down into tasks", or "document this module".
-  Also use for reverse engineering existing code into docs (/deckrd rev)
-  or for lightweight quick changes (/deckrd quick).
+  Also use for reverse engineering existing code into docs (/deckrd rev).
   Do NOT use for direct code writing — use /deckrd-coder after tasks are generated.
   Do NOT use when the user only wants to run or fix existing code without planning.
 metadata:
@@ -68,9 +67,6 @@ Gate Rule: each command requires the previous command's document. No skipping.
 > → `/deckrd rev --to req` → `spec` → `impl` → `tasks`
 
 **Small bug fix:**
-
-> "Fix the off-by-one error in the pagination logic."
-> → `/deckrd quick "Fix off-by-one in pagination"`
 
 ## Troubleshooting
 
