@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# src: ./skills/deckrd/scripts/init-dirs.sh
+# src: ./skills/deckrd/scripts/init.sh
 # @(#) : deckrd プロジェクト初期化スクリプト
 #
 # Copyright (c) 2025 atsushifx <https://github.com/atsushifx>
@@ -7,7 +7,7 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 #
-# @file init-dirs.sh
+# @file init.sh
 # @brief Bootstrap and initialize DECKRD project structure
 # @description
 #   1. Bootstrap: copy deckrd-rules to .claude/rules/ and docs templates
@@ -17,12 +17,12 @@
 #   4. Initialize .local/deckrd/session.json
 #
 # @usage
-#   init-dirs.sh <project> <project-type> [OPTIONS]
+#   init.sh <project> <project-type> [OPTIONS]
 #
 # @example
-#   init-dirs.sh myapp webapp
-#   init-dirs.sh myapp webapp --language go
-#   init-dirs.sh myapp lib --language typescript --ai-model claude-sonnet-4-5
+#   init.sh myapp webapp
+#   init.sh myapp webapp --language go
+#   init.sh myapp lib --language typescript --ai-model claude-sonnet-4-5
 #
 # @exitcode 0 Success
 # @exitcode 1 Error during execution
@@ -31,7 +31,7 @@
 # @stderr User-visible logs, progress messages, usage, and error messages
 #
 # @author atsushifx
-# @version 3.0.0
+# @version 0.1.0
 # @license MIT
 
 # shellcheck disable=SC1091
@@ -83,7 +83,7 @@ init_vars() {
 # @stderr Usage text
 show_usage() {
   cat >&2 <<EOF
-Usage: init-dirs.sh <project> <project-type> [OPTIONS]
+Usage: init.sh <project> <project-type> [OPTIONS]
 
 Bootstrap and initialize a DECKRD project.
 
@@ -103,9 +103,9 @@ Project file:
   .local/deckrd/project.json
 
 Example:
-  init-dirs.sh myapp webapp
-  init-dirs.sh myapp lib --language go
-  init-dirs.sh voift webapp --language typescript --ai-model claude-sonnet-4-5
+  init.sh myapp webapp
+  init.sh myapp lib --language go
+  init.sh voift webapp --language typescript --ai-model claude-sonnet-4-5
 EOF
 }
 
@@ -306,21 +306,24 @@ init_session() {
   timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
   if [[ -f "$SESSION_FILE" ]]; then
-    # Already exists: preserve as-is, just reset current_step
+    # Already exists: preserve as-is
     echo "" >&2
     echo "Session preserved: ${SESSION_FILE}" >&2
     return 0
   fi
 
-  cat >"$SESSION_FILE" <<EOF
-{
-  "current_step": "init",
-  "completed": ["init"],
-  "documents": {},
-  "created_at": "${timestamp}",
-  "updated_at": "${timestamp}"
-}
-EOF
+  jq -n \
+    --arg lang "$LANGUAGE" \
+    --arg ai_model "$AI_MODEL" \
+    --arg timestamp "$timestamp" \
+    '{
+      active:     null,
+      lang:       $lang,
+      ai_model:   $ai_model,
+      modules:    {},
+      created_at: $timestamp,
+      updated_at: $timestamp
+    }' >"$SESSION_FILE"
 
   echo "" >&2
   echo "Session created: ${SESSION_FILE}" >&2
