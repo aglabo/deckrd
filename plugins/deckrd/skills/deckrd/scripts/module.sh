@@ -23,7 +23,7 @@
 #   module.sh create <module> [--force]
 #
 # @example
-#   module.sh AGTKind/isCollection
+#   module.sh agt-kind/is-collection
 #   module.sh myns/mymod --force
 #   module.sh create myns/mymod
 #   module.sh create myfeature
@@ -32,7 +32,7 @@
 # @exitcode 1 Error during execution
 #
 # @author atsushifx
-# @version 1.1.0
+# @version 0.1.0
 # @license MIT
 
 # don't use -u for checking error by Agent
@@ -42,7 +42,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly SCRIPT_DIR
 
 # Load bootstrap (defines SYMBOL, REPO_ROOT, DECKRD_LIB_DIR, etc.)
-# shellcheck source=libs/bootstrap.sh
+# shellcheck disable=SC1091
 . "${SCRIPT_DIR}/libs/bootstrap.sh"
 
 # Validate environment (requires jq)
@@ -111,7 +111,7 @@ Subcommands:
   create    Create module dirs and .project.json (subdomain auto-resolved if omitted)
 
 Arguments:
-  <namespace>/<module>  Module path (e.g. AGTKind/isCollection)
+  <namespace>/<module>  Module path (e.g. agt-kind/is-collection)
   <module>              Module name only; subdomain auto-resolved from git remote name
                         Allowed: a-z, A-Z, 0-9, hyphen, underscore
                         Case-insensitive: normalized to lowercase
@@ -180,7 +180,7 @@ validate_and_normalize() {
   # Must contain exactly one slash
   if [[ "$raw" != */* ]]; then
     echo "Error: Path must be in format <namespace>/<module>" >&2
-    echo "  Example: AGTKind/isCollection" >&2
+    echo "  Example: agt-kind/is-collection" >&2
     exit 1
   fi
 
@@ -307,28 +307,34 @@ update_session() {
   mkdir -p "$DECKRD_LOCAL_DATA"
 
   if [[ -f "$SESSION_FILE" ]]; then
-    # Update: set active module, add/reset module entry
+    # Update: set active module, add/reset module entry in modules hierarchy
     jq --arg path "$path" \
       --arg timestamp "$timestamp" \
-      '.active       = $path |
-        .updated_at   = $timestamp |
-        .current_step = "init" |
-        .completed    = ["init"] |
-        .documents    = {}' \
+      '.active = $path |
+        .updated_at = $timestamp |
+        .modules[$path] = {
+          current_step: "module",
+          completed: ["module"],
+          documents: {}
+        }' \
       "$SESSION_FILE" >"${SESSION_FILE}.tmp" &&
       mv "${SESSION_FILE}.tmp" "$SESSION_FILE"
   else
-    # Create new session file
+    # Create new session file with modules hierarchy
     jq -n \
       --arg path "$path" \
       --arg timestamp "$timestamp" \
       '{
-        active:       $path,
-        current_step: "init",
-        completed:    ["init"],
-        documents:    {},
-        created_at:   $timestamp,
-        updated_at:   $timestamp
+        active:      $path,
+        modules:     {
+          ($path): {
+            current_step: "module",
+            completed:    ["module"],
+            documents:    {}
+          }
+        },
+        created_at:  $timestamp,
+        updated_at:  $timestamp
       }' >"$SESSION_FILE"
   fi
 
