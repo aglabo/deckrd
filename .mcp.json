@@ -1,12 +1,12 @@
 {
   "mcpServers": {
-    "cocoindex-code": {
+    "codex-mcp": {
       "type": "stdio",
-      "command": "cocoindex-code"
-    },
-    "fossil-mcp": {
-      "type": "stdio",
-      "command": "fossil-mcp"
+      "command": "codex",
+      "args": [
+        "mcp-server"
+      ],
+      "env": {}
     }
   }
 }
