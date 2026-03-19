@@ -3,7 +3,8 @@ title: deckrd - "Your Goals to Task" framework
 description: A document-driven workflow for progressively documenting and organizing requirements through implementation decisions.
 ---
 
-<!-- textlint-disable ja-technical-writing/sentence-length -->
+<!-- textlint-disable
+  ja-technical-writing/sentence-length -->
 <!-- markdownlint-disable line-length -->
 
 |English|[日本語](README.ja.md)|
@@ -61,15 +62,16 @@ Code / Tests
 
 ### Key Commands
 
-| Command                     | Description                        |
-| --------------------------- | ---------------------------------- |
-| `init <namespace>/<module>` | Prepare directories for documents  |
-| `req`                       | Create requirements definition     |
-| `spec`                      | Create specification document      |
-| `impl`                      | Create implementation criteria     |
-| `tasks`                     | Create implementation task list    |
-| `dr --add`                  | Record Decision Records (optional) |
-| `status`                    | Check workflow progress            |
+| Command                         | Description                                      |
+| ------------------------------- | ------------------------------------------------ |
+| `init <project> <project-type>` | Bootstrap project (run once per project)         |
+| `module <namespace>/<module>`   | Create module directory and set as active module |
+| `req`                           | Create requirements definition                   |
+| `spec`                          | Create specification document                    |
+| `impl`                          | Create implementation criteria                   |
+| `tasks`                         | Create implementation task list                  |
+| `dr --add`                      | Record Decision Records (optional)               |
+| `status`                        | Check workflow progress                          |
 
 > For details, see the plugin README:
 >
@@ -120,7 +122,8 @@ claude plugin install deckrd-coder@deckrd
 
 ```bash
 # Step 1: Plan and document with deckrd
-/deckrd init myProject/feature
+/deckrd init myProject shell
+/deckrd module myProject/feature
 /deckrd req
 /deckrd spec
 /deckrd impl
