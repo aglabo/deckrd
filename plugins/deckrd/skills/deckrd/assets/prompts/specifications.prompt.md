@@ -3,7 +3,7 @@ name: Specifications Generation Prompt
 description: AI prompt for generating specifications documents from requirements
 ---
 
-## Specifications Document Generation Prompt
+# Specifications Document Generation Prompt
 
 <!-- textlint-disable
   ja-technical-writing/sentence-length,

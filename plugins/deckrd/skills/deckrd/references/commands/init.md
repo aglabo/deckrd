@@ -3,7 +3,7 @@ title: init Command
 description: Bootstrap and initialize a DECKRD project
 ---
 
-# init Command
+## init Command
 
 Bootstrap and initialize a DECKRD project.
 
