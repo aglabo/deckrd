@@ -67,7 +67,7 @@ Claude Code → Settings → Plugins → Enable deckrd
 Once enabled, start a new workflow with:
 
 ```bash
-/deckrd init <namespace>/<module>
+/deckrd init <project> <project-type>
 ```
 
 deckrd then guides you through a stepwise workflow,
