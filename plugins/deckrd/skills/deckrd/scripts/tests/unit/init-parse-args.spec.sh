@@ -82,6 +82,22 @@ Describe "init.sh: parse_args"
     End
   End
 
+  Describe "Given: --language bash (alias)"
+    It "[Normal] Should: normalize bash to shell"
+      When call parse_args myapp webapp --language bash
+      The status should equal 0
+      The variable LANGUAGE should equal "shell"
+    End
+  End
+
+  Describe "Given: --language=bash (alias, = syntax)"
+    It "[Normal] Should: normalize bash to shell"
+      When call parse_args myapp webapp --language=bash
+      The status should equal 0
+      The variable LANGUAGE should equal "shell"
+    End
+  End
+
   Describe "Given: --ai-model option"
     It "[Normal] Should: set AI_MODEL"
       When call parse_args myapp webapp --ai-model claude-sonnet-4-5
