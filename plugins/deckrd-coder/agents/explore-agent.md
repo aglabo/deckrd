@@ -45,18 +45,21 @@ If profile is absent or incomplete, detect from manifest files:
 | `setup.py` / `pyproject.toml` | Python               |
 | `go.mod`                      | Go                   |
 | `build.gradle`                | Java / Kotlin        |
+| `*.sh` / `.shellcheckrc`      | Shell (Bash)         |
+
+> **Note:** `bash` is treated as an alias for `shell`. When the profile specifies `language: bash`, load `languages/shell.md` instead.
 
 ### Step 3: Tool Command Detection
 
 For each detected language, identify:
 
-| Tool        | Detection method                               |
-| ----------- | ---------------------------------------------- |
-| Test runner | `vitest`, `jest`, `pytest`, `cargo test`, etc. |
-| Lint        | `eslint`, `clippy`, `flake8`, `golangci-lint`  |
-| Type check  | `tsc --noEmit`, `mypy`, etc.                   |
-| Build       | `tsc`, `cargo build`, `go build`, etc.         |
-| Format      | `prettier`, `rustfmt`, `black`, etc.           |
+| Tool        | Detection method                                            |
+| ----------- | ----------------------------------------------------------- |
+| Test runner | `vitest`, `jest`, `pytest`, `cargo test`, `shellspec`       |
+| Lint        | `eslint`, `clippy`, `flake8`, `golangci-lint`, `shellcheck` |
+| Type check  | `tsc --noEmit`, `mypy`, `bash -n` (syntax check)            |
+| Build       | `tsc`, `cargo build`, `go build`, `bash -n`                 |
+| Format      | `prettier`, `rustfmt`, `black`, `shfmt`                     |
 
 Read config files to confirm exact commands and configuration.
 Examples: `vitest.config.*`, `.eslintrc.*`, `pyproject.toml`

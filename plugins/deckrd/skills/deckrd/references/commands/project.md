@@ -3,6 +3,8 @@ title: project Command
 description: Configure project settings including name and development language
 ---
 
+<!-- markdownlint-disable line-length-->
+
 ## project Command
 
 Configure project settings (project name and development language).
@@ -15,15 +17,11 @@ Configure project settings (project name and development language).
 
 ## Parameters
 
-<!-- markdownlint-disable line-length -->
-
-| Parameter                     | Required | Description                                                                        |
-| ----------------------------- | -------- | ---------------------------------------------------------------------------------- |
-| `--project <name>`            | Yes      | Project name                                                                       |
-| `--language <lang>`, `--lang` | No       | Development language (default: `typescript`): `go`, `typescript`, `python`, `rust` |
-| `-h`, `--help`                | No       | Show usage information                                                             |
-
-<!-- markdownlint-enable -->
+| Parameter                     | Required | Description                                                                                                 |
+| ----------------------------- | -------- | ----------------------------------------------------------------------------------------------------------- |
+| `--project <name>`            | Yes      | Project name                                                                                                |
+| `--language <lang>`, `--lang` | No       | Development language (default: `typescript`): `go`, `typescript`, `python`, `rust`, `shell` (alias: `bash`) |
+| `-h`, `--help`                | No       | Show usage information                                                                                      |
 
 ## Actions
 
@@ -70,14 +68,10 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/project.sh --project <name> --language <lang>
 
 ## Error Messages
 
-<!-- markdownlint-disable line-length -->
-
-| Error Message                                             | Cause                        | Solution                                         |
-| --------------------------------------------------------- | ---------------------------- | ------------------------------------------------ |
-| `Error: --project is required`                            | `--project` not specified    | Add `--project <name>`                           |
-| `Error: Unsupported language: <lang>. Supported: go, ...` | Language not in allowed list | Use one of: `go`, `typescript`, `python`, `rust` |
-
-<!-- markdownlint-enable -->
+| Error Message                                             | Cause                        | Solution                                                  |
+| --------------------------------------------------------- | ---------------------------- | --------------------------------------------------------- |
+| `Error: --project is required`                            | `--project` not specified    | Add `--project <name>`                                    |
+| `Error: Unsupported language: <lang>. Supported: go, ...` | Language not in allowed list | Use one of: `go`, `typescript`, `python`, `rust`, `shell` |
 
 ## Notes
 

@@ -22,15 +22,15 @@ Bootstrap and initialize a DECKRD project.
 
 ## Options
 
-<!-- markdownlint-disable line-length -->
+<!-- markdownlint-disable line-length MD060 -->
 
-| Option                        | Default      | Description                                                      |
-| ----------------------------- | ------------ | ---------------------------------------------------------------- |
-| `--language <lang>`, `--lang` | `typescript` | Programming language: `typescript`, `go`, `python`, `rust`       |
-| `--ai-model <model>`          | `sonnet`     | AI model: `gpt-*`, `o1-*`, `claude-*`, `haiku`, `sonnet`, `opus` |
-| `-h`, `--help`                | —            | Show usage information                                           |
+| Option                        | Default      | Description                                                                         |
+| ----------------------------- | ------------ | ----------------------------------------------------------------------------------- |
+| `--language <lang>`, `--lang` | `typescript` | Programming language: `typescript`, `go`, `python`, `rust`, `shell` (alias: `bash`) |
+| `--ai-model <model>`          | `sonnet`     | AI model: `gpt-*`, `o1-*` or `<provider>`/`<model>`                                 |
+| `-h`, `--help`                | —            | Show usage information                                                              |
 
-<!-- markdownlint-enable line-length -->
+<!-- markdownlint-enable line-length MD060 -->
 
 ## Example
 
