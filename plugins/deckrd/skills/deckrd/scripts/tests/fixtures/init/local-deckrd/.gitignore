@@ -12,7 +12,10 @@
 **/tmp/
 
 # session filles
+*
+!README*
 *kv
+*session
 
 # checklist
 **/*checklist.md
