@@ -60,7 +60,7 @@ readonly PROJECT_FILE
 
 ##
 # @description Supported languages
-SUPPORTED_LANGUAGES=(go typescript python rust)
+SUPPORTED_LANGUAGES=(typescript go python rust shell)
 readonly SUPPORTED_LANGUAGES
 
 ##
@@ -96,6 +96,7 @@ Options:
   --project-type <type>         Project type (e.g. lib, cli, api)
   --language <lang>, --lang     Programming language (default: typescript)
                                 Supported: ${SUPPORTED_LANGUAGES[*]}
+                                Alias: bash → shell
   --ai-model <model>            AI model (default: sonnet)
   -h, --help                    Show this help message
 
@@ -162,10 +163,12 @@ parse_options() {
         exit 1
       fi
       LANGUAGE="$2"
+      [[ "$LANGUAGE" == "bash" ]] && LANGUAGE="shell"
       shift 2
       ;;
     --language=* | --lang=*)
       LANGUAGE="${1#*=}"
+      [[ "$LANGUAGE" == "bash" ]] && LANGUAGE="shell"
       shift
       ;;
     --ai-model)

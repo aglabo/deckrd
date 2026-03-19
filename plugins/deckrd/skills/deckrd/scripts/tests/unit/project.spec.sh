@@ -98,6 +98,24 @@ Describe "project.sh"
       The output should include "rust"
     End
 
+    It "shell を指定できる"
+      When run bash "$SCRIPT" --project myapp --language shell
+      The status should equal 0
+      The output should include "shell"
+    End
+
+    It "bash を指定すると shell として扱われる"
+      When run bash "$SCRIPT" --project myapp --language bash
+      The status should equal 0
+      The output should include "shell"
+    End
+
+    It "bash エイリアス (= 構文) を指定すると shell として扱われる"
+      When run bash "$SCRIPT" --project myapp --language=bash
+      The status should equal 0
+      The output should include "shell"
+    End
+
     It "サポート外の言語はexit 1する"
       When run bash "$SCRIPT" --project myapp --language cobol
       The status should equal 1
