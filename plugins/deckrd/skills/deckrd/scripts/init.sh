@@ -71,7 +71,7 @@ init_vars() {
   PROJECT_FILE="${PROJECT_FILE:-${DECKRD_LOCAL_DATA}/.project.json}"
   SESSION_FILE="${SESSION_FILE:-${DECKRD_LOCAL_DATA}/session.json}"
   BASE_SUBDIRS=("notes" "temp")
-  SUPPORTED_LANGUAGES=(typescript go python rust)
+  SUPPORTED_LANGUAGES=(typescript go python rust shell)
   PROJECT_NAME="${PROJECT_NAME:-}"
   PROJECT_TYPE="${PROJECT_TYPE:-}"
   LANGUAGE="${LANGUAGE:-typescript}"
@@ -94,6 +94,7 @@ Arguments:
 Options:
   --language <lang>, --lang   Programming language (default: typescript)
                               Supported: ${SUPPORTED_LANGUAGES[*]}
+                              Alias: bash → shell
   --ai-model <model>          AI model (default: sonnet)
                               Supported: gpt-*, o1-*, claude-*, haiku, sonnet, opus
   -h, --help                  Show this help message
@@ -142,10 +143,12 @@ parse_args() {
         return 1
       fi
       LANGUAGE="$2"
+      [[ "$LANGUAGE" == "bash" ]] && LANGUAGE="shell"
       shift 2
       ;;
     --language=* | --lang=*)
       LANGUAGE="${1#*=}"
+      [[ "$LANGUAGE" == "bash" ]] && LANGUAGE="shell"
       shift
       ;;
     --ai-model)
