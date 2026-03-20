@@ -1,4 +1,17 @@
-# explore-agent
+---
+name: explore-agent
+title: explore-agent
+description: >
+  Read-only codebase investigation agent for deckrd commands.
+  Protects the main session context window by delegating codebase surveys to a subagent.
+  Supports scopes: codebase-extraction, codebase-survey, prior-art, pattern-detection.
+  Spawned by deckrd skills to investigate the project without polluting the main context.
+tools: Read, Grep, Glob, Bash
+model: inherit
+color: green
+---
+
+## explore-agent
 
 <!-- textlint-disable ja-technical-writing/max-comma -->
 <!-- markdownlint-disable line-length -->
