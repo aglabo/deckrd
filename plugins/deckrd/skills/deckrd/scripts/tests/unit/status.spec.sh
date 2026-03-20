@@ -40,8 +40,8 @@ Describe "status.sh"
       mkdir -p "$DECKRD_LOCAL"
       cat >"${DECKRD_LOCAL}/session.json" <<'JSON'
 {
-  "current_step": "init",
-  "completed": ["init"],
+  "current_step": "module",
+  "completed": ["module"],
   "documents": {},
   "created_at": "2025-01-01T00:00:00Z",
   "updated_at": "2025-01-01T00:00:00Z"
@@ -71,7 +71,7 @@ JSON
   "modules": {
     "myns/mymod": {
       "current_step": "req",
-      "completed": ["init", "req"]
+      "completed": ["module", "req"]
     }
   },
   "created_at": "2025-01-01T00:00:00Z",

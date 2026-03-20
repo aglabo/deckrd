@@ -6,6 +6,7 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 #
+# @version 0.1.0
 # USAGE: source this file, do NOT execute directly.
 #   . "$(dirname "${BASH_SOURCE[0]}")/libs/normalize-doc-type.sh"
 
@@ -16,6 +17,7 @@ fi
 readonly _NORMALIZE_DOC_TYPE_LOADED=1
 
 # Short form aliases
+# shellcheck disable=SC2034
 readonly -a SHORT_TYPES=(
   "req"
   "spec"
@@ -27,6 +29,7 @@ readonly -a SHORT_TYPES=(
 )
 
 # Canonical long forms
+# shellcheck disable=SC2034
 readonly -a LONG_TYPES=(
   "implementation"
   "requirements"

@@ -6,6 +6,7 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 #
+# @version 0.1.0
 # USAGE: source this file, do NOT execute directly.
 #   . "$(dirname "${BASH_SOURCE[0]}")/libs/session.sh"
 
@@ -22,6 +23,7 @@ readonly _SESSION_LOADED=1
 # SESSION_SCHEMA - compatibility shim: exposes _KV_SCHEMA as SESSION_SCHEMA
 # This allows existing code that checks SESSION_SCHEMA[$buffer] to work.
 # We use a nameref alias to the same underlying array.
+# shellcheck disable=SC2034
 declare -n SESSION_SCHEMA="_KV_SCHEMA"
 
 # session_init - Register schema for a buffer and initialize with defaults

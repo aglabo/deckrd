@@ -6,6 +6,7 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 #
+# @version 0.1.0
 # USAGE: source this file, do NOT execute directly.
 #   . "$(dirname "${BASH_SOURCE[0]}")/libs/config.sh"
 
@@ -38,6 +39,7 @@ kv_init "config" "$_CONFIG_SCHEMA"
 
 # CONFIG - compatibility shim: exposes _KV_config as CONFIG
 # This allows existing code that accesses CONFIG[key] directly to work.
+# shellcheck disable=SC2034
 declare -n CONFIG="_KV_config"
 
 # config_init - Initialize CONFIG with defaults and optionally load from session file

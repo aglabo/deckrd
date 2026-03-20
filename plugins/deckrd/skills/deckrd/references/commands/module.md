@@ -26,7 +26,7 @@ Initialize a DECKRD module directory structure and set it as the active module.
 
 | Argument               | Required | Description                                                               |
 | ---------------------- | -------- | ------------------------------------------------------------------------- |
-| `<namespace>/<module>` | Yes*     | Module path (e.g. `AGTKind/isCollection`)                                 |
+| `<namespace>/<module>` | Yes*     | Module path (e.g. `agt-kind/is-collection`)                               |
 | `<module>`             | Yes*     | Module name only; subdomain auto-resolved from git remote name (`create`) |
 
 \* One of the two forms is required.
@@ -42,17 +42,18 @@ Initialize a DECKRD module directory structure and set it as the active module.
 
 | Rule               | Detail                                          |
 | ------------------ | ----------------------------------------------- |
-| Allowed characters | `a-z`, `A-Z`, `0-9`, hyphen `-`, underscore `_` |
-| Case sensitivity   | Case-insensitive — normalized to **lowercase**  |
+| Allowed characters | `a-z`, hyphen `-`, underscore `_`               |
+| Case sensitivity   | Lowercase only — uppercase letters are rejected |
 | Format             | Must contain exactly one `/` separator          |
 
-### Examples of normalization
+### Examples
 
-| Input                  | Normalized             |
-| ---------------------- | ---------------------- |
-| `AGTKind/isCollection` | `agtkind/iscollection` |
-| `MyNS/MyMod`           | `myns/mymod`           |
-| `my-ns/my_mod`         | `my-ns/my_mod`         |
+| Input                    | Result                        |
+| ------------------------ | ----------------------------- |
+| `agt-kind/is-collection` | valid                         |
+| `my-ns/my-mod`           | valid                         |
+| `AGTKind/isCollection`   | error (uppercase not allowed) |
+| `MyNS/MyMod`             | error (uppercase not allowed) |
 
 ## Actions
 
@@ -96,16 +97,20 @@ Initialize a DECKRD module directory structure and set it as the active module.
 
 5. Update `.local/deckrd/session.json`:
    - Set `active` to normalized module path
-   - Reset `current_step` to `"init"`, `completed` to `["init"]`, `documents` to `{}`
+   - Set `current_step` to `"module"`, `completed` to `["module"]`, `documents` to `{}`
 
 ## Session Schema (after module)
 
 ```json
 {
   "active": "<namespace>/<module>",
-  "current_step": "init",
-  "completed": ["init"],
-  "documents": {},
+  "modules": {
+    "<namespace>/<module>": {
+      "current_step": "module",
+      "completed": ["module"],
+      "documents": {}
+    }
+  },
   "updated_at": "<ISO8601>"
 }
 ```

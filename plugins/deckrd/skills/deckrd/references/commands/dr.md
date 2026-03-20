@@ -60,7 +60,7 @@ Note: DRs can be added during any step (req, spec, impl, tasks).
 
 **Preconditions (STRICT):**
 
-- Session must exist at `docs/.deckrd/.session.json`
+- Session must exist at `.local/deckrd/session.json`
 - `session.active` must be set
 - `session.modules[active]` must exist
 - `session.modules[active].current_step` must be one of: `"req"`, `"spec"`, `"impl"`, `"tasks"`
@@ -91,7 +91,7 @@ Exit with error. Do NOT create or modify files.
 **Session file location:**
 
 ```bash
-docs/.deckrd/.session.json
+.local/deckrd/session.json
 ```
 
 **Required fields:**

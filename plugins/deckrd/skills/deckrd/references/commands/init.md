@@ -94,14 +94,14 @@ Creates `.local/deckrd/session.json` if it does not exist:
 
 ```json
 {
-  "current_step": "init",
-  "completed": ["init"],
-  "documents": {},
+  "active": null,
+  "modules": {},
   "created_at": "<ISO8601>",
   "updated_at": "<ISO8601>"
 }
 ```
 
+- No active module is set — run `module` next to initialize a module.
 - Existing session file is preserved as-is.
 
 ## Script
@@ -114,4 +114,4 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/init.sh <project> <project-type> [OPTIONS]
 
 ## Next Step
 
-Profile and session are ready. Run `/deckrd req` to start requirements definition.
+Profile and session are ready. Run `/deckrd module <namespace>/<module>` to create a module.

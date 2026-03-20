@@ -28,7 +28,7 @@
 # @exitcode 1 Error during execution
 #
 # @author atsushifx
-# @version 2.2.0
+# @version 0.1.0
 # @license MIT
 
 # don't use  -u for checking error by Agent
@@ -38,7 +38,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly SCRIPT_DIR
 
 # Load bootstrap (defines SYMBOL, PROJECT_ROOT, DECKRD_LOCAL_DATA, DECKRD_LIB_DIR, etc.)
-# shellcheck source=../libs/bootstrap.sh
+# shellcheck disable=SC1091
 . "${SCRIPT_DIR}/../libs/bootstrap.sh"
 
 # ============================================================================

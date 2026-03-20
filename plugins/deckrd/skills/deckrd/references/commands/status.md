@@ -29,11 +29,11 @@ The `status` command shows:
 DECKRD Status
 =============
 
-Active Module: AGTKind/isCollection
+Active Module: agt-kind/is-collection
 Current Step:  spec
-Completed:     init, req
+Completed:     module, req
 
-Module Path:   docs/.deckrd/AGTKind/isCollection  (DECKRD_DOCS default)
+Module Path:   docs/.deckrd/agt-kind/is-collection  (DECKRD_DOCS default)
 
 Configuration:
   Language:    ja
@@ -44,7 +44,7 @@ Session Info:
   Updated:     2025-01-15T14:30:00Z
 
 Workflow Progress:
-  [✓] init
+  [✓] module
   [✓] req
   [•] spec
   [ ] impl
@@ -59,11 +59,11 @@ Workflow Progress:
 
 ## Error Messages
 
-| Error                 | Cause                               | Solution                               |
-| --------------------- | ----------------------------------- | -------------------------------------- |
-| No session file found | Session not initialized             | Run `deckrd init <namespace>/<module>` |
-| No active module set  | Session exists but no active module | Run `deckrd init <namespace>/<module>` |
-| jq is not installed   | jq command not available            | Install jq                             |
+| Error                 | Cause                               | Solution                                   |
+| --------------------- | ----------------------------------- | ------------------------------------------ |
+| No session file found | Session not initialized             | Run `deckrd init <project> <project-type>` |
+| No active module set  | Session exists but no active module | Run `deckrd module <namespace>/<module>`   |
+| jq is not installed   | jq command not available            | Install jq                                 |
 
 ## Script
 
