@@ -15,7 +15,14 @@
 # settings
 !settings.json
 
-## cluade add-ons
+# claude settings
+!rules/
+!rules/**
+rules/deckrd-rule-*
+
+
+## claude add-ons
 # Agents
 !agents/
 !agents/*
+

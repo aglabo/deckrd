@@ -50,6 +50,8 @@
 # @version 1.3.0
 # @license MIT
 
+# shellcheck disable=SC2034
+
 set -euo pipefail
 
 # ============================================================================
@@ -64,7 +66,6 @@ readonly REPO_ROOT
 ##
 # @description Script directory path
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck disable=SC2034
 readonly SCRIPT_DIR
 
 # ============================================================================
@@ -85,12 +86,10 @@ AI_MODEL="sonnet"
 
 ##
 # @description Path to commit message generator template
-# shellcheck disable=SC2034
 readonly AGENT_TEMPLATE_PATH=".claude/agents/commit-message-generator.md"
 
 ##
 # @description Maximum number of recent commits to show in context
-# shellcheck disable=SC2034
 readonly MAX_LOG_ENTRIES=10
 
 ##
@@ -357,7 +356,9 @@ generate_commit_message() {
 
   # Format 1: Try extracting from standard markers (traditional format)
   # Also handles backtick-wrapped markers: `=== commit header ===`
+  # shellcheck disable=SC2016
   if echo "$after_diff" | grep -qE '^`?=== commit header ===`?'; then
+    # shellcheck disable=SC2016
     extracted_msg=$(echo "$after_diff" |
       sed -n '/^`\?=== commit header ===`\?/,/^`\?=== commit footer ===`\?/p' |
       sed '1d;$d')
