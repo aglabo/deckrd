@@ -6,6 +6,7 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 #
+# @version 0.1.0
 # USAGE: source this file, do NOT execute directly.
 #   . "$(dirname "${BASH_SOURCE[0]}")/libs/kv-store.sh"
 
@@ -52,8 +53,10 @@ kv_init() {
   declare -Ag "_KV_${store}"
 
   # Initialize with default values using nameref
+  # shellcheck disable=SC2178
   local -n _kv_buf="_KV_${store}"
   local _kv_set_default
+  # shellcheck disable=SC2329
   _kv_set_default() { _kv_buf["$1"]="${2}"; }
   _kv_schema_iter "$store" _kv_set_default
   unset -f _kv_set_default
@@ -68,6 +71,7 @@ kv_get() {
   local store="$1"
   local key="$2"
 
+  # shellcheck disable=SC2178
   local -n _kv_buf="_KV_${store}"
   printf '%s' "${_kv_buf[$key]:-}"
 }
@@ -82,6 +86,7 @@ kv_set() {
   local key="$2"
   local value="${3:-}"
 
+  # shellcheck disable=SC2178
   local -n _kv_buf="_KV_${store}"
   _kv_buf["$key"]="$value"
 }
@@ -116,11 +121,13 @@ kv_load() {
     return 1
   fi
 
+  # shellcheck disable=SC2178
   local -n _kv_buf="_KV_${store}"
 
   if [[ ! -f "$file" ]]; then
     # File not found: initialize with defaults
     local _kv_set_default
+    # shellcheck disable=SC2329
     _kv_set_default() { _kv_buf["$1"]="${2}"; }
     _kv_schema_iter "$store" _kv_set_default
     unset -f _kv_set_default
@@ -135,6 +142,7 @@ kv_load() {
 
   # Load from JSON
   local _kv_load_key
+  # shellcheck disable=SC2329
   _kv_load_key() {
     local key="$1"
     local default="$2"
