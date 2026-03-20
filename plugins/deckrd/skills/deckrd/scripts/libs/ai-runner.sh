@@ -6,6 +6,7 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 #
+# @version 0.1.0
 # USAGE: dot-source this file, do NOT execute directly.
 #   . "$(dirname "${BASH_SOURCE[0]}")/ai-runner.sh"
 
