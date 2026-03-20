@@ -591,7 +591,7 @@ After Phase 3 cleanup is approved, update `.session.json`:
 ```json
 {
   "current_step": "spec",
-  "completed": ["init", "req", "spec"],
+  "completed": ["module", "req", "spec"],
   "documents": {
     "requirements": "requirements.md",
     "specifications": "specifications.md"
