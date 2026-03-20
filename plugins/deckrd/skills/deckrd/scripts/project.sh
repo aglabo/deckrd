@@ -22,6 +22,10 @@
 #
 # @exitcode 0 Success
 # @exitcode 1 Error during execution
+#
+# @author atsushifx
+# @version 0.1.0
+# @license MIT
 
 # don't use -u for checking error by Agent
 set -eo pipefail
@@ -37,7 +41,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly SCRIPT_DIR
 
 # Load bootstrap (defines SYMBOL, REPO_ROOT, DECKRD_LIB_DIR, etc.)
-# shellcheck source=libs/bootstrap.sh
+# shellcheck disable=SC1091
 . "${SCRIPT_DIR}/libs/bootstrap.sh"
 
 # Validate environment (requires jq)
