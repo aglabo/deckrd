@@ -356,9 +356,10 @@ generate_commit_message() {
   local extracted_msg=""
 
   # Format 1: Try extracting from standard markers (traditional format)
-  if echo "$after_diff" | grep -q '^=== commit header ==='; then
+  # Also handles backtick-wrapped markers: `=== commit header ===`
+  if echo "$after_diff" | grep -qE '^`?=== commit header ===`?'; then
     extracted_msg=$(echo "$after_diff" |
-      sed -n '/^=== commit header ===/,/^=== commit footer ===/p' |
+      sed -n '/^`\?=== commit header ===`\?/,/^`\?=== commit footer ===`\?/p' |
       sed '1d;$d')
   fi
 
@@ -373,8 +374,7 @@ generate_commit_message() {
   # If still not found, report error
   if [[ -z "$extracted_msg" ]]; then
     echo "Error: commit message not found in AI output" >&2
-    # shellcheck disable=SC2006,SC2288
-    echo "Expected format: either '=== commit header ===' markers or '$()$(text...)$()' code blocks" >&2
+    echo 'Expected format: either === commit header === markers or ```text code blocks' >&2
     echo "Debug output:" >&2
     echo "$full_output" >&2
     return 1
