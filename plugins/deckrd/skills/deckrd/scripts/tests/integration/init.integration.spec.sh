@@ -119,12 +119,14 @@ Describe "init.sh: main() integration"
       The contents of file "${DECKRD_LOCAL_DATA}/.project.json" should include "typescript"
     End
 
-    It "[Normal] Should: create session.json containing 'init'"
+    It "[Normal] Should: create session.json with v0.1.0 schema (active, lang, modules)"
       When run bash "$SCRIPT" myapp webapp
       The status should equal 0
       The stderr should include "Session"
       The path "${DECKRD_LOCAL_DATA}/session.json" should be exist
-      The contents of file "${DECKRD_LOCAL_DATA}/session.json" should include "init"
+      The contents of file "${DECKRD_LOCAL_DATA}/session.json" should include "active"
+      The contents of file "${DECKRD_LOCAL_DATA}/session.json" should include "typescript"
+      The contents of file "${DECKRD_LOCAL_DATA}/session.json" should include "modules"
     End
 
     It "[Normal] Should: create .gitignore in DECKRD_LOCAL_DATA containing '*kv'"
