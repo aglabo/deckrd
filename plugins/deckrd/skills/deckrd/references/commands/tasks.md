@@ -223,7 +223,7 @@ After completion, update `.session.json`:
 ```json
 {
   "current_step": "tasks",
-  "completed": ["init", "req", "spec", "impl", "tasks"],
+  "completed": ["module", "req", "spec", "impl", "tasks"],
   "documents": {
     "requirements": "requirements.md",
     "specifications": "specifications.md",
