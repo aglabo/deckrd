@@ -249,7 +249,7 @@ After Phase 4 approval, update `.session.json`:
 ```json
 {
   "current_step": "req",
-  "completed": ["init", "req"],
+  "completed": ["module", "req"],
   "documents": {
     "requirements": "requirements.md"
   }
