@@ -20,7 +20,7 @@
 # @exitcode 1 Error (no session, no jq, etc.)
 #
 # @author atsushifx
-# @version 1.0.0
+# @version 0.1.0
 # @license MIT
 
 set -eo pipefail
@@ -29,7 +29,7 @@ set -eo pipefail
 # Skip if already loaded (DECKRD_LIB_DIR is set by bootstrap)
 if [[ -z "${DECKRD_LIB_DIR:-}" ]]; then
   _STATUS_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  # shellcheck source=libs/bootstrap.sh
+  # shellcheck disable=SC1091
   . "${_STATUS_SCRIPT_DIR}/libs/bootstrap.sh"
   unset _STATUS_SCRIPT_DIR
 fi
@@ -42,7 +42,7 @@ fi
 init_vars() {
   SESSION_FILE="${SESSION_FILE:-${DECKRD_LOCAL_DATA}/session.json}"
   DECKRD_DOCS="${DECKRD_DOCS:-${PROJECT_ROOT}/docs/.deckrd}"
-  WORKFLOW_STEPS=(init req spec impl tasks)
+  WORKFLOW_STEPS=(module req spec impl tasks)
 }
 
 # Check if session file exists
@@ -51,7 +51,7 @@ check_session() {
     echo "Error: No session file found."
     echo "  Expected: ${SESSION_FILE}"
     echo ""
-    echo "Run 'deckrd init <namespace>/<module>' to initialize."
+    echo "Run 'deckrd init <project> <project-type>' and 'deckrd module <namespace>/<module>' to initialize."
     return 1
   fi
 }
@@ -63,7 +63,7 @@ display_progress() {
 
   echo "Workflow Progress:"
   for step in "${WORKFLOW_STEPS[@]}"; do
-    if echo "$completed" | grep -q "$step"; then
+    if echo "$completed" | grep -qE "(^|, )${step}(,|$)"; then
       echo "  [✓] $step"
     elif [[ "$step" == "$current_step" ]]; then
       echo "  [•] $step"
@@ -85,7 +85,7 @@ main() {
   if [[ -z "$active" ]]; then
     echo "Error: No active module set in session."
     echo ""
-    echo "Run 'deckrd init <namespace>/<module>' to set active module."
+    echo "Run 'deckrd module <namespace>/<module>' to set active module."
     exit 1
   fi
 
