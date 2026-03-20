@@ -1,12 +1,21 @@
 {
   "mcpServers": {
     "codex-mcp": {
-      "type": "stdio",
+      "type:": "stdio",
       "command": "codex",
       "args": [
         "mcp-server"
-      ],
-      "env": {}
+      ]
+    },
+    "serena-mcp": {
+      "type:": "stdio",
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/oraios/serena",
+        "serena",
+        "start-mcp-server"
+      ]
     }
   }
 }
