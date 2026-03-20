@@ -22,6 +22,7 @@ SCRIPT="${SCRIPTS_DIR}/init.sh"
 # ============================================================================
 
 Describe "init.sh: validate_args"
+  # shellcheck disable=SC2329
   load_script_with_mocks() {
     # Mock: validate_env を常に成功させる
     # shellcheck disable=SC2329
