@@ -17,7 +17,7 @@ Include ../spec_helper.sh
 
 SCRIPT="${DECKRD_LIB_DIR}/normalize-doc-type.sh"
 
-# shellcheck disable=SC1091
+# shellcheck disable=SC1090,SC1091
 . "${SCRIPT}"
 
 Describe "normalize_doc_type"
