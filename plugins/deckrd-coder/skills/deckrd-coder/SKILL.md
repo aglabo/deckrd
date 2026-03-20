@@ -49,24 +49,42 @@ Default checklist: `tasks/implementation-checklist.md`
 
 ## Execution Flow
 
-| Phase | Name          | What happens                                   |
-| ----- | ------------- | ---------------------------------------------- |
-| 0     | Environment   | Confirm test framework, lint, type-check setup |
-| 1     | Task Info     | Read session, tasks.md, checklist for task     |
-| 2     | Decomposition | Break task into minimal implementation steps   |
-| 3     | BDD Loop      | Red → Green → Refactor per step                |
-| 4     | Quality Gate  | All tests pass, lint and type-check pass       |
-| 5     | Done Check    | Confirm all checklist items complete           |
+deckrd-coder is an orchestration layer. BDD implementation (Red → Green → Refactor) is
+delegated to the **bdd-coder** agent per task.
+
+| Phase | Name               | What happens                                            |
+| ----- | ------------------ | ------------------------------------------------------- |
+| 0     | Environment        | Detect language, test framework, lint, type-check setup |
+| 1     | Task Info          | Read session, tasks.md, checklist for target task       |
+| 2     | Dependency Map     | Classify tasks into serial / parallel execution groups  |
+| 3     | bdd-coder Dispatch | Spawn bdd-coder per task; collect status reports        |
+| 4     | Quality Gate       | Global lint + type-check + all tests pass               |
+| 5     | Done Check         | Confirm all checklist items complete                    |
+| 6     | Session End        | Reset state; remind user to commit manually             |
 
 Gate Rule: phases must run in order. No skipping.
 
 All tests MUST pass at Phase 4. No exceptions.
 Do NOT commit after completion — user commits manually.
 
+### bdd-coder Dispatch (Phase 3)
+
+Pass the following context to each bdd-coder instance:
+
+| Item              | Content                             |
+| ----------------- | ----------------------------------- |
+| Task ID           | e.g. `T-01-02-01`                   |
+| Task description  | Full Given/When/Then from tasks.md  |
+| Quality gate cmds | Commands table from ENV PROFILE     |
+| Checklist path    | Path to implementation-checklist.md |
+
+Do NOT pass: session-wide context, other tasks' info, or session.json.
+
+If bdd-coder reports `BLOCKED`: stop, report to user, wait for instruction.
+
 ## References
 
 - Full phase details: [workflow.md](references/workflow.md)
-- Step-by-step implementation: [implementation.md](references/implementation.md)
 - Error recovery: [troubleshooting.md](references/troubleshooting.md)
 - Q&A: [faq.md](references/faq.md)
 - BDD sub-agent: [agents/bdd-coder.md](../../agents/bdd-coder.md)
@@ -90,8 +108,8 @@ Cause: `/deckrd tasks` has not been run yet.
 Solution: Complete the full deckrd flow first: `req` → `spec` → `impl` → `tasks`.
 
 **Tests failing at Phase 4**
-Cause: Green phase implementation is incomplete or incorrect.
-Solution: Return to Phase 3, fix the failing test's implementation. Do not skip Phase 4.
+Cause: bdd-coder implementation is incomplete or incorrect.
+Solution: Return to Phase 3, re-dispatch bdd-coder for the failing task. Do not skip Phase 4.
 
 **Phase skipped accidentally**
 Cause: Announcement not made before a phase.
