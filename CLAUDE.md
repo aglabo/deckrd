@@ -1,210 +1,77 @@
 ---
 title: deckrd Project - Claude Code Guide
-version: 0.0.4
-authors:
-  - atsushifx
-changed: 2026-01-14 dev-docに分離
+version: 0.1.0
 ---
 
 <!-- textlint-disable
-  ja-technical-writing/sentence-length,
-  ja-technical-writing/max-comma -->
-
+  ja-technical-writing/sentence-length -->
 <!-- markdownlint-disable line-length -->
 
-## Core Principles
+## Project
 
-### Project Purpose
+**deckrd** — Goals → Requirements → Specifications → Implementation → Tasks
 
-**deckrd** transforms goals into executable tasks through systematic documentation.
+- Language: Bash (.sh) / Platform: Windows + Cross-platform
+- Repo: <https://github.com/aglabo/deckrd> / License: MIT
 
-**Core Workflow**: Goals → Requirements → Design → Specifications → Implementation → Tasks
-
-### Project Essentials
-
-- Language: Bash scripts (.sh)
-- Platform: Windows/Cross-platform
-- Repository: <https://github.com/aglabo/deckrd>
-- License: MIT (Copyright 2025- aglabo)
-
-### Development Philosophy
-
-1. **Document-Driven**: Plan before implementing
-2. **Quality-First**: Automated checks at every commit
-3. **Modular Design**: Plugin-based architecture
-4. **Tool-Assisted**: MCP servers for analysis
-
-## Technical Context
-
-### Project Structure
+## Structure
 
 ```text
 deckrd/
-├── plugins/          # deckrd, bdd-coder, deckrd-coder
-├── docs/             # Technical documentation
-│   ├── dev-guides/   # Setup, workflow
-│   ├── dev-architecture/  # Architecture, plugins
-│   ├── dev-api/      # MCP API reference
-│   └── dev-standards/  # Commands, quality, tools
-├── configs/          # Linter/formatter configs
-├── scripts/          # Utility scripts
-└── temp/idd/         # IDD working files
+├── plugins/deckrd/          # Main plugin (skills, scripts, assets)
+├── plugins/deckrd-coder/    # BDD coding helper plugin
+├── docs/                    # dev-guides, dev-architecture, dev-api, dev-standards
+├── configs/                 # Linter/formatter configs
+└── temp/idd/                # IDD framework working files
 ```
 
-### MCP Servers
+## Plugins
 
-**serena-mcp**: Semantic bash script analysis
+| Plugin                   | Commands                                                          | Session                      |
+| ------------------------ | ----------------------------------------------------------------- | ---------------------------- |
+| `plugins/deckrd/`        | `/deckrd` (init, module, req, dr, spec, impl, tasks, status, rev) | `.local/deckrd/session.json` |
+| `plugins/deckrd-coder/`  | `/deckrd-coder <task-id>`                                         | —                            |
+| IDD Framework (external) | `/idd/issue:*`, `/idd-pr`, `/idd-commit-message`                  | `temp/idd/`                  |
 
-- Memories: `.serena/memories/`
-- Tools: find_symbol, search_for_pattern, get_symbols_overview
+IDD Framework location: `~/.claude/plugins/marketplaces/claude-idd-framework-marketplace/plugins/claude-idd-framework`
 
-**lsmcp**: TypeScript/JavaScript LSP (future support)
+## Workflow
 
-- Cache: `.lsmcp/`
-- Tools: Symbol search, diagnostics, refactoring
+**Planning (deckrd)**:
+`/deckrd init <project> <type>` → `module <ns>/<mod>` → `req` → `dr` (opt) → `spec` → `impl` → `tasks`
 
-**codex-mcp**: AI code generation
+**Execution (IDD)**:
+`/idd/issue:new` → branch → implement → `/idd-commit-message` → `/idd-pr`
 
-- Tools: Template processing, code suggestions
+> Details: [Workflow Guide](docs/dev-guides/workflow.md) | [Deckrd Commands](docs/dev-standards/deckrd-commands.md)
 
-**Detailed API**: See [MCP Servers API Reference](docs/dev-api/mcp-servers.md)
+## Quality Gates
 
-### Plugin System
+| Tool                  | Purpose          | Run via                       |
+| --------------------- | ---------------- | ----------------------------- |
+| dprint                | Formatting       | `dprint fmt` / `dprint check` |
+| markdownlint          | Markdown         | `pnpm run lint:markdown`      |
+| textlint              | Text quality     | `pnpm run lint:text`          |
+| shellcheck            | Bash scripts     | automatic                     |
+| gitleaks + secretlint | Secret detection | pre-commit hook               |
+| commitlint            | Commit message   | pre-commit hook               |
 
-**Main Plugin** (`plugins/deckrd/`):
+**DO NOT** invoke `runners/run-*.sh` directly — always use `pnpm run` scripts.
 
-- Commands: `/deckrd` (init, req, dr, spec, impl, tasks, status)
-- Session: `.local/deckrd/session.json`
+## Tool Selection
 
-**External Plugin** (IDD Framework):
+| Task                 | Tool                                                |
+| -------------------- | --------------------------------------------------- |
+| Bash code analysis   | serena-mcp                                          |
+| Code generation      | codex-mcp                                           |
+| Documentation search | Read, Grep                                          |
+| deckrd commands      | `plugins/deckrd/skills/deckrd/references/commands/` |
+| IDD commands         | IDD Framework path above                            |
 
-- Location: `~/.claude/plugins/marketplaces/claude-idd-framework-marketplace/plugins/claude-idd-framework`
-- Commands: `/idd/issue:*`, `/idd-pr`, `/idd-commit-message`
-- Working: `temp/idd/`
+## Key Docs
 
-**Details**: See [Plugin System Architecture](docs/dev-architecture/plugin-system.md)
-
-### Development Workflow
-
-**Planning** (deckrd): `/deckrd init` → req → dr → spec → impl → tasks
-
-**Execution** (IDD): Issue → Branch → Implementation → Commit → PR
-
-**Details**: See [Development Workflow Guide](docs/dev-guides/workflow.md)
-
-### Quality Standards
-
-**Automated**:
-
-- dprint (formatting)
-- markdownlint, textlint (documentation)
-- gitleaks, secretlint (security)
-- commitlint (Conventional Commits)
-
-**Manual Verification**:
-
-```bash
-dprint check
-markdownlint-cli2 "**/*.md"
-textlint --config ./configs/textlintrc.yaml "**/*.md"
-cspell check "**/*.{sh,md,json,yml,yaml}"
-```
-
-**Details**: See [Code Quality Standards](docs/dev-standards/code-quality.md)
-
-## Documentation Reference
-
-### Getting Started
-
-- **[Workflow Guide](docs/dev-guides/workflow.md)** - Development process and workflows
-
-### Command Reference
-
-- **[Deckrd Commands](docs/dev-standards/deckrd-commands.md)** - `/deckrd` commands
-- **[IDD Commands](docs/dev-standards/idd-commands.md)** - `/idd` commands
-
-### Architecture
-
-- **[Architecture Overview](docs/dev-architecture/architecture.md)** - System design
-- **[Plugin System](docs/dev-architecture/plugin-system.md)** - Plugin development
-
-### Development Standards
-
-- **[Code Quality](docs/dev-standards/code-quality.md)** - Quality requirements
-- **[Tool Selection](docs/dev-standards/tool-selection.md)** - When to use which tool
-- **[MCP Configuration](docs/dev-standards/mcp-servers.md)** - MCP setup
-
-### API Reference
-
-- **[MCP Servers API](docs/dev-api/mcp-servers.md)** - Complete MCP API reference
-
-### Contribution Guidelines
-
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** - How to contribute
-- **[README.md](README.md)** - Project overview
-
-## Quick Commands
-
-### Development
-
-```bash
-# Format code
-dprint fmt
-
-# Quality checks
-markdownlint-cli2 "**/*.md"
-textlint --config ./configs/textlintrc.yaml "**/*.md"
-cspell check "**/*.{sh,md,json,yml,yaml}"
-
-# Install hooks
-pnpm run prepare
-```
-
-### Workflow
-
-```bash
-# IDD workflow
-/idd/issue:new
-/idd-commit-message
-/idd-pr
-
-# deckrd workflow
-/deckrd init
-/deckrd req
-/deckrd spec
-/deckrd impl
-/deckrd tasks
-```
-
-### Git
-
-```bash
-# Commit (Conventional Commits)
-git commit -m "type(scope): description"
-
-# Types: feat, fix, docs, style, refactor, test, chore, ci, perf, build, release
-```
-
-## Tool Selection Quick Reference
-
-| Task                    | Tool                                          |
-| ----------------------- | --------------------------------------------- |
-| Bash analysis           | serena-mcp                                    |
-| TypeScript (future)     | lsmcp                                         |
-| Documentation           | Read, Grep                                    |
-| Code generation         | codex-mcp                                     |
-| Command search (deckrd) | `plugins/deckrd/`                             |
-| Command search (IDD)    | `~/.claude/plugins/.../claude-idd-framework/` |
-
-**Details**: See [Tool Selection Guide](docs/dev-standards/tool-selection.md)
-
-## Important Paths
-
-- deckrd project: `~/workspaces/develop/deckrd`
-- IDD framework: `~/.claude/plugins/marketplaces/claude-idd-framework-marketplace\plugins/claude-idd-framework`
-- Session files: `.local/deckrd/session.json`
-- Temp files: `temp/idd/`
-
----
-
-**For detailed information, always refer to the documentation files linked above.**
+- [Architecture](docs/dev-architecture/architecture.md)
+- [Plugin System](docs/dev-architecture/plugin-system.md)
+- [Code Quality](docs/dev-standards/code-quality.md)
+- [Tool Selection](docs/dev-standards/tool-selection.md)
+- [MCP Servers API](docs/dev-api/mcp-servers.md)
