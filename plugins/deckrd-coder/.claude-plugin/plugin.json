@@ -1,7 +1,7 @@
 {
   "name": "deckrd-coder",
   "description": "Deckrd task implementation skill - automatically extracts specified tasks from tasks.md and implements them using strict BDD process. Internally executes bdd-coder agent. Optimizes token usage with project memory & serena-mcp.",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "author": {
     "name": "atsushifx",
     "email": "atsushifx@gmail.com"

@@ -15,7 +15,7 @@ non_goals:
   - project-specific usage examples
 meta:
   author: atsushifx
-  version: 0.0.4
+  version: 0.1.0
 ---
 
 <!--textlint-disable ja-technical-writing/sentence-length -->
