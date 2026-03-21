@@ -17,10 +17,10 @@ Initialize a DECKRD module directory structure and set it as the active module.
 
 ## Subcommands
 
-| Subcommand | Description                                                   |
-| ---------- | ------------------------------------------------------------- |
-| (none)     | Create module dirs and update session (legacy form)           |
-| `create`   | Create module dirs, write `.project.json`, and update session |
+| Subcommand | Description                                                                |
+| ---------- | -------------------------------------------------------------------------- |
+| (none)     | Create module dirs and update session (legacy form)                        |
+| `create`   | Create module dirs and update session (subdomain auto-resolved if omitted) |
 
 ## Arguments
 
@@ -77,25 +77,13 @@ Initialize a DECKRD module directory structure and set it as the active module.
    ├── requirements/
    ├── specifications/
    ├── implementation/
-   ├── tasks/
-   └── .project.json
+   └── tasks/
    ```
 
    - Without `--force`: exits with error if directory already exists
    - With `--force`: recreates directories (existing files are preserved)
 
-4. Write `.project.json`:
-
-   ```json
-   {
-     "name": "<module-name>",
-     "description": "",
-     "created_at": "<ISO8601>",
-     "updated_at": "<ISO8601>"
-   }
-   ```
-
-5. Update `.local/deckrd/session.json`:
+4. Update `.local/deckrd/session.json`:
    - Set `active` to normalized module path
    - Set `current_step` to `"module"`, `completed` to `["module"]`, `documents` to `{}`
 
@@ -119,13 +107,13 @@ Initialize a DECKRD module directory structure and set it as the active module.
 
 <!-- markdownlint-disable line-length -->
 
-| Error                                         | Cause                            | Solution                            |
-| --------------------------------------------- | -------------------------------- | ----------------------------------- |
-| `Path must be in format <namespace>/<module>` | Missing `/` separator (legacy)   | Use `namespace/module` format       |
-| `namespace '...' contains invalid characters` | Invalid chars in namespace       | Use only `a-z A-Z 0-9 - _`          |
-| `Module directory already exists`             | Directory exists, no `--force`   | Add `--force` to re-initialize      |
-| `Cannot get git remote origin URL`            | No git remote origin configured  | Run inside a git repo with `origin` |
-| `Cannot extract repository name`              | Remote URL has no parseable name | Set a valid `git remote origin` URL |
+| Error                                         | Cause                            | Solution                                   |
+| --------------------------------------------- | -------------------------------- | ------------------------------------------ |
+| `Path must be in format <namespace>/<module>` | Missing `/` separator (legacy)   | Use `namespace/module` format              |
+| `namespace '...' contains invalid characters` | Invalid chars in namespace       | Use only `a-z`, hyphen `-`, underscore `_` |
+| `Module directory already exists`             | Directory exists, no `--force`   | Add `--force` to re-initialize             |
+| `Cannot get git remote origin URL`            | No git remote origin configured  | Run inside a git repo with `origin`        |
+| `Cannot extract repository name`              | Remote URL has no parseable name | Set a valid `git remote origin` URL        |
 
 <!-- markdownlint-enable -->
 

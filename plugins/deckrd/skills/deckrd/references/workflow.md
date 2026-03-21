@@ -13,91 +13,90 @@ Deckrd follows a linear document derivation workflow:
 Goals/Ideas → Requirements → Specifications → Implementation → Tasks
 ```
 
+## Prerequisites
+
+### init
+
+Bootstrap the project once per repository. Writes project configuration and creates an empty session file.
+
+- **Command:** `init <project> <project-type>`
+- **Input:** Project name and project type (e.g., `webapp`, `lib`, `cli`)
+- **Output:** `.local/deckrd/project.json` + `.local/deckrd/session.json` (no active module set)
+- **Note:** Run once per project — not part of the per-feature workflow
+
+---
+
 ## Workflow Steps
 
-### 1. init
+### 1. module
 
-Initialize the module directory and session.
+Create module directory structure and set the active module.
 
-- **Input:** namespace/module name
-- **Output:** Directory structure + session entry
+- **Command:** `module <namespace>/<module>`
+- **Input:** Namespace and module name (e.g., `agt-kind/is-collection`)
+- **Output:** `docs/.deckrd/<namespace>/<module>/` directory structure; session updated (active module set)
 - **Next:** req
+
+Variants:
+
+- `module <ns>/<mod> --force` — Re-initialize existing module (files preserved)
+- `module create <ns>/<mod>` — Create module with `.project.json`
 
 ### 2. req (Requirements)
 
 Derive clear requirements from initial goals.
 
-- **Input:** User's goals, ideas, or problem description
+- **Input:** User's goals, ideas, or problem description (free-form)
 - **Output:** `requirements/requirements.md`
-- **Source:** User input (free-form)
+- **Source:** User input
 - **Next:** spec (or dr to add Decision Records)
 
-### 2a. dr (Decision Records) - Optional
+### dr (Decision Records) — Optional
 
-Append Decision Records during requirements phase.
+Append Decision Records at any step.
 
 - **Input:** Decision context from user
 - **Output:** `decision-records.md` (append-only)
-- **Precondition:** current_step === "req"
-- **Note:** DRs are non-normative records of architectural Decisions
+- **Precondition:** `current_step` must be one of: `req`, `spec`, `impl`, `tasks`
+- **Note:** Requires confirmation when `current_step === "tasks"`
+- **Note:** DRs are non-normative records of architectural decisions
 
 ### 3. spec (Specifications)
 
-Derive technically verifiable behavioral goals from requirements.
+Derive technically verifiable behavioral specifications from requirements.
 
-- **Input:** Requirements document
+- **Input:** `requirements/requirements.md`
 - **Output:** `specifications/specifications.md`
-- **Source:** `requirements/requirements.md`
 - **Next:** impl
 
 ### 4. impl (Implementation)
 
-code example for write constraint:
+Derive an implementation plan (phase and commit decomposition) from specifications.
 
-#### Constraint: <観点名>
-
-- Rule:
-  <必ず満たすべき制約を一文で断定的に書く>
-- Rationale
-  <なぜこの制約が必要か。仕様・安全性・一貫性など>
-- Notes
-  - <補足条件>
-  - <例外があれば明示>
-- Example (Non-normative)
-
-  ```typescript
-  // 制約を説明するための最小例 (実装ではない)
-  ```
-
-例:
-
-```markdown
-#### Constraint: Primitive value handling
-
-- Rule:
-  null および undefined は Primitive 値として扱う。
-- Rationale:
-  JavaScript では `typeof null === "object"` という仕様上の例外があり、
-  これを特別扱いしないと分類結果が不安定になるため。
-- Notes:
-  - NaN, Infinity も number として Primitive に含める。
-  - object 判定より前に評価される必要がある。
-```
+- **Input:** `specifications/specifications.md`
+- **Output:** `implementation/implementation.md`
+- **Next:** tasks
 
 ### 5. tasks
 
-create task lists for coding. use BDD coding style.
+Derive executable BDD-style implementation tasks.
 
-- **Input:** Implementation document
-- **Output:** `tasks/tasks.md`
-- **Source:** `implementation/implementation.md`
-- **Next:** (complete)
+- **Input:** `implementation/implementation.md` + `specifications/specifications.md`
+- **Output:** `tasks/tasks.md` + `tasks/implementation-checklist.md`
+- **Next:** (complete — use `/deckrd-coder` to implement)
+
+Variants:
+
+- `tasks update` — Regenerate `implementation-checklist.md` from existing `tasks.md`
 
 ## Directory Structure
 
 ```bash
+.local/deckrd/
+├── project.json                     # Project configuration
+└── session.json                     # Session state
+
 docs/.deckrd/
-├── .session.json                    # Session state
 └── <namespace>/
     └── <module>/
         ├── requirements/
@@ -107,25 +106,28 @@ docs/.deckrd/
         │   └── specifications.md
         ├── implementation/
         │   └── implementation.md
-        ├── tasks/
-        │   └── tasks.md
-        └── quick/
-            └── quick-spec.md        # Created by /deckrd quick (lightweight path)
+        └── tasks/
+            ├── tasks.md
+            └── implementation-checklist.md
 ```
 
 ## Usage Example
 
 ```bash
-# Start new module
-/deckrd init AGTKind/isCollection
+# Bootstrap project (once per project)
+/deckrd init myapp webapp
+
+# Create module and set as active
+/deckrd module agt-kind/is-collection
+# → Creates docs/.deckrd/agt-kind/is-collection/ directory structure
 
 # User provides goals, then derive requirements
 /deckrd req
 # → Creates requirements/requirements.md
 
-# (Optional) Add Decision Records during req phase
+# (Optional) Add Decision Records during any step
 /deckrd dr --add
-# → Appends to Decision-records.md (only allowed during req step)
+# → Appends to decision-records.md
 
 # Derive specifications from requirements
 /deckrd spec
@@ -133,11 +135,11 @@ docs/.deckrd/
 
 # Derive implementation plan
 /deckrd impl
-# → Reads requirements.md, specifications.md, creates implementation.md
+# → Reads specifications.md, creates implementation.md
 
 # Derive executable tasks
 /deckrd tasks
-# → Reads specifications.md, creates tasks.md
+# → Reads implementation.md, creates tasks.md + implementation-checklist.md
 ```
 
 ---
@@ -149,8 +151,9 @@ docs/.deckrd/
 Use when: existing code or PoC exists and documentation is missing.
 
 ```bash
-# Start module
-/deckrd init my-project/legacy-module
+# Bootstrap project and create module
+/deckrd init my-project lib
+/deckrd module my-project/legacy-module
 
 # Reverse-engineer requirements from code
 /deckrd rev --to req
@@ -166,28 +169,8 @@ Or reverse-engineer directly to a later stage:
 
 ```bash
 /deckrd rev --to spec   # → Skip req, generate spec from code
-/deckrd rev --to impl   # → Generate impl from code (req+spec must exist)
+/deckrd rev --to impl   # → Generate impl from code (req + spec must exist)
 ```
-
-### Lightweight Path (small changes / bug fixes)
-
-Use when: the change is small (1–3 files), well-understood, and requires no new interfaces.
-
-```bash
-# Start module
-/deckrd init my-project/feature-x
-
-# Single combined req+spec document
-/deckrd quick "Fix the timeout handling in the retry loop"
-# → Creates quick/quick-spec.md
-
-# Implement directly
-/deckrd-coder quick-spec.md
-```
-
-Escalate to the full flow if the change grows beyond 3 files or introduces new interfaces.
-
----
 
 ## Workflow Selection Guide
 
@@ -195,6 +178,5 @@ Escalate to the full flow if the change grows beyond 3 files or introduces new i
 | -------------------------------------------- | ------------------------------ |
 | New feature from scratch                     | Standard flow                  |
 | Existing code, no documentation              | `rev` path                     |
-| Bug fix or minor change (1–3 files)          | `quick` path                   |
 | PoC completed, need production documentation | `rev --to req` + standard flow |
 | Complex change, new external interfaces      | Standard flow                  |

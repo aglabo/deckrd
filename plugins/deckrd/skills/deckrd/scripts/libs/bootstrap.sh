@@ -22,33 +22,35 @@ if [[ -z "${PROJECT_ROOT:-}" ]]; then
     (cd "$(dirname "${BASH_SOURCE[0]}")/../../../../.." && pwd))"
 fi
 export PROJECT_ROOT
+readonly PROJECT_ROOT
 
-SCRIPTS_DIR="${SCRIPTS_DIR:-${PROJECT_ROOT}/scripts}"
-export SCRIPTS_DIR
+# DECKRD_ROOT: root of the deckrd plugin skill
+DECKRD_ROOT="${DECKRD_ROOT:-${PROJECT_ROOT}/plugins/deckrd/skills/deckrd}"
+export DECKRD_ROOT
+readonly DECKRD_ROOT
 
-PLUGINS_DIR="${PLUGINS_DIR:-${PROJECT_ROOT}/plugins}"
-export PLUGINS_DIR
+# DECKRD_SCRIPTS_DIR: deckrd scripts directory
+DECKRD_SCRIPTS_DIR="${DECKRD_SCRIPTS_DIR:-${DECKRD_ROOT}/scripts}"
+export DECKRD_SCRIPTS_DIR
+readonly DECKRD_SCRIPTS_DIR
 
-DECKRD_LIB_DIR="${DECKRD_LIB_DIR:-${PLUGINS_DIR}/deckrd/skills/deckrd/scripts/libs}"
+# DECKRD_LIB_DIR: deckrd library directory
+DECKRD_LIB_DIR="${DECKRD_LIB_DIR:-${DECKRD_ROOT}/scripts/libs}"
 export DECKRD_LIB_DIR
+readonly DECKRD_LIB_DIR
 
-REPO_ROOT="${REPO_ROOT:-${PROJECT_ROOT}}"
-export REPO_ROOT
-
+# DECKRD_DATA_DIR: user-level deckrd data directory
 DECKRD_DATA_DIR="${DECKRD_DATA_DIR:-${XDG_DATA_HOME:-${HOME}/.local/share}/deckrd}"
 export DECKRD_DATA_DIR
+readonly DECKRD_DATA_DIR
 
+# DECKRD_LOCAL_DATA: project-local deckrd data directory
 DECKRD_LOCAL_DATA="${DECKRD_LOCAL_DATA:-${PROJECT_ROOT}/.local/deckrd}"
 export DECKRD_LOCAL_DATA
 
+# DECKRD_DOCS_DIR: deckrd docs directory
 DECKRD_DOCS_DIR="${DECKRD_DOCS_DIR:-${PROJECT_ROOT}/docs/.deckrd}"
 export DECKRD_DOCS_DIR
-
-ASSETS_DIR="${ASSETS_DIR:-${PROJECT_ROOT}/.claude}"
-export ASSETS_DIR
-
-AGENTS_DIR="${AGENTS_DIR:-${ASSETS_DIR}/agents}"
-export AGENTS_DIR
 
 # SYMBOL: valid character pattern for project names, namespaces, and domains
 # Allowed: lowercase letters (a-z), hyphens (-), underscores (_)

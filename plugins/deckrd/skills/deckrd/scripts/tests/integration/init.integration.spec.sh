@@ -15,7 +15,7 @@ unset _LIB_DIR
 
 Include ../spec_helper.sh
 
-SCRIPT="${SCRIPTS_DIR}/init.sh"
+SCRIPT="${DECKRD_SCRIPTS_DIR}/init.sh"
 
 # ============================================================================
 # init.sh: main() integration
@@ -97,9 +97,9 @@ Describe "init.sh: main() integration"
       When run bash "$SCRIPT" myapp webapp
       The status should equal 0
       The stderr should include "Init complete"
-      The path "${DECKRD_DOCS}" should be directory
-      The path "${DECKRD_DOCS}/notes" should be directory
-      The path "${DECKRD_DOCS}/temp" should be directory
+      The path "${DECKRD_DOCS_DIR}" should be directory
+      The path "${DECKRD_DOCS_DIR}/notes" should be directory
+      The path "${DECKRD_DOCS_DIR}/temp" should be directory
     End
 
     It "[Normal] Should: create DECKRD_LOCAL_DATA directory"

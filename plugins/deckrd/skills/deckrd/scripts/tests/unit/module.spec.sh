@@ -16,7 +16,7 @@ unset _LIB_DIR
 
 Include ../spec_helper.sh
 
-SCRIPT="${SCRIPTS_DIR}/module.sh"
+SCRIPT="${DECKRD_SCRIPTS_DIR}/module.sh"
 
 # ============================================================================
 # module.sh
@@ -95,11 +95,11 @@ Describe "module.sh"
         The output should include "implementation"
         The output should include "tasks"
         The output should include "Session updated"
-        The path "${DECKRD_DOCS}/myns/mymod/requirements" should be directory
-        The path "${DECKRD_DOCS}/myns/mymod/specifications" should be directory
-        The path "${DECKRD_DOCS}/myns/mymod/implementation" should be directory
-        The path "${DECKRD_DOCS}/myns/mymod/tasks" should be directory
-        The path "${DECKRD_DOCS}/myns/mymod/.project.json" should not be exist
+        The path "${DECKRD_DOCS_DIR}/myns/mymod/requirements" should be directory
+        The path "${DECKRD_DOCS_DIR}/myns/mymod/specifications" should be directory
+        The path "${DECKRD_DOCS_DIR}/myns/mymod/implementation" should be directory
+        The path "${DECKRD_DOCS_DIR}/myns/mymod/tasks" should be directory
+        The path "${DECKRD_DOCS_DIR}/myns/mymod/.project.json" should not be exist
       End
     End
 
@@ -154,7 +154,7 @@ Describe "module.sh"
 
     Describe "When: run with 'myns/mymod' on existing directory without --force"
       It "[Error] Should: exit with status 1 and output 'already exists' error"
-        mkdir -p "${DECKRD_DOCS}/myns/mymod"
+        mkdir -p "${DECKRD_DOCS_DIR}/myns/mymod"
         When run bash "$SCRIPT" myns/mymod
         The status should equal 1
         The stderr should include "already exists"
@@ -163,7 +163,7 @@ Describe "module.sh"
 
     Describe "When: run with 'myns/mymod' on existing directory with --force"
       It "[Edge] Should: exit with status 0 and output 'myns/mymod'"
-        mkdir -p "${DECKRD_DOCS}/myns/mymod"
+        mkdir -p "${DECKRD_DOCS_DIR}/myns/mymod"
         When run bash "$SCRIPT" myns/mymod --force
         The status should equal 0
         The output should include "myns/mymod"
@@ -180,15 +180,14 @@ Describe "module.sh"
     After "teardown_deckrd_tmpdir"
 
     Describe "When: run 'create myns/mymod'"
-      It "[Normal] Should: exit with status 0, create .project.json with name/created_at fields, and output 'Session updated'"
+      It "[Normal] Should: exit with status 0, create module dirs, and output 'Session updated'"
         When run bash "$SCRIPT" create myns/mymod
         The status should equal 0
         The output should include "myns/mymod"
-        The output should include "project.json"
         The output should include "Session updated"
-        The path "${DECKRD_DOCS}/myns/mymod/.project.json" should be exist
-        The contents of file "${DECKRD_DOCS}/myns/mymod/.project.json" should include "mymod"
-        The contents of file "${DECKRD_DOCS}/myns/mymod/.project.json" should include "created_at"
+        The path "${DECKRD_DOCS_DIR}/myns/mymod/requirements" should be directory
+        The path "${DECKRD_DOCS_DIR}/myns/mymod/specifications" should be directory
+        The path "${DECKRD_DOCS_DIR}/myns/mymod/.project.json" should not be exist
       End
     End
 
@@ -210,11 +209,10 @@ Describe "module.sh"
     After "teardown_deckrd_tmpdir"
 
     Describe "When: run 'create myfeature'"
-      It "[Normal] Should: exit with status 0, output 'myfeature', and create .project.json"
+      It "[Normal] Should: exit with status 0 and output 'myfeature'"
         When run bash "$SCRIPT" create myfeature
         The status should equal 0
         The output should include "myfeature"
-        The output should include "project.json"
       End
     End
   End

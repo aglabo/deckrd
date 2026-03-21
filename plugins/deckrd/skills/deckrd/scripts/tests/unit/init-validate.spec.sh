@@ -15,7 +15,7 @@ unset _LIB_DIR
 
 Include ../spec_helper.sh
 
-SCRIPT="${SCRIPTS_DIR}/init.sh"
+SCRIPT="${DECKRD_SCRIPTS_DIR}/init.sh"
 
 # ============================================================================
 # init.sh: validate_args + validate_language

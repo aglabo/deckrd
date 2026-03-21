@@ -15,5 +15,5 @@ _HELPER_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/plugins/deckrd/skills/deckrd/script
 . "${_HELPER_DIR}/spec_helper.sh"
 unset _HELPER_DIR
 
-SUBCOMMANDS_DIR="${SCRIPTS_DIR}/subcommands"
+SUBCOMMANDS_DIR="${DECKRD_SCRIPTS_DIR}/subcommands"
 export SUBCOMMANDS_DIR

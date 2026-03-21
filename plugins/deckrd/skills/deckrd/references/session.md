@@ -19,12 +19,14 @@ description: Session file location, schema, and state transition rules
 ```json
 {
   "active": "<namespace>/<module>",
+  "lang": "typescript",
+  "ai_model": "sonnet",
   "created_at": "2025-01-01T00:00:00Z",
   "updated_at": "2025-01-01T00:00:00Z",
   "modules": {
     "<namespace>/<module>": {
       "current_step": "spec",
-      "completed": ["init", "req"],
+      "completed": ["module", "req"],
       "documents": {
         "requirements": "requirements.md",
         "specifications": "specifications.md"
@@ -36,20 +38,23 @@ description: Session file location, schema, and state transition rules
 
 ## Fields
 
-| Field                    | Type   | Description                  |
-| ------------------------ | ------ | ---------------------------- |
-| `active`                 | string | Currently active module path |
-| `modules`                | object | Per-module session states    |
-| `modules.*.current_step` | string | Last completed step          |
-| `modules.*.completed`    | array  | All completed steps          |
-| `modules.*.documents`    | object | Generated document paths     |
+| Field                    | Type   | Description                                    |
+| ------------------------ | ------ | ---------------------------------------------- |
+| `active`                 | string | Currently active module path                   |
+| `lang`                   | string | Programming language (e.g. `typescript`, `go`) |
+| `ai_model`               | string | AI model identifier (e.g. `sonnet`)            |
+| `modules`                | object | Per-module session states                      |
+| `modules.*.current_step` | string | Last completed step                            |
+| `modules.*.completed`    | array  | All completed steps                            |
+| `modules.*.documents`    | object | Generated document paths                       |
 
 ## State Transitions
 
 ```bash
-(none) ──init──> init ──req──> req ──spec──> spec ──impl──> impl ──tasks──> tasks
-                               │
-                               └──dr──> (stays in req, append-only DRs)
+# init is a prerequisite (not a tracked step)
+(none) ──module──> module ──req──> req ──spec──> spec ──impl──> impl ──tasks──> tasks
+                                    │
+                                    └──dr──> (stays in req, append-only DRs)
 ```
 
 Note: The `dr` command does NOT advance the step. It appends Decision Records
@@ -61,11 +66,26 @@ while remaining in the `req` step.
 
 ```json
 {
-  "active": "AGTKind/isCollection",
+  "active": null,
+  "lang": "typescript",
+  "ai_model": "sonnet",
+  "modules": {},
+  "created_at": "2025-01-01T00:00:00Z",
+  "updated_at": "2025-01-01T00:00:00Z"
+}
+```
+
+### After module command
+
+```json
+{
+  "active": "agt-kind/is-collection",
+  "lang": "typescript",
+  "ai_model": "sonnet",
   "modules": {
-    "AGTKind/isCollection": {
-      "current_step": "init",
-      "completed": ["init"],
+    "agt-kind/is-collection": {
+      "current_step": "module",
+      "completed": ["module"],
       "documents": {}
     }
   }
@@ -78,11 +98,13 @@ After `req` command:
 
 ```json
 {
-  "active": "AGTKind/isCollection",
+  "active": "agt-kind/is-collection",
+  "lang": "typescript",
+  "ai_model": "sonnet",
   "modules": {
-    "AGTKind/isCollection": {
+    "agt-kind/is-collection": {
       "current_step": "req",
-      "completed": ["init", "req"],
+      "completed": ["module", "req"],
       "documents": {
         "requirements": "requirements.md"
       }
@@ -116,8 +138,8 @@ ${DECKRD_DOCS}/<namespace>/<module>/<document-type>/<filename>
 Default (`DECKRD_DOCS` = `<repo-root>/docs/.deckrd`):
 
 ```bash
-docs/.deckrd/AGTKind/isCollection/requirements/requirements.md
-docs/.deckrd/AGTKind/isCollection/specifications/specifications.md
+docs/.deckrd/agt-kind/is-collection/requirements/requirements.md
+docs/.deckrd/agt-kind/is-collection/specifications/specifications.md
 ```
 
 ## Error Handling

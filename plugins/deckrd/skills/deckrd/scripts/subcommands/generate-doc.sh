@@ -31,29 +31,23 @@
 # @version 0.1.0
 # @license MIT
 
+# shellcheck disable=SC1091
+
 # don't use  -u for checking error by Agent
 set -eo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly SCRIPT_DIR
-
 # Load bootstrap (defines SYMBOL, PROJECT_ROOT, DECKRD_LOCAL_DATA, DECKRD_LIB_DIR, etc.)
-# shellcheck disable=SC1091
-. "${SCRIPT_DIR}/../libs/bootstrap.sh"
+_BOOTSTRAP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+. "${_BOOTSTRAP_DIR}/libs/bootstrap.sh"
+unset _BOOTSTRAP_DIR
 
 # ============================================================================
 # Library Dependencies
 # ============================================================================
 
-readonly DECKRD_LIB_DIR
-
-# shellcheck disable=SC1091
 . "${DECKRD_LIB_DIR}/session.sh"
-# shellcheck disable=SC1091
 . "${DECKRD_LIB_DIR}/config.sh"
-# shellcheck disable=SC1091
 . "${DECKRD_LIB_DIR}/ai-runner.sh"
-# shellcheck disable=SC1091
 . "${DECKRD_LIB_DIR}/normalize-doc-type.sh"
 
 # ============================================================================
@@ -70,8 +64,8 @@ SESSION_FILE="${DECKRD_LOCAL_DATA}/session.json"
 
 ##
 # @description deckrd assets directory
-ASSETS_DIR="${SCRIPT_DIR}/../assets"
-readonly ASSETS_DIR
+DECKRD_ASSETS_DIR="${SCRIPT_DIR}/../assets"
+readonly DECKRD_ASSETS_DIR
 
 # ============================================================================
 # Functions
@@ -100,7 +94,7 @@ Document Types:
   review-fix      Review: fix phase
 
 Options:
-  --ai-model <model>  AI model name (default: loaded from session, or gpt-5.2)
+  --ai-model <model>  AI model name (default: loaded from session, or sonnet)
                       Supported: gpt-*, o1-*, claude-*, haiku, sonnet, opus
                       Formats: 'model-name' or 'org/model-name'
   --lang <lang>       Document language (default: loaded from session, or system)
@@ -295,8 +289,8 @@ get_prompt_file() {
 resolve_doc_paths() {
   local doc_type="$1"
 
-  local prompt_path="${ASSETS_DIR}/prompts/${doc_type}.prompt.md"
-  local template_path="${ASSETS_DIR}/templates/${doc_type}.template.md"
+  local prompt_path="${DECKRD_ASSETS_DIR}/prompts/${doc_type}.prompt.md"
+  local template_path="${DECKRD_ASSETS_DIR}/templates/${doc_type}.template.md"
 
   if [[ ! -f "$prompt_path" ]]; then
     echo "Error: Prompt file not found: $prompt_path" >&2
