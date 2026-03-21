@@ -20,7 +20,7 @@ version: 0.1.0
 deckrd/
 ├── plugins/deckrd/          # Main plugin (skills, scripts, assets)
 ├── plugins/deckrd-coder/    # BDD coding helper plugin
-├── docs/                    # dev-guides, dev-architecture, dev-api, dev-standards
+├── docs/                    # user-guides, developer-guides, specs, contributing, onboarding
 ├── configs/                 # Linter/formatter configs
 └── temp/idd/                # IDD framework working files
 ```
@@ -43,7 +43,7 @@ IDD Framework location: `~/.claude/plugins/marketplaces/claude-idd-framework-mar
 **Execution (IDD)**:
 `/idd/issue:new` → branch → implement → `/idd-commit-message` → `/idd-pr`
 
-> Details: [Workflow Guide](docs/dev-guides/workflow.md) | [Deckrd Commands](docs/dev-standards/deckrd-commands.md)
+> Details: [Workflow Guide](docs/developer-guides/workflow.md) | [Deckrd Commands](docs/developer-guides/deckrd-commands.md)
 
 ## Quality Gates
 
@@ -70,8 +70,8 @@ IDD Framework location: `~/.claude/plugins/marketplaces/claude-idd-framework-mar
 
 ## Key Docs
 
-- [Architecture](docs/dev-architecture/architecture.md)
-- [Plugin System](docs/dev-architecture/plugin-system.md)
-- [Code Quality](docs/dev-standards/code-quality.md)
-- [Tool Selection](docs/dev-standards/tool-selection.md)
-- [MCP Servers API](docs/dev-api/mcp-servers.md)
+- [Architecture](docs/developer-guides/architecture.md)
+- [Plugin System](docs/developer-guides/plugin-system.md)
+- [Code Quality](docs/contributing/code-quality.md)
+- [Tool Selection](docs/developer-guides/tool-selection.md)
+- [MCP Servers API](docs/specs/mcp-servers.md)
