@@ -1,14 +1,15 @@
 ---
 title: "MCP Servers API Reference"
 description: "Complete API reference for MCP servers used in deckrd project"
-category: "dev-api"
-tags: ["api", "mcp", "serena-mcp", "lsmcp", "codex-mcp"]
+category: "specs"
+tags: ["api", "mcp", "cocoindex-code", "filesystem"]
 created: "2026-01-14"
-version: "0.0.4"
+version: "0.1.0"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
-  - 0.0.4   2026-01-14  初版作成
+  - 0.0.4   2026-01-14  Initial version
+  - 0.1.0   2026-03-21  Update to cocoindex-code / filesystem
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.
@@ -16,8 +17,10 @@ copyright:
 status: "published"
 ---
 
-<!-- textlint-disable ja-technical-writing/no-exclamation-question-mark -->
-<!-- textlint-disable ja-technical-writing/max-comma -->
+<!-- textlint-disable
+  ja-technical-writing/sentence-length,
+  ja-technical-writing/no-exclamation-question-mark,
+  ja-technical-writing/max-comma -->
 <!-- markdownlint-disable line-length -->
 
 ## MCP Servers API Reference
@@ -26,7 +29,7 @@ status: "published"
 
 This document provides detailed API reference for the three MCP servers used in the deckrd project.
 
-See also: [MCP Server Configuration](../dev-standards/mcp-servers.md) for setup instructions.
+See also: [MCP Server Configuration](./mcp-servers-config.md) for setup instructions.
 
 ## serena-mcp
 
@@ -421,65 +424,84 @@ Resolves a symbol to its definition in external libraries.
 
 > Note: codex-mcp provides AI-powered generation APIs. Specific API methods depend on the codex-mcp version installed. Consult the codex-mcp documentation for detailed API reference.
 
-**Common Usage**:
+Semantic code search. Searches code using a natural language query.
 
-- Template processing
-- Code snippet generation
-- Documentation generation
-- Pattern matching and replacement
+**Parameters**:
+
+- `query` (string, required) - Search query (natural language)
+- `lang` (string, optional) - Language filter
+
+## filesystem
+
+**Purpose**: File system access.
+
+**Configuration**:
+
+```json
+{
+  "filesystem": {
+    "command": "pnpx",
+    "args": ["@modelcontextprotocol/server-filesystem", "."]
+  }
+}
+```
+
+### APIs
+
+#### read_file
+
+Reads the content of the specified file.
+
+**Parameters**:
+
+- `path` (string, required) - File path
+
+#### write_file
+
+Writes content to a file.
+
+**Parameters**:
+
+- `path` (string, required) - File path
+- `content` (string, required) - Content to write
+
+#### list_directory
+
+Lists the contents of a directory.
+
+**Parameters**:
+
+- `path` (string, required) - Directory path
+
+#### create_directory
+
+Creates a directory.
+
+**Parameters**:
+
+- `path` (string, required) - Path of the directory to create
 
 ## Usage Patterns
 
 ### Bash Script Analysis (serena-mcp)
 
-```bash
-# 1. Get overview
-serena-mcp get_symbols_overview --relative-path "scripts/init.sh"
+```text
+# Search code using natural language
+query: "function that handles session initialization"
 
-# 2. Find specific function
-serena-mcp find_symbol --name-path-pattern "main" --include-body true
-
-# 3. Find references
-serena-mcp find_referencing_symbols --name-path "main" --relative-path "init.sh"
-
-# 4. Search patterns
-serena-mcp search_for_pattern --substring-pattern "set -euo pipefail"
+# Search with language filter
+query: "error handling pattern"
+lang: "bash"
 ```
 
 ### TypeScript Analysis (lsmcp)
 
-```bash
-# 1. Index external libraries
-lsmcp index_external_libraries --root /path/to/project
+```text
+# Read a file
+path: "plugins/deckrd/skills/deckrd/scripts/init.sh"
 
-# 2. Search symbols
-lsmcp search_symbols --query "MyClass" --kind "Class"
-
-# 3. Get definitions
-lsmcp lsp_get_definitions --root /path/to/project \
-  --relativePath "src/index.ts" --line 10 --symbolName "MyClass"
-
-# 4. Get diagnostics
-lsmcp lsp_get_diagnostics --root /path/to/project \
-  --relativePath "src/index.ts"
-```
-
-### Memory Management (serena-mcp)
-
-```bash
-# 1. List memories
-serena-mcp list_memories
-
-# 2. Read memory
-serena-mcp read_memory --memory-file-name "project_overview"
-
-# 3. Write memory
-serena-mcp write_memory --memory-file-name "project_overview" \
-  --content "Project description here"
-
-# 4. Edit memory
-serena-mcp edit_memory --memory-file-name "project_overview" \
-  --needle "old text" --repl "new text" --mode "literal"
+# List a directory
+path: "plugins/deckrd/skills/"
 ```
 
 ## Performance Tips
@@ -493,10 +515,8 @@ serena-mcp edit_memory --memory-file-name "project_overview" \
 
 ### Search Optimization
 
-1. **Restrict Paths**: Always use `relative_path` when possible
-2. **Use Globs**: Filter files with `paths_include_glob`
-3. **Depth Control**: Limit `depth` in symbol searches
-4. **Cache Results**: Store frequently accessed data in memories
+1. **Natural language queries**: cocoindex-code uses semantic understanding to find related code even when the exact keyword is unknown
+2. **Language filter**: Use the `lang` parameter to narrow the search target
 
 ## Error Handling
 
@@ -504,31 +524,12 @@ serena-mcp edit_memory --memory-file-name "project_overview" \
 
 #### "File not found"
 
-- Check `relative_path` is correct
-- Ensure file exists in project
-- Verify no typos in path
-
-#### "Symbol not found"
-
-- Verify symbol name spelling
-- Check `name_path_pattern` format
-- Try `substring_matching: true`
-
-#### "Timeout"
-
-- Increase `timeout` parameter
-- Simplify search query
-- Restrict search scope
-
-#### "Invalid YAML"
-
-- Check frontmatter syntax
-- Ensure proper indentation
-- Validate quotes and colons
+- Rephrase the query and retry
+- Remove the `lang` filter to broaden the search scope
 
 ## Related Documentation
 
-- [MCP Server Configuration](../dev-standards/mcp-servers.md) - Setup guide
-- [Tool Selection Guide](../dev-standards/tool-selection.md) - When to use which tool
-- [Architecture](../dev-architecture/architecture.md) - System architecture
-- [Development Workflow](../dev-guides/workflow.md) - Workflow integration
+- [MCP Server Configuration](./mcp-servers-config.md) - Setup guide
+- [Tool Selection Guide](../developer-guides/tool-selection.md) - When to use which tool
+- [Architecture](../developer-guides/architecture.md) - System architecture
+- [Development Workflow](../developer-guides/workflow.md) - Workflow integration
