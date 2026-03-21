@@ -61,15 +61,16 @@ Code / Tests
 
 ### 主要コマンド
 
-| コマンド                    | 説明                                   |
-| --------------------------- | -------------------------------------- |
-| `init <namespace>/<module>` | ドキュメント作成用のディレクトリを準備 |
-| `req`                       | 要件定義書を作成                       |
-| `spec`                      | 仕様書を作成                           |
-| `impl`                      | 実装判断基準を作成                     |
-| `tasks`                     | 実装用タスクリストを作成               |
-| `dr --add`                  | Decision Records を記録 (オプション )  |
-| `status`                    | ワークフロー進捗を確認                 |
+| コマンド                        | 説明                                             |
+| ------------------------------- | ------------------------------------------------ |
+| `init <project> <project-type>` | プロジェクトを初期化 (プロジェクトごとに1回のみ) |
+| `module <namespace>/<module>`   | モジュールディレクトリを作成してアクティブ化     |
+| `req`                           | 要件定義書を作成                                 |
+| `spec`                          | 仕様書を作成                                     |
+| `impl`                          | 実装判断基準を作成                               |
+| `tasks`                         | 実装用タスクリストを作成                         |
+| `dr --add`                      | Decision Records を記録 (オプション)             |
+| `status`                        | ワークフロー進捗を確認                           |
 
 > 詳細は各プラグインの README.md を参照してください：
 >
@@ -118,7 +119,8 @@ claude plugin install deckrd-coder@deckrd
 
 ```bash
 # Step 1: deckrd で計画・ドキュメント化
-/deckrd init mypProject/feature
+/deckrd init myProject shell
+/deckrd module myProject/feature
 /deckrd req
 /deckrd spec
 /deckrd impl
