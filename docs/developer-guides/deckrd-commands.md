@@ -1,14 +1,15 @@
 ---
 title: "Deckrd Commands Reference"
 description: "Complete reference for deckrd document-driven workflow commands"
-category: "dev-standards"
+category: "developer-guides"
 tags: ["deckrd", "commands", "reference", "cli"]
 created: "2026-01-14"
 version: "0.0.4"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
-  - 0.0.4   2026-01-14  初版作成
+  - 0.0.4   2026-01-14  Initial version
+  - 0.1.0   2026-03-21  Fix session path and schema, add command list, add lang/ai_model fields to session schema
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.
@@ -275,3 +276,5 @@ Use both together for a complete development cycle:
 - Documents are derivation artifacts, not final deliverables
 - The workflow ensures thoughtful planning before implementation
 - tasks.md is the bridge between planning and coding
+- Workflow Guide: `docs/developer-guides/workflow.md`
+- Quickstart: `docs/user-guides/01-quickstart.ja.md`
