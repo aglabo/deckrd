@@ -1,14 +1,15 @@
 ---
 title: "Plugin System Architecture"
 description: "Detailed documentation of the deckrd plugin architecture and implementation"
-category: "dev-architecture"
+category: "developer-guides"
 tags: ["plugins", "architecture", "modular"]
 created: "2026-01-14"
 version: "0.0.4"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
-  - 0.0.4   2026-01-14  初版作成
+  - 0.0.4   2026-01-14  Initial version
+  - 0.1.0   2026-03-21  Update Integration Points to cocoIndex-code/filesystem, update plugin.json/bootstrap.sh/session.sh/directory structure to match actual implementation
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.
@@ -39,6 +40,8 @@ plugins/{plugin-name}/
 │       │   ├── commands/ # Command docs
 │       │   └── workflow.md
 │       ├── scripts/      # Implementation scripts
+│       │   ├── libs/     # bootstrap.sh, session.sh, config.sh, etc.
+│       │   ├── subcommands/ # generate-doc.sh, etc.
 │       │   ├── init.sh
 │       │   ├── req.sh
 │       │   └── ...
@@ -258,15 +261,17 @@ claude plugin install deckrd@deckrd
 
 ### With MCP Servers
 
-**Usage in Scripts**:
+MCP servers available during Claude Code command execution:
 
-```bash
-# Use serena-mcp for code analysis
-serena-mcp find_symbol --name "init" --relative-path "scripts/"
+- cocoindex-code: Semantic code search (used by deckrd-coder)
+- filesystem: File system access (used by deckrd and deckrd-coder)
 
-# Use codex-mcp for template processing
-codex-mcp process-template --template "requirements.md.tmpl"
-```
+MCP server configuration per plugin:
+
+| Plugin       | MCP config file                | Available servers          |
+| ------------ | ------------------------------ | -------------------------- |
+| deckrd       | plugins/deckrd/.mcp.json       | filesystem                 |
+| deckrd-coder | plugins/deckrd-coder/.mcp.json | filesystem, cocoindex-code |
 
 ### With IDD Framework
 
@@ -508,6 +513,6 @@ fi
 ## Related Documentation
 
 - [Architecture Overview](architecture.md) - System architecture
-- [Development Workflow](../dev-guides/workflow.md) - Development process
-- [Deckrd Commands](../dev-standards/deckrd-commands.md) - Command reference
-- [Code Quality](../dev-standards/code-quality.md) - Quality standards
+- [Development Workflow](./workflow.md) - Development process
+- [Deckrd Commands](./deckrd-commands.md) - Command reference
+- [Code Quality](../contributing/code-quality.md) - Quality standards
