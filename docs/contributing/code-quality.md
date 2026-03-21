@@ -1,14 +1,15 @@
 ---
 title: "Code Quality Standards"
 description: "Code quality standards, formatting rules, and quality gates for deckrd project"
-category: "dev-standards"
+category: "contributing"
 tags: ["quality", "standards", "formatting", "linting"]
 created: "2026-01-14"
 version: "0.0.4"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
-  - 0.0.4   2026-01-14  初版作成
+  - 0.0.4   2026-01-14  Initial version
+  - 0.1.0   2026-03-21  Version update
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.
@@ -484,8 +485,6 @@ command --flag value
 ```markdown
 # Internal links (relative)
 
-[Setup Guide](../dev-guides/setup.md)
-
 # External links (absolute)
 
 [GitHub](https://github.com/aglabo/deckrd)
@@ -583,7 +582,6 @@ git filter-branch --force --index-filter \
 
 ## Related Documentation
 
-- [Development Setup](../dev-guides/setup.md) - Initial setup
-- [Development Workflow](../dev-guides/workflow.md) - Workflow process
+- [Development Workflow](../developer-guides/workflow.md) - Workflow process
 - [Tool Selection](tool-selection.md) - Tool usage guide
 - [MCP Servers](mcp-servers.md) - MCP configuration
