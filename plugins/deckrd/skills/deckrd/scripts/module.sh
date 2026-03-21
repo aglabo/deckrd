@@ -127,6 +127,7 @@ EOF
 parse_args() {
   # Check for "create" subcommand as first positional argument
   if [[ $# -gt 0 && "$1" == "create" ]]; then
+    # shellcheck disable=SC2034
     SUBCOMMAND="create"
     shift
   fi
@@ -322,12 +323,6 @@ if [[ -z "$MODULE_PATH" ]]; then
   exit 1
 fi
 
-if [[ "$SUBCOMMAND" == "create" ]]; then
-  NORMALIZED=$(validate_and_normalize_create "$MODULE_PATH")
-  create_module_dirs "$NORMALIZED"
-  update_session "$NORMALIZED"
-else
-  NORMALIZED=$(validate_and_normalize "$MODULE_PATH")
-  create_module_dirs "$NORMALIZED"
-  update_session "$NORMALIZED"
-fi
+NORMALIZED=$(validate_and_normalize_create "$MODULE_PATH")
+create_module_dirs "$NORMALIZED"
+update_session "$NORMALIZED"
