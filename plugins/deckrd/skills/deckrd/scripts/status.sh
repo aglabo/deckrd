@@ -25,14 +25,11 @@
 
 set -eo pipefail
 
-# Load bootstrap (defines SYMBOL, PROJECT_ROOT, DECKRD_LOCAL_DATA, etc.)
-# Skip if already loaded (DECKRD_LIB_DIR is set by bootstrap)
-if [[ -z "${DECKRD_LIB_DIR:-}" ]]; then
-  _STATUS_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  # shellcheck disable=SC1091
-  . "${_STATUS_SCRIPT_DIR}/libs/bootstrap.sh"
-  unset _STATUS_SCRIPT_DIR
-fi
+# Load bootstrap (defines SYMBOL, PROJECT_ROOT, DECKRD_LOCAL_DATA, DECKRD_LIB_DIR, etc.)
+_BOOTSTRAP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1091
+. "${_BOOTSTRAP_DIR}/libs/bootstrap.sh"
+unset _BOOTSTRAP_DIR
 
 # ============================================================================
 # Functions

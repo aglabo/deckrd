@@ -15,7 +15,7 @@ unset _LIB_DIR
 
 Include ../spec_helper.sh
 
-SCRIPT="${SCRIPTS_DIR}/status.sh"
+SCRIPT="${DECKRD_SCRIPTS_DIR}/status.sh"
 
 Describe "status.sh"
   Describe "Given: session.json does not exist"
