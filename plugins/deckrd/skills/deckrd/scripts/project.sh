@@ -36,13 +36,11 @@ set -eo pipefail
 
 ##
 # @description Script directory path
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck disable=SC2034
-readonly SCRIPT_DIR
-
-# Load bootstrap (defines SYMBOL, REPO_ROOT, DECKRD_LIB_DIR, etc.)
+# Load bootstrap (defines SYMBOL, PROJECT_ROOT, DECKRD_LOCAL_DATA, DECKRD_LIB_DIR, etc.)
+_BOOTSTRAP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
-. "${SCRIPT_DIR}/libs/bootstrap.sh"
+. "${_BOOTSTRAP_DIR}/libs/bootstrap.sh"
+unset _BOOTSTRAP_DIR
 
 # Validate environment (requires jq)
 # shellcheck disable=SC1091
@@ -52,10 +50,6 @@ _validate_env_errmsg=$(validate_env) || {
   exit 1
 }
 unset _validate_env_errmsg
-
-##
-# @description DECKRD local data directory
-readonly DECKRD_LOCAL_DATA
 
 ##
 # @description Project file path

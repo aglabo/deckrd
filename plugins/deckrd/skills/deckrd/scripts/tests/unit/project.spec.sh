@@ -15,7 +15,7 @@ unset _LIB_DIR
 
 Include ../spec_helper.sh
 
-SCRIPT="${SCRIPTS_DIR}/project.sh"
+SCRIPT="${DECKRD_SCRIPTS_DIR}/project.sh"
 
 Describe "project.sh"
   Before "setup_deckrd_tmpdir"
