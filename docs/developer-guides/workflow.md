@@ -1,14 +1,15 @@
 ---
 title: "Development Workflow Guide"
 description: "Document-driven and issue-driven development workflow for deckrd project"
-category: "dev-guides"
+category: "developer-guides"
 tags: ["workflow", "deckrd", "idd-framework", "development"]
 created: "2026-01-14"
 version: "0.0.4"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
-  - 0.0.4   2026-01-14  初版作成
+  - 0.0.4   2026-01-14  Initial version
+  - 0.1.0   2026-03-21  Fix session path and schema, fix IDD/deckrd workflow order, add lang/ai_model fields to session schema
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.
@@ -40,7 +41,7 @@ Goals/Ideas → Requirements → Specifications → Implementation → Tasks
 
 ### Commands Reference
 
-See [Deckrd Commands Reference](../dev-standards/deckrd-commands.md) for detailed command documentation.
+See [Deckrd Commands Reference](./deckrd-commands.md) for detailed command documentation.
 
 #### 1. Initialize New Feature
 
@@ -125,7 +126,7 @@ Execute planned tasks with GitHub integration for issues, branches, commits, and
 
 ### Commands Reference
 
-See [IDD Framework Commands Reference](../dev-standards/idd-commands.md) for detailed command documentation.
+See [IDD Framework Commands Reference](./idd-commands.md) for detailed command documentation.
 
 ### Workflow Stages
 
@@ -412,7 +413,7 @@ ls temp/idd/
 
 ## Additional Resources
 
-- [Deckrd Commands Reference](../dev-standards/deckrd-commands.md)
-- [IDD Framework Commands Reference](../dev-standards/idd-commands.md)
-- [Code Quality Standards](../dev-standards/code-quality.md)
-- [Architecture Overview](../dev-architecture/architecture.md)
+- [Deckrd Commands Reference](./deckrd-commands.md)
+- [IDD Framework Commands Reference](./idd-commands.md)
+- [Code Quality Standards](../contributing/code-quality.md)
+- [Architecture Overview](./architecture.md)

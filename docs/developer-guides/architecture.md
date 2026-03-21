@@ -1,14 +1,15 @@
 ---
 title: "Architecture Overview"
 description: "High-level architecture and design principles of the deckrd project"
-category: "dev-architecture"
+category: "developer-guides"
 tags: ["architecture", "design", "overview"]
 created: "2026-01-14"
 version: "0.0.4"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
-  - 0.0.4   2026-01-14  初版作成
+  - 0.0.4   2026-01-14  Initial version
+  - 0.1.0   2026-03-21  Update schema, update Layer 3 MCP servers to cocoindex-code/filesystem, add lang/ai_model fields to session schema
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.
@@ -104,20 +105,15 @@ Easy to add new plugins:
 
 **serena-mcp**:
 
-- Bash script analysis
-- Symbol search
-- Code patterns
+- Semantic code search
+- Natural language query-based code exploration
+- Used by: root, deckrd-coder
 
 **lsmcp**:
 
-- LSP integration (future TypeScript support)
-- Code intelligence
-- Refactoring tools
-
-**codex-mcp**:
-
-- AI code generation
-- Template processing
+- File system access
+- File read/write operations
+- Used by: deckrd, deckrd-coder
 
 ### Layer 4: Configuration & Quality Gates
 
@@ -191,7 +187,7 @@ See [Plugin System Architecture](plugin-system.md) for detailed information abou
 
 ## MCP Integration
 
-See [MCP Servers Reference](../dev-api/mcp-servers.md) for detailed information about:
+See [MCP Servers Reference](../specs/mcp-servers.md) for detailed information about:
 
 - Server configuration
 - Available tools
@@ -333,6 +329,6 @@ cspell check "**/*"        # Spelling
 ## Related Documentation
 
 - [Plugin System](plugin-system.md) - Detailed plugin architecture
-- [MCP Servers](../dev-api/mcp-servers.md) - MCP API reference
-- [Code Quality](../dev-standards/code-quality.md) - Quality standards
-- [Development Workflow](../dev-guides/workflow.md) - Development process
+- [MCP Servers](../specs/mcp-servers.md) - MCP API reference
+- [Code Quality](../contributing/code-quality.md) - Quality standards
+- [Development Workflow](./workflow.md) - Development process

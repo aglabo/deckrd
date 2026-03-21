@@ -1,14 +1,15 @@
 ---
 title: "IDD Framework Commands Reference"
 description: "Complete reference for Issue-Driven Development framework commands"
-category: "dev-standards"
+category: "developer-guides"
 tags: ["idd-framework", "commands", "reference", "github"]
 created: "2026-01-14"
 version: "0.0.4"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
-  - 0.0.4   2026-01-14  初版作成
+  - 0.0.4   2026-01-14  Initial version
+  - 0.1.0   2026-03-22  Version update
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.

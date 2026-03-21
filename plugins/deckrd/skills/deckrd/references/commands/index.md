@@ -9,20 +9,20 @@ description: Reference table of all deckrd commands
 
 ## Standard Flow
 
-| Command                         | Description                                                                              |
-| ------------------------------- | ---------------------------------------------------------------------------------------- |
-| `init <project> <project-type>` | Bootstrap project, write project.json, init session                                      |
-| `module <ns>/<mod>`             | Create module directories, set active module                                             |
-| `module <ns>/<mod> --force`     | Re-initialize module (existing files preserved)                                          |
-| `module create <ns>/<mod>`      | Create module with `.project.json`, set active                                           |
-| `module create <mod>`           | Same; subdomain auto-resolved from git remote name                                       |
-| `req`                           | Derive requirements from goals                                                           |
-| `dr`                            | Manage Decision Records (req step only)                                                  |
-| `dr --add`                      | Append a new Decision Record                                                             |
-| `spec`                          | Derive specifications from requirements                                                  |
-| `impl`                          | Derive implementation plan from specifications                                           |
-| `tasks`                         | Derive executable tasks from implementation; auto-generate `implementation-checklist.md` |
-| `tasks update`                  | Regenerate `implementation-checklist.md` from existing `tasks.md`                        |
+| Command                         | Description                                                                     |
+| ------------------------------- | ------------------------------------------------------------------------------- |
+| `init <project> <project-type>` | Bootstrap project, write project.json, init session                             |
+| `module <ns>/<mod>`             | Create module directories, set active module                                    |
+| `module <ns>/<mod> --force`     | Re-initialize module (existing files preserved)                                 |
+| `module create <ns>/<mod>`      | Create module dirs and update session, set active                               |
+| `module create <mod>`           | Same; subdomain auto-resolved from git remote name                              |
+| `req`                           | Derive requirements from goals                                                  |
+| `dr`                            | Manage Decision Records (any step)                                              |
+| `dr --add`                      | Append a new Decision Record                                                    |
+| `spec`                          | Derive specifications from requirements                                         |
+| `impl`                          | Derive implementation plan from specifications                                  |
+| `tasks`                         | Derive executable tasks from implementation; with `implementation-checklist.md` |
+| `tasks update`                  | Regenerate `implementation-checklist.md` from existing `tasks.md`               |
 
 ## Alternative Paths
 
