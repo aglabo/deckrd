@@ -1,12 +1,19 @@
 {
   "mcpServers": {
+    "filesystem": {
+      "type": "stdio",
+      "command": "pnpx",
+      "args": [
+        "@modelcontextprotocol/server-filesystem",
+        "."
+      ]
+    },
     "cocoindex-code": {
       "type": "stdio",
-      "command": "cocoindex-code"
-    },
-    "fossil-mcp": {
-      "type": "stdio",
-      "command": "fossil-mcp"
+      "command": "ccc",
+      "args": [
+        "mcp"
+      ]
     }
   }
 }
