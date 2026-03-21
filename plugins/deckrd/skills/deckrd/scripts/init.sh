@@ -62,13 +62,11 @@ unset _validate_env_errmsg
 # @description Initialize script configuration variables
 # @description All variables use ${VAR:-default} to allow external override (mock)
 init_vars() {
-  SCRIPT_DIR="${SCRIPT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
-  INITS_DIR="${INITS_DIR:-${SCRIPT_DIR}/../assets/inits}"
+  INITS_DIR="${INITS_DIR:-${DECKRD_ROOT}/assets/inits}"
   RULES_SRC_DIR="${RULES_SRC_DIR:-${INITS_DIR}/deckrd-rules}"
   DOCS_SRC_DIR="${DOCS_SRC_DIR:-${INITS_DIR}/docs}"
   LOCAL_SRC_DIR="${LOCAL_SRC_DIR:-${INITS_DIR}/local-deckrd}"
   CLAUDE_RULES_DIR="${CLAUDE_RULES_DIR:-${PROJECT_ROOT}/.claude/rules}"
-  DECKRD_DOCS="${DECKRD_DOCS:-${PROJECT_ROOT}/docs/.deckrd}"
   PROJECT_FILE="${PROJECT_FILE:-${DECKRD_LOCAL_DATA}/.project.json}"
   SESSION_FILE="${SESSION_FILE:-${DECKRD_LOCAL_DATA}/session.json}"
   BASE_SUBDIRS=("notes" "temp")
@@ -252,10 +250,10 @@ init_directory() {
 init_directories() {
   echo "Init: creating directories and installing assets..." >&2
   init_directory "$CLAUDE_RULES_DIR" "$RULES_SRC_DIR" "deckrd-rules"
-  init_directory "$DECKRD_DOCS" "$DOCS_SRC_DIR" "docs"
+  init_directory "$DECKRD_DOCS_DIR" "$DOCS_SRC_DIR" "docs"
   init_directory "$DECKRD_LOCAL_DATA" "$LOCAL_SRC_DIR" "local-deckrd"
   for subdir in "${BASE_SUBDIRS[@]}"; do
-    init_directory "${DECKRD_DOCS}/${subdir}"
+    init_directory "${DECKRD_DOCS_DIR}/${subdir}"
   done
   echo "Init complete." >&2
   echo "" >&2
