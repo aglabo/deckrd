@@ -35,18 +35,18 @@
 # @version 0.1.0
 # @license MIT
 
+# shellcheck disable=SC1091
+
 # don't use -u for checking error by Agent
 set -eo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly SCRIPT_DIR
+# Load bootstrap (defines SYMBOL, PROJECT_ROOT, DECKRD_LOCAL_DATA, DECKRD_LIB_DIR, etc.)
+_BOOTSTRAP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Load bootstrap (defines SYMBOL, REPO_ROOT, DECKRD_LIB_DIR, etc.)
-# shellcheck disable=SC1091
-. "${SCRIPT_DIR}/libs/bootstrap.sh"
+. "${_BOOTSTRAP_DIR}/libs/bootstrap.sh"
+unset _BOOTSTRAP_DIR
 
 # Validate environment (requires jq)
-# shellcheck disable=SC1091
 . "${DECKRD_LIB_DIR}/validate-env.sh"
 _validate_env_errmsg=$(validate_env) || {
   echo "$_validate_env_errmsg" >&2
@@ -57,19 +57,10 @@ unset _validate_env_errmsg
 # ============================================================================
 # Script Configuration
 # ============================================================================
-
-##
-# @description Project root directory
-readonly PROJECT_ROOT
-
-##
-# @description DECKRD docs directory
-DECKRD_DOCS="${DECKRD_DOCS:-${PROJECT_ROOT}/docs/.deckrd}"
-readonly DECKRD_DOCS
-
-##
-# @description DECKRD local data directory
-readonly DECKRD_LOCAL_DATA
+# Variables provided by bootstrap.sh:
+#   PROJECT_ROOT      - repository root
+#   DECKRD_DOCS_DIR   - docs/.deckrd base directory
+#   DECKRD_LOCAL_DATA - .local/deckrd directory
 
 ##
 # @description Session file path
@@ -108,13 +99,12 @@ Usage: module.sh <namespace>/<module> [--force]
 Initialize DECKRD module directory structure and update session.
 
 Subcommands:
-  create    Create module dirs and .project.json (subdomain auto-resolved if omitted)
+  create    Create module dirs and update session (subdomain auto-resolved if omitted)
 
 Arguments:
   <namespace>/<module>  Module path (e.g. agt-kind/is-collection)
   <module>              Module name only; subdomain auto-resolved from git remote name
-                        Allowed: a-z, A-Z, 0-9, hyphen, underscore
-                        Case-insensitive: normalized to lowercase
+                        Allowed: a-z, hyphen, underscore (lowercase only)
 
 Options:
   --force   Re-initialize even if module directory already exists
@@ -249,36 +239,13 @@ validate_and_normalize_create() {
 }
 
 ##
-# @description Create .project.json for a module
-# @arg $1 string Normalized module path (namespace/module)
-create_module_project() {
-  local path="$1"
-  local namespace="${path%%/*}"
-  local module="${path#*/}"
-  local base="${DECKRD_DOCS}/${namespace}/${module}"
-  local project_file="${base}/.project.json"
-  local timestamp
-  timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-
-  jq -n \
-    --arg name "$module" \
-    --arg description "" \
-    --arg created_at "$timestamp" \
-    --arg updated_at "$timestamp" \
-    '{name: $name, description: $description, created_at: $created_at, updated_at: $updated_at}' \
-    >"$project_file"
-
-  echo "  created: .project.json"
-}
-
-##
 # @description Create module directory structure
 # @arg $1 string Normalized module path (namespace/module)
 create_module_dirs() {
   local path="$1"
   local namespace="${path%%/*}"
   local module="${path#*/}"
-  local base="${DECKRD_DOCS}/${namespace}/${module}"
+  local base="${DECKRD_DOCS_DIR}/${namespace}/${module}"
 
   # Check existing (without --force)
   if [[ -d "$base" && "$FORCE" == false ]]; then
@@ -358,7 +325,6 @@ fi
 if [[ "$SUBCOMMAND" == "create" ]]; then
   NORMALIZED=$(validate_and_normalize_create "$MODULE_PATH")
   create_module_dirs "$NORMALIZED"
-  create_module_project "$NORMALIZED"
   update_session "$NORMALIZED"
 else
   NORMALIZED=$(validate_and_normalize "$MODULE_PATH")
