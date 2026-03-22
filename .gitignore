@@ -17,6 +17,10 @@ thumbs.db
 *.diff
 *.patch
 
+# ignore release package
+releases/*
+!releases/.keep
+
 #   history, cache
 .history/
 .cache/
