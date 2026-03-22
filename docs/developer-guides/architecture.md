@@ -4,7 +4,7 @@ description: "High-level architecture and design principles of the deckrd projec
 category: "developer-guides"
 tags: ["architecture", "design", "overview"]
 created: "2026-01-14"
-version: "0.0.4"
+version: "0.1.0"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
