@@ -4,7 +4,7 @@ description: "Code quality standards, formatting rules, and quality gates for de
 category: "contributing"
 tags: ["quality", "standards", "formatting", "linting"]
 created: "2026-01-14"
-version: "0.0.4"
+version: "0.1.0"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:

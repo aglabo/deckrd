@@ -4,7 +4,7 @@ description: "Complete reference for Issue-Driven Development framework commands
 category: "developer-guides"
 tags: ["idd-framework", "commands", "reference", "github"]
 created: "2026-01-14"
-version: "0.0.4"
+version: "0.1.0"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:

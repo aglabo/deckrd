@@ -4,7 +4,7 @@ description: "Detailed documentation of the deckrd plugin architecture and imple
 category: "developer-guides"
 tags: ["plugins", "architecture", "modular"]
 created: "2026-01-14"
-version: "0.0.4"
+version: "0.1.0"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:

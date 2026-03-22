@@ -64,18 +64,48 @@ Claude Code → Settings → Plugins → Enable deckrd
 
 ## First Use
 
-Once enabled, start a new workflow with:
+Once enabled, initialize a new project and module:
 
 ```bash
 /deckrd init <project> <project-type>
+/deckrd module <namespace>/<module>
 ```
 
-deckrd then guides you through a stepwise workflow,
-deriving documents from goals to executable tasks.
+Then work through the stepwise workflow:
+
+```text
+init → module → req → [dr] → spec → impl → tasks
+```
+
+Each step derives the next document from the previous one.
+`dr` (Decision Records) is optional and can be added at any point after `req`.
+
+## Commands
+
+| Command                 | Description                              |
+| ----------------------- | ---------------------------------------- |
+| `init <project> <type>` | Initialize project (run once)            |
+| `module <ns>/<mod>`     | Create module and set as active          |
+| `req`                   | Derive requirements document             |
+| `dr`                    | Add decision record (optional)           |
+| `spec`                  | Derive specifications from requirements  |
+| `impl`                  | Derive implementation plan from specs    |
+| `tasks`                 | Generate executable tasks from impl plan |
+| `tasks update`          | Regenerate implementation-checklist.md   |
+| `status`                | Show current workflow progress           |
+| `review <doc>`          | Review document quality                  |
+| `rev`                   | Reverse-engineer existing code into docs |
 
 ## Where documents are stored
 
-deckrd manages all generated documents and workflow state under `docs/.deckrd/` in your project.
+deckrd stores workflow state and generated documents separately:
+
+- Session state: `docs/.deckrd/.session.json`
+- Generated documents: `docs/.deckrd/<namespace>/<module>/`
+  - `requirements/` — requirement documents
+  - `specifications/` — specification documents
+  - `implementation/` — implementation plan
+  - `tasks/` — executable task documents
 
 You can browse the derived requirements, specifications, and tasks at any time using your editor or file explorer.
 
@@ -88,6 +118,16 @@ deckrd works well for:
 - Bug Fixes: Understand root causes and plan solutions
 - System Design: Capture architectural decisions
 - Documentation: Trace decision-making and rationale
+
+## Integration with deckrd-coder
+
+After completing the deckrd workflow and generating `tasks.md`, you can use the optional **deckrd-coder** plugin to implement each task automatically using a strict BDD (Red-Green-Refactor) process:
+
+```bash
+/deckrd-coder T01-02    # Implement task T01-02
+```
+
+See the [deckrd-coder plugin](../deckrd-coder/README.md) for details.
 
 ## Documentation
 

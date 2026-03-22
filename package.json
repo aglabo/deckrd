@@ -17,7 +17,9 @@
   },
   "scripts": {
     "prepare": "bash ./scripts/setup-dev-env.sh",
-    "scan:secrets": "gitleaks dir --config ./configs/gitleaks.toml . && secretlint --secretlintrc ./configs/secretlint.config.yaml **/*",
+    "release:changelog": "bash runners/run-git-cliff.sh changelog",
+    "release:note": "bash runners/run-git-cliff.sh release-notes",
+    "scan:secrets": "concurrently \"betterleaks protect --config C:/Users/atsushifx/workspaces/develop/ci-platform/configs/betterleaks.toml\" \"secretlint --secretlintrc ./configs/secretlint.config.yaml **/*\"",
     "check:sh": "bash runners/run-shfmt.sh --list .",
     "check:dprint": "dprint check",
     "format:dprint": "dprint fmt",

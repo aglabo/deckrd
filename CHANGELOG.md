@@ -2,6 +2,68 @@
 
 <!-- textlint-disable ja-technical-writing/sentence-length -->
 
+## [0.1.0] - 2026-03-22
+
+### 🚀 Features
+
+- *(deckrd/core)* Introduce bootstrap-based environment initialization and centralized runtime variables
+- *(deckrd/libs)* Add core libraries:
+  - session.sh (state management)
+  - config.sh (configuration abstraction)
+  - ai-runner.sh (multi-provider AI execution and validation)
+- *(deckrd/workflow)* Establish phase-based review system:
+  - review-explore / review-harden / review-fix
+- *(deckrd/templates)* Add BDD implementation checklist template with hierarchical task IDs
+- *(deckrd/commands)* Introduce profile/project configuration command and structured workflow commands
+- *(runners)* Add unified runner scripts for lint, format, and test execution
+- *(tests)* Integrate ShellSpec testing framework with multi-layer test structure
+
+---
+
+### 💥 Breaking Changes
+
+- Rename `profile` → `project` (config file: `.local/deckrd/project.json`)
+- Replace `run-prompt.sh` with `generate-doc.sh`
+- Remove `--phase` option in favor of phase-specific doc-types (`review-explore`, etc.)
+- Rename environment variables:
+  - `DECKRD_LOCAL` → `DECKRD_LOCAL_DATA`
+- Normalize doc-type arguments to `@<type>` format
+
+---
+
+### 🐛 Bug Fixes
+
+- Stabilize AI execution by disabling MCP during Claude invocation
+- Fix commit message generation hang issues
+- Improve fallback behavior when `jq` is not available
+- Fix session path inconsistencies across scripts
+
+---
+
+### ♻️ Refactor
+
+- Extract script logic into reusable libraries (session/config/ai-runner)
+- Centralize environment resolution via bootstrap
+- Simplify generate-doc execution flow and remove global state variables
+- Reorganize ShellSpec tests into layered structure (unit/functional/integration/system)
+
+---
+
+### 📚 Documentation
+
+- Add comprehensive command references (review, module, profile, status)
+- Document phase-based review workflow and decision record integration
+- Update requirements/spec/implementation workflows with multi-phase execution models
+- Add rules for traceability, naming conventions, and commit linkage
+
+---
+
+### ⚙️ Miscellaneous Tasks
+
+- Split CI workflows into focused pipelines (secrets scan / workflow QA)
+- Add runner scripts for textlint, markdownlint, shellcheck, and shellspec
+- Normalize project configuration and dictionary entries (cspell, commitlint)
+
 ## [0.0.4] - 2026-01-14
 
 ### 🚀 Features
