@@ -25,6 +25,29 @@ It manages the following documents as separate, distinct layers:
 
 > Prerequisites: AI execution environment (Claude Code, etc.) and access to a compatible LLM
 
+## The Three Components
+
+deckrd consists of three integrated components that cover the full development lifecycle:
+
+| Component         | Command                     | Role                                    |
+| ----------------- | --------------------------- | --------------------------------------- |
+| **deckrd**        | `/deckrd <command>`         | Planning: Goals → Tasks (design phase)  |
+| **deckrd-coder**  | `/deckrd-coder <task-id>`   | BDD-style implementation (coding phase) |
+| **IDD Framework** | `/idd/issue:new`, `/idd-pr` | GitHub Issues / PRs (execution phase)   |
+
+## Complete Workflow
+
+```text
+Phase 1: Issue Definition (IDD)
+  /idd/issue:new → GitHub Issue → Branch
+
+Phase 2: Planning (deckrd)
+  /deckrd init → module → req → [dr] → spec → impl → tasks
+
+Phase 3: Implementation & Release (deckrd-coder + IDD)
+  /deckrd-coder T01 → BDD impl → /idd-commit-message → /idd-pr → PR
+```
+
 ## Installation
 
 ### Using as Claude Code plugins
@@ -42,25 +65,30 @@ claude plugin install deckrd@deckrd
 1. Download the zip archive from [deckrd - release](https://github.com/aglabo/deckrd/releases)
 2. Copy the `deckrd` directory to your Agent Skills directory
 
-## Basic Usage
+## Quick Start
 
-### Workflow
+```bash
+# Phase 1: Create Issue (IDD)
+/idd/issue:new
 
-```text
-Goals / Ideas
-    ↓
-requirements (Define requirements)
-    ↓
-specifications (Write specifications)
-    ↓
-implementation (Decision criteria)
-    ↓
-tasks (Implementation tasks)
-    ↓
-Code / Tests
+# Phase 2: Plan with deckrd
+/deckrd init myProject shell
+/deckrd module myProject/feature
+/deckrd req
+/deckrd spec
+/deckrd impl
+/deckrd tasks
+
+# Phase 3: Implement and release (deckrd-coder + IDD)
+/deckrd-coder T01-01    # Implement task T01-01
+/deckrd-coder T01-02    # Implement task T01-02
+# ... (run for each task)
+/idd-commit-message
+git commit -m "..."
+/idd-pr
 ```
 
-### Key Commands
+## Key Commands
 
 | Command                         | Description                                      |
 | ------------------------------- | ------------------------------------------------ |
@@ -73,9 +101,11 @@ Code / Tests
 | `dr --add`                      | Record Decision Records (optional)               |
 | `status`                        | Check workflow progress                          |
 
-> For details, see the plugin README:
+> For details, see:
 >
 > - [deckrd plugin](plugins/deckrd/README.md)
+> - [deckrd-coder plugin](plugins/deckrd-coder/README.md)
+> - [User Guide](docs/user-guides/index.ja.md)
 
 ## Important Notes
 
@@ -134,10 +164,10 @@ claude plugin install deckrd-coder@deckrd
 /deckrd-coder T01-02    # Implement task T01-02
 # ... (run for each task)
 
-# Step 3: Verify and commit
-git diff
-git add .
-git commit
+# Step 3: Commit and create PR (IDD)
+/idd-commit-message
+git commit -m "..."
+/idd-pr
 ```
 
 ### Important Notes
@@ -148,3 +178,32 @@ git commit
 - Commit: Execute manually (not automatic)
 
 > For details, see [deckrd-coder plugin](plugins/deckrd-coder/README.md)
+
+---
+
+## Documentation
+
+### User Guides
+
+- [User Guide Index](docs/user-guides/index.ja.md)
+- [Overview & Diagrams](docs/user-guides/00-overview.ja.md)
+- [Quickstart](docs/user-guides/01-quickstart.ja.md)
+- [Commands Guide](docs/user-guides/02-commands.ja.md)
+
+### Developer Guides
+
+- [Architecture Overview](docs/developer-guides/architecture.md)
+- [Development Workflow](docs/developer-guides/workflow.md)
+- [deckrd Commands Reference](docs/developer-guides/deckrd-commands.md)
+- [IDD Commands Reference](docs/developer-guides/idd-commands.md)
+- [Plugin System](docs/developer-guides/plugin-system.md)
+- [Tool Selection](docs/developer-guides/tool-selection.md)
+
+### Contributing
+
+- [Contributing Guide](CONTRIBUTING.md)
+- [Code Quality Standards](docs/contributing/code-quality.md)
+
+### Changelog
+
+- [CHANGELOG](CHANGELOG.md)
