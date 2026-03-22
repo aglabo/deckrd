@@ -4,7 +4,7 @@ description: "Document-driven and issue-driven development workflow for deckrd p
 category: "developer-guides"
 tags: ["workflow", "deckrd", "idd-framework", "development"]
 created: "2026-01-14"
-version: "0.0.4"
+version: "0.1.0"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
