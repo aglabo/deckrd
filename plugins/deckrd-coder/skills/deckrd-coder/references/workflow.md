@@ -26,7 +26,7 @@ deckrd-coder の責務:
 ```bash
 Phase 0: 開発環境の取得・設定 (explore-agent 委譲)
     ↓
-Phase 1: タスクリスト取得 (session + checklist 読み込み)
+Phase 1: チェックリスト作成 (checklist-builder 委譲)
     ↓
 Phase 2: タスク分析・依存関係マッピング
     ↓
@@ -39,15 +39,15 @@ Phase 5: チェックリスト確認と完了判定
 Phase 6: ワークフロー終了
 ```
 
-| Phase   | 目的                 | 出力                           |
-| ------- | -------------------- | ------------------------------ |
-| Phase 0 | 開発言語・環境を把握 | ENV PROFILE (env-profile.md)   |
-| Phase 1 | 対象タスクを特定     | タスクID、Given/When/Then 一覧 |
-| Phase 2 | 依存関係を分析       | 実行グループ (直列 / 並列)     |
-| Phase 3 | bdd-coder に委譲     | 各タスクのステータスレポート   |
-| Phase 4 | 全体品質を検証       | 品質ゲート合格確認             |
-| Phase 5 | 完了状態を確認       | セッション終了前の最終確認     |
-| Phase 6 | セッション終了       | 開発ツール・状態をリセット     |
+| Phase   | 目的                       | Agent             | 出力                                       |
+| ------- | -------------------------- | ----------------- | ------------------------------------------ |
+| Phase 0 | 開発言語・環境を把握       | explore-agent     | ENV PROFILE (env-profile.md)               |
+| Phase 1 | チェックリストを生成       | checklist-builder | temp/tasks/<slug>-<adjective>-checklist.md |
+| Phase 2 | 依存関係を分析             | deckrd-coder      | 実行グループ (直列 / 並列)                 |
+| Phase 3 | bdd-coder に委譲           | bdd-coder         | 各タスクのステータスレポート               |
+| Phase 4 | 全体品質を検証             | deckrd-coder      | 品質ゲート合格確認                         |
+| Phase 5 | 完了状態を確認             | deckrd-coder      | セッション終了前の最終確認                 |
+| Phase 6 | セッション終了             | deckrd-coder      | 開発ツール・状態をリセット                 |
 
 ## Before You Begin (MANDATORY — Phase 0 の前に実行)
 
@@ -95,18 +95,38 @@ Store as **ENV PROFILE** for use in Phase 3 (bdd-coder への渡し), Phase 4, P
 
 出力: `temp/deckrd-work/env-profile.md`
 
-## Phase 1: タスクリスト取得
+## Phase 1: チェックリスト作成 (checklist-builder 委譲)
 
-アクティブなセッション情報から、コーディング対象のタスク定義を取得する。
+**checklist-builder** エージェントを起動してチェックリストを生成する。
 
-実行内容:
+### 入力タイプ別の動作
 
-- `docs/.deckrd/.session.json` の `active` フィールドから現在セッションを取得
-- 指定されたタスク ID のセクションを抽出
-- チェックリストファイルを読み込み (`tasks/implementation-checklist.md` or `--checklist` 指定)
-- 未完了 (`[ ]`) の `-R` / `-G` / `-F` 項目を把握
+| 入力タイプ             | checklist-builder の動作                                    |
+| ---------------------- | ----------------------------------------------------------- |
+| 自然言語の指示         | 指示を解析してタスク分解、チェックリストを生成              |
+| Task ID (例: T01-02)   | tasks.md の該当エントリを展開してチェックリストを生成       |
+| `--checklist <path>` 指定 | checklist-builder をスキップ、既存ファイルをそのまま使用 |
 
-出力: タスク ID、Given/When/Then 一覧、未完了チェックリスト項目。
+### Step 1-1: checklist-builder の起動
+
+Spawn **checklist-builder** with:
+
+- `instruction`: ユーザーの指示 or Task ID
+- `tasks_md`: tasks.md のパス (Task ID 入力時のみ)
+- `directory`: リポジトリルート
+
+The agent:
+
+1. 入力を解析してタスクを分解
+2. チェックリストを `temp/tasks/<slug>-<adjective>-checklist.md` に書き込む
+3. チェックリストのパスをメインセッションに返却
+
+### Step 1-2: チェックリストの取得
+
+返却されたチェックリストパスを **CHECKLIST PATH** として保存。
+Phase 2 以降で使用する。
+
+出力: `temp/tasks/<slug>-<adjective>-checklist.md`
 
 ## Phase 2: タスク分析・依存関係マッピング
 
