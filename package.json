@@ -17,6 +17,7 @@
   },
   "scripts": {
     "prepare": "bash ./scripts/setup-dev-env.sh",
+    "generate:hackers": "bash scripts/generate-hacker-list.sh -o ./plugins/_generated/hackers.dic",
     "release:changelog": "bash runners/run-git-cliff.sh changelog",
     "release:note": "bash runners/run-git-cliff.sh release-notes",
     "scan:secrets": "concurrently \"betterleaks protect --config C:/Users/atsushifx/workspaces/develop/ci-platform/configs/betterleaks.toml\" \"secretlint --secretlintrc ./configs/secretlint.config.yaml **/*\"",
