@@ -1,0 +1,193 @@
+# --- core: turing award / CS pioneers ---
+knuth:
+  short: knuth
+  fullname: Donald E. Knuth
+  category: turing
+
+dijkstra:
+  short: dijkstra
+  fullname: Edsger W. Dijkstra
+  category: turing
+
+lamport:
+  short: lamport
+  fullname: Leslie Lamport
+  category: turing
+
+ritchie:
+  short: ritchie
+  fullname: Dennis Ritchie
+  category: turing
+
+thompson:
+  short: ken-thompson
+  fullname: Kenneth Thompson
+  category: turing
+
+hoare:
+  short: tony-hoare
+  fullname: Tony Hoare
+  category: turing
+
+cerf:
+  short: vint-cerf
+  fullname: Vinton Cerf
+  category: turing
+
+bernerslee:
+  short: tim-berners-lee
+  fullname: Tim Berners-Lee
+  category: turing
+
+patterson:
+  short: patterson
+  fullname: David Patterson
+  category: turing
+
+hennessy:
+  short: hennessy
+  fullname: John Hennessy
+  category: turing
+
+aho:
+  short: aho
+  fullname: Alfred Aho
+  category: turing
+
+ullman:
+  short: ullman
+  fullname: Jeffrey Ullman
+  category: turing
+
+liskov:
+  short: liskov
+  fullname: Barbara Liskov
+  category: turing
+
+stonebraker:
+  short: stonebraker
+  fullname: Michael Stonebraker
+  category: turing
+
+diffie:
+  short: diffie
+  fullname: Whitfield Diffie
+  category: turing
+
+hellman:
+  short: hellman
+  fullname: Martin Hellman
+  category: turing
+
+# --- programming language designers ---
+matz:
+  short: matz-matsumoto
+  fullname: Yukihiro Matsumoto
+  category: language
+
+guido:
+  short: guido-van-rossum
+  fullname: Guido van Rossum
+  category: language
+
+stroustrup:
+  short: stroustrup
+  fullname: Bjarne Stroustrup
+  category: language
+
+wirth:
+  short: wirth
+  fullname: Niklaus Wirth
+  category: language
+
+wall:
+  short: larry-wall
+  fullname: Larry Wall
+  category: language
+
+gosling:
+  short: gosling
+  fullname: James Gosling
+  category: language
+
+kay:
+  short: alan-kay
+  fullname: Alan Kay
+  category: language
+
+odersky:
+  short: odersky
+  fullname: Martin Odersky
+  category: language
+
+# --- OSS / hacker culture ---
+torvalds:
+  short: torvalds
+  fullname: Linus Torvalds
+  category: oss
+
+stallman:
+  short: rms-stallman
+  fullname: Richard Stallman
+  category: oss
+
+tj:
+  short: tj-holowaychuk
+  fullname: TJ Holowaychuk
+  category: oss
+
+tridgell:
+  short: tridgell
+  fullname: Andrew Tridgell
+  category: oss
+
+cox:
+  short: russ-cox
+  fullname: Russ Cox
+  category: oss
+
+pike:
+  short: rob-pike
+  fullname: Rob Pike
+  category: oss
+
+kernighan:
+  short: brian-kernighan
+  fullname: Brian Kernighan
+  category: oss
+
+# --- authors / methodology ---
+fowler:
+  short: fowler
+  fullname: Martin Fowler
+  category: author
+
+beck:
+  short: beck
+  fullname: Kent Beck
+  category: author
+
+gamma:
+  short: gamma
+  fullname: Erich Gamma
+  category: author
+
+martin:
+  short: unclebob-martin
+  fullname: Robert C. Martin
+  category: author
+
+evans:
+  short: evans
+  fullname: Eric Evans
+  category: author
+
+hunt:
+  short: dave-hunt
+  fullname: Dave Thomas Hunt
+  category: author
+
+thomas:
+  short: dave-thomas
+  fullname: David Thomas
+  category: author
