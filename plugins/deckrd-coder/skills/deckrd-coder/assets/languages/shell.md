@@ -45,13 +45,34 @@ End
 
 ## Project Conventions
 
-| Item            | Value                                    |
-| --------------- | ---------------------------------------- |
-| Extension       | `.sh`                                    |
-| Shebang         | `#!/usr/bin/env bash`                    |
-| Strict mode     | `set -euo pipefail` or `set -o pipefail` |
-| Config files    | `.shellcheckrc`, `.editorconfig`         |
-| Package manager | `pnpm` (for ShellSpec runner scripts)    |
+| Item            | Value                                                    |
+| --------------- | -------------------------------------------------------- |
+| Extension       | `.sh`                                                    |
+| Shebang         | `#!/usr/bin/env bash` (included in File Header Template) |
+| Strict mode     | `set -euo pipefail` or `set -o pipefail`                 |
+| Config files    | `.shellcheckrc`, `.editorconfig`                         |
+| Package manager | `pnpm` (for ShellSpec runner scripts)                    |
+
+## File Header Template
+
+All new Shell scripts MUST begin with the file header.
+Apply when creating a new file. Do NOT modify existing files.
+
+Template: [templates/shell-header.tpl.sh](../templates/shell-header.tpl.sh)
+
+### Placeholder Resolution
+
+| Placeholder                           | How to resolve                                                                   |
+| ------------------------------------- | -------------------------------------------------------------------------------- |
+| `<path/from/project/root>`            | Relative path from the repository root. Use forward slashes.                     |
+| `<one-line description of this file>` | Single-line summary from the task description or file purpose. No period at end. |
+
+### Application Rules
+
+- Apply to NEW files only. Never modify existing file headers.
+- Place the header at the very beginning of the file (line 1).
+- Add `set -euo pipefail` immediately after the header block.
+- Do not duplicate the shebang — it is already included in the header.
 
 ## Project Detection
 
