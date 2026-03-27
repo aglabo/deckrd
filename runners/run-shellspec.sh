@@ -103,7 +103,7 @@ get_spec_files() {
   if [[ "$test_type" == "all" ]]; then
     type_filter="tests"
   else
-    type_filter="tests/${test_type}"
+    type_filter="(tests|__tests__)/${test_type}"
   fi
   get_filelist "$SPEC_SEARCH_ROOT" "*.spec.sh" "$type_filter" "$@"
 }
