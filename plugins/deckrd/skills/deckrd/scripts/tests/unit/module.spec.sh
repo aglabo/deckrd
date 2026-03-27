@@ -7,12 +7,11 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 
-# shellcheck disable=SC1091
+# shellcheck disable=SC1090
 
-_LIB_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/plugins/deckrd/skills/deckrd/scripts/libs" && pwd)"
-# shellcheck disable=SC1091
-. "${_LIB_DIR}/bootstrap.sh"
-unset _LIB_DIR
+_RUNTIME_BOOTSTRAP="${SHELLSPEC_PROJECT_ROOT}/plugins/_runtime/libs/bootstrap.lib.sh"
+. "$_RUNTIME_BOOTSTRAP"
+unset _RUNTIME_BOOTSTRAP
 
 Include ../spec_helper.sh
 
