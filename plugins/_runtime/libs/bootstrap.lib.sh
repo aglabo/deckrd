@@ -150,7 +150,7 @@ bootstrap_finalize() {
 # it correctly points to the script that sourced this file.
 _bootstrap_caller="${BASH_SOURCE[1]:-}"
 bootstrap_init "${_bootstrap_caller}"
-if [[ "${1:-}" != "no-finalize" ]]; then
+if [[ "${1:-}" != "--no-finalize" ]]; then
   bootstrap_finalize
 fi
 unset _bootstrap_caller

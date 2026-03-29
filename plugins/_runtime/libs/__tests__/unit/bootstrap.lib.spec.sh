@@ -35,7 +35,7 @@ SCRIPT="${_RUNTIME_LIBS_DIR}/bootstrap.lib.sh"
 # variables under test. bootstrap_finalize is NOT called globally so that
 # "When call" can inspect mutable variable values.
 # shellcheck disable=SC1090
-. "$SCRIPT" no-finalize
+. "$SCRIPT" --no-finalize
 
 Describe "bootstrap.lib.sh"
 
@@ -51,7 +51,7 @@ Describe "bootstrap.lib.sh"
     End
 
     It "[Normal] bootstrap_init を呼んで status=0 で終了する"
-      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" no-finalize; bootstrap_init && echo ok"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" --no-finalize; bootstrap_init && echo ok"
       The status should equal 0
       The output should equal "ok"
     End
@@ -220,31 +220,31 @@ Describe "bootstrap.lib.sh"
   Describe "冪等性: bootstrap_init 2回"
 
     It "[Normal] PROJECT_ROOT が変化しない"
-      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" no-finalize; FIRST=\"\$PROJECT_ROOT\"; bootstrap_init; [[ \"\$PROJECT_ROOT\" == \"\$FIRST\" ]] && echo ok"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" --no-finalize; FIRST=\"\$PROJECT_ROOT\"; bootstrap_init; [[ \"\$PROJECT_ROOT\" == \"\$FIRST\" ]] && echo ok"
       The status should equal 0
       The output should equal "ok"
     End
 
     It "[Normal] RUNTIME_LIB_DIR が変化しない"
-      When run bash -c "export PROJECT_ROOT=/tmp/proj; export DECKRD_ROOT=/tmp/deckrd; . \"$SCRIPT\" no-finalize; FIRST=\"\$RUNTIME_LIB_DIR\"; bootstrap_init; [[ \"\$RUNTIME_LIB_DIR\" == \"\$FIRST\" ]] && echo ok"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj; export DECKRD_ROOT=/tmp/deckrd; . \"$SCRIPT\" --no-finalize; FIRST=\"\$RUNTIME_LIB_DIR\"; bootstrap_init; [[ \"\$RUNTIME_LIB_DIR\" == \"\$FIRST\" ]] && echo ok"
       The status should equal 0
       The output should equal "ok"
     End
 
     It "[Normal] DECKRD_ROOT が変化しない"
-      When run bash -c "export PROJECT_ROOT=/tmp/proj; export DECKRD_ROOT=/tmp/deckrd; . \"$SCRIPT\" no-finalize; FIRST=\"\$DECKRD_ROOT\"; bootstrap_init; [[ \"\$DECKRD_ROOT\" == \"\$FIRST\" ]] && echo ok"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj; export DECKRD_ROOT=/tmp/deckrd; . \"$SCRIPT\" --no-finalize; FIRST=\"\$DECKRD_ROOT\"; bootstrap_init; [[ \"\$DECKRD_ROOT\" == \"\$FIRST\" ]] && echo ok"
       The status should equal 0
       The output should equal "ok"
     End
 
     It "[Normal] DECKRD_SCRIPTS_DIR が変化しない"
-      When run bash -c "export PROJECT_ROOT=/tmp/proj; export DECKRD_ROOT=/tmp/deckrd; . \"$SCRIPT\" no-finalize; FIRST=\"\$DECKRD_SCRIPTS_DIR\"; bootstrap_init; [[ \"\$DECKRD_SCRIPTS_DIR\" == \"\$FIRST\" ]] && echo ok"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj; export DECKRD_ROOT=/tmp/deckrd; . \"$SCRIPT\" --no-finalize; FIRST=\"\$DECKRD_SCRIPTS_DIR\"; bootstrap_init; [[ \"\$DECKRD_SCRIPTS_DIR\" == \"\$FIRST\" ]] && echo ok"
       The status should equal 0
       The output should equal "ok"
     End
 
     It "[Normal] DECKRD_LIB_DIR が変化しない"
-      When run bash -c "export PROJECT_ROOT=/tmp/proj; export DECKRD_ROOT=/tmp/deckrd; . \"$SCRIPT\" no-finalize; FIRST=\"\$DECKRD_LIB_DIR\"; bootstrap_init; [[ \"\$DECKRD_LIB_DIR\" == \"\$FIRST\" ]] && echo ok"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj; export DECKRD_ROOT=/tmp/deckrd; . \"$SCRIPT\" --no-finalize; FIRST=\"\$DECKRD_LIB_DIR\"; bootstrap_init; [[ \"\$DECKRD_LIB_DIR\" == \"\$FIRST\" ]] && echo ok"
       The status should equal 0
       The output should equal "ok"
     End

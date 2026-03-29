@@ -6,15 +6,14 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 
-# shellcheck disable=SC1091
+# shellcheck disable=SC1090,SC1091
+# cspell:words reinit kvtest mydefault badjson myvalue noschema eqval rtstore
 
-_LIB_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/plugins/deckrd/skills/deckrd/scripts/libs" && pwd)"
-# shellcheck disable=SC1091
-. "${_LIB_DIR}/bootstrap.sh"
-unset _LIB_DIR
+_RUNTIME_BOOTSTRAP="${SHELLSPEC_PROJECT_ROOT}/plugins/_runtime/libs/bootstrap.lib.sh"
+. "$_RUNTIME_BOOTSTRAP" --no-finalize
+unset _RUNTIME_BOOTSTRAP
 
 Include ../spec_helper.sh
-
 . "${DECKRD_LIB_DIR}/kv-store.sh"
 
 Describe "kv-store.sh"
@@ -298,18 +297,18 @@ Describe "kv-store.sh"
 
       Describe "When: kv_load を呼ぶ"
         It "Then: [Normal] return 0 を返しデフォルト値で初期化される"
-          When call kv_load "loadstore" "/tmp/nonexistent_kvtest_$$_noext"
+          When call kv_load "loadstore" "/tmp/nonexistent_kvtest_$$_no_ext"
           The status should equal 0
         End
 
         It "Then: [Normal] key1 はデフォルト値 default1 になる"
-          kv_load "loadstore" "/tmp/nonexistent_kvtest_$$_noext"
+          kv_load "loadstore" "/tmp/nonexistent_kvtest_$$_no_ext"
           When call kv_get "loadstore" "key1"
           The output should equal "default1"
         End
 
         It "Then: [Normal] key2 はデフォルト値 default2 になる"
-          kv_load "loadstore" "/tmp/nonexistent_kvtest_$$_noext"
+          kv_load "loadstore" "/tmp/nonexistent_kvtest_$$_no_ext"
           When call kv_get "loadstore" "key2"
           The output should equal "default2"
         End

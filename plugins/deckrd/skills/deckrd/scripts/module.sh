@@ -41,10 +41,10 @@
 set -eo pipefail
 
 # Load bootstrap (defines SYMBOL, PROJECT_ROOT, DECKRD_LOCAL_DATA, DECKRD_LIB_DIR, etc.)
-_BOOTSTRAP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-. "${_BOOTSTRAP_DIR}/libs/bootstrap.sh"
-unset _BOOTSTRAP_DIR
+# shellcheck disable=SC1091
+_PROJECT_ROOT="$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)"
+. "${_PROJECT_ROOT}/plugins/_runtime/libs/bootstrap.lib.sh"
+unset _PROJECT_ROOT
 
 # Validate environment (requires jq)
 . "${DECKRD_LIB_DIR}/validate-env.sh"
@@ -93,17 +93,18 @@ FORCE=false
 show_usage() {
   cat <<EOF
 Usage: module.sh <namespace>/<module> [--force]
+       module.sh <module> [--force]
        module.sh create <namespace>/<module> [--force]
        module.sh create <module> [--force]
 
 Initialize DECKRD module directory structure and update session.
 
 Subcommands:
-  create    Create module dirs and update session (subdomain auto-resolved if omitted)
+  create    Create module dirs and update session (alias for default behavior)
 
 Arguments:
   <namespace>/<module>  Module path (e.g. agt-kind/is-collection)
-  <module>              Module name only; subdomain auto-resolved from git remote name
+  <module>              Module name only; namespace auto-resolved from project name
                         Allowed: a-z, hyphen, underscore (lowercase only)
 
 Options:
@@ -200,42 +201,55 @@ validate_and_normalize() {
 }
 
 ##
-# @description Get repository name from git remote origin URL
-# @stdout Repository name (lowercase, without .git suffix)
-# @return 0 on success, exits on error
-get_repo_name() {
-  local remote_url
-  remote_url=$(git remote get-url origin 2>/dev/null) || {
-    echo "Error: Cannot get git remote origin URL" >&2
-    exit 1
+# @description Resolve default namespace for module path fallback
+# @description Priority: .project.json project field > git remote origin repo name
+# @stdout Namespace string (lowercase)
+# @stderr Error message if neither source is available
+# @return 0 on success, 1 on error
+_get_default_ns() {
+  local project_file="${DECKRD_LOCAL_DATA}/.project.json"
+
+  # 1st priority: .project.json の project フィールド
+  if [[ -f "$project_file" ]]; then
+    local project_name
+    project_name=$(jq -r '.project // empty' "$project_file" 2>/dev/null)
+    if [[ -n "$project_name" ]]; then
+      echo "$project_name"
+      return 0
+    fi
+  fi
+
+  # 2nd priority: ローカルリポジトリのルートディレクトリ名を取得
+  local repo_root
+  repo_root=$(git rev-parse --show-toplevel 2>/dev/null) || {
+    echo "Error: Cannot resolve default namespace: no .project.json and not in a git repository" >&2
+    return 1
   }
   local repo_name
-  repo_name="${remote_url##*/}"
-  repo_name="${repo_name##*:}"
-  repo_name="${repo_name%.git}"
+  repo_name="${repo_root##*/}"
   repo_name="${repo_name,,}"
-  [[ -z "$repo_name" ]] && {
-    echo "Error: Cannot extract repository name" >&2
-    exit 1
-  }
+  if [[ -z "$repo_name" ]]; then
+    echo "Error: Cannot extract repository name from git root directory" >&2
+    return 1
+  fi
   echo "$repo_name"
 }
 
 ##
-# @description Validate and normalize module path for create subcommand
-# @arg $1 string Raw module path (<subdomain>/<module> or <module>)
+# @description Validate and normalize module path with namespace fallback
+# @arg $1 string Raw module path (<namespace>/<module> or <module>)
 # @stdout Normalized path (lowercase)
 # @return 0 on success, exits on error
-validate_and_normalize_create() {
+validate_and_normalize_with_fallback() {
   local raw="$1"
   if [[ "$raw" == */* ]]; then
-    # <subdomain>/<module> form: delegate to existing validator
+    # <namespace>/<module> form: delegate to existing validator
     validate_and_normalize "$raw"
   else
-    # <module> form: auto-resolve subdomain from git remote name
-    local subdomain
-    subdomain=$(get_repo_name)
-    validate_and_normalize "${subdomain}/${raw}"
+    # <module> form: auto-resolve namespace from project name or git remote
+    local namespace
+    namespace=$(_get_default_ns) || exit 1
+    validate_and_normalize "${namespace}/${raw}"
   fi
 }
 
@@ -315,14 +329,16 @@ update_session() {
 # Main Execution
 # ============================================================================
 
-parse_args "$@"
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  parse_args "$@"
 
-if [[ -z "$MODULE_PATH" ]]; then
-  echo "Error: <namespace>/<module> is required" >&2
-  show_usage
-  exit 1
+  if [[ -z "$MODULE_PATH" ]]; then
+    echo "Error: <namespace>/<module> is required" >&2
+    show_usage
+    exit 1
+  fi
+
+  NORMALIZED=$(validate_and_normalize_with_fallback "$MODULE_PATH")
+  create_module_dirs "$NORMALIZED"
+  update_session "$NORMALIZED"
 fi
-
-NORMALIZED=$(validate_and_normalize_create "$MODULE_PATH")
-create_module_dirs "$NORMALIZED"
-update_session "$NORMALIZED"
