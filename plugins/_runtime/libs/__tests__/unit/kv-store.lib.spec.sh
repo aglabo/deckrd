@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# kv-store.spec.sh - ShellSpec tests for kv-store.sh
+# kv-store.lib.spec.sh - ShellSpec tests for kv-store.lib.sh
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #
@@ -9,16 +9,15 @@
 # shellcheck disable=SC1090,SC1091
 # cspell:words reinit kvtest mydefault badjson myvalue noschema eqval rtstore
 
-_RUNTIME_BOOTSTRAP="${SHELLSPEC_PROJECT_ROOT}/plugins/_runtime/libs/bootstrap.lib.sh"
-. "$_RUNTIME_BOOTSTRAP" --no-finalize
-unset _RUNTIME_BOOTSTRAP
+_RUNTIME_LIBS_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/plugins/_runtime/libs" && pwd)"
 
-Include ../spec_helper.sh
-. "${DECKRD_LIB_DIR}/kv-store.sh"
+Include "../spec_helper.sh"
 
-Describe "kv-store.sh"
+. "${_RUNTIME_LIBS_DIR}/kv-store.lib.sh"
 
-  Describe "kv-store.sh loading"
+Describe "kv-store.lib.sh"
+
+  Describe "kv-store.lib.sh loading"
     Describe "When: スクリプトを読み込む"
       It "Then: [Normal] kv_init 関数が存在する"
         When call type kv_init
@@ -316,14 +315,14 @@ Describe "kv-store.sh"
     End
 
     Describe "Given: 有効な JSON ファイルが存在する"
-      Before "setup_deckrd_tmpdir; kv_init 'jsonstore' $'key1|default1\nkey2|default2'"
-      After "teardown_deckrd_tmpdir"
+      Before "setup_tmpdir; kv_init 'jsonstore' $'key1|default1\nkey2|default2'"
+      After "teardown_tmpdir"
 
       Describe "When: kv_load を呼ぶ"
         It "Then: [Normal] key1 が JSON から読み込まれる"
           printf '{"key1":"loaded1","key2":"loaded2"}' \
-            > "${DECKRD_LOCAL}/kv.kv"
-          kv_load "jsonstore" "${DECKRD_LOCAL}/kv"
+            > "${NAMING_TMPDIR}/kv.kv"
+          kv_load "jsonstore" "${NAMING_TMPDIR}/kv"
           When call kv_get "jsonstore" "key1"
           The status should equal 0
           The output should equal "loaded1"
@@ -331,8 +330,8 @@ Describe "kv-store.sh"
 
         It "Then: [Normal] key2 が JSON から読み込まれる"
           printf '{"key1":"loaded1","key2":"loaded2"}' \
-            > "${DECKRD_LOCAL}/kv.kv"
-          kv_load "jsonstore" "${DECKRD_LOCAL}/kv"
+            > "${NAMING_TMPDIR}/kv.kv"
+          kv_load "jsonstore" "${NAMING_TMPDIR}/kv"
           When call kv_get "jsonstore" "key2"
           The status should equal 0
           The output should equal "loaded2"
@@ -340,8 +339,8 @@ Describe "kv-store.sh"
 
         It "Then: [Normal] JSON に存在しないキーはデフォルト値になる"
           printf '{"key1":"only-key1"}' \
-            > "${DECKRD_LOCAL}/kv.kv"
-          kv_load "jsonstore" "${DECKRD_LOCAL}/kv"
+            > "${NAMING_TMPDIR}/kv.kv"
+          kv_load "jsonstore" "${NAMING_TMPDIR}/kv"
           When call kv_get "jsonstore" "key2"
           The status should equal 0
           The output should equal "default2"
@@ -350,26 +349,26 @@ Describe "kv-store.sh"
     End
 
     Describe "Given: 空 JSON {} のファイルが存在する"
-      Before "setup_deckrd_tmpdir; kv_init 'emptyjson_store' $'key1|def1\nkey2|def2'"
-      After "teardown_deckrd_tmpdir"
+      Before "setup_tmpdir; kv_init 'emptyjson_store' $'key1|def1\nkey2|def2'"
+      After "teardown_tmpdir"
 
       Describe "When: kv_load を呼ぶ"
         It "Then: [Edge] return 0 を返す"
-          printf '{}' > "${DECKRD_LOCAL}/empty.kv"
-          When call kv_load "emptyjson_store" "${DECKRD_LOCAL}/empty"
+          printf '{}' > "${NAMING_TMPDIR}/empty.kv"
+          When call kv_load "emptyjson_store" "${NAMING_TMPDIR}/empty"
           The status should equal 0
         End
 
         It "Then: [Edge] key1 はデフォルト値になる"
-          printf '{}' > "${DECKRD_LOCAL}/empty.kv"
-          kv_load "emptyjson_store" "${DECKRD_LOCAL}/empty"
+          printf '{}' > "${NAMING_TMPDIR}/empty.kv"
+          kv_load "emptyjson_store" "${NAMING_TMPDIR}/empty"
           When call kv_get "emptyjson_store" "key1"
           The output should equal "def1"
         End
 
         It "Then: [Edge] key2 はデフォルト値になる"
-          printf '{}' > "${DECKRD_LOCAL}/empty.kv"
-          kv_load "emptyjson_store" "${DECKRD_LOCAL}/empty"
+          printf '{}' > "${NAMING_TMPDIR}/empty.kv"
+          kv_load "emptyjson_store" "${NAMING_TMPDIR}/empty"
           When call kv_get "emptyjson_store" "key2"
           The output should equal "def2"
         End
@@ -377,14 +376,14 @@ Describe "kv-store.sh"
     End
 
     Describe "Given: JSON の値が空文字のファイルが存在する"
-      Before "setup_deckrd_tmpdir; kv_init 'emptyval_store' $'key1|mydefault'"
-      After "teardown_deckrd_tmpdir"
+      Before "setup_tmpdir; kv_init 'emptyval_store' $'key1|mydefault'"
+      After "teardown_tmpdir"
 
       Describe "When: kv_load を呼ぶ"
         It "Then: [Edge] 空文字値はデフォルト値にフォールバックする"
           # 仕様: ${value:-${default}} で空文字 → デフォルト値が使われる
-          printf '{"key1":""}' > "${DECKRD_LOCAL}/emptyval.kv"
-          kv_load "emptyval_store" "${DECKRD_LOCAL}/emptyval"
+          printf '{"key1":""}' > "${NAMING_TMPDIR}/emptyval.kv"
+          kv_load "emptyval_store" "${NAMING_TMPDIR}/emptyval"
           When call kv_get "emptyval_store" "key1"
           The output should equal "mydefault"
         End
@@ -392,20 +391,20 @@ Describe "kv-store.sh"
     End
 
     Describe "Given: JSON にスキーマ外キーが含まれるファイルが存在する"
-      Before "setup_deckrd_tmpdir; kv_init 'extrakey_store' $'key1|def1'"
-      After "teardown_deckrd_tmpdir"
+      Before "setup_tmpdir; kv_init 'extrakey_store' $'key1|def1'"
+      After "teardown_tmpdir"
 
       Describe "When: kv_load を呼ぶ"
         It "Then: [Edge] スキーマ内キーは正しく読み込まれる"
-          printf '{"key1":"loaded1","extra":"ignored"}' > "${DECKRD_LOCAL}/extra.kv"
-          kv_load "extrakey_store" "${DECKRD_LOCAL}/extra"
+          printf '{"key1":"loaded1","extra":"ignored"}' > "${NAMING_TMPDIR}/extra.kv"
+          kv_load "extrakey_store" "${NAMING_TMPDIR}/extra"
           When call kv_get "extrakey_store" "key1"
           The output should equal "loaded1"
         End
 
         It "Then: [Edge] スキーマ外キーは kv_get で取得できない (無視)"
-          printf '{"key1":"loaded1","extra":"ignored"}' > "${DECKRD_LOCAL}/extra.kv"
-          kv_load "extrakey_store" "${DECKRD_LOCAL}/extra"
+          printf '{"key1":"loaded1","extra":"ignored"}' > "${NAMING_TMPDIR}/extra.kv"
+          kv_load "extrakey_store" "${NAMING_TMPDIR}/extra"
           When call kv_get "extrakey_store" "extra"
           The output should equal ""
         End
@@ -423,13 +422,13 @@ Describe "kv-store.sh"
     End
 
     Describe "Given: 不正な JSON ファイルが存在する"
-      Before "setup_deckrd_tmpdir; kv_init 'badjson_store' $'key1|def1\nkey2|def2'"
-      After "teardown_deckrd_tmpdir"
+      Before "setup_tmpdir; kv_init 'badjson_store' $'key1|def1\nkey2|def2'"
+      After "teardown_tmpdir"
 
       Describe "When: kv_load を呼ぶ"
         It "Then: [Error] return 1 を返す (invalid JSON はエラー)"
-          printf 'not-json' > "${DECKRD_LOCAL}/bad.kv"
-          When call kv_load "badjson_store" "${DECKRD_LOCAL}/bad"
+          printf 'not-json' > "${NAMING_TMPDIR}/bad.kv"
+          When call kv_load "badjson_store" "${NAMING_TMPDIR}/bad"
           The status should equal 1
           The output should include "Error"
         End
@@ -439,43 +438,43 @@ Describe "kv-store.sh"
 
   Describe "kv_save"
     Describe "Given: データがセットされた状態"
-      Before "setup_deckrd_tmpdir; kv_init 'savestore' $'key1|v1\nkey2|v2'"
-      After "teardown_deckrd_tmpdir"
+      Before "setup_tmpdir; kv_init 'savestore' $'key1|v1\nkey2|v2'"
+      After "teardown_tmpdir"
 
       Describe "When: kv_save を呼ぶ"
         It "Then: [Normal] ファイルが作成される"
           kv_set "savestore" "key1" "testval"
-          kv_save "savestore" "${DECKRD_LOCAL}/kv"
-          When call test -f "${DECKRD_LOCAL}/kv.kv"
+          kv_save "savestore" "${NAMING_TMPDIR}/kv"
+          When call test -f "${NAMING_TMPDIR}/kv.kv"
           The status should equal 0
         End
 
         It "Then: [Normal] ディレクトリが自動作成される"
           kv_set "savestore" "key1" "testval"
-          kv_save "savestore" "${DECKRD_LOCAL}/nested/dir/kv"
-          When call test -f "${DECKRD_LOCAL}/nested/dir/kv.kv"
+          kv_save "savestore" "${NAMING_TMPDIR}/nested/dir/kv"
+          When call test -f "${NAMING_TMPDIR}/nested/dir/kv.kv"
           The status should equal 0
         End
       End
     End
 
     Describe "Given: データがセットされた状態 (JSON 整形検証)"
-      Before "setup_deckrd_tmpdir; kv_init 'jsoncheck_store' $'key1|v1'"
-      After "teardown_deckrd_tmpdir"
+      Before "setup_tmpdir; kv_init 'jsoncheck_store' $'key1|v1'"
+      After "teardown_tmpdir"
 
       Describe "When: kv_save 後に JSON 内容を検証する"
         It "Then: [Normal] 保存されたファイルが有効な JSON である"
           kv_set "jsoncheck_store" "key1" "myvalue"
-          kv_save "jsoncheck_store" "${DECKRD_LOCAL}/jsoncheck"
-          When call cat "${DECKRD_LOCAL}/jsoncheck.kv"
+          kv_save "jsoncheck_store" "${NAMING_TMPDIR}/jsoncheck"
+          When call cat "${NAMING_TMPDIR}/jsoncheck.kv"
           The status should equal 0
           The output should equal '{"key1":"myvalue"}'
         End
 
         It "Then: [Normal] kv_load でキー値が正しく復元できる"
           kv_set "jsoncheck_store" "key1" "myvalue"
-          kv_save "jsoncheck_store" "${DECKRD_LOCAL}/jsoncheck"
-          kv_load "jsoncheck_store" "${DECKRD_LOCAL}/jsoncheck"
+          kv_save "jsoncheck_store" "${NAMING_TMPDIR}/jsoncheck"
+          kv_load "jsoncheck_store" "${NAMING_TMPDIR}/jsoncheck"
           When call kv_get "jsoncheck_store" "key1"
           The output should equal "myvalue"
         End
@@ -483,39 +482,39 @@ Describe "kv-store.sh"
     End
 
     Describe "Given: 空スキーマのストア"
-      Before "setup_deckrd_tmpdir; kv_init 'emptysave_store' ''"
-      After "teardown_deckrd_tmpdir"
+      Before "setup_tmpdir; kv_init 'emptysave_store' ''"
+      After "teardown_tmpdir"
 
       Describe "When: kv_save を呼ぶ"
         It "Then: [Edge] ファイルが作成される"
-          When call kv_save "emptysave_store" "${DECKRD_LOCAL}/empty_save"
+          When call kv_save "emptysave_store" "${NAMING_TMPDIR}/empty_save"
           The status should equal 0
         End
 
         It "Then: [Edge] 作成されたファイルの内容は {} になる"
-          kv_save "emptysave_store" "${DECKRD_LOCAL}/empty_save"
-          When call cat "${DECKRD_LOCAL}/empty_save.kv"
+          kv_save "emptysave_store" "${NAMING_TMPDIR}/empty_save"
+          When call cat "${NAMING_TMPDIR}/empty_save.kv"
           The output should equal "{}"
         End
       End
     End
 
     Describe "Given: 特殊文字を含む値がセットされた状態"
-      Before "setup_deckrd_tmpdir; kv_init 'specialsave_store' $'key1|default'"
-      After "teardown_deckrd_tmpdir"
+      Before "setup_tmpdir; kv_init 'specialsave_store' $'key1|default'"
+      After "teardown_tmpdir"
 
       Describe "When: スペースを含む値を kv_save する"
         It "Then: [Edge] ファイルが作成される"
           kv_set "specialsave_store" "key1" "hello world"
-          When call kv_save "specialsave_store" "${DECKRD_LOCAL}/special"
+          When call kv_save "specialsave_store" "${NAMING_TMPDIR}/special"
           The status should equal 0
         End
 
         It "Then: [Edge] kv_load で正しく復元できる"
           kv_set "specialsave_store" "key1" "hello world"
-          kv_save "specialsave_store" "${DECKRD_LOCAL}/special"
+          kv_save "specialsave_store" "${NAMING_TMPDIR}/special"
           kv_init "specialsave_store" $'key1|default'
-          kv_load "specialsave_store" "${DECKRD_LOCAL}/special"
+          kv_load "specialsave_store" "${NAMING_TMPDIR}/special"
           When call kv_get "specialsave_store" "key1"
           The output should equal "hello world"
         End
@@ -524,15 +523,15 @@ Describe "kv-store.sh"
       Describe "When: ダブルクォートを含む値を kv_save する"
         It "Then: [Edge] ファイルが作成される"
           kv_set "specialsave_store" "key1" 'say "hello"'
-          When call kv_save "specialsave_store" "${DECKRD_LOCAL}/dq"
+          When call kv_save "specialsave_store" "${NAMING_TMPDIR}/dq"
           The status should equal 0
         End
 
         It "Then: [Edge] kv_load で正しく復元できる"
           kv_set "specialsave_store" "key1" 'say "hello"'
-          kv_save "specialsave_store" "${DECKRD_LOCAL}/dq"
+          kv_save "specialsave_store" "${NAMING_TMPDIR}/dq"
           kv_init "specialsave_store" $'key1|default'
-          kv_load "specialsave_store" "${DECKRD_LOCAL}/dq"
+          kv_load "specialsave_store" "${NAMING_TMPDIR}/dq"
           When call kv_get "specialsave_store" "key1"
           The output should equal 'say "hello"'
         End
@@ -598,16 +597,16 @@ Describe "kv-store.sh"
   End
 
   Describe "ラウンドトリップ (kv_save → kv_load)"
-    Before "setup_deckrd_tmpdir; kv_init 'rtstore' $'key1|d1\nkey2|d2'"
-    After "teardown_deckrd_tmpdir"
+    Before "setup_tmpdir; kv_init 'rtstore' $'key1|d1\nkey2|d2'"
+    After "teardown_tmpdir"
 
     Describe "When: kv_save 後に kv_load する"
       It "Then: [Normal] key1 の値が復元される"
         kv_set "rtstore" "key1" "roundtrip1"
         kv_set "rtstore" "key2" "roundtrip2"
-        kv_save "rtstore" "${DECKRD_LOCAL}/rt"
+        kv_save "rtstore" "${NAMING_TMPDIR}/rt"
         kv_init "rtstore" $'key1|d1\nkey2|d2'
-        kv_load "rtstore" "${DECKRD_LOCAL}/rt"
+        kv_load "rtstore" "${NAMING_TMPDIR}/rt"
         When call kv_get "rtstore" "key1"
         The status should equal 0
         The output should equal "roundtrip1"
@@ -616,9 +615,9 @@ Describe "kv-store.sh"
       It "Then: [Normal] key2 の値が復元される"
         kv_set "rtstore" "key1" "roundtrip1"
         kv_set "rtstore" "key2" "roundtrip2"
-        kv_save "rtstore" "${DECKRD_LOCAL}/rt"
+        kv_save "rtstore" "${NAMING_TMPDIR}/rt"
         kv_init "rtstore" $'key1|d1\nkey2|d2'
-        kv_load "rtstore" "${DECKRD_LOCAL}/rt"
+        kv_load "rtstore" "${NAMING_TMPDIR}/rt"
         When call kv_get "rtstore" "key2"
         The status should equal 0
         The output should equal "roundtrip2"
@@ -626,9 +625,9 @@ Describe "kv-store.sh"
 
       It "Then: [Normal] スペースを含む値が正しく復元される"
         kv_set "rtstore" "key1" "hello world"
-        kv_save "rtstore" "${DECKRD_LOCAL}/rt_space"
+        kv_save "rtstore" "${NAMING_TMPDIR}/rt_space"
         kv_init "rtstore" $'key1|d1\nkey2|d2'
-        kv_load "rtstore" "${DECKRD_LOCAL}/rt_space"
+        kv_load "rtstore" "${NAMING_TMPDIR}/rt_space"
         When call kv_get "rtstore" "key1"
         The status should equal 0
         The output should equal "hello world"
@@ -636,9 +635,9 @@ Describe "kv-store.sh"
 
       It "Then: [Normal] ダブルクォートを含む値が正しく復元される"
         kv_set "rtstore" "key1" 'say "hi"'
-        kv_save "rtstore" "${DECKRD_LOCAL}/rt_dq"
+        kv_save "rtstore" "${NAMING_TMPDIR}/rt_dq"
         kv_init "rtstore" $'key1|d1\nkey2|d2'
-        kv_load "rtstore" "${DECKRD_LOCAL}/rt_dq"
+        kv_load "rtstore" "${NAMING_TMPDIR}/rt_dq"
         When call kv_get "rtstore" "key1"
         The status should equal 0
         The output should equal 'say "hi"'
