@@ -7,16 +7,23 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 
-# shellcheck disable=SC1091
+# shellcheck disable=SC1090
 
-_LIB_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/plugins/deckrd/skills/deckrd/scripts/libs" && pwd)"
-# shellcheck disable=SC1091
-. "${_LIB_DIR}/bootstrap.sh"
-unset _LIB_DIR
+_RUNTIME_BOOTSTRAP="${SHELLSPEC_PROJECT_ROOT}/plugins/_runtime/libs/bootstrap.lib.sh"
+. "$_RUNTIME_BOOTSTRAP" "--no-finalize"
+unset _RUNTIME_BOOTSTRAP
 
 Include ../spec_helper.sh
 
 SCRIPT="${DECKRD_SCRIPTS_DIR}/module.sh"
+
+# Helper: setup tmpdir and create .project.json with project name "myproject"
+setup_deckrd_tmpdir_with_project() {
+  setup_deckrd_tmpdir
+  mkdir -p "$DECKRD_LOCAL_DATA"
+  printf '{"project":"myproject","project_type":"feature","language":"shell","ai_model":"sonnet","created_at":"2026-01-01T00:00:00Z","updated_at":"2026-01-01T00:00:00Z"}\n' \
+    >"${DECKRD_LOCAL_DATA}/.project.json"
+}
 
 # ============================================================================
 # module.sh
@@ -119,14 +126,6 @@ Describe "module.sh"
   Describe "Given: invalid legacy format argument"
     Before "setup_deckrd_tmpdir"
     After "teardown_deckrd_tmpdir"
-
-    Describe "When: run with 'mymod' (no slash)"
-      It "[Error] Should: exit with status 1 and output 'namespace' error"
-        When run bash "$SCRIPT" mymod
-        The status should equal 1
-        The stderr should include "namespace"
-      End
-    End
 
     Describe "When: run with '/mymod' (empty namespace)"
       It "[Error] Should: exit with status 1 and output 'empty' error"
