@@ -23,13 +23,16 @@
 # @version 0.1.0
 # @license MIT
 
+#shellcheck disable=SC1091
+
+# don't use -u for checking error by Agent
 set -eo pipefail
 
 # Load bootstrap (defines SYMBOL, PROJECT_ROOT, DECKRD_LOCAL_DATA, DECKRD_LIB_DIR, etc.)
-_BOOTSTRAP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
-. "${_BOOTSTRAP_DIR}/libs/bootstrap.sh"
-unset _BOOTSTRAP_DIR
+_PROJECT_ROOT="$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)"
+. "${_PROJECT_ROOT}/plugins/_runtime/libs/bootstrap.lib.sh"
+unset _PROJECT_ROOT
 
 # ============================================================================
 # Functions
