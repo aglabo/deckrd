@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# plugins/deckrd/skills/deckrd/scripts/libs/kv-store.sh - Generic key-value store
+# plugins/_runtime/libs/kv-store.lib.sh - Generic key-value store
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #
@@ -8,7 +8,7 @@
 #
 # @version 0.1.0
 # USAGE: source this file, do NOT execute directly.
-#   . "$(dirname "${BASH_SOURCE[0]}")/libs/kv-store.sh"
+#   . "$(dirname "${BASH_SOURCE[0]}")/kv-store.lib.sh"
 
 # Guard: prevent re-sourcing
 if [[ -n "${_KV_STORE_LOADED:-}" ]]; then
