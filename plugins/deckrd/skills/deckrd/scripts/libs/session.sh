@@ -18,7 +18,7 @@ readonly _SESSION_LOADED=1
 
 # Load kv-store as the backing implementation
 # shellcheck disable=SC1091
-. "${DECKRD_LIB_DIR}/kv-store.sh"
+. "${RUNTIME_LIB_DIR}/kv-store.lib.sh"
 
 # SESSION_SCHEMA - compatibility shim: exposes _KV_SCHEMA as SESSION_SCHEMA
 # This allows existing code that checks SESSION_SCHEMA[$buffer] to work.
