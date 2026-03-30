@@ -16,26 +16,26 @@ if [[ -n "${_KV_STORE_LOADED:-}" ]]; then
 fi
 readonly _KV_STORE_LOADED=1
 
-# Global associative array: store_name → schema string
+# shellcheck source=plugins/_runtime/libs/utils.lib.sh
+. "$(dirname "${BASH_SOURCE[0]}")/utils.lib.sh"
+
+# Global associative array: store_name → schema array name ("_KV_SCHEMA_<store>")
 declare -Ag _KV_SCHEMA
 
 # _kv_schema_iter - Iterate over schema entries, calling callback for each key/default pair
 #
-# @arg $1 string Store name (used to look up schema)
+# @arg $1 string Store name (used to look up schema array)
 # @arg $2 string Callback function name; called as: callback key default
 _kv_schema_iter() {
   local store="$1"
   local callback="$2"
-  local schema="${_KV_SCHEMA[$store]}"
-  local line key default
 
-  while IFS= read -r line; do
-    # skip empty lines
-    [[ -z "$line" ]] && continue
-    key="${line%%|*}"
-    default="${line#*|}"
-    "$callback" "$key" "$default"
-  done <<<"$schema"
+  local -n _kv_schema_ref="_KV_SCHEMA_${store}"
+  local key
+
+  for key in "${!_kv_schema_ref[@]}"; do
+    "$callback" "$key" "${_kv_schema_ref[$key]}"
+  done
 }
 
 # _kv_normalize_key - Normalize and validate a key name
@@ -76,21 +76,46 @@ kv_init() {
   local store="$1"
   local schema="$2"
 
-  # Validate and normalize all keys, rebuilding schema with trimmed keys
+  # Guard: empty schema is an error
+  if [[ -z "$schema" ]]; then
+    echo "Error: kv_init: schema must not be empty"
+    return 1
+  fi
+
+  # Validate and normalize all keys first (fail fast before mutating state)
   local _kv_init_line _kv_init_key _kv_init_default _key _rc
-  local _normalized_schema=""
+  local -a _validated_keys=()
+  local -a _validated_defaults=()
   while IFS= read -r _kv_init_line; do
     [[ -z "$_kv_init_line" ]] && continue
     _kv_init_key="${_kv_init_line%%|*}"
     _kv_init_default="${_kv_init_line#*|}"
-    _key="$(_kv_normalize_key "$_kv_init_key")"
-    _rc=$?
-    if [[ $_rc -ne 0 ]]; then
-      echo "$_key"
+    [[ "$_kv_init_key" == "$_kv_init_line" ]] && _kv_init_default=""
+
+    local _normalized_key _norm_err
+    _norm_err="$(_kv_normalize_key "$_kv_init_key")"
+    local _norm_rc=$?
+    if [[ $_norm_rc -ne 0 ]]; then
+      echo "$_norm_err"
       return 1
     fi
-    _normalized_schema+="${_key}|${_kv_init_default}"$'\n'
+    _normalized_key="$_norm_err"
+    _validated_keys+=("$_normalized_key")
+    _validated_defaults+=("$_kv_init_default")
   done <<<"$schema"
+
+  # Register schema array: _KV_SCHEMA_<store>[key]=default
+  declare -Ag "_KV_SCHEMA_${store}"
+  # shellcheck disable=SC2178
+  local -n _kv_schema_ref="_KV_SCHEMA_${store}"
+  # Clear previous schema entries
+  for _key in "${!_kv_schema_ref[@]}"; do
+    unset "_kv_schema_ref[$_key]"
+  done
+  local i
+  for i in "${!_validated_keys[@]}"; do
+    _kv_schema_ref["${_validated_keys[$i]}"]="${_validated_defaults[$i]}"
+  done
 
   # Register schema (with normalized keys)
   _KV_SCHEMA["$store"]="$_normalized_schema"
@@ -99,7 +124,7 @@ kv_init() {
   declare -Ag "_KV_${store}"
 
   # Initialize with default values using nameref
-  # shellcheck disable=SC2178
+
   local -n _kv_buf="_KV_${store}"
   local _kv_set_default
   # shellcheck disable=SC2329
@@ -116,8 +141,24 @@ kv_init() {
 kv_get() {
   local store="$1"
   local key="$2"
+  local _err
 
-  # shellcheck disable=SC2178
+  _err="$(_kv_normalize_key "$key")"
+  local _rc=$?
+  if [[ $_rc -ne 0 ]]; then
+    echo "$_err"
+    return $_rc
+  fi
+  key="$_err"
+
+  if [[ -n "${_KV_SCHEMA[$store]+set}" ]]; then
+    local -n _kv_schema_ref="_KV_SCHEMA_${store}"
+    if [[ -z "${_kv_schema_ref[$key]+set}" ]]; then
+      echo "Error: kv_get: key '${key}' is not in schema for store '${store}'"
+      return 1
+    fi
+  fi
+
   local -n _kv_buf="_KV_${store}"
   printf '%s' "${_kv_buf[$key]:-}"
 }
@@ -131,8 +172,24 @@ kv_set() {
   local store="$1"
   local key="$2"
   local value="${3:-}"
+  local _err
 
-  # shellcheck disable=SC2178
+  _err="$(_kv_normalize_key "$key")"
+  local _rc=$?
+  if [[ $_rc -ne 0 ]]; then
+    echo "$_err"
+    return $_rc
+  fi
+  key="$_err"
+
+  if [[ -n "${_KV_SCHEMA[$store]+set}" ]]; then
+    local -n _kv_schema_ref="_KV_SCHEMA_${store}"
+    if [[ -z "${_kv_schema_ref[$key]+set}" ]]; then
+      echo "Error: kv_set: key '${key}' is not in schema for store '${store}'"
+      return 1
+    fi
+  fi
+
   local -n _kv_buf="_KV_${store}"
   _kv_buf["$key"]="$value"
 }
@@ -252,6 +309,50 @@ kv_store_path() {
   fi
 }
 
+# _kv_json_to_buff - Load a JSON string into a KV buffer
+#
+# Validates JSON keys against schema, then populates _KV_<store> from the JSON string.
+# Empty-string values fall back to schema defaults (${value:-${default}}).
+# Caller is responsible for ensuring the string is valid JSON.
+#
+# @arg $1 string Store name
+# @arg $2 string JSON string (must be valid JSON)
+# @return 0 on success, 1 on schema error or unknown key
+_kv_json_to_buff() {
+  local store="$1"
+  local json="$2"
+
+  if [[ -z "${_KV_SCHEMA[$store]+set}" ]]; then
+    echo "Error: _kv_json_to_buff: schema not registered for store '${store}'"
+    return 1
+  fi
+
+  local -n _kv_schema_chk="_KV_SCHEMA_${store}"
+  local -n _kv_buf="_KV_${store}"
+
+  # Build schema key list as JSON array for unknown-key detection
+  local schema_keys_json
+  schema_keys_json=$(printf '%s\n' "${!_kv_schema_chk[@]}" \
+    | jq_read -Rcs '[split("\n")[] | select(. != "")]')
+
+  # Validate keys and load values in a single jq invocation.
+  # Unknown keys produce a sentinel "ERROR\t<key>" line.
+  # Output: "key\tvalue" per entry (TSV via @tsv).
+  local k v
+  while IFS=$'\t' read -r k v; do
+    if [[ "$k" == "ERROR" ]]; then
+      echo "Error: _kv_json_to_buff: unknown key '${v}'"
+      return 1
+    fi
+    _kv_buf["$k"]="${v:-${_kv_schema_chk[$k]}}"
+  done < <(jq_read -r --argjson schema "$schema_keys_json" '
+    to_entries[] |
+    if (.key as $k | $schema | index($k) | not) then ["ERROR", .key]
+    else [.key, .value]
+    end | @tsv
+  ' <<< "$json")
+}
+
 # kv_load - Load store from file
 #
 # @arg $1 string Store name
@@ -268,11 +369,9 @@ kv_load() {
     return 1
   fi
 
-  # shellcheck disable=SC2178
-  local -n _kv_buf="_KV_${store}"
-
   if [[ ! -f "$file" ]]; then
     # File not found: initialize with defaults
+    local -n _kv_buf="_KV_${store}"
     local _kv_set_default
     # shellcheck disable=SC2329
     _kv_set_default() { _kv_buf["$1"]="${2}"; }
@@ -282,40 +381,32 @@ kv_load() {
   fi
 
   # Validate JSON before loading
-  if ! jq empty "$file" 2>/dev/null; then
+  if ! "${jqexe:-jq}" empty "$file" 2>/dev/null; then
     echo "Error: kv_load: invalid JSON file '${file}'"
     return 1
   fi
 
-  # Load from JSON
-  local _kv_load_key
-  # shellcheck disable=SC2329
-  _kv_load_key() {
-    local key="$1"
-    local default="$2"
-    local value
-    value=$(jq -r ".${key} // empty" "$file" 2>/dev/null)
-    _kv_buf["$key"]="${value:-${default}}"
-  }
-  _kv_schema_iter "$store" _kv_load_key
-  unset -f _kv_load_key
+  local json
+  json="$(< "$file")"
+  _kv_json_to_buff "$store" "$json"
 }
 
-# _kv_buf_to_json - Serialize an associative array to compact JSON
+# _kv_buff_to_json - Serialize an associative array to compact JSON
 #
 # @arg $1 string Store name (nameref target "_KV_<store>")
 # @stdout Compact JSON object (no trailing newline issues, CRLF-safe)
-_kv_buf_to_json() {
+_kv_buff_to_json() {
   local store="$1"
   # shellcheck disable=SC2178
   local -n _kv_buf="_KV_${store}"
 
-  local json="{}"
+  # Build "key\tvalue" TSV lines from the buffer and convert to compact JSON
+  # in a single jq invocation.
   local key
   for key in "${!_kv_buf[@]}"; do
-    json=$(printf '%s' "$json" | jq --arg k "$key" --arg v "${_kv_buf[$key]}" '. + {($k): $v}')
+    json=$(printf '%s' "$json" | jq_read --arg k "$key" --arg v "${_kv_buf[$key]}" '. + {($k): $v}')
   done
-  printf '%s' "$json" | jq -c . | tr -d '\r'
+  printf '%s' "$json" | jq_read -c .
 }
 
 # kv_save - Save store contents to file
@@ -335,7 +426,7 @@ kv_save() {
   fi
 
   mkdir -p "$(dirname "$file")"
-  _kv_buf_to_json "$store" >"$file"
+  _kv_buff_to_json "$store" >"$file"
 }
 
 # kv_all - Output all store entries as "key=value" lines
@@ -345,7 +436,6 @@ kv_save() {
 kv_all() {
   local store="$1"
 
-  # shellcheck disable=SC2178
   local -n _kv_buf="_KV_${store}"
   local key
   for key in "${!_kv_buf[@]}"; do
