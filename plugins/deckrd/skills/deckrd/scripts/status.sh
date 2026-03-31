@@ -81,7 +81,7 @@ main() {
   # Extract fields from session
   local active lang ai_model created updated current_step completed
 
-  active=$(jq -r '.active // empty' "$SESSION_FILE")
+  active=$(${jqexe:-jq} -r '.active // empty' "$SESSION_FILE")
   if [[ -z "$active" ]]; then
     echo "Error: No active module set in session."
     echo ""
@@ -89,12 +89,12 @@ main() {
     exit 1
   fi
 
-  lang=$(jq -r '.lang // "system"' "$SESSION_FILE")
-  ai_model=$(jq -r '.ai_model // "unknown"' "$SESSION_FILE")
-  created=$(jq -r '.created_at // "unknown"' "$SESSION_FILE")
-  updated=$(jq -r '.updated_at // "unknown"' "$SESSION_FILE")
-  current_step=$(jq -r ".modules[\"$active\"].current_step // empty" "$SESSION_FILE")
-  completed=$(jq -r ".modules[\"$active\"].completed | join(\", \") // \"none\"" "$SESSION_FILE")
+  lang=$(${jqexe:-jq} -r '.lang // "system"' "$SESSION_FILE")
+  ai_model=$(${jqexe:-jq} -r '.ai_model // "unknown"' "$SESSION_FILE")
+  created=$(${jqexe:-jq} -r '.created_at // "unknown"' "$SESSION_FILE")
+  updated=$(${jqexe:-jq} -r '.updated_at // "unknown"' "$SESSION_FILE")
+  current_step=$(${jqexe:-jq} -r ".modules[\"$active\"].current_step // empty" "$SESSION_FILE")
+  completed=$(${jqexe:-jq} -r ".modules[\"$active\"].completed | join(\", \") // \"none\"" "$SESSION_FILE")
 
   # Display status
   echo "DECKRD Status"

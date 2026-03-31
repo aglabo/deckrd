@@ -60,7 +60,7 @@ run_coder_tmpscript() {
     printf 'unset %s\n' "$var_name"
     [[ -n "$extra_setup" ]] && printf 'export %s\n' "$extra_setup"
     printf '. "%s" && echo "$%s"\n' "$SCRIPT" "$var_name"
-  } > "$_CODER_TMPSCRIPT"
+  } >"$_CODER_TMPSCRIPT"
 
   bash "$_CODER_TMPSCRIPT"
 }
@@ -94,4 +94,3 @@ teardown_nongit_tmpdir() {
   [[ -n "${_NONGIT_TMPDIR:-}" && -d "$_NONGIT_TMPDIR" ]] && rm -rf "$_NONGIT_TMPDIR"
   unset _NONGIT_TMPDIR
 }
-

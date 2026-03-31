@@ -39,15 +39,15 @@ Phase 5: チェックリスト確認と完了判定
 Phase 6: ワークフロー終了
 ```
 
-| Phase   | 目的                       | Agent             | 出力                                       |
-| ------- | -------------------------- | ----------------- | ------------------------------------------ |
-| Phase 0 | 開発言語・環境を把握       | explore-agent     | ENV PROFILE (env-profile.md)               |
-| Phase 1 | チェックリストを生成       | checklist-builder | temp/tasks/<slug>-<adjective>-checklist.md |
-| Phase 2 | 依存関係を分析             | deckrd-coder      | 実行グループ (直列 / 並列)                 |
-| Phase 3 | bdd-coder に委譲           | bdd-coder         | 各タスクのステータスレポート               |
-| Phase 4 | 全体品質を検証             | deckrd-coder      | 品質ゲート合格確認                         |
-| Phase 5 | 完了状態を確認             | deckrd-coder      | セッション終了前の最終確認                 |
-| Phase 6 | セッション終了             | deckrd-coder      | 開発ツール・状態をリセット                 |
+| Phase   | 目的                 | Agent             | 出力                                       |
+| ------- | -------------------- | ----------------- | ------------------------------------------ |
+| Phase 0 | 開発言語・環境を把握 | explore-agent     | ENV PROFILE (env-profile.md)               |
+| Phase 1 | チェックリストを生成 | checklist-builder | temp/tasks/<slug>-<adjective>-checklist.md |
+| Phase 2 | 依存関係を分析       | deckrd-coder      | 実行グループ (直列 / 並列)                 |
+| Phase 3 | bdd-coder に委譲     | bdd-coder         | 各タスクのステータスレポート               |
+| Phase 4 | 全体品質を検証       | deckrd-coder      | 品質ゲート合格確認                         |
+| Phase 5 | 完了状態を確認       | deckrd-coder      | セッション終了前の最終確認                 |
+| Phase 6 | セッション終了       | deckrd-coder      | 開発ツール・状態をリセット                 |
 
 ## Before You Begin (MANDATORY — Phase 0 の前に実行)
 
@@ -101,10 +101,10 @@ Store as **ENV PROFILE** for use in Phase 3 (bdd-coder への渡し), Phase 4, P
 
 ### 入力タイプ別の動作
 
-| 入力タイプ             | checklist-builder の動作                                    |
-| ---------------------- | ----------------------------------------------------------- |
-| 自然言語の指示         | 指示を解析してタスク分解、チェックリストを生成              |
-| Task ID (例: T01-02)   | tasks.md の該当エントリを展開してチェックリストを生成       |
+| 入力タイプ                | checklist-builder の動作                                 |
+| ------------------------- | -------------------------------------------------------- |
+| 自然言語の指示            | 指示を解析してタスク分解、チェックリストを生成           |
+| Task ID (例: T01-02)      | tasks.md の該当エントリを展開してチェックリストを生成    |
 | `--checklist <path>` 指定 | checklist-builder をスキップ、既存ファイルをそのまま使用 |
 
 ### Step 1-1: checklist-builder の起動

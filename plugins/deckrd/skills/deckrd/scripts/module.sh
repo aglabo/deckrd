@@ -212,7 +212,7 @@ _get_default_ns() {
   # 1st priority: .project.json の project フィールド
   if [[ -f "$project_file" ]]; then
     local project_name
-    project_name=$(jq -r '.project // empty' "$project_file" 2>/dev/null)
+    project_name=$(${jqexe:-jq} -r '.project // empty' "$project_file" 2>/dev/null)
     if [[ -n "$project_name" ]]; then
       echo "$project_name"
       return 0
@@ -290,7 +290,7 @@ update_session() {
 
   if [[ -f "$SESSION_FILE" ]]; then
     # Update: set active module, add/reset module entry in modules hierarchy
-    jq --arg path "$path" \
+    ${jqexe:-jq} --arg path "$path" \
       --arg timestamp "$timestamp" \
       '.active = $path |
         .updated_at = $timestamp |
@@ -303,7 +303,7 @@ update_session() {
       mv "${SESSION_FILE}.tmp" "$SESSION_FILE"
   else
     # Create new session file with modules hierarchy
-    jq -n \
+    ${jqexe:-jq} -n \
       --arg path "$path" \
       --arg timestamp "$timestamp" \
       '{

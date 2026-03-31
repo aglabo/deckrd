@@ -268,12 +268,12 @@ write_project() {
 
   local created_at
   if [[ -f "$PROJECT_FILE" ]]; then
-    created_at=$(jq -r '.created_at // empty' "$PROJECT_FILE" 2>/dev/null || echo "$timestamp")
+    created_at=$(${jqexe:-jq} -r '.created_at // empty' "$PROJECT_FILE" 2>/dev/null || echo "$timestamp")
   else
     created_at="$timestamp"
   fi
 
-  jq -n \
+  ${jqexe:-jq} -n \
     --arg project "$PROJECT_NAME" \
     --arg project_type "$PROJECT_TYPE" \
     --arg language "$LANGUAGE" \
@@ -311,7 +311,7 @@ init_session() {
     return 0
   fi
 
-  jq -n \
+  ${jqexe:-jq} -n \
     --arg lang "$LANGUAGE" \
     --arg ai_model "$AI_MODEL" \
     --arg timestamp "$timestamp" \

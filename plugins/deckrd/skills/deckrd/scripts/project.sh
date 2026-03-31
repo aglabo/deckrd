@@ -231,16 +231,16 @@ write_project() {
   local created_at existing_type existing_model
   if [[ -f "$PROJECT_FILE" ]]; then
     # Update: preserve created_at, merge existing fields for omitted options
-    created_at=$(jq -r '.created_at // empty' "$PROJECT_FILE" 2>/dev/null || echo "$timestamp")
-    existing_type=$(jq -r '.project_type // empty' "$PROJECT_FILE" 2>/dev/null || true)
-    existing_model=$(jq -r '.ai_model // empty' "$PROJECT_FILE" 2>/dev/null || true)
+    created_at=$(${jqexe:-jq} -r '.created_at // empty' "$PROJECT_FILE" 2>/dev/null || echo "$timestamp")
+    existing_type=$(${jqexe:-jq} -r '.project_type // empty' "$PROJECT_FILE" 2>/dev/null || true)
+    existing_model=$(${jqexe:-jq} -r '.ai_model // empty' "$PROJECT_FILE" 2>/dev/null || true)
     [[ -z "$PROJECT_TYPE" ]] && PROJECT_TYPE="$existing_type"
     [[ "$AI_MODEL" == "sonnet" ]] && [[ -n "$existing_model" ]] && AI_MODEL="$existing_model"
   else
     created_at="$timestamp"
   fi
 
-  jq -n \
+  ${jqexe:-jq} -n \
     --arg project "$PROJECT_NAME" \
     --arg project_type "$PROJECT_TYPE" \
     --arg language "$LANGUAGE" \
