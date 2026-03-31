@@ -290,6 +290,7 @@ update_session() {
 
   if [[ -f "$SESSION_FILE" ]]; then
     # Update: set active module, add/reset module entry in modules hierarchy
+    # shellcheck disable=SC2016
     ${jqexe:-jq} --arg path "$path" \
       --arg timestamp "$timestamp" \
       '.active = $path |
@@ -303,6 +304,7 @@ update_session() {
       mv "${SESSION_FILE}.tmp" "$SESSION_FILE"
   else
     # Create new session file with modules hierarchy
+    # shellcheck disable=SC2016
     ${jqexe:-jq} -n \
       --arg path "$path" \
       --arg timestamp "$timestamp" \
