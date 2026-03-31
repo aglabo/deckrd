@@ -31,20 +31,21 @@ Describe "validate-env.sh"
   Describe "validate_env"
     Describe "Given: jq がインストールされている環境"
       Describe "When: validate_env を呼ぶ"
-        It "Then: [Normal] exit 0 を返す"
+        It "Then: [Normal] exit 0 を返し、jqexe が設定される"
           When call validate_env
           The status should equal 0
+          The variable jqexe should not be blank
         End
       End
     End
 
-    Describe "Given: jq がインストールされていない環境 (jq を隠す)"
+    Describe "Given: jaq も jq もインストールされていない環境 (両方を隠す)"
       Describe "When: validate_env を呼ぶ"
-        It "Then: [Error] return 1 を返し、stdout に 'jq is required' を含む"
-          # 新規サブシェルで validate-env.sh を source し、jq を隠して validate_env を呼ぶ
-          When run /usr/bin/bash -c "command() { [[ \"\$*\" == *jq* ]] && return 1; builtin command \"\$@\"; }; export -f command; . '${DECKRD_LIB_DIR}/validate-env.sh'; validate_env"
+        It "Then: [Error] return 1 を返し、stdout に 'jq or jaq is required' を含む"
+          # 新規サブシェルで validate-env.sh を source し、jq/jaq を隠して validate_env を呼ぶ
+          When run /usr/bin/bash -c "command() { [[ \"\$*\" == *jq* || \"\$*\" == *jaq* ]] && return 1; builtin command \"\$@\"; }; export -f command; . '${DECKRD_LIB_DIR}/validate-env.sh'; validate_env"
           The status should equal 1
-          The output should include "jq is required"
+          The output should include "jq or jaq is required"
         End
       End
     End
