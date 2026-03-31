@@ -300,6 +300,7 @@ Describe "bootstrap.lib.sh"
       Before "export PROJECT_ROOT=/tmp/proj; unset RUNTIME_LIB_DIR; bootstrap_init"
 
       It "[Normal] PROJECT_ROOT/plugins/_runtime/libs になる"
+        # shellcheck disable=SC2153
         When call echo "$RUNTIME_LIB_DIR"
         The output should equal "/tmp/proj/plugins/_runtime/libs"
       End
@@ -541,6 +542,7 @@ Describe "bootstrap.lib.sh"
       End
 
       It "[Normal] XDG_DATA_HOME が未設定のまま (副作用なし)"
+        # shellcheck disable=SC2016
         When call bash -c '[[ -z "${XDG_DATA_HOME+x}" ]] && echo ok'
         The output should equal "ok"
       End
@@ -712,6 +714,7 @@ Describe "bootstrap.lib.sh"
       End
 
       It "[Normal] 正規表現パターン文字 [ を含む"
+        # shellcheck disable=SC2016
         When call bash -c '[[ "$SYMBOL" == *"["* ]] && echo ok'
         The output should equal "ok"
       End

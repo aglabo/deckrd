@@ -273,6 +273,7 @@ write_project() {
     created_at="$timestamp"
   fi
 
+  # shellcheck disable=SC2016
   ${jqexe:-jq} -n \
     --arg project "$PROJECT_NAME" \
     --arg project_type "$PROJECT_TYPE" \
@@ -311,6 +312,7 @@ init_session() {
     return 0
   fi
 
+  # shellcheck disable=SC2016
   ${jqexe:-jq} -n \
     --arg lang "$LANGUAGE" \
     --arg ai_model "$AI_MODEL" \
