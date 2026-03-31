@@ -52,8 +52,8 @@ Read: `docs/.deckrd/<namespace>/<module>/specifications/specifications.md`
 
 ## Output
 
-| Subcommand | Creates         |
-| ---------- | --------------- |
+| Subcommand | Creates          |
+| ---------- | ---------------- |
 | (none)     | `tasks/tasks.md` |
 
 ## Prompt & Template
