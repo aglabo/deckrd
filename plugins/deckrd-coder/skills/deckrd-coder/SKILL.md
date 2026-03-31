@@ -72,11 +72,11 @@ Do NOT commit after completion — user commits manually.
 
 Always spawn **checklist-builder** with the user's instruction or Task ID.
 
-| Input type           | checklist-builder behavior                                      |
-| -------------------- | --------------------------------------------------------------- |
-| Natural-language     | Analyze instruction, decompose into BDD tasks, generate file    |
-| Task ID (e.g. T01-02) | Read tasks.md entry, expand into BDD checklist, generate file  |
-| `--checklist <path>` | Skip checklist-builder, use the specified existing file         |
+| Input type            | checklist-builder behavior                                    |
+| --------------------- | ------------------------------------------------------------- |
+| Natural-language      | Analyze instruction, decompose into BDD tasks, generate file  |
+| Task ID (e.g. T01-02) | Read tasks.md entry, expand into BDD checklist, generate file |
+| `--checklist <path>`  | Skip checklist-builder, use the specified existing file       |
 
 Output: `temp/tasks/<slug>-<adjective>-checklist.md`
 
@@ -84,12 +84,12 @@ Output: `temp/tasks/<slug>-<adjective>-checklist.md`
 
 Pass the following context to each bdd-coder instance:
 
-| Item              | Content                                      |
-| ----------------- | -------------------------------------------- |
-| Task ID           | e.g. `T-01-02-01`                            |
-| Task description  | Full Given/When/Then from checklist          |
-| Quality gate cmds | Commands table from ENV PROFILE              |
-| Checklist path    | Path to generated checklist file             |
+| Item              | Content                             |
+| ----------------- | ----------------------------------- |
+| Task ID           | e.g. `T-01-02-01`                   |
+| Task description  | Full Given/When/Then from checklist |
+| Quality gate cmds | Commands table from ENV PROFILE     |
+| Checklist path    | Path to generated checklist file    |
 
 Do NOT pass: session-wide context, other tasks' info, or session.json.
 

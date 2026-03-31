@@ -61,9 +61,9 @@ T-01: {{TEST_TARGET_NAME}}
 
 #### T-01-01-01 — {{CASE_DESCRIPTION}}
 
-| Input                | Expected                |
-| -------------------- | ----------------------- |
-| `{{INPUT_EXAMPLE}}`  | `{{EXPECTED_EXAMPLE}}`  |
+| Input               | Expected               |
+| ------------------- | ---------------------- |
+| `{{INPUT_EXAMPLE}}` | `{{EXPECTED_EXAMPLE}}` |
 
 - [ ] **[T-01-01-01-R] Red** : `{{FUNCTION_NAME}}({{INPUT_EXAMPLE}})` のテストを書き、失敗を確認する
 - [ ] **[T-01-01-01-G] Green** : テストが通る最小限の実装をする
@@ -81,9 +81,9 @@ T-01: {{TEST_TARGET_NAME}}
 
 #### T-01-02-01 — {{CASE_ERROR_DESCRIPTION}}
 
-| Input                      | Expected                      |
-| -------------------------- | ----------------------------- |
-| `{{INPUT_ERROR_EXAMPLE}}`  | `{{EXPECTED_ERROR_EXAMPLE}}`  |
+| Input                     | Expected                     |
+| ------------------------- | ---------------------------- |
+| `{{INPUT_ERROR_EXAMPLE}}` | `{{EXPECTED_ERROR_EXAMPLE}}` |
 
 - [ ] **[T-01-02-01-R] Red** : `{{FUNCTION_NAME}}({{INPUT_ERROR_EXAMPLE}})` のテストを書き、失敗を確認する
 - [ ] **[T-01-02-01-G] Green** : エラー処理を実装し、テストが通ることを確認する
@@ -101,9 +101,9 @@ T-01: {{TEST_TARGET_NAME}}
 
 #### T-01-03-01 — {{CASE_EDGE_DESCRIPTION}}
 
-| Input                      | Expected                      |
-| -------------------------- | ----------------------------- |
-| `{{INPUT_EDGE_EXAMPLE}}`   | `{{EXPECTED_EDGE_EXAMPLE}}`   |
+| Input                    | Expected                    |
+| ------------------------ | --------------------------- |
+| `{{INPUT_EDGE_EXAMPLE}}` | `{{EXPECTED_EDGE_EXAMPLE}}` |
 
 - [ ] **[T-01-03-01-R] Red** : `{{FUNCTION_NAME}}({{INPUT_EDGE_EXAMPLE}})` のテストを書き、失敗を確認する
 - [ ] **[T-01-03-01-G] Green** : エッジケースが正しく処理されることを確認する

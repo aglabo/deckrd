@@ -12,6 +12,8 @@ model: inherit
 color: cyan
 ---
 
+<!-- textlint-disable
+  ja-technical-writing/sentence-length -->
 <!-- markdownlint-disable line-length -->
 
 ## Role
@@ -22,11 +24,11 @@ then invoke `/deckrd-coder` with the generated checklist path.
 
 ## Inputs
 
-| Parameter     | Description                                                        |
-| ------------- | ------------------------------------------------------------------ |
-| `instruction` | Natural-language instruction OR Task ID (e.g. `T01-02`)           |
-| `tasks_md`    | Path to tasks.md (required only when instruction is a Task ID)     |
-| `directory`   | Repository root (default: current working directory)               |
+| Parameter     | Description                                                    |
+| ------------- | -------------------------------------------------------------- |
+| `instruction` | Natural-language instruction OR Task ID (e.g. `T01-02`)        |
+| `tasks_md`    | Path to tasks.md (required only when instruction is a Task ID) |
+| `directory`   | Repository root (default: current working directory)           |
 
 ## Workflow
 
@@ -44,9 +46,9 @@ Determine input type, then extract task information:
 
 1. Read the instruction carefully.
 2. Identify:
-   - **Target**: function, class, or module to implement
-   - **Behaviors**: normal cases, error cases, edge cases
-   - **Constraints**: language, framework, existing code to extend
+   - Target: function, class, or module to implement
+   - Behaviors: normal cases, error cases, edge cases
+   - Constraints: language, framework, existing code to extend
 
 If target or behaviors are ambiguous, ask ONE clarifying question before proceeding.
 
@@ -54,7 +56,7 @@ If target or behaviors are ambiguous, ask ONE clarifying question before proceed
 
 Construct the filename as:
 
-```
+```text
 <content-slug>-<random-adjective>-checklist.md
 ```
 
@@ -67,7 +69,7 @@ Rules:
 
 Adjective pool (pick one at random):
 
-```
+```bash
 ancient, bold, brave, calm, clear, cool, dark, deep, dire,
 dusty, early, fair, fast, firm, free, full, good, grand,
 great, grim, hard, high, keen, kind, late, lazy, lean,
@@ -85,15 +87,15 @@ Use the template at:
 
 Fill in all `{{...}}` placeholders based on the analyzed request:
 
-| Placeholder             | How to fill                                              |
-| ----------------------- | -------------------------------------------------------- |
-| `{{TEST_TARGET_NAME}}`  | Exact function/method/class name to implement            |
-| `{{FUNCTION_NAME}}`     | Same as TEST_TARGET_NAME (or the primary function)       |
-| `{{SCENARIO_BEHAVIOR}}` | Concrete behavior description for the scenario           |
-| `{{CASE_DESCRIPTION}}`  | One-line description of the specific test case           |
-| `{{INPUT_EXAMPLE}}`     | Concrete input value (literal, not abstract)             |
-| `{{EXPECTED_EXAMPLE}}`  | Concrete expected output value                           |
-| `YYYY-MM-DD HH:MM:SS`   | Current timestamp                                        |
+| Placeholder             | How to fill                                        |
+| ----------------------- | -------------------------------------------------- |
+| `{{TEST_TARGET_NAME}}`  | Exact function/method/class name to implement      |
+| `{{FUNCTION_NAME}}`     | Same as TEST_TARGET_NAME (or the primary function) |
+| `{{SCENARIO_BEHAVIOR}}` | Concrete behavior description for the scenario     |
+| `{{CASE_DESCRIPTION}}`  | One-line description of the specific test case     |
+| `{{INPUT_EXAMPLE}}`     | Concrete input value (literal, not abstract)       |
+| `{{EXPECTED_EXAMPLE}}`  | Concrete expected output value                     |
+| `YYYY-MM-DD HH:MM:SS`   | Current timestamp                                  |
 
 Guidelines:
 
@@ -121,7 +123,7 @@ Guidelines:
 
 After writing the checklist, report to the caller:
 
-```
+```bash
 CHECKLIST: temp/tasks/<filename>
 TASKS: <count> targets, <count> scenarios, <count> cases
 HANDOFF: /deckrd-coder --checklist <path>
