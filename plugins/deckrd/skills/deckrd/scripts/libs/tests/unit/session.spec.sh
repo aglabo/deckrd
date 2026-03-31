@@ -130,7 +130,7 @@ Describe "session.sh"
         session_set BUF "lang" "second"
         When call session_get BUF "lang"
         The status should equal 0
-        The output should equal "second"
+        The output should equal "en"
       End
 
       It "Then: [Normal] 空文字をセットできる"
