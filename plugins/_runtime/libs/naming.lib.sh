@@ -48,7 +48,10 @@ _try_create_cache_file() {
   local filename="${1}"
 
   _init_filename_cache || return 1
-  ( set -o noclobber; : > "${_FILENAME_CACHE_DIR}/${filename}" ) 2>/dev/null
+  (
+    set -o noclobber
+    : >"${_FILENAME_CACHE_DIR}/${filename}"
+  ) 2>/dev/null
 }
 
 # hacker_random - Pick a random hacker name from hackers.dic
@@ -120,7 +123,7 @@ generate_filename() {
       break
     fi
 
-    i=$(( i + 1 ))
+    i=$((i + 1))
   done
 
   if [[ $i -ge $max_retries ]]; then
