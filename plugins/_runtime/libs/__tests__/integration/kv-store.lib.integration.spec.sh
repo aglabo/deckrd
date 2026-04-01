@@ -46,10 +46,10 @@ Describe "kv-store.lib.sh - integration tests"
 
     Describe "Given: schema 未登録のストア"
       Describe "When: kv_load を呼ぶ"
-        It "Then: [Error] return 1 を返し Error: を stdout に出力する"
+        It "Then: [Error] return 1 を返し Error: を stderr に出力する"
           When call kv_load "noschema_store" "/tmp/any"
           The status should equal 1
-          The output should include "Error:"
+          The stderr should include "Error:"
         End
       End
     End
@@ -63,7 +63,7 @@ Describe "kv-store.lib.sh - integration tests"
           printf 'not-json' > "${NAMING_TMPDIR}/bad.kv"
           When call kv_load "badjson_store" "${NAMING_TMPDIR}/bad"
           The status should equal 1
-          The output should include "Error"
+          The stderr should include "Error"
         End
       End
     End
@@ -72,10 +72,10 @@ Describe "kv-store.lib.sh - integration tests"
   Describe "kv_save"
     Describe "Given: schema 未登録のストア"
       Describe "When: kv_save を呼ぶ"
-        It "Then: [Error] return 1 を返し Error: を stdout に出力する"
+        It "Then: [Error] return 1 を返し Error: を stderr に出力する"
           When call kv_save "noschema_save_store" "/tmp/any"
           The status should equal 1
-          The output should include "Error:"
+          The stderr should include "Error:"
         End
       End
     End
