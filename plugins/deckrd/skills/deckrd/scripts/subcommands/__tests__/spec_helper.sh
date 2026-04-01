@@ -10,7 +10,7 @@
 # Delegate to the canonical spec_helper in scripts/tests/
 # ============================================================================
 
-_HELPER_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/plugins/deckrd/skills/deckrd/scripts/tests" && pwd)"
+_HELPER_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/plugins/deckrd/skills/deckrd/scripts/__tests__" && pwd)"
 # shellcheck disable=SC1091
 . "${_HELPER_DIR}/spec_helper.sh"
 unset _HELPER_DIR
