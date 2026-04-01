@@ -4,6 +4,8 @@ aliases:
   - bash
 ---
 
+<!-- markdownlint-disable line-length -->
+
 # Shell Language Rules
 
 ## Build & Run
