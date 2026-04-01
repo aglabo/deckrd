@@ -133,7 +133,7 @@ parse_options() {
 #
 resolve_spec_files() {
   [[ $# -eq 0 ]] && {
-    printf 'Error: No arguments given.\n'
+    printf 'Error: No arguments given.\n' >&2
     return 1
   }
 
@@ -153,7 +153,7 @@ resolve_spec_files() {
 
   # テスト種別以外 → エラー (stdout)
   if ! is_test_type "$first_arg"; then
-    printf "Error: Unknown argument '%s'. Expected a test type, spec file, or glob pattern.\n" "$first_arg"
+    printf "Error: Unknown argument '%s'. Expected a test type, spec file, or glob pattern.\n" "$first_arg" >&2
     return 1
   fi
 
