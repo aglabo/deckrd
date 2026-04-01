@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# runners/libs/tests/spec_helper.sh
+# runners/libs/__tests__/spec_helper.sh
 # @(#) : shared test helper for runners/libs tests
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
@@ -11,4 +11,4 @@
 # shellcheck disable=SC1091
 
 # Delegate to the shared spec helper
-. "${SHELLSPEC_PROJECT_ROOT}/runners/tests/spec_helper.sh"
+. "${SHELLSPEC_PROJECT_ROOT}/runners/__tests__/spec_helper.sh"
