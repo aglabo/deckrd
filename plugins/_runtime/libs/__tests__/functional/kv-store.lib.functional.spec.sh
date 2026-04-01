@@ -102,11 +102,11 @@ Describe "kv-store.lib.sh - functional tests"
       After "teardown_tmpdir"
 
       Describe "When: kv_load を呼ぶ"
-        It "Then: [Error] return 1 かつ stdout に 'Error:' を出力する"
+        It "Then: [Error] return 1 かつ stderr に 'Error:' を出力する"
           printf '{"key1":"loaded1","unknown":"ignored"}' > "${NAMING_TMPDIR}/extra.kv"
           When call kv_load "extrakey_store" "${NAMING_TMPDIR}/extra"
           The status should equal 1
-          The output should include "Error:"
+          The stderr should include "Error:"
         End
       End
     End
