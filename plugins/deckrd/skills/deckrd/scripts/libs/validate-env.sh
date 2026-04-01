@@ -29,7 +29,7 @@ if ! declare -f validate_env >/dev/null 2>&1; then
     elif command -v jq >/dev/null 2>&1; then
       export jqexe="jq"
     else
-      echo "Error: jq or jaq is required but not installed."
+      echo "Error: jq or jaq is required but not installed." >&2
       return 1
     fi
     return 0
