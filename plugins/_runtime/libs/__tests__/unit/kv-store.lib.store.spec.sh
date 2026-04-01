@@ -64,7 +64,7 @@ Describe "kv-store.lib.sh (store)"
         It "Then: [Error] 空文字は return 1 かつ 'must not be empty' を出力する"
           When call _kv_normalize_key ""
           The status should equal 1
-          The output should include "Error: _kv_normalize_key: key must not be empty"
+          The stderr should include "Error: _kv_normalize_key: key must not be empty"
         End
       End
     End
@@ -83,7 +83,7 @@ Describe "kv-store.lib.sh (store)"
         It "Then: [Error] '$1' は return 1 かつ 'invalid key' を出力する"
           When call _kv_normalize_key "$1"
           The status should equal 1
-          The output should include "Error: _kv_normalize_key: invalid key: '$1'"
+          The stderr should include "Error: _kv_normalize_key: invalid key: '$1'"
         End
       End
     End
@@ -155,17 +155,17 @@ Describe "kv-store.lib.sh (store)"
           kv_init "onekey_store2" "key1|val1"
           When call kv_get "onekey_store2" "other_key"
           The status should equal 1
-          The output should include "Error: kv_get:"
+          The stderr should include "Error: kv_get:"
         End
       End
     End
 
     Describe "Given: 空スキーマ"
       Describe "When: kv_init を呼ぶ"
-        It "Then: [Error] 空スキーマは return 1 かつ stdout に Error: を出力する"
+        It "Then: [Error] 空スキーマは return 1 かつ stderr に Error: を出力する"
           When call kv_init "emptyschema_store" ""
           The status should equal 1
-          The output should include "Error:"
+          The stderr should include "Error:"
         End
 
         It "Then: [Error] 空スキーマはストアが登録されない"
@@ -209,18 +209,18 @@ Describe "kv-store.lib.sh (store)"
           "|val"
         End
 
-        It "Then: [Error] '$1' は return 1 かつ stdout に Error: を出力する"
+        It "Then: [Error] '$1' は return 1 かつ stderr に Error: を出力する"
           When call kv_init "badkey_store" "$1"
           The status should equal 1
-          The output should include "Error:"
+          The stderr should include "Error:"
         End
       End
 
       Describe "When: kv_init を呼ぶ (複数キー中に 1 つ不正)"
-        It "Then: [Error] 複数キー中に 1 つ不正があれば return 1 かつ stdout に Error: を出力する"
+        It "Then: [Error] 複数キー中に 1 つ不正があれば return 1 かつ stderr に Error: を出力する"
           When call kv_init "badkey_store_multi" $'valid_key|val1\nmy-key|val2'
           The status should equal 1
-          The output should include "Error:"
+          The stderr should include "Error:"
         End
 
         It "Then: [Edge] 不正キーがあってもストアのスキーマは登録されない"
@@ -253,7 +253,7 @@ Describe "kv-store.lib.sh (store)"
         It "Then: [Error] スキーマ外キーは return 1 かつ 'Error: kv_get:' を出力する"
           When call kv_get "get_store" "no_such_key"
           The status should equal 1
-          The output should include "Error: kv_get:"
+          The stderr should include "Error: kv_get:"
         End
 
         It "Then: [Edge] スペースを含む値がそのまま返る"
@@ -273,13 +273,13 @@ Describe "kv-store.lib.sh (store)"
         It "Then: [Error] スキーマ外キーを kv_set すると return 1 かつ 'Error: kv_set:' を出力する"
           When call kv_set "get_store" "extra_key" "extra_val"
           The status should equal 1
-          The output should include "Error: kv_set:"
+          The stderr should include "Error: kv_set:"
         End
 
         It "Then: [Error] スキーマ外キーを kv_get すると return 1 かつ 'Error: kv_get:' を出力する"
           When call kv_get "get_store" "undefined_extra"
           The status should equal 1
-          The output should include "Error: kv_get:"
+          The stderr should include "Error: kv_get:"
         End
       End
     End
@@ -295,7 +295,7 @@ Describe "kv-store.lib.sh (store)"
         It "Then: [Edge] キー引数なしで kv_get を呼ぶと return 1 かつ 'Error:' を出力する"
           When call kv_get "uninit_get_store" ""
           The status should equal 1
-          The output should include "Error:"
+          The stderr should include "Error:"
         End
       End
     End
@@ -333,7 +333,7 @@ Describe "kv-store.lib.sh (store)"
         It "Then: [Error] '$1' は return 1 かつ 'Error:' を出力する"
           When call kv_get "invalid_get_store" "$1"
           The status should equal 1
-          The output should include "Error:"
+          The stderr should include "Error:"
         End
       End
     End
@@ -347,7 +347,7 @@ Describe "kv-store.lib.sh (store)"
         It "Then: [Error] スキーマ外の新規キーをセットすると return 1 かつ 'Error: kv_set:' を出力する"
           When call kv_set "set_store" "newkey" "newval"
           The status should equal 1
-          The output should include "Error: kv_set:"
+          The stderr should include "Error: kv_set:"
         End
 
         It "Then: [Normal] 既存キーを上書きできる"
@@ -375,7 +375,7 @@ Describe "kv-store.lib.sh (store)"
         It "Then: [Error] スキーマ外キーを kv_set すると return 1 かつ 'Error: kv_set:' を出力する"
           When call kv_set "set_store" "extra_for_all" "extra_val"
           The status should equal 1
-          The output should include "Error: kv_set:"
+          The stderr should include "Error: kv_set:"
         End
       End
 
@@ -405,7 +405,7 @@ Describe "kv-store.lib.sh (store)"
         It "Then: [Edge] キー引数なしで kv_set を呼ぶと return 1 かつ 'Error:' を出力する"
           When call kv_set "uninit_set_store2" "" "val"
           The status should equal 1
-          The output should include "Error:"
+          The stderr should include "Error:"
         End
       End
     End
@@ -436,7 +436,7 @@ Describe "kv-store.lib.sh (store)"
         It "Then: [Error] '$1' は return 1 かつ 'Error:' を出力する"
           When call kv_set "invalid_set_store" "$1" "val"
           The status should equal 1
-          The output should include "Error:"
+          The stderr should include "Error:"
         End
       End
     End
@@ -503,10 +503,10 @@ Describe "kv-store.lib.sh (store)"
   Describe "kv_load"
     Describe "Given: スキーマ未登録のストア"
       Describe "When: kv_load を呼ぶ"
-        It "Then: [Error] return 1 かつ stdout に 'Error: kv_load:' を出力する"
+        It "Then: [Error] return 1 かつ stderr に 'Error: kv_load:' を出力する"
           When call kv_load "noschema_load_store" "/tmp/dummy"
           The status should equal 1
-          The output should include "Error: kv_load:"
+          The stderr should include "Error: kv_load:"
         End
       End
     End
@@ -574,14 +574,14 @@ Describe "kv-store.lib.sh (store)"
           printf '%s' 'this is not json' > "${NAMING_TMPDIR}/broken.kv"
           When call kv_load "invalid_json_store" "${NAMING_TMPDIR}/broken"
           The status should equal 1
-          The output should include "Error: kv_load:"
+          The stderr should include "Error: kv_load:"
         End
 
         It "Then: [Error] stdout に 'Error: kv_load:' を出力する"
           printf '%s' 'this is not json' > "${NAMING_TMPDIR}/broken.kv"
           When call kv_load "invalid_json_store" "${NAMING_TMPDIR}/broken"
           The status should equal 1
-          The output should include "Error: kv_load:"
+          The stderr should include "Error: kv_load:"
         End
       End
     End
@@ -637,11 +637,11 @@ Describe "kv-store.lib.sh (store)"
       After "teardown_tmpdir"
 
       Describe "When: kv_load を呼ぶ"
-        It "Then: [Error] return 1 かつ stdout に 'Error:' を出力する"
+        It "Then: [Error] return 1 かつ stderr に 'Error:' を出力する"
           printf '%s' '{"key1":"v1","key2":"v2","unknown":"x"}' > "${NAMING_TMPDIR}/extra.kv"
           When call kv_load "extra_key_store" "${NAMING_TMPDIR}/extra"
           The status should equal 1
-          The output should include "Error:"
+          The stderr should include "Error:"
         End
       End
     End
@@ -650,10 +650,10 @@ Describe "kv-store.lib.sh (store)"
   Describe "kv_save"
     Describe "Given: スキーマ未登録のストア"
       Describe "When: kv_save を呼ぶ"
-        It "Then: [Error] return 1 かつ stdout に 'Error: kv_save:' を出力する"
+        It "Then: [Error] return 1 かつ stderr に 'Error: kv_save:' を出力する"
           When call kv_save "noschema_save_store" "/tmp/dummy"
           The status should equal 1
-          The output should include "Error: kv_save:"
+          The stderr should include "Error: kv_save:"
         End
       End
     End
