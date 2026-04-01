@@ -94,7 +94,7 @@ Describe "normalize_doc_type"
     It "exit 1でエラーメッセージを返す"
       When run normalize_doc_type invalid
       The status should equal 1
-      The output should include "Unknown doc-type"
+      The stderr should include "Error: unknown doc-type"
     End
   End
 
@@ -102,7 +102,7 @@ Describe "normalize_doc_type"
     It "exit 1でエラーメッセージを返す"
       When run normalize_doc_type ""
       The status should equal 1
-      The output should include "Error: doc-type is required"
+      The stderr should include "Error: doc-type is required"
     End
   End
 
@@ -110,13 +110,13 @@ Describe "normalize_doc_type"
     It "大文字を含む場合はexit 1でエラーメッセージを返す"
       When run normalize_doc_type "Req"
       The status should equal 1
-      The output should include "Error: doc-type must match"
+      The stderr should include "Error: doc-type must match"
     End
 
     It "数字を含む場合はexit 1でエラーメッセージを返す"
       When run normalize_doc_type "req1"
       The status should equal 1
-      The output should include "Error: doc-type must match"
+      The stderr should include "Error: doc-type must match"
     End
   End
 
