@@ -9,7 +9,7 @@
 # shellcheck shell=bash
 # get-filelist.spec.sh — BDD spec for get-filelist.sh
 
-Include "${SHELLSPEC_PROJECT_ROOT}/runners/libs/tests/spec_helper.sh"
+Include "${SHELLSPEC_PROJECT_ROOT}/runners/libs/__tests__/spec_helper.sh"
 Include "${SHELLSPEC_PROJECT_ROOT}/runners/libs/get-filelist.sh"
 
 Describe 'get_filelist()'
