@@ -29,7 +29,7 @@ teardown_deckrd_tmpdir() {
 }
 
 # Fixtures directory
-FIXTURES_DIR="${SHELLSPEC_PROJECT_ROOT}/plugins/deckrd/skills/deckrd/scripts/tests/fixtures"
+FIXTURES_DIR="${SHELLSPEC_PROJECT_ROOT}/plugins/deckrd/skills/deckrd/scripts/__tests__/fixtures"
 export FIXTURES_DIR
 
 # Helper: return the path to a fixture file
