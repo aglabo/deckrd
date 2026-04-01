@@ -59,12 +59,12 @@ _kv_normalize_key() {
   key="${key%"${key##*[![:space:]]}"}"
 
   if [[ -z "$key" ]]; then
-    echo "Error: _kv_normalize_key: key must not be empty"
+    echo "Error: _kv_normalize_key: key must not be empty" >&2
     return 1
   fi
 
   if [[ ! "$key" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
-    echo "Error: _kv_normalize_key: invalid key: '${key}'"
+    echo "Error: _kv_normalize_key: invalid key: '${key}'" >&2
     return 1
   fi
 
@@ -81,7 +81,7 @@ kv_init() {
 
   # Guard: empty schema is an error
   if [[ -z "$schema" ]]; then
-    echo "Error: kv_init: schema must not be empty"
+    echo "Error: kv_init: schema must not be empty" >&2
     return 1
   fi
 
@@ -95,14 +95,8 @@ kv_init() {
     _kv_init_default="${_kv_init_line#*|}"
     [[ "$_kv_init_key" == "$_kv_init_line" ]] && _kv_init_default=""
 
-    local _normalized_key _norm_err
-    _norm_err="$(_kv_normalize_key "$_kv_init_key")"
-    local _norm_rc=$?
-    if [[ $_norm_rc -ne 0 ]]; then
-      echo "$_norm_err"
-      return 1
-    fi
-    _normalized_key="$_norm_err"
+    local _normalized_key
+    _normalized_key="$(_kv_normalize_key "$_kv_init_key")" || return 1
     _validated_keys+=("$_normalized_key")
     _validated_defaults+=("$_kv_init_default")
   done <<<"$schema"
@@ -143,20 +137,12 @@ kv_init() {
 kv_get() {
   local store="$1"
   local key="$2"
-  local _err
-
-  _err="$(_kv_normalize_key "$key")"
-  local _rc=$?
-  if [[ $_rc -ne 0 ]]; then
-    echo "$_err"
-    return $_rc
-  fi
-  key="$_err"
+  key="$(_kv_normalize_key "$key")" || return $?
 
   if [[ -n "${_KV_SCHEMA[$store]+set}" ]]; then
     local -n _kv_schema_ref="_KV_SCHEMA_${store}"
     if [[ -z "${_kv_schema_ref[$key]+set}" ]]; then
-      echo "Error: kv_get: key '${key}' is not in schema for store '${store}'"
+      echo "Error: kv_get: key '${key}' is not in schema for store '${store}'" >&2
       return 1
     fi
   fi
@@ -174,20 +160,12 @@ kv_set() {
   local store="$1"
   local key="$2"
   local value="${3:-}"
-  local _err
-
-  _err="$(_kv_normalize_key "$key")"
-  local _rc=$?
-  if [[ $_rc -ne 0 ]]; then
-    echo "$_err"
-    return $_rc
-  fi
-  key="$_err"
+  key="$(_kv_normalize_key "$key")" || return $?
 
   if [[ -n "${_KV_SCHEMA[$store]+set}" ]]; then
     local -n _kv_schema_ref="_KV_SCHEMA_${store}"
     if [[ -z "${_kv_schema_ref[$key]+set}" ]]; then
-      echo "Error: kv_set: key '${key}' is not in schema for store '${store}'"
+      echo "Error: kv_set: key '${key}' is not in schema for store '${store}'" >&2
       return 1
     fi
   fi
@@ -210,7 +188,7 @@ _kv_normalize_filename() {
 
   # Reject empty basename first
   if [[ -z "$base" ]]; then
-    printf 'Error: _kv_normalize_filename: basename must not be empty\n'
+    printf 'Error: _kv_normalize_filename: basename must not be empty\n' >&2
     return 1
   fi
 
@@ -221,7 +199,7 @@ _kv_normalize_filename() {
   # Valid pattern: optional prefix of [._-], then at least one [A-Za-z],
   # then any sequence of [A-Za-z0-9_.-]
   if [[ ! "$base" =~ ^[._-]*[A-Za-z][A-Za-z0-9_.-]*$ ]]; then
-    printf "Error: _kv_normalize_filename: invalid basename: '%s'\n" "$base"
+    printf "Error: _kv_normalize_filename: invalid basename: '%s'\n" "$base" >&2
     return 1
   fi
 
@@ -250,16 +228,13 @@ _kv_file_path() {
 
   # Reject paths ending with "/" (no filename component)
   if [[ "$path" == */ ]]; then
-    echo "Error: _kv_file_path: path must not end with '/': '${path}'"
+    echo "Error: _kv_file_path: path must not end with '/': '${path}'" >&2
     return 1
   fi
 
   # Extract basename and derive stem (validate once here)
   base="${path##*/}"
-  stem="$(_kv_normalize_filename "$base")" || {
-    echo "$stem"
-    return 1
-  }
+  stem="$(_kv_normalize_filename "$base")" || return 1
 
   # Reconstruct path: preserve dir if present, else filename only
   if [[ "$path" == */* ]]; then
@@ -287,16 +262,13 @@ kv_store_path() {
 
   # Reject paths ending with "/" (no filename component)
   if [[ "$path" == */ ]]; then
-    echo "Error: kv_store_path: path must not end with '/': '${path}'"
+    echo "Error: kv_store_path: path must not end with '/': '${path}'" >&2
     return 1
   fi
 
   # Extract basename and derive stem (validate once here)
   local base="${path##*/}"
-  stem="$(_kv_normalize_filename "$base")" || {
-    echo "$stem"
-    return 1
-  }
+  stem="$(_kv_normalize_filename "$base")" || return 1
 
   # Reconstruct path: preserve dir if present, else prepend DECKRD_LOCAL_DATA
   if [[ "$path" == */* ]]; then
@@ -304,7 +276,7 @@ kv_store_path() {
     printf '%s/%s.kv' "$dir" "$stem"
   else
     if [[ -z "${DECKRD_LOCAL_DATA:-}" ]]; then
-      echo "Error: kv_store_path: DECKRD_LOCAL_DATA is not set"
+      echo "Error: kv_store_path: DECKRD_LOCAL_DATA is not set" >&2
       return 1
     fi
     printf '%s/%s.kv' "$DECKRD_LOCAL_DATA" "$stem"
@@ -325,7 +297,7 @@ _kv_json_to_buff() {
   local json="$2"
 
   if [[ -z "${_KV_SCHEMA[$store]+set}" ]]; then
-    echo "Error: _kv_json_to_buff: schema not registered for store '${store}'"
+    echo "Error: _kv_json_to_buff: schema not registered for store '${store}'" >&2
     return 1
   fi
 
@@ -343,7 +315,7 @@ _kv_json_to_buff() {
   local k v
   while IFS=$'\t' read -r k v; do
     if [[ "$k" == "ERROR" ]]; then
-      echo "Error: _kv_json_to_buff: unknown key '${v}'"
+      echo "Error: _kv_json_to_buff: unknown key '${v}'" >&2
       return 1
     fi
     _kv_buf["$k"]="${v:-${_kv_schema_chk[$k]}}"
@@ -367,7 +339,7 @@ kv_load() {
   file="$(_kv_file_path "$path")"
 
   if [[ -z "${_KV_SCHEMA[$store]+set}" ]]; then
-    echo "Error: kv_load: schema not registered for store '${store}'"
+    echo "Error: kv_load: schema not registered for store '${store}'" >&2
     return 1
   fi
 
@@ -384,7 +356,7 @@ kv_load() {
 
   # Validate JSON before loading
   if ! "${jqexe:-jq}" empty "$file" 2>/dev/null; then
-    echo "Error: kv_load: invalid JSON file '${file}'"
+    echo "Error: kv_load: invalid JSON file '${file}'" >&2
     return 1
   fi
 
@@ -423,7 +395,7 @@ kv_save() {
   file="$(_kv_file_path "$path")"
 
   if [[ -z "${_KV_SCHEMA[$store]+set}" ]]; then
-    echo "Error: kv_save: schema not registered for store '${store}'"
+    echo "Error: kv_save: schema not registered for store '${store}'" >&2
     return 1
   fi
 
