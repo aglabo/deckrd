@@ -112,7 +112,7 @@ Describe "session.sh"
         It "Then: [Error] スキーマ外キーは exit 1 を返す"
           When call session_get BUF "no_such_key"
           The status should equal 1
-          The output should include "Error:"
+          The stderr should include "Error:"
         End
       End
     End
@@ -130,7 +130,7 @@ Describe "session.sh"
         session_set BUF "lang" "second"
         When call session_get BUF "lang"
         The status should equal 0
-        The output should equal "en"
+        The output should equal "second"
       End
 
       It "Then: [Normal] 空文字をセットできる"

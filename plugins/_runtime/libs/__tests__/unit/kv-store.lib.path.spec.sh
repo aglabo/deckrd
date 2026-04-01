@@ -136,16 +136,16 @@ Describe "kv-store.lib.sh"
 
     Describe "Given: / 終わりのパス（ファイル名なし）"
       Describe "When: _kv_file_path を呼ぶ"
-        It "Then: [Error] /foo/bar/ は return 1 かつ stdout に Error: を出力する"
+        It "Then: [Error] /foo/bar/ は return 1 かつ stderr に Error: を出力する"
           When call _kv_file_path "/foo/bar/"
           The status should equal 1
-          The output should include "Error:"
+          The stderr should include "Error:"
         End
 
-        It "Then: [Error] / のみは return 1 かつ stdout に Error: を出力する"
+        It "Then: [Error] / のみは return 1 かつ stderr に Error: を出力する"
           When call _kv_file_path "/"
           The status should equal 1
-          The output should include "Error:"
+          The stderr should include "Error:"
         End
       End
     End
@@ -155,19 +155,19 @@ Describe "kv-store.lib.sh"
         It "Then: [Error] 数字始まりの basename は return 1 かつ Error: を出力する"
           When call _kv_file_path "/foo/bar/1invalid"
           The status should equal 1
-          The output should include "Error:"
+          The stderr should include "Error:"
         End
 
         It "Then: [Error] スペースを含む basename は return 1 かつ Error: を出力する"
           When call _kv_file_path "/foo/bar/my file"
           The status should equal 1
-          The output should include "Error:"
+          The stderr should include "Error:"
         End
 
         It "Then: [Error] @ を含む basename は return 1 かつ Error: を出力する"
           When call _kv_file_path "/foo/bar/my@store"
           The status should equal 1
-          The output should include "Error:"
+          The stderr should include "Error:"
         End
       End
     End
@@ -177,13 +177,13 @@ Describe "kv-store.lib.sh"
         It "Then: [Error] 数字始まりのファイル名のみは return 1 かつ Error: を出力する"
           When call _kv_file_path "1invalid"
           The status should equal 1
-          The output should include "Error:"
+          The stderr should include "Error:"
         End
 
         It "Then: [Error] スペースを含むファイル名のみは return 1 かつ Error: を出力する"
           When call _kv_file_path "my file"
           The status should equal 1
-          The output should include "Error:"
+          The stderr should include "Error:"
         End
       End
     End
@@ -252,19 +252,19 @@ Describe "kv-store.lib.sh"
           It "Then: [Error] /foo/bar/ は return 1 かつ Error: を出力する"
             When call kv_store_path "/foo/bar/"
             The status should equal 1
-            The output should include "Error:"
+            The stderr should include "Error:"
           End
 
           It "Then: [Error] 数字始まりのファイル名のみは return 1 かつ Error: を出力する"
             When call kv_store_path "1invalid"
             The status should equal 1
-            The output should include "Error:"
+            The stderr should include "Error:"
           End
 
           It "Then: [Error] 不正な basename を含むパスは return 1 かつ Error: を出力する"
             When call kv_store_path "/foo/bar/1invalid"
             The status should equal 1
-            The output should include "Error:"
+            The stderr should include "Error:"
           End
         End
       End
@@ -275,10 +275,10 @@ Describe "kv-store.lib.sh"
 
       Describe "Given: ファイル名のみ（ディレクトリなし）"
         Describe "When: kv_store_path を呼ぶ"
-          It "Then: [Error] return 1 かつ stdout に Error: を出力する"
+          It "Then: [Error] return 1 かつ stderr に Error: を出力する"
             When call kv_store_path "session"
             The status should equal 1
-            The output should include "Error:"
+            The stderr should include "Error:"
           End
         End
       End
@@ -404,52 +404,52 @@ Describe "kv-store.lib.sh"
 
     Describe "Given: 不正なファイル名（バリデーションエラー）"
       Describe "When: _kv_normalize_filename を呼ぶ"
-        It "Then: [Error] 空文字は return 1 かつ stdout に Error: を出力する"
+        It "Then: [Error] 空文字は return 1 かつ stderr に Error: を出力する"
           When call _kv_normalize_filename ""
           The status should equal 1
-          The output should include "Error:"
+          The stderr should include "Error:"
         End
 
-        It "Then: [Error] スペースを含む名前は return 1 かつ stdout に Error: を出力する"
+        It "Then: [Error] スペースを含む名前は return 1 かつ stderr に Error: を出力する"
           When call _kv_normalize_filename "my file"
           The status should equal 1
-          The output should include "Error:"
+          The stderr should include "Error:"
         End
 
-        It "Then: [Error] スラッシュを含む名前は return 1 かつ stdout に Error: を出力する"
+        It "Then: [Error] スラッシュを含む名前は return 1 かつ stderr に Error: を出力する"
           When call _kv_normalize_filename "foo/bar"
           The status should equal 1
-          The output should include "Error:"
+          The stderr should include "Error:"
         End
 
-        It "Then: [Error] @ を含む名前は return 1 かつ stdout に Error: を出力する"
+        It "Then: [Error] @ を含む名前は return 1 かつ stderr に Error: を出力する"
           When call _kv_normalize_filename "my@store"
           The status should equal 1
-          The output should include "Error:"
+          The stderr should include "Error:"
         End
 
-        It "Then: [Error] . のみの名前は return 1 かつ stdout に Error: を出力する"
+        It "Then: [Error] . のみの名前は return 1 かつ stderr に Error: を出力する"
           When call _kv_normalize_filename "."
           The status should equal 1
-          The output should include "Error:"
+          The stderr should include "Error:"
         End
 
-        It "Then: [Error] .. の名前は return 1 かつ stdout に Error: を出力する"
+        It "Then: [Error] .. の名前は return 1 かつ stderr に Error: を出力する"
           When call _kv_normalize_filename ".."
           The status should equal 1
-          The output should include "Error:"
+          The stderr should include "Error:"
         End
 
-        It "Then: [Error] __ の名前は return 1 かつ stdout に Error: を出力する"
+        It "Then: [Error] __ の名前は return 1 かつ stderr に Error: を出力する"
           When call _kv_normalize_filename "__"
           The status should equal 1
-          The output should include "Error:"
+          The stderr should include "Error:"
         End
 
-        It "Then: [Error] 数字始まりの名前は return 1 かつ stdout に Error: を出力する"
+        It "Then: [Error] 数字始まりの名前は return 1 かつ stderr に Error: を出力する"
           When call _kv_normalize_filename "1start"
           The status should equal 1
-          The output should include "Error:"
+          The stderr should include "Error:"
         End
       End
     End

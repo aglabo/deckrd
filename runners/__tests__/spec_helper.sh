@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# runners/libs/tests/spec_helper.sh
-# @(#) : shared test helper for runners/libs tests
+# runners/__tests__/spec_helper.sh
+# @(#) : shared test helper for runners tests
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #
@@ -23,10 +23,13 @@ setup_temp_specs() {
   mkdir -p "${TEMP_DIR}/runners/libs/tests/integration"
   mkdir -p "${TEMP_DIR}/plugins/deckrd/tests/unit"
 
+  mkdir -p "${TEMP_DIR}/runners/libs/tests/system"
+
   touch "${TEMP_DIR}/runners/libs/tests/unit/args-normalize.spec.sh"
   touch "${TEMP_DIR}/runners/libs/tests/unit/kv-store.spec.sh"
   touch "${TEMP_DIR}/runners/libs/tests/unit/init.spec.sh"
   touch "${TEMP_DIR}/runners/libs/tests/integration/args-normalize.spec.sh"
+  touch "${TEMP_DIR}/runners/libs/tests/system/runner.spec.sh"
   touch "${TEMP_DIR}/plugins/deckrd/tests/unit/deckrd-init.spec.sh"
 
   # shellcheck disable=SC2034

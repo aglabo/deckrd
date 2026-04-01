@@ -49,12 +49,12 @@ normalize_doc_type() {
   local doc_type="${1:-}"
 
   if [[ -z "${doc_type}" ]]; then
-    echo "Error: doc-type is required"
+    echo "Error: doc-type is required" >&2
     return 1
   fi
 
   if [[ ! "${doc_type}" =~ ^[a-z]([a-z-]*[a-z])?$ ]]; then
-    echo "Error: doc-type must match [a-z][a-z-]* ${doc_type}"
+    echo "Error: doc-type must match [a-z][a-z-]* ${doc_type}" >&2
     return 1
   fi
 
@@ -87,7 +87,7 @@ normalize_doc_type() {
     echo "${doc_type}"
     ;;
   *)
-    echo "Unknown doc-type: ${doc_type}"
+    echo "Error: unknown doc-type: ${doc_type}" >&2
     return 1
     ;;
   esac

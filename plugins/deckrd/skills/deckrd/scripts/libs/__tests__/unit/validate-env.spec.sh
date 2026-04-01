@@ -41,11 +41,11 @@ Describe "validate-env.sh"
 
     Describe "Given: jaq も jq もインストールされていない環境 (両方を隠す)"
       Describe "When: validate_env を呼ぶ"
-        It "Then: [Error] return 1 を返し、stdout に 'jq or jaq is required' を含む"
+        It "Then: [Error] return 1 を返し、stderr に 'jq or jaq is required' を含む"
           # 新規サブシェルで validate-env.sh を source し、jq/jaq を隠して validate_env を呼ぶ
           When run /usr/bin/bash -c "command() { [[ \"\$*\" == *jq* || \"\$*\" == *jaq* ]] && return 1; builtin command \"\$@\"; }; export -f command; . '${DECKRD_LIB_DIR}/validate-env.sh'; validate_env"
           The status should equal 1
-          The output should include "jq or jaq is required"
+          The stderr should include "jq or jaq is required"
         End
       End
     End

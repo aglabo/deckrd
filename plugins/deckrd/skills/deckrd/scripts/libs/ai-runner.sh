@@ -63,13 +63,13 @@ validate_ai_model() {
   local model="${1:-}"
 
   if [[ -z "$model" ]]; then
-    echo "Error: AI model is required"
+    echo "Error: AI model is required" >&2
     return 1
   fi
 
   # <provider>/ 形式（モデル部分が空）は無効
   if [[ "$model" == */ ]]; then
-    echo "Error: unknown AI model: ${model}"
+    echo "Error: unknown AI model: ${model}" >&2
     return 1
   fi
 
@@ -78,7 +78,7 @@ validate_ai_model() {
     return 0
   fi
 
-  echo "Error: unknown AI model: ${model}"
+  echo "Error: unknown AI model: ${model}" >&2
   return 1
 }
 
@@ -95,14 +95,14 @@ resolve_ai_model() {
   local model="${1:-}"
 
   if [[ -z "$model" ]]; then
-    echo "Error: AI model is required"
+    echo "Error: AI model is required" >&2
     return 1
   fi
 
   # <provider>/ 形式（モデル部分が空）は無効
   if [[ "$model" == */ ]]; then
     local provider="${model%/}"
-    echo "Error: model name is required after provider: ${provider}"
+    echo "Error: model name is required after provider: ${provider}" >&2
     return 1
   fi
 
@@ -113,7 +113,7 @@ resolve_ai_model() {
     case "$raw_model" in
     claude-*) echo "$raw_model" ;;
     *)
-      echo "Error: invalid model for anthropic: ${raw_model}"
+      echo "Error: invalid model for anthropic: ${raw_model}" >&2
       return 1
       ;;
     esac
@@ -126,7 +126,7 @@ resolve_ai_model() {
     case "$raw_model" in
     gpt-* | o1-* | o3-*) echo "$raw_model" ;;
     *)
-      echo "Error: invalid model for openai: ${raw_model}"
+      echo "Error: invalid model for openai: ${raw_model}" >&2
       return 1
       ;;
     esac
@@ -139,7 +139,7 @@ resolve_ai_model() {
     case "$raw_model" in
     gemini-*) echo "$raw_model" ;;
     *)
-      echo "Error: invalid model for google: ${raw_model}"
+      echo "Error: invalid model for google: ${raw_model}" >&2
       return 1
       ;;
     esac
@@ -149,7 +149,7 @@ resolve_ai_model() {
     case "$raw_model" in
     gemini-*) echo "$raw_model" ;;
     *)
-      echo "Error: invalid model for google: ${raw_model}"
+      echo "Error: invalid model for google: ${raw_model}" >&2
       return 1
       ;;
     esac
@@ -162,7 +162,7 @@ resolve_ai_model() {
     case "$raw_model" in
     claude-* | gpt-* | gemini-* | grok-*) echo "$raw_model" ;;
     *)
-      echo "Error: invalid model for copilot: ${raw_model}"
+      echo "Error: invalid model for copilot: ${raw_model}" >&2
       return 1
       ;;
     esac
@@ -172,7 +172,7 @@ resolve_ai_model() {
     case "$raw_model" in
     claude-* | gpt-* | gemini-* | grok-*) echo "$raw_model" ;;
     *)
-      echo "Error: invalid model for copilot: ${raw_model}"
+      echo "Error: invalid model for copilot: ${raw_model}" >&2
       return 1
       ;;
     esac
@@ -182,7 +182,7 @@ resolve_ai_model() {
     case "$raw_model" in
     claude-* | gpt-* | gemini-* | grok-*) echo "$raw_model" ;;
     *)
-      echo "Error: invalid model for copilot: ${raw_model}"
+      echo "Error: invalid model for copilot: ${raw_model}" >&2
       return 1
       ;;
     esac
@@ -192,7 +192,7 @@ resolve_ai_model() {
     echo "$raw_model"
     ;;
   *)
-    echo "Error: unknown AI model: ${model}"
+    echo "Error: unknown AI model: ${model}" >&2
     return 1
     ;;
   esac

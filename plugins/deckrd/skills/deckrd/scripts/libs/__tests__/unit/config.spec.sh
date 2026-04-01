@@ -62,7 +62,7 @@ Describe "config.sh"
         It "Then: [Error] スキーマ外のキーはエラーになる"
           When call config_get "no_such_key"
           The status should equal 1
-          The output should include "not in schema"
+          The stderr should include "not in schema"
         End
       End
 
@@ -92,7 +92,7 @@ Describe "config.sh"
         It "Then: [Error] スキーマ外のキーはエラーになる"
           When call config_set "no_such_key" "val"
           The status should equal 1
-          The output should include "not in schema"
+          The stderr should include "not in schema"
         End
       End
     End
