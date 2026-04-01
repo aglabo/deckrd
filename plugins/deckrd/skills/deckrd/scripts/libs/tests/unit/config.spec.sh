@@ -100,7 +100,7 @@ Describe "config.sh"
 
   Describe "config_all"
     Describe "Given: CONFIG に複数のキーがセットされた状態"
-      Before "CONFIG=(); CONFIG[ai_model]=sonnet; CONFIG[lang]=ja"
+      Before "config_init; config_set 'ai_model' 'sonnet'; config_set 'lang' 'ja'"
 
       Describe "When: config_all を呼ぶ"
         It "Then: [Normal] ai_model=sonnet が出力に含まれる"

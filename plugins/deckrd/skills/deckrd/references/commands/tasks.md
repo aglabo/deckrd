@@ -212,7 +212,7 @@ Workflow complete. `tasks.md` is ready.
 
 To implement tasks using BDD:
 
-```
+```bash
 /deckrd-coder <task-id>
 ```
 

@@ -9,6 +9,8 @@
 # @version 0.1.0
 # USAGE: source this file, do NOT execute directly.
 #   . "$(dirname "${BASH_SOURCE[0]}")/kv-store.lib.sh"
+# shellcheck disable=SC2178  # nameref false positive: local -n correctly references arrays
+# shellcheck disable=SC2016  # jq filter strings intentionally use single quotes; $k/$v are jq variables, not shell
 
 # Guard: prevent re-sourcing
 if [[ -n "${_KV_STORE_LOADED:-}" ]]; then
@@ -17,6 +19,7 @@ fi
 readonly _KV_STORE_LOADED=1
 
 # shellcheck source=plugins/_runtime/libs/utils.lib.sh
+# shellcheck disable=SC1091
 . "$(dirname "${BASH_SOURCE[0]}")/utils.lib.sh"
 
 # Global associative array: store_name → schema array name ("_KV_SCHEMA_<store>")
@@ -106,7 +109,6 @@ kv_init() {
 
   # Register schema array: _KV_SCHEMA_<store>[key]=default
   declare -Ag "_KV_SCHEMA_${store}"
-  # shellcheck disable=SC2178
   local -n _kv_schema_ref="_KV_SCHEMA_${store}"
   # Clear previous schema entries
   for _key in "${!_kv_schema_ref[@]}"; do
@@ -117,8 +119,8 @@ kv_init() {
     _kv_schema_ref["${_validated_keys[$i]}"]="${_validated_defaults[$i]}"
   done
 
-  # Register schema (with normalized keys)
-  _KV_SCHEMA["$store"]="$_normalized_schema"
+  # Register schema (mark store as initialized)
+  _KV_SCHEMA["$store"]="$store"
 
   # Declare the store associative array if not already declared
   declare -Ag "_KV_${store}"
@@ -332,8 +334,8 @@ _kv_json_to_buff() {
 
   # Build schema key list as JSON array for unknown-key detection
   local schema_keys_json
-  schema_keys_json=$(printf '%s\n' "${!_kv_schema_chk[@]}" \
-    | jq_read -Rcs '[split("\n")[] | select(. != "")]')
+  schema_keys_json=$(printf '%s\n' "${!_kv_schema_chk[@]}" |
+    jq_read -Rcs '[split("\n")[] | select(. != "")]')
 
   # Validate keys and load values in a single jq invocation.
   # Unknown keys produce a sentinel "ERROR\t<key>" line.
@@ -350,7 +352,7 @@ _kv_json_to_buff() {
     if (.key as $k | $schema | index($k) | not) then ["ERROR", .key]
     else [.key, .value]
     end | @tsv
-  ' <<< "$json")
+  ' <<<"$json")
 }
 
 # kv_load - Load store from file
@@ -387,7 +389,7 @@ kv_load() {
   fi
 
   local json
-  json="$(< "$file")"
+  json="$(<"$file")"
   _kv_json_to_buff "$store" "$json"
 }
 
@@ -397,11 +399,11 @@ kv_load() {
 # @stdout Compact JSON object (no trailing newline issues, CRLF-safe)
 _kv_buff_to_json() {
   local store="$1"
-  # shellcheck disable=SC2178
   local -n _kv_buf="_KV_${store}"
 
   # Build "key\tvalue" TSV lines from the buffer and convert to compact JSON
   # in a single jq invocation.
+  local json='{}'
   local key
   for key in "${!_kv_buf[@]}"; do
     json=$(printf '%s' "$json" | jq_read --arg k "$key" --arg v "${_kv_buf[$key]}" '. + {($k): $v}')

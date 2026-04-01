@@ -10,9 +10,13 @@
 .claude/**
 .serena/**
 
-# temp
+## temp
 **/temp/**
 **/tmp/**
 
 ## Dev tools
 .tools/**
+
+## releases
+releases/**
+

@@ -14,6 +14,9 @@ metadata:
   license: MIT
 ---
 
+<!-- textlint-disable
+  ja-technical-writing/sentence-length -->
+
 # deckrd-coder
 
 Implements tasks using strict BDD: Red → Green → Refactor.
