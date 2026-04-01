@@ -100,42 +100,42 @@ Describe "session.sh"
     Before "declare -gA BUF=(); session_init BUF \"$SESSION_SCHEMA_TEST\""
 
     Describe "Given: BUF にキーをセットした状態"
-      Before "session_set BUF key1 value1"
+      Before "session_set BUF active myproject"
 
       Describe "When: session_get を呼ぶ"
         It "Then: [Normal] セットした値が返る"
-          When call session_get BUF "key1"
+          When call session_get BUF "active"
           The status should equal 0
-          The output should equal "value1"
+          The output should equal "myproject"
         End
 
-        It "Then: [Normal] 存在しないキーは空文字を返す"
+        It "Then: [Error] スキーマ外キーは exit 1 を返す"
           When call session_get BUF "no_such_key"
-          The status should equal 0
-          The output should equal ""
+          The status should equal 1
+          The output should include "Error:"
         End
       End
     End
 
     Describe "When: session_set を呼ぶ"
       It "Then: [Normal] 新規キーに値をセットできる"
-        session_set BUF "newkey" "newval"
-        When call session_get BUF "newkey"
+        session_set BUF "ai_model" "claude-3-5"
+        When call session_get BUF "ai_model"
         The status should equal 0
-        The output should equal "newval"
+        The output should equal "claude-3-5"
       End
 
       It "Then: [Normal] 既存キーを上書きできる"
-        session_set BUF "existing" "first"
-        session_set BUF "existing" "second"
-        When call session_get BUF "existing"
+        session_set BUF "lang" "first"
+        session_set BUF "lang" "second"
+        When call session_get BUF "lang"
         The status should equal 0
         The output should equal "second"
       End
 
       It "Then: [Normal] 空文字をセットできる"
-        session_set BUF "emptykey" ""
-        When call session_get BUF "emptykey"
+        session_set BUF "lang" ""
+        When call session_get BUF "lang"
         The status should equal 0
         The output should equal ""
       End

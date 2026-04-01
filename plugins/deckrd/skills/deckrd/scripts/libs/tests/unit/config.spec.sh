@@ -48,48 +48,51 @@ Describe "config.sh"
   End
 
   Describe "config_get / config_set"
-    Describe "Given: CONFIG 配列にキーをセットした状態"
-      Before "CONFIG=(); CONFIG[key1]=value1"
+    Describe "Given: config_init 済みの状態"
+      Before "config_init"
 
       Describe "When: config_get を呼ぶ"
         It "Then: [Normal] セットした値が返る"
-          When call config_get "key1"
+          config_set "lang" "ja"
+          When call config_get "lang"
           The status should equal 0
-          The output should equal "value1"
+          The output should equal "ja"
         End
 
-        It "Then: [Normal] 存在しないキーは空文字を返す"
+        It "Then: [Error] スキーマ外のキーはエラーになる"
           When call config_get "no_such_key"
-          The status should equal 0
-          The output should equal ""
+          The status should equal 1
+          The output should include "not in schema"
         End
       End
-    End
-
-    Describe "Given: CONFIG 配列が空の状態"
-      Before "CONFIG=()"
 
       Describe "When: config_set を呼ぶ"
-        It "Then: [Normal] 新規キーに値をセットできる"
-          config_set "newkey" "newval"
-          When call config_get "newkey"
+        It "Then: [Normal] スキーマ内キーに値をセットできる"
+          config_set "lang" "en"
+          When call config_get "lang"
           The status should equal 0
-          The output should equal "newval"
+          The output should equal "en"
         End
 
         It "Then: [Normal] 既存キーを上書きできる"
-          config_set "existing" "first"
-          config_set "existing" "second"
-          When call config_get "existing"
+          config_set "lang" "first"
+          config_set "lang" "second"
+          When call config_get "lang"
           The status should equal 0
           The output should equal "second"
         End
 
         It "Then: [Normal] 空文字をセットできる"
-          config_set "emptykey" ""
-          When call config_get "emptykey"
+          config_set "doc_type" ""
+          When call config_get "doc_type"
           The status should equal 0
           The output should equal ""
+        End
+
+        It "Then: [Error] スキーマ外のキーはエラーになる"
+          When call config_set "no_such_key" "val"
+          The status should equal 1
+          The output should include "not in schema"
         End
       End
     End
