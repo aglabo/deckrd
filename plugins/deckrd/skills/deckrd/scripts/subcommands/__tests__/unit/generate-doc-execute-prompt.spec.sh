@@ -34,7 +34,7 @@ Describe "generate-doc.sh ai-runner.sh integration"
       It "Then: [Normal] validate_ai_model は ai-runner.sh 版（空引数でｴGﾗ臆[出力）"
         When call validate_ai_model ""
         The status should equal 1
-        The output should include "Error:"
+        The stderr should include "Error:"
       End
     End
   End
@@ -70,10 +70,10 @@ Describe "generate-doc.sh ai-runner.sh integration"
           "openai/"
         End
 
-        It "Then: [Error] $1 → exit 1､Astdout に Error: を含む"
+        It "Then: [Error] $1 → exit 1､Astderr に Error: を含む"
           When call validate_ai_model "$1"
           The status should equal 1
-          The output should include "Error:"
+          The stderr should include "Error:"
         End
       End
     End
