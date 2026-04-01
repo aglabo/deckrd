@@ -9,7 +9,7 @@
 # shellcheck shell=bash
 # run-shellspec.spec.sh — BDD spec for run-shellspec.sh
 
-Include "${SHELLSPEC_PROJECT_ROOT}/runners/tests/spec_helper.sh"
+Include "${SHELLSPEC_PROJECT_ROOT}/runners/__tests__/spec_helper.sh"
 Include "${SHELLSPEC_PROJECT_ROOT}/runners/run-shellspec.sh"
 
 Describe 'is_test_type()'
@@ -198,6 +198,9 @@ Describe 'is_spec_glob()'
 End
 
 Describe 'expand_spec_glob()'
+  Before 'setup_temp_specs'
+  After 'teardown_temp_specs'
+
   Describe 'glob expansion'
     It 'returns matching spec files for runners/libs/tests/unit/*.spec.sh'
       When call expand_spec_glob 'runners/libs/tests/unit/*.spec.sh'
@@ -233,6 +236,9 @@ Describe 'resolve_spec_files()'
   End
 
   Describe 'test type expansion'
+    Before 'setup_temp_specs'
+    After 'teardown_temp_specs'
+
     It 'expands unit to unit spec files'
       When call resolve_spec_files 'unit'
       The output should include 'tests/unit'
@@ -250,7 +256,7 @@ Describe 'resolve_spec_files()'
   Describe 'error handling'
     It 'exits with failure for unknown test type'
       When call resolve_spec_files 'unknowntype'
-      The output should include 'Error'
+      The stderr should include 'Error'
       The status should be failure
     End
   End
