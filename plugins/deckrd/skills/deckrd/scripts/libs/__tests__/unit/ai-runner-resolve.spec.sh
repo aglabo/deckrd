@@ -210,7 +210,7 @@ Describe "ai-runner.sh"
         It "Then: [Error] $1 は exit 1 を返す"
           When call validate_ai_model "$1"
           The status should equal 1
-          The output should include "Error:"
+          The stderr should include "Error:"
         End
       End
     End
@@ -220,13 +220,13 @@ Describe "ai-runner.sh"
         It "Then: [Error] 引数なしは exit 1 を返す"
           When call validate_ai_model
           The status should equal 1
-          The output should include "Error:"
+          The stderr should include "Error:"
         End
 
         It "Then: [Error] 空文字列は exit 1 を返す"
           When call validate_ai_model ""
           The status should equal 1
-          The output should include "Error:"
+          The stderr should include "Error:"
         End
       End
     End
