@@ -30,7 +30,7 @@ NAMING_MAX_RETRIES="${NAMING_MAX_RETRIES:-5}"
 _init_filename_cache() {
   local cache_dir="${_FILENAME_CACHE_DIR}"
   if [[ -z "$cache_dir" ]]; then
-    echo "Error: _init_filename_cache: _FILENAME_CACHE_DIR is not set"
+    echo "Error: _init_filename_cache: _FILENAME_CACHE_DIR is not set" >&2
     return 1
   fi
   mkdir -p "$cache_dir"
@@ -64,7 +64,7 @@ hacker_random() {
   local dic="${1:-${PROJECT_ROOT}/plugins/_generated/hackers.dic}"
 
   if [[ ! -f "$dic" ]]; then
-    echo "Error: hacker_random: file not found: ${dic}"
+    echo "Error: hacker_random: file not found: ${dic}" >&2
     return 1
   fi
 
@@ -72,7 +72,7 @@ hacker_random() {
   name=$(grep -v '^\s*#' "$dic" | grep -v '^\s*$' | shuf -n 1)
 
   if [[ -z "$name" ]]; then
-    echo "Error: hacker_random: no entries found in: ${dic}"
+    echo "Error: hacker_random: no entries found in: ${dic}" >&2
     return 1
   fi
 
@@ -128,7 +128,7 @@ generate_filename() {
 
   if [[ $i -ge $max_retries ]]; then
     printf 'Error: generate_filename: max retries (%d) exceeded for slug "%s"\n' \
-      "$max_retries" "$slug"
+      "$max_retries" "$slug" >&2
     return 1
   fi
 
