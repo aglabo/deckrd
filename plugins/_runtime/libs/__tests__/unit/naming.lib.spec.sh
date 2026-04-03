@@ -48,10 +48,10 @@ Describe "naming.lib.sh"
 
     Describe "Given: 存在しないファイルパスを指定する"
       Describe "When: hacker_random に存在しないパスを渡す"
-        It "Then: [Error] status=1 を返し stdout にエラーメッセージが出力される"
+        It "Then: [Error] status=1 を返し stderr にエラーメッセージが出力される"
           When call hacker_random "/no/such/file.dic"
           The status should equal 1
-          The output should include "file not found"
+          The error should include "file not found"
         End
       End
     End
@@ -218,22 +218,22 @@ Describe "naming.lib.sh"
         Before "register_fixed_filename"
         After "teardown_always_same_mock"
 
-        It "Then: [Error] status=1 を返しエラーが stdout に出力される"
+        It "Then: [Error] status=1 を返しエラーが stderr に出力される"
           When call generate_filename "myfile" "doc"
           The status should equal 1
-          The output should include "max retries"
+          The error should include "max retries"
         End
 
-        It "Then: [Error] stdout に max retries exceeded メッセージが出力される"
+        It "Then: [Error] stderr に max retries exceeded メッセージが出力される"
           When call generate_filename "myfile" "doc"
           The status should equal 1
-          The output should include "max retries"
+          The error should include "max retries"
         End
 
-        It "Then: [Error] stdout に slug 名 myfile が含まれる"
+        It "Then: [Error] stderr に slug 名 myfile が含まれる"
           When call generate_filename "myfile" "doc"
           The status should equal 1
-          The output should include "myfile"
+          The error should include "myfile"
         End
       End
     End
