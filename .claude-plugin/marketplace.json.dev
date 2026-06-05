@@ -12,13 +12,13 @@
     {
       "name": "deckrd",
       "description": "your goals to tasks framework",
-      "source": "./skills/deckrd",
+      "source": "./plugins/deckrd",
       "strict": true
     },
     {
       "name": "deckrd-coder",
       "description": "Deckrd task implementation skill - extracts specified tasks from tasks.md and implements them using strict BDD process. Internally applies bdd-coder decision rules.",
-      "source": "./skills/deckrd-coder",
+      "source": "./plugins/deckrd-coder",
       "strict": true
     }
   ]
