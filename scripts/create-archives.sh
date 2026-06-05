@@ -320,6 +320,38 @@ copy_deckrd_json() {
 }
 
 ##
+# @description Copy skills directory (resolving symlinks) to temporary distribution
+# @arg $1 string Temporary dist directory path
+# @return 0 on success, 1 on error
+copy_skills_to_dist() {
+  local temp_dist="$1"
+  local skills_source="${PROJECT_ROOT}/skills"
+  local skills_dest="${temp_dist}/skills"
+
+  if [ ! -d "$skills_source" ]; then
+    echo "Warning: skills/ directory not found, skipping" >&2
+    return 0
+  fi
+
+  mkdir -p "$skills_dest"
+
+  # Copy each skill directory, resolving symlinks
+  for skill_link in "$skills_source"/*/; do
+    local skill_name
+    skill_name="$(basename "$skill_link")"
+    local real_path
+    real_path="$(realpath "$skill_link")"
+
+    if command -v rsync >/dev/null 2>&1; then
+      rsync -a --copy-links "$real_path/" "${skills_dest}/${skill_name}/"
+    else
+      cp -fr "$real_path/" "${skills_dest}/${skill_name}/"
+    fi
+    echo "Copied skills/${skill_name} (resolved from ${real_path})"
+  done
+}
+
+##
 # @description Create zip archive of distribution
 # @arg $1 string Normalized version
 # @arg $2 string Temporary dist directory path
@@ -348,8 +380,11 @@ archive_deckrd() {
     return 1
   fi
 
-  # Create archive from temp_dist parent directory
-  if (cd "$temp_dist" && zip -r "$archive_file" "deckrd"); then
+  # Create archive from temp_dist: include deckrd/ and skills/ if present
+  local targets=("deckrd")
+  [ -d "${temp_dist}/skills" ] && targets+=("skills")
+
+  if (cd "$temp_dist" && zip -r "$archive_file" "${targets[@]}"); then
     echo "Created archive: $archive_file"
   else
     echo "Error: Failed to create archive" >&2
@@ -497,6 +532,9 @@ main() {
 
   # Copy deckrd.json with selected fields
   copy_deckrd_json "$TEMP_DIST" || exit 1
+
+  # Copy skills/ directory (resolves symlinks for npx skills compatibility)
+  copy_skills_to_dist "$TEMP_DIST" || exit 1
 
   # Create zip archive
   archive_deckrd "$normalized_version" "$TEMP_DIST" || exit 1
