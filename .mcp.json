@@ -1,21 +1,18 @@
 {
   "mcpServers": {
     "codex-mcp": {
-      "type:": "stdio",
+      "type": "stdio",
       "command": "codex",
       "args": [
         "mcp-server"
-      ]
+      ],
+      "env": {}
     },
-    "serena-mcp": {
-      "type:": "stdio",
-      "command": "uvx",
+    "filesystem": {
+      "type": "stdio",
+      "command": "pnpx",
       "args": [
-        "--from",
-        "git+https://github.com/oraios/serena",
-        "serena",
-        "start-mcp-server",
-        "--project",
+        "@modelcontextprotocol/server-filesystem",
         "."
       ]
     }

@@ -6,7 +6,6 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 
-
 ##  General
 #   OS specific files
 .DS_Store
@@ -17,23 +16,18 @@ thumbs.db
 *.diff
 *.patch
 
-# ignore release package
-releases/*
-!releases/.keep
-
 #   history, cache
 .history/
 .cache/
 # **/*cache
 
-
 #   backup/swap/temp
 $~*
 ~*
 *~
-*tmp
-*swp
-*lock
+*.tmp
+*.swp
+*.lock
 
 # session files
 *session.json
@@ -41,12 +35,14 @@ $~*
 **/*session.json
 **/*session
 
-# deckrd local config (project-local, not for repository)
-.local/deckrd/
-
 # .env files
 .env*
 .env.*
+
+# ignore release package
+releases/*
+!releases/.keep
+
 
 ## Development tools (installed locally)
 .tools/
@@ -69,6 +65,8 @@ $~*
 !.claude/agents/**
 !.claude/rules/
 !.claude/rules/**
+!.claude/commands/
+!.claude/commands/**
 
 # MCP server dependency files
 .cocoindex_code/
