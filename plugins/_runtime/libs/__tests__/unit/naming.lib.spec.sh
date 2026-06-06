@@ -112,6 +112,7 @@ Describe "naming.lib.sh"
         It "Then: [Error] status=1 を返す"
           When call generate_filename "myfile" "doc"
           The status should equal 1
+          The stderr should include "Error:"
         End
       End
     End

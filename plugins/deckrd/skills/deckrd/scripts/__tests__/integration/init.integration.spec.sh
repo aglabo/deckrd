@@ -142,7 +142,7 @@ Describe "init.sh: main() integration"
       The status should equal 0
       The stderr should include "Init complete"
       The contents of file "${DECKRD_LOCAL_DATA}/.gitignore" \
-        should equal "$(load_fixture "init/local-deckrd/.gitignore")"
+        should equal "$(load_asset "inits/local-deckrd/.gitignore")"
     End
   End
 
