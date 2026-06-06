@@ -2,8 +2,9 @@
   "mcpServers": {
     "filesystem": {
       "type": "stdio",
-      "command": "pnpx",
+      "command": "npx",
       "args": [
+        "-y",
         "@modelcontextprotocol/server-filesystem",
         "."
       ]
