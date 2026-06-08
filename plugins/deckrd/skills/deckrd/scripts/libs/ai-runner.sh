@@ -282,7 +282,7 @@ _build_ai_command() {
 #   echo "prompt" | run_ai "openai/gpt-4o" 30
 run_ai() {
   local model="${1:-}"
-  local timeout_sec="${2:-5}"
+  local timeout_sec="${2:-120}"
 
   if [[ -z "$model" ]]; then
     echo "Error: model is required" >&2

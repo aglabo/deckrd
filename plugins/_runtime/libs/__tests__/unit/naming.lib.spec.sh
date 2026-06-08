@@ -72,6 +72,47 @@ Describe "naming.lib.sh"
     End
   End
 
+  Describe "adjective_random"
+    Describe "naming.lib.sh loading"
+      Describe "When: スクリプトを読み込む"
+        It "Then: [Normal] adjective_random 関数が存在する"
+          When call type adjective_random
+          The status should equal 0
+          The output should include "adjective_random"
+        End
+      End
+    End
+
+    Describe "Given: _ADJECTIVES 配列が定義されている"
+      Describe "When: adjective_random を引数なしで呼ぶ"
+        It "Then: [Normal] 空文字でない adjective が返る"
+          When call adjective_random
+          The status should equal 0
+          The output should not equal ""
+        End
+
+        It "Then: [Normal] 返値が _ADJECTIVES 配列内の語である"
+          _check_in_adjectives() {
+            local word
+            for word in "${_ADJECTIVES[@]}"; do
+              [[ "$word" == "$1" ]] && return 0
+            done
+            return 1
+          }
+          result=$(adjective_random)
+          When call _check_in_adjectives "$result"
+          The status should equal 0
+        End
+
+        It "Then: [Normal] 30回呼び出すと 2種類以上の異なる値が返る (ランダム性)"
+          result=$(for _ in $(seq 1 30); do adjective_random; done | sort -u | wc -l | tr -d ' ')
+          When call test "$result" -gt 1
+          The status should equal 0
+        End
+      End
+    End
+  End
+
   Describe "generate_filename"
     Describe "naming.lib.sh loading"
       Describe "When: スクリプトを読み込む"

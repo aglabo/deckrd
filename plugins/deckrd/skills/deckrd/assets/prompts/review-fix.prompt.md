@@ -42,6 +42,13 @@ specified review phase.
 - `PHASE`: explore | harden | fix (REQUIRED)
 - `LANG`: system | en | ja | other
 
+## Phase Binding
+
+This is the phase-specific prompt for `fix`.
+If PARAMETERS omits `PHASE`, treat it as `fix`.
+If PARAMETERS conflicts with this filename, STOP and report a phase mismatch
+instead of silently switching personas.
+
 ---
 
 ## Language Rules

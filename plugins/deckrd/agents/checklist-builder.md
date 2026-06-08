@@ -64,26 +64,20 @@ Rules:
 
 - `<content-slug>`: kebab-case summary of the implementation target (e.g. `add-greeting-function`, `parse-config-file`)
   - Derived from the instruction: verb + noun, max 4 words, lowercase, hyphens only
-- `<random-adjective>`: one random adjective from the list below
+- `<random-adjective>`: one random adjective selected via `adjective_random()`
 - Output path: `temp/tasks/<content-slug>-<random-adjective>-checklist.md`
 
-Adjective pool (pick one at random):
+Select the adjective using the Bash tool:
 
 ```bash
-ancient, bold, brave, calm, clear, cool, dark, deep, dire,
-dusty, early, fair, fast, firm, free, full, good, grand,
-great, grim, hard, high, keen, kind, late, lazy, lean,
-light, lone, lost, mild, neat, nice, noble, odd, pale,
-plain, proud, pure, quiet, rare, rich, rough, round, safe,
-sharp, short, shy, slim, slow, smart, soft, solid, stark,
-stern, still, stone, swift, tall, tame, thin, tiny, tidy,
-tough, true, vast, warm, wide, wild, wise, young
+source "${PROJECT_ROOT}/plugins/_runtime/libs/naming.lib.sh"
+adjective=$(adjective_random)
 ```
 
 ### Phase 3: Build Checklist
 
 Use the template at:
-`plugins/deckrd/skills/deckrd-coder/assets/templates/implementation-checklist.tpl.md`
+`../skills/deckrd-coder/assets/templates/implementation-checklist.tpl.md`
 
 Fill in all `{{...}}` placeholders based on the analyzed request:
 

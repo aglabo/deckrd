@@ -15,13 +15,13 @@ language: rust
 
 ## Quality Gates
 
-| Gate       | Command                                              |
-| ---------- | ---------------------------------------------------- |
-| Lint       | `cargo clippy -- -D warnings`                        |
-| Type Check | `cargo check`                                        |
-| Format     | `cargo fmt`                                          |
+| Gate       | Command                                               |
+| ---------- | ----------------------------------------------------- |
+| Lint       | `cargo clippy -- -D warnings`                         |
+| Type Check | `cargo check`                                         |
+| Format     | `cargo fmt`                                           |
 | Test       | `cargo llvm-cov` or `cargo tarpaulin` (with coverage) |
-| Test+Doc   | `cargo test --doc`                                   |
+| Test+Doc   | `cargo test --doc`                                    |
 
 ## Test Framework
 

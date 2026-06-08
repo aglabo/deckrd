@@ -98,6 +98,9 @@ config_get() {
 #
 # @arg $1 string Key name
 # @arg $2 string Value
+# @note config_set updates the in-memory CONFIG store only.
+#       Changes are NOT automatically written back to session.json.
+#       Call session_save explicitly after config_set if persistence is needed.
 config_set() {
   local key="$1"
   local value="${2:-}"

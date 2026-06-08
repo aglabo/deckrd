@@ -109,7 +109,8 @@ THEN <expected system response>
 - `WHEN`, `WHILE`, `NOT DO`, `WHERE` are optional but at least one MUST appear.
 - Multiple keywords may combine in one requirement:
   `GIVEN … WHILE … WHEN … THEN …`
-- `NOT DO` replaces `THEN` when the requirement prohibits an action.
+- `NOT DO` identifies the prohibited behavior; `THEN` still states the required
+  prevention, rejection, or mitigation response.
 
 ### EARS Examples
 
@@ -229,14 +230,19 @@ Store the diagram as **CONTEXT DIAGRAM** for inclusion in Section 2 of requireme
 
 ## Step 2: Generate requirements.md
 
-Using the **REQUIREMENTS TEMPLATE**, populate:
+Using the **REQUIREMENTS TEMPLATE**, populate the sections in this exact order:
 
-- Overview
-- Context
-- Design Decisions (summary only)
-- Functional Requirements (normative, in EARS Basic syntax)
-- Non-Functional Requirements
-- Change History
+1. Overview
+2. Context
+3. Design Decisions (summary only)
+4. Functional Requirements (normative, in EARS Basic syntax)
+5. Non-Functional Requirements
+6. Constraints
+7. User Stories
+8. Acceptance Criteria
+9. Open Questions
+10. Traceability
+11. Change History
 
 ⚠️ Requirements are **normative**.
 ⚠️ Examples are **non-prescriptive**.
@@ -257,7 +263,39 @@ If `GENERATE_DECISION_RECORDS==true` or `DR==true`:
 
 ---
 
-## Step 4: Generate Open Questions
+## Step 4: Generate User Stories
+
+Derive 3–7 User Stories from the Functional Requirements:
+
+- Format: "As a \<role\>, I want \<goal\>. Because \<reason\>."
+- Cover the primary stakeholders identified in Step 1
+- Each story must map to at least one FR
+
+Include in **Section 7** of requirements.md.
+
+---
+
+## Step 5: Generate Acceptance Criteria
+
+Write Acceptance Criteria in Gherkin format for the top functional requirements:
+
+- 3 main scenarios (happy path)
+- 2 exception/edge-case scenarios
+
+Format:
+
+```gherkin
+Scenario: <title>
+  Given <precondition>
+  When  <action>
+  Then  <expected result>
+```
+
+Include in **Section 8** of requirements.md.
+
+---
+
+## Step 6: Generate Open Questions
 
 Collect unresolved items from USER INPUT and HEARING NOTES:
 
@@ -277,35 +315,3 @@ For each `[MISSING]` EARS element, generate one Open Question row:
 Format as a table: Question | Type | Impact Area | Owner
 
 Include in **Section 9** of requirements.md.
-
----
-
-## Step 5: Generate User Stories
-
-Derive 3–7 User Stories from the Functional Requirements:
-
-- Format: "As a \<role\>, I want \<goal\>. Because \<reason\>."
-- Cover the primary stakeholders identified in Step 1
-- Each story must map to at least one FR
-
-Include in **Section 7** of requirements.md.
-
----
-
-## Step 6: Generate Acceptance Criteria
-
-Write Acceptance Criteria in Gherkin format for the top functional requirements:
-
-- 3 main scenarios (happy path)
-- 2 exception/edge-case scenarios
-
-Format:
-
-```gherkin
-Scenario: <title>
-  Given <precondition>
-  When  <action>
-  Then  <expected result>
-```
-
-Include in **Section 8** of requirements.md.

@@ -524,6 +524,36 @@ For each accepted removal or rewrite:
 
 ---
 
+### Phase 4: Second Opinion via Codex
+
+After Phase 3 cleanup is approved, invoke `/codex-review spec` before transitioning to `impl`.
+
+This step is **REQUIRED** when the specifications:
+
+- Reference external systems or third-party APIs heavily
+- Define data persistence or schema contracts
+- Introduce new module boundaries or public interfaces
+
+In all other cases, this step is **RECOMMENDED** before every `spec → impl` transition.
+
+**Execution:**
+
+```bash
+/codex-review spec
+```
+
+Focus: balanced review — correctness, completeness, consistency across behavioral contracts.
+
+**Handling findings:**
+
+- **Accept**: Note which findings to act on before running `impl`
+- **Reject**: Always provide a rationale — silent rejection is not allowed
+- If findings require revisions, return to Phase 2 and regenerate; then re-run Phases 3–4
+
+See [`deckrd-rule-second-opinion.md`](../../../../../../../../.claude/rules/deckrd-rule-second-opinion.md) for the full rule.
+
+---
+
 ## Input
 
 Read requirements document from session's active module:
@@ -586,7 +616,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh @specifications @requirements
 
 ## Session Update
 
-After Phase 3 cleanup is approved, update `.session.json`:
+After Phase 4 (or Phase 3 if Phase 4 is skipped), update `.session.json`:
 
 ```json
 {

@@ -14,13 +14,13 @@ language: go
 
 ## Quality Gates
 
-| Gate       | Command                          |
-| ---------- | -------------------------------- |
-| Lint       | `golangci-lint run ./...`        |
-| Vet        | `go vet ./...`                   |
-| Format     | `gofmt -w .` or `goimports -w .` |
-| Test       | `go test -cover ./...`           |
-| Test+Race  | `go test -race -cover ./...`     |
+| Gate      | Command                          |
+| --------- | -------------------------------- |
+| Lint      | `golangci-lint run ./...`        |
+| Vet       | `go vet ./...`                   |
+| Format    | `gofmt -w .` or `goimports -w .` |
+| Test      | `go test -cover ./...`           |
+| Test+Race | `go test -race -cover ./...`     |
 
 ## Test Framework
 

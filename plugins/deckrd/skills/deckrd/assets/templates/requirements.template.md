@@ -124,7 +124,13 @@ Implementation MUST support UTF-8 input.
 
 {{CONSTRAINT_STATEMENT_1}}
 
-## 7. Acceptance Criteria
+## 7. User Stories
+
+| Story ID | Role     | Goal     | Reason     | Related Requirements |
+| -------- | -------- | -------- | ---------- | -------------------- |
+| US-001   | {{ROLE}} | {{GOAL}} | {{REASON}} | REQ-F-001            |
+
+## 8. Acceptance Criteria
 
 ```gherkin
 # AC-001: {{AC_SCENARIO_TITLE_1}}
@@ -149,24 +155,24 @@ Scenario: {{AC_SCENARIO_TITLE_3}}
   Then  {{EXPECTED_RESULT_3}}
 ```
 
-## 8. Traceability
-
-| REQ ID     | AC IDs         | Type           |
-| ---------- | -------------- | -------------- |
-| REQ-F-001  | AC-001, AC-002 | Functional     |
-| REQ-F-002  | AC-003         | Functional     |
-| REQ-NF-001 | —              | Non-Functional |
-| REQ-NF-002 | —              | Non-Functional |
-| REQ-NF-003 | —              | Non-Functional |
-| REQ-C-001  | —              | Constraint     |
-
 ## 9. Open Questions
 
 | Question       | Type       | Impact Area  | Owner       |
 | -------------- | ---------- | ------------ | ----------- |
 | {{QUESTION_1}} | {{TYPE_1}} | {{IMPACT_1}} | {{OWNER_1}} |
 
-## 10. Change History
+## 10. Traceability
+
+| REQ ID     | AC IDs         | Type           |
+| ---------- | -------------- | -------------- |
+| REQ-F-001  | AC-001, AC-002 | Functional     |
+| REQ-F-002  | AC-003         | Functional     |
+| REQ-NF-001 | N/A            | Non-Functional |
+| REQ-NF-002 | N/A            | Non-Functional |
+| REQ-NF-003 | N/A            | Non-Functional |
+| REQ-C-001  | N/A            | Constraint     |
+
+## 11. Change History
 
 | Date     | Version | Description     |
 | -------- | ------- | --------------- |
