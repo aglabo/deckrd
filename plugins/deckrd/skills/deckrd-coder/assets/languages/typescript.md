@@ -73,7 +73,9 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 let _testDir: string;
-beforeEach(() => { _testDir = mkdtempSync(path.join(tmpdir(), 'test-')); });
+beforeEach(() => {
+  _testDir = mkdtempSync(path.join(tmpdir(), 'test-'));
+});
 afterEach(() => rmSync(_testDir, { recursive: true, force: true }));
 ```
 

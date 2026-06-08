@@ -17,12 +17,12 @@ aliases:
 
 ## Quality Gates
 
-| Gate       | Command                                       |
-| ---------- | --------------------------------------------- |
-| Lint       | `shellcheck **/*.sh`                          |
-| Format     | `shfmt -w **/*.sh`                            |
-| Test       | `shellspec --format documentation` (required) |
-| Coverage   | included in the above command                 |
+| Gate     | Command                                       |
+| -------- | --------------------------------------------- |
+| Lint     | `shellcheck **/*.sh`                          |
+| Format   | `shfmt -w **/*.sh`                            |
+| Test     | `shellspec --format documentation` (required) |
+| Coverage | included in the above command                 |
 
 ## Test Framework
 
