@@ -138,6 +138,26 @@ Use the coverage + complexity report from the language toolchain:
 When an automated per-function score is not available, compute manually:
 CC = 1 + (number of `if` / `case` / `while` / `for` / `&&` / `||` branches in the function).
 
+### Fallback when coverage is unavailable
+
+If per-function coverage cannot be obtained, substitute `coverage = 0`:
+
+```
+CRAP = CC² × (1 - 0)³ + CC = CC² + CC = CC × (CC + 1)
+```
+
+This is the worst-case score and produces a conservative (strict) judgment.
+
+| CC | CRAP (cov=0%) | Verdict  |
+| -- | ------------- | -------- |
+| 1  | 2             | PASS     |
+| 4  | 20            | WARN     |
+| 5  | 30            | WARN     |
+| 6  | 42            | CRITICAL |
+
+**Rule**: if coverage is unavailable, treat any function with CC ≥ 6 as CRITICAL.
+Mark the report with `cov=N/A` and note that coverage tooling was unavailable.
+
 ### Reporting format
 
 Include per-function CRAP scores in the quality gate report:
@@ -147,5 +167,6 @@ CRAP SCORES:
   functionA  CC=3  cov=95%  CRAP=3.0   [PASS]
   functionB  CC=8  cov=60%  CRAP=34.2  [CRITICAL — must fix]
   functionC  CC=5  cov=80%  CRAP=5.4   [PASS]
-OVERALL: 1 critical, 0 warnings
+  functionD  CC=6  cov=N/A  CRAP=42.0  [CRITICAL — coverage unavailable, worst-case assumed]
+OVERALL: 2 critical, 0 warnings
 ```
