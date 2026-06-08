@@ -54,6 +54,16 @@ _try_create_cache_file() {
   ) 2>/dev/null
 }
 
+_ADJECTIVES=(
+  ancient bold brave calm clear cool dark deep dire dusty
+  early fair fast firm free full good grand great grim hard
+  high keen kind late lazy lean light lone lost mild neat
+  nice noble odd pale plain proud pure quiet rare rich rough
+  round safe sharp short shy slim slow smart soft solid stark
+  stern still stone swift tall tame thin tiny tidy tough true
+  vast warm wide wild wise young
+)
+
 # hacker_random - Pick a random hacker name from hackers.dic
 #
 # @arg $1 string (optional) Path to .dic file
@@ -77,6 +87,19 @@ hacker_random() {
   fi
 
   printf '%s' "$name"
+}
+
+# adjective_random - Pick a random adjective from _ADJECTIVES
+#
+# @stdout One adjective word (e.g. "bold")
+# @return 0 on success, 1 on error (empty array)
+adjective_random() {
+  if [[ ${#_ADJECTIVES[@]} -eq 0 ]]; then
+    echo "Error: adjective_random: _ADJECTIVES array is empty" >&2
+    return 1
+  fi
+
+  printf '%s\n' "${_ADJECTIVES[$RANDOM % ${#_ADJECTIVES[@]}]}"
 }
 
 # _generate_filename - Internal: generate a filename candidate (no collision check)
