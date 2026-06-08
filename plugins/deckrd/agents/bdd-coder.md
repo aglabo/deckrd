@@ -121,13 +121,32 @@ Repeat steps 3.1–3.7 for each `state: todo` item:
 4. VERIFY — criterion met?
 5. ONLY THEN — mark gate passed
 
-| Gate       | Must pass |
-| ---------- | --------- |
-| Tests      | All PASS  |
-| Type check | 0 errors  |
-| Lint       | 0 errors  |
+| Gate       | Must pass                                         |
+| ---------- | ------------------------------------------------- |
+| Tests      | All PASS (with coverage)                          |
+| Coverage   | Report generated; CRAP scores computed            |
+| CRAP       | No function with score > 30; warn if 16–30 exists |
+| Type check | 0 errors                                          |
+| Lint       | 0 errors                                          |
+
+**CRAP score formula:** `CC² × (1 - coverage/100)³ + CC`
+Score > 30 → `BLOCKED`. Score 16–30 → `DONE_WITH_CONCERNS`.
+See: [skills/deckrd-coder/assets/test-quality.md](../skills/deckrd-coder/assets/test-quality.md) — CRAP Score section.
 
 If any gate fails: fix and re-run. 3+ failures → report `BLOCKED` to caller.
+
+**After all gates pass** — spawn **code-reviewer** with:
+
+- `task_id`: this task's ID
+- `changed_files`: implementation files modified in Phase 3–6
+- `test_files`: test files written or modified in Phase 3–5
+- `env_profile`: path to `temp/deckrd-work/env-profile.md`
+- `coverage_cmd`: coverage command from ENV PROFILE
+
+If code-reviewer returns `BLOCKED`: revert to Phase 3, fix critical findings.
+If code-reviewer returns `PASS_WITH_WARNINGS`: set status `DONE_WITH_CONCERNS`, include findings in NOTES.
+
+Agent definition: [code-reviewer.md](code-reviewer.md)
 
 ## Status Report to Caller
 
@@ -162,6 +181,8 @@ NOTES: <required if not DONE>
 - [ ] Tests: ALL PASS
 - [ ] Type check: 0 errors
 - [ ] Lint: 0 errors
+- [ ] code-reviewer spawned and returned PASS or PASS_WITH_WARNINGS
+- [ ] CRAP scores recorded in report
 
 ### Task Complete
 
@@ -173,6 +194,9 @@ NOTES: <required if not DONE>
 
 For test structure patterns, append-first examples, and coverage categories, see:
 [templates/bdd-coder-unittest.tpl.md](templates/bdd-coder-unittest.tpl.md)
+
+For host safety, idempotency, and mock discipline principles, see:
+[skills/deckrd-coder/assets/test-quality.md](../skills/deckrd-coder/assets/test-quality.md)
 
 ---
 

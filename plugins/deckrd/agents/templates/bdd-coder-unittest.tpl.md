@@ -60,6 +60,10 @@ Identify assertions across these categories:
 - Normal: Happy path with valid inputs
 - Invalid: Type mismatches, null/undefined, wrong formats, out-of-range values
 - Edge cases: Boundary values, empty collections, special characters
+- False-negative check: Does the test actually fail when the implementation is wrong?
+  Remove or corrupt the implementation and confirm the test turns RED.
+- State transition: State-dependent behavior (e.g. initial→active→closed, unauthorized→authorized).
+  Test that valid transitions produce correct results and that invalid transitions are rejected.
 
 Example breakdown for function `getRawOSPlatform(runtime)`:
 
@@ -144,6 +148,6 @@ For complete workflow details, see:
 
 <!-- textlint-disable -->
 
-- Main agent doc: `plugins/deckrd-coder/agents/bdd-coder.md`
+- Main agent doc: `plugins/deckrd/agents/bdd-coder.md`
 - Core principle: "Append-first principle" in Core Principles section
 - Workflow: "Phase 3: RED-GREEN-REFACTOR Loop" section

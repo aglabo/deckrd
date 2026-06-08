@@ -128,3 +128,56 @@ If you find yourself here, either:
 
 1. Delete the implementation and start from Red, or
 2. Acknowledge this is documentation-testing and treat the coverage accordingly.
+
+## Anti-Pattern 8: False-Positive Test
+
+**What it looks like**:
+A test that fails even when the implementation is correct.
+Usually caused by over-constrained assertions (checking internal implementation details
+instead of observable behavior), or tests tied to specific timing, call ordering,
+or object identity.
+
+**Why it fails**:
+The test blocks correct implementations without providing useful signal.
+It trains both developers and AI to distrust the test suite.
+Over-constrained tests break during valid refactors, producing noise instead of information.
+
+**Red flag**:
+
+> Test fails after a pure refactor that changed no observable behavior.
+> Test asserts on internal call order, specific mock invocation count,
+> or object identity rather than observable output.
+
+**Correct behavior**:
+Assert only on observable behavior: return values, state changes visible to callers,
+and side effects visible at the public interface.
+If a pure refactor breaks a test, the test is asserting implementation, not behavior — rewrite it.
+
+## Anti-Pattern 9: Skeletal Mock (Coverage-Padding Mock)
+
+**What it looks like**:
+Mocking the unit under test itself, or mocking so thoroughly that the test only
+verifies that the mock returns what you told it to return.
+Coverage numbers go up; confidence does not.
+
+**Why it fails**:
+The test cannot detect defects in the unit it purports to test.
+Coverage metrics become misleading — files appear tested but real bugs survive.
+
+**Red flag**:
+
+> `vi.mock('./myFunction')` appears in a test for `myFunction` itself.
+> Every collaborator including the module under test is mocked.
+> The test would still pass if you replaced the implementation with `return undefined`.
+
+**Correct behavior**:
+Mock only external dependencies and collaborators **outside** the unit under test:
+clock, filesystem, network, and non-deterministic system calls.
+The logic of the unit itself MUST be exercised by real production code.
+
+**Distinction from idempotency doubles**:
+Clock injection (`vi.setSystemTime(fixedDate)`), tempdir helpers, and HTTP stubs are
+*deterministic test doubles* — they isolate the test from a non-deterministic environment,
+not from the code under test. These are required for idempotent tests, not forbidden.
+
+See: [../../test-quality.md](../assets/test-quality.md) for the full distinction.

@@ -83,7 +83,7 @@ tough, true, vast, warm, wide, wild, wise, young
 ### Phase 3: Build Checklist
 
 Use the template at:
-`plugins/deckrd-coder/skills/deckrd-coder/assets/templates/implementation-checklist.tpl.md`
+`plugins/deckrd/skills/deckrd-coder/assets/templates/implementation-checklist.tpl.md`
 
 Fill in all `{{...}}` placeholders based on the analyzed request:
 

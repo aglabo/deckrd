@@ -15,13 +15,13 @@ language: rust
 
 ## Quality Gates
 
-| Gate       | Command                       |
-| ---------- | ----------------------------- |
-| Lint       | `cargo clippy -- -D warnings` |
-| Type Check | `cargo check`                 |
-| Format     | `cargo fmt`                   |
-| Test       | `cargo test`                  |
-| Test+Doc   | `cargo test --doc`            |
+| Gate       | Command                                              |
+| ---------- | ---------------------------------------------------- |
+| Lint       | `cargo clippy -- -D warnings`                        |
+| Type Check | `cargo check`                                        |
+| Format     | `cargo fmt`                                          |
+| Test       | `cargo llvm-cov` or `cargo tarpaulin` (with coverage) |
+| Test+Doc   | `cargo test --doc`                                   |
 
 ## Test Framework
 
@@ -67,6 +67,18 @@ fn given_context_when_action_then_result() {
 | Module system  | Cargo workspaces and crates     |
 | Config files   | `Cargo.toml`, `Cargo.lock`      |
 | Error handling | `Result<T, E>` and `?` operator |
+
+## Test Quality (Rust-specific)
+
+For canonical host-safety, idempotency, and mock discipline principles, see:
+[../test-quality.md](../test-quality.md)
+
+- **Tempdir**: Use the `tempfile` crate — `tempfile::tempdir()` returns a `TempDir`
+  that is automatically deleted when dropped.
+- **Clock injection**: Accept `SystemTime` or `std::time::Instant` as a parameter
+  instead of calling `SystemTime::now()` directly inside the function under test.
+- **No filesystem side effects**: Write test artifacts to `std::env::temp_dir()`,
+  never to the project directory or `$HOME`.
 
 ## Project Detection
 

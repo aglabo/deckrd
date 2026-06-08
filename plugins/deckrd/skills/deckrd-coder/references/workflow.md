@@ -72,14 +72,14 @@ Spawn **explore-agent** with:
 - `scope`: `pattern-detection`
 - `directory`: repository root (or sub-package root for monorepos)
 - `focus`: `test-framework,build-tools,lint,type-check`
-- Agent definition: [`plugins/deckrd-coder/agents/explore-agent.md`](../../../../agents/explore-agent.md)
+- Agent definition: [`plugins/deckrd/agents/explore-agent-coder.md`](../../../../agents/explore-agent-coder.md)
 
 The agent:
 
 1. Reads `.deckrd/profile.json` if present (`project`, `language`)
 
 2. Loads the language rule file if language is found:
-   `plugins/deckrd-coder/skills/deckrd-coder/assets/languages/<language>.md`
+   `plugins/deckrd/skills/deckrd-coder/assets/languages/<language>.md`
 
 3. Detects language from manifest files
    (`package.json`, `Cargo.toml`, `setup.py`, etc.)
@@ -215,12 +215,29 @@ bdd-coder(T-01-03) ┘
 
 - [ ] Lint チェック: 合格
 - [ ] 型チェック: 合格
-- [ ] テスト実行: すべてグリーン
+- [ ] テスト実行: すべてグリーン (カバレッジ付き)
+- [ ] **code-reviewer** 起動: 全変更ファイルを対象にCRAP算出・コードレビューを実行
+- [ ] CRAP 判定: スコア > 30 の関数がないこと (16–30 は DONE_WITH_CONCERNS)
+- [ ] コードレビュー判定: `PASS` または `PASS_WITH_WARNINGS` であること
+
+**CRAP 計算式:** `CC² × (1 - coverage/100)³ + CC`
+詳細は [../assets/test-quality.md](../assets/test-quality.md) — CRAP Score セクションを参照。
+
+code-reviewer の起動パラメータ:
+
+- `task_id`: 各タスクの ID
+- `changed_files`: Phase 3 で変更した実装ファイル一覧
+- `test_files`: Phase 3–5 で追加・変更したテストファイル一覧
+- `env_profile`: `temp/deckrd-work/env-profile.md`
+- `coverage_cmd`: ENV PROFILE のカバレッジコマンド
+
+Agent definition: [../../../../agents/code-reviewer.md](../../../../agents/code-reviewer.md)
 
 失敗時:
 
 - 失敗回数 1–2: 分析・修正・再実行
 - 失敗回数 3+: ユーザーに相談 (先へ進まない)
+- CRAP > 30 または code-reviewer `BLOCKED`: リファクタリング (CC 削減) またはテスト追加後に再実行
 
 ## Phase 5: 完了確認
 

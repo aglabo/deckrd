@@ -8,6 +8,21 @@
         "@modelcontextprotocol/server-filesystem",
         "."
       ]
+    },
+    "cocoindex-code": {
+      "type": "stdio",
+      "command": "ccc",
+      "args": [
+        "mcp"
+      ]
+    },
+    "codex-mcp": {
+      "type": "stdio",
+      "command": "codex",
+      "args": [
+        "mcp-server"
+      ],
+      "env": {}
     }
   }
 }
