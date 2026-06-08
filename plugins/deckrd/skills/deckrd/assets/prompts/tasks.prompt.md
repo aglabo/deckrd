@@ -21,7 +21,9 @@ You will receive:
 1. This PROMPT
 2. PARAMETERS
 3. SPECIFICATIONS document
-4. IMPLEMENTATION document (implementation.md)
+4. IMPLEMENTATION document(s):
+   - single mode: `implementation.md`
+   - split mode: all files listed in `implementation_files`
 5. (Optionally) an external Tasks template reference
 
 ## Output rules
@@ -93,6 +95,30 @@ describe('<TestTarget>', () => {                    // T-XX
 });
 ```
 
+### EARS → BDD Mapping Rules
+
+Requirements written in EARS syntax map to BDD structure as follows:
+
+| EARS element             | BDD element                     | Notes                                             |
+| ------------------------ | ------------------------------- | ------------------------------------------------- |
+| `GIVEN <condition>`      | outer `describe` scenario label | The precondition that sets up the context         |
+| `WHEN <event>` / `WHILE` | inner `describe` or `it` label  | The triggering event or state                     |
+| `THEN <response>`        | `it` assertion label            | The observable result to verify                   |
+| `NOT DO <behavior>`      | `it('[異常]...')` negative case | Assert that the forbidden behavior does not occur |
+| `WHERE <feature/config>` | `describe` wrapping the group   | Feature-flag or config-gated test group           |
+
+**Example mapping**:
+
+```text
+EARS: GIVEN authenticated user WHEN POST /items THEN return 201 with item id
+  ↓
+describe('POST /items', () => {                         // TestTarget  T-01
+  describe('[正常] Given: authenticated user', () => {  // Scenario    T-01-01
+    it('Then: returns 201 with item id', () => { ... }); // Case       T-01-01-01
+  });
+});
+```
+
 ### Category Prefixes
 
 Use category prefixes in describe blocks:
@@ -107,30 +133,32 @@ Use category prefixes in describe blocks:
 
 ## Generation Rules
 
-1. **Read IMPLEMENTATION document first**:
+1. **Read IMPLEMENTATION document(s) first**:
    - Identify actual function/class/method names
    - Note any renamed or refactored components
    - Understand the actual implementation structure
-   - **ALWAYS use the names defined in implementation.md**
+   - In single mode, use names defined in `implementation.md`
+   - In split mode, read every file in `implementation_files`; if a name appears
+     in multiple files, the latest file in the ordered list wins
 
 2. **Read SPECIFICATIONS** and identify:
    - Test targets (functions, classes, methods)
    - Input/output constraints
    - Edge cases and error conditions
-   - Cross-reference with implementation.md for exact names
+   - Cross-reference with IMPLEMENTATION document(s) for exact names
 
 3. **Break down** each specification into:
    - Test target (describe block level 1)
    - Given/When scenarios (describe block level 2)
    - Then assertions (it block level)
-   - **Use exact function/method names from implementation.md**
+   - **Use exact function/method names from IMPLEMENTATION document(s)**
 
 4. **Generate tasks** with:
    - Unique Task ID
    - Markdown checkbox
    - Clear test description
    - Mapping to BDD structure
-   - **Target names matching implementation.md**
+   - **Target names matching IMPLEMENTATION document(s)**
 
 5. **Order tasks** by:
    - Test target sequence
@@ -159,5 +187,6 @@ Each task MUST include:
 - NEVER create overly granular tasks (combine related assertions)
 - NEVER skip error handling scenarios
 - NEVER omit edge case coverage (include boundary values, state transitions, and false-negative verification)
-- NEVER use function/method names from specifications if they differ from implementation.md
-- NEVER ignore implementation.md when naming test targets
+- NEVER use function/method names from specifications if they differ from the
+  IMPLEMENTATION document(s)
+- NEVER ignore IMPLEMENTATION document(s) when naming test targets
