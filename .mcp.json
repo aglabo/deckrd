@@ -1,20 +1,4 @@
 {
   "mcpServers": {
-    "codex-mcp": {
-      "type": "stdio",
-      "command": "codex",
-      "args": [
-        "mcp-server"
-      ],
-      "env": {}
-    },
-    "filesystem": {
-      "type": "stdio",
-      "command": "pnpx",
-      "args": [
-        "@modelcontextprotocol/server-filesystem",
-        "."
-      ]
-    }
-  }
+}
 }
