@@ -1,112 +1,70 @@
 # deckrd-coder
 
-deckrd マーケットプレイスの BDD コーディングプラグインです。
-
-## 概要
-
-Deckrd ワークフローの tasks.md から指定したタスク（例：`T01-02`）を読み込みます。
-BDD（Behavior-Driven Development）厳格プロセスで実装を自動化する deckrd 専用プラグインです。
+deckrd ワークフローと統合された BDD コーディングスキルです。
+`tasks.md` から指定タスクを読み込み、Red-Green-Refactor の厳格プロセスで実装を自動化します。
 
 ## 特徴
 
-- deckrd 前提: deckrd ワークフローと完全統合
-- Red-Green-Refactor 厳密実装: テスト駆動開発の原則を厳守
-- マルチ言語対応: TypeScript/Vitest、Python/pytest など、任意の言語とテストフレームワークに対応
-- TodoWrite 統合: タスク進捗を自動追跡
-- 品質ゲート統合: 型チェック、リント、テスト、ビルドの自動実行
+- **deckrd 統合**: `req → spec → impl → tasks` ワークフローと完全統合
+- **BDD 厳格プロセス**: Red → Green → Refactor の各フェーズを1アサーションずつ確実に実施
+- **マルチ言語対応**: TypeScript/Vitest、Go、Rust、Shell/ShellSpec など任意の言語に対応
+- **品質ゲート統合**: 型チェック・Lint・テスト・カバレッジ・CRAPスコア算出を自動実行
+- **独立コードレビュー**: codex-mcp による実装者とは独立したコードレビュー
 
 ## 使用方法
 
-### 基本構文
-
 ```bash
-/deckrd-coder <TASK_ID>
-```
-
-### 実行例
-
-```bash
+# Task ID を指定して実装
 /deckrd-coder T01-02
-/deckrd-coder T01-03
-/deckrd-coder T01-10
-```
 
-## 含まれるコンポーネント
+# 自然言語で指示
+"グリーティング関数を実装して"
+"implement config file parser"
 
-### エージェント
-
-- bdd-coder: Red-Green-Refactor サイクルで実装を推進するエージェント
-
-### スキル
-
-- deckrd-coder: deckrd タスク解析と BDD 実装自動化スキル
-
-## インストール
-
-このプラグインは deckrd マーケットプレイスに組み込まれています。
-
-### Claude Code での利用
-
-```bash
-# deckrd-coder スキルを使用
-/deckrd-coder <TASK_ID>
-```
-
-## 構成
-
-```text
-deckrd-coder/
-├── SKILL.md                 # 実装スキル定義
-├── manifest.json            # プラグインメタデータ
-├── README.md               # このファイル
-├── assets/                 # アセット（テンプレートなど）
-├── references/             # リファレンスドキュメント
-└── scripts/                # ユーティリティスクリプト
+# 既存チェックリストを使用
+/deckrd-coder T01-02 --checklist temp/tasks/my-checklist.md
 ```
 
 ## 実行フェーズ
 
-スキル内で以下のフェーズを自動管理します。
+| Phase | 内容 | 担当エージェント |
+|-------|------|----------------|
+| 0 | 開発環境検出（言語・テストフレームワーク・ツールコマンド） | explore-agent-coder |
+| 1 | チェックリスト生成（Task ID または自然言語から BDD タスクに分解） | checklist-builder |
+| 2 | タスク依存関係分析（直列/並列グループ分類） | deckrd-coder |
+| 3 | BDD 実装（Red → Green → Refactor を1アサーションずつ） | bdd-coder |
+| 4 | グローバル品質ゲート（Lint・型チェック・テスト・CRAP・コードレビュー） | deckrd-coder + code-reviewer |
+| 5 | 完了確認 | deckrd-coder |
+| 6 | セッション終了（コミットはユーザーが手動実施） | deckrd-coder |
 
-1. **Phase 1**: セッション・タスク情報取得
-   - deckrd session.json からアクティブセッション確認
-   - tasks.md から指定タスク ID のテストケース一覧を抽出
+## 構成
 
-2. **Phase 2**: プロジェクト情報・コード規約参照
-   - code_style_conventions.md で命名規約・ファイル配置ルール確認
-   - project_overview.md で技術スタック・プロジェクト構造確認
+```text
+skills/deckrd-coder/
+├── SKILL.md                          # スキル定義
+├── README.md                         # このファイル
+├── assets/
+│   ├── languages/                    # 言語別ルール（TypeScript/Go/Rust/Shell）
+│   ├── templates/
+│   │   ├── implementation-checklist.tpl.md
+│   │   └── shell-header.tpl.sh
+│   ├── test-quality.md               # テスト品質原則（Host Safety/Idempotency/CRAP）
+│   ├── testing-anti-patterns.md      # BDD を破壊するアンチパターン集
+│   └── pressure-scenarios.md        # BDD 規律を試すプレッシャーシナリオ
+└── references/
+    ├── workflow.md                   # 内部フロー詳細
+    ├── faq.md                        # よくある質問
+    ├── troubleshooting.md            # トラブルシューティング
+    └── implementation.md             # 実装フローリファレンス
+```
 
-3. **Phase 3**: Red-Green-Refactor サイクル実装（各テストケースごとに繰り返し）
-   - [Red]テストを書く
-   - テスト失敗確認（エラーメッセージを確認）
-   - [Green]最小限の実装追加
-   - テスト成功確認
-   - [Refactor]コード品質を改善する場合はコード整理を実施
-   - Todo を更新
-   - 次のテストケースへ
+関連エージェント（`plugins/deckrd/agents/` 配下）:
 
-4. **Phase 4**: 品質保証チェック実行
-   - ユニットテスト実行
-   - シークレット検出
-   - 型チェック
-   - コード整形確認
-
-5. **Phase 5**: 実装完了
-   - 全テスト PASS、型エラーなし確認
-   - tasks.md の該当タスクをチェック
-   - コミットは実行しない（ユーザーが手動で実施）
-
-## 関連リソース
-
-- [deckrd マーケットプレイス](https://github.com/atsushifx/deckrd)
-- [親プロジェクト: aglabo-command-runner](https://github.com/atsushifx/aglabo-command-runner)
+- `bdd-coder.md` — Red-Green-Refactor 実装エージェント
+- `checklist-builder.md` — BDD チェックリスト生成エージェント
+- `explore-agent-coder.md` — 開発環境検出エージェント
+- `code-reviewer.md` — CC/CRAP 算出・codex-mcp コードレビューエージェント
 
 ## ライセンス
 
 MIT License - Copyright (c) 2025 atsushifx
-
-## サポート
-
-問題報告や機能リクエストは以下をご利用ください。
-
-- GitHub Issues: <https://github.com/atsushifx/deckrd/issues>
