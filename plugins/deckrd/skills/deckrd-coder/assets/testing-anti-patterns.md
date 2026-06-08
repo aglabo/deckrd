@@ -153,6 +153,18 @@ Assert only on observable behavior: return values, state changes visible to call
 and side effects visible at the public interface.
 If a pure refactor breaks a test, the test is asserting implementation, not behavior — rewrite it.
 
+**Language-specific examples**:
+
+- **TypeScript**: Asserting `expect(spy).toHaveBeenCalledWith(...)` on an internal helper
+  instead of the public return value. Or using `toStrictEqual` on a mutable object
+  reference that changes shape during valid refactors.
+- **Go**: `assert.Equal(t, reflect.TypeOf(x).Name(), "MyStruct")` — asserting on the
+  type name instead of the behavior the struct provides.
+- **Rust**: Comparing `format!("{:?}", result)` (Debug output) instead of testing
+  the actual fields — Debug format is not a stable interface.
+- **Shell**: Asserting on the exact whitespace or column alignment of a command's
+  output instead of the presence of the expected value.
+
 ## Anti-Pattern 9: Skeletal Mock (Coverage-Padding Mock)
 
 **What it looks like**:
@@ -174,6 +186,19 @@ Coverage metrics become misleading — files appear tested but real bugs survive
 Mock only external dependencies and collaborators **outside** the unit under test:
 clock, filesystem, network, and non-deterministic system calls.
 The logic of the unit itself MUST be exercised by real production code.
+
+**Language-specific examples**:
+
+- **TypeScript**: `vi.mock('./validator')` in a test file named `validator.test.ts` —
+  mocking the module you are supposed to be testing.
+  Also: using `any` to bypass type checking in test helpers, hiding mismatches that
+  real code would catch.
+- **Go**: Defining an `interface{}` receiver that accepts every type so the test passes
+  without verifying the concrete type's behavior.
+- **Rust**: Using `unwrap()` in test setup without documenting why it cannot panic —
+  hides setup failures as cryptic test panics rather than clear errors.
+- **Shell**: Stubbing every external command including the script under test itself
+  with `function my_script() { return 0; }`, leaving no real logic tested.
 
 **Distinction from idempotency doubles**:
 Clock injection (`vi.setSystemTime(fixedDate)`), tempdir helpers, and HTTP stubs are
