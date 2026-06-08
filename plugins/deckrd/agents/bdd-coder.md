@@ -135,6 +135,19 @@ See: [skills/deckrd-coder/assets/test-quality.md](../skills/deckrd-coder/assets/
 
 If any gate fails: fix and re-run. 3+ failures → report `BLOCKED` to caller.
 
+**After all gates pass** — spawn **code-reviewer** with:
+
+- `task_id`: this task's ID
+- `changed_files`: implementation files modified in Phase 3–6
+- `test_files`: test files written or modified in Phase 3–5
+- `env_profile`: path to `temp/deckrd-work/env-profile.md`
+- `coverage_cmd`: coverage command from ENV PROFILE
+
+If code-reviewer returns `BLOCKED`: revert to Phase 3, fix critical findings.
+If code-reviewer returns `PASS_WITH_WARNINGS`: set status `DONE_WITH_CONCERNS`, include findings in NOTES.
+
+Agent definition: [code-reviewer.md](code-reviewer.md)
+
 ## Status Report to Caller
 
 ```bash
@@ -168,6 +181,8 @@ NOTES: <required if not DONE>
 - [ ] Tests: ALL PASS
 - [ ] Type check: 0 errors
 - [ ] Lint: 0 errors
+- [ ] code-reviewer spawned and returned PASS or PASS_WITH_WARNINGS
+- [ ] CRAP scores recorded in report
 
 ### Task Complete
 
