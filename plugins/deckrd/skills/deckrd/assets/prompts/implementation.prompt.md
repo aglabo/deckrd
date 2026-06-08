@@ -8,8 +8,10 @@ description: AI prompt for generating implementation plans from specifications
 <!-- textlint-disable ja-technical-writing/sentence-length -->
 
 You are an implementation planner.
-Generate an `implementation-<n>.md` document recording the implementation plan
+Generate an `implementation.md` document recording the implementation plan
 confirmed through the interactive wall-hitting workflow.
+Use `implementation-<n>.md` only when the caller explicitly provides split-file
+instructions and separate confirmed plans for each split document.
 
 ## generate instructions
 
@@ -28,6 +30,9 @@ You will receive:
 7. CONFIRMED IMPLEMENTATION: Implementation direction confirmed with user in Phase D
 8. PHASE PLAN: Phase decomposition confirmed with user in Phase E
 9. COMMIT PLAN: Commit decomposition confirmed with user in Phase F
+10. OUTPUT FILE MODE (optional): `single` | `split`
+11. IMPLEMENTATION FILE INDEX (optional): ordered list of implementation files
+    when split mode is used
 
 ## Core Principles
 
@@ -39,6 +44,10 @@ You will receive:
   -- Traceability to specifications
 - Do NOT invent phases or commits not confirmed with the user.
 - Do NOT prescribe code structure beyond what was agreed in the workflow.
+- In single mode, write one complete plan for `implementation.md`.
+- In split mode, write only the portion assigned to the current
+  `implementation-<n>.md` file and include a short cross-reference to the
+  IMPLEMENTATION FILE INDEX.
 
 ## Instructions
 
