@@ -79,12 +79,12 @@ See: [testing-anti-patterns.md](testing-anti-patterns.md) — AP9: Skeletal Mock
 
 ### Distinction summary
 
-| Double type | Mock target | Verdict |
-| ----------- | ----------- | ------- |
-| Clock injection (`vi.setSystemTime`, `t.Setenv`) | Environment | Required for idempotency |
-| Tempdir (`mktemp -d`, `t.TempDir()`) | Filesystem isolation | Required for host safety |
-| HTTP stub / VCR fixture | External network | Required |
-| `vi.mock('./myUnit')` on the unit under test | The unit itself | **Forbidden (AP9)** |
+| Double type                                      | Mock target          | Verdict                  |
+| ------------------------------------------------ | -------------------- | ------------------------ |
+| Clock injection (`vi.setSystemTime`, `t.Setenv`) | Environment          | Required for idempotency |
+| Tempdir (`mktemp -d`, `t.TempDir()`)             | Filesystem isolation | Required for host safety |
+| HTTP stub / VCR fixture                          | External network     | Required                 |
+| `vi.mock('./myUnit')` on the unit under test     | The unit itself      | **Forbidden (AP9)**      |
 
 ---
 
@@ -106,34 +106,34 @@ Where:
 
 ### Interpretation
 
-| CRAP score | Risk level | Meaning |
-| ---------- | ---------- | ------- |
-| ≤ 5        | Low        | Well-tested, simple code |
+| CRAP score | Risk level | Meaning                       |
+| ---------- | ---------- | ----------------------------- |
+| ≤ 5        | Low        | Well-tested, simple code      |
 | 6–15       | Moderate   | Acceptable; monitor on growth |
 | 16–30      | High       | Refactor or increase coverage |
-| > 30       | Critical   | Must not ship without fixing |
+| > 30       | Critical   | Must not ship without fixing  |
 
 A function with CC=10 and 0% coverage scores **110** (critical).
 The same function at 100% coverage scores **10** (low).
 
 ### Required actions by score
 
-| Score | Action |
-| ----- | ------ |
-| > 30  | BLOCKED — must refactor (reduce CC) or add tests before proceeding |
+| Score | Action                                                                    |
+| ----- | ------------------------------------------------------------------------- |
+| > 30  | BLOCKED — must refactor (reduce CC) or add tests before proceeding        |
 | 16–30 | WARN — report to caller with `DONE_WITH_CONCERNS`; include score in notes |
-| ≤ 15  | PASS — include score in quality gate report |
+| ≤ 15  | PASS — include score in quality gate report                               |
 
 ### How to compute
 
 Use the coverage + complexity report from the language toolchain:
 
-| Language   | Tool / command |
-| ---------- | -------------- |
+| Language   | Tool / command                                                                                    |
+| ---------- | ------------------------------------------------------------------------------------------------- |
 | TypeScript | `vitest run --coverage` → parse per-function `complexity` from coverage JSON, or use `ts-complex` |
-| Go         | `go test -cover ./...` + `gocyclo ./...` → compute per function |
-| Rust       | `cargo llvm-cov` + `cargo clippy` complexity lint → compute per function |
-| Shell      | `shellspec --format documentation` + manual CC count (branches in function) |
+| Go         | `go test -cover ./...` + `gocyclo ./...` → compute per function                                   |
+| Rust       | `cargo llvm-cov` + `cargo clippy` complexity lint → compute per function                          |
+| Shell      | `shellspec --format documentation` + manual CC count (branches in function)                       |
 
 When an automated per-function score is not available, compute manually:
 CC = 1 + (number of `if` / `case` / `while` / `for` / `&&` / `||` branches in the function).
