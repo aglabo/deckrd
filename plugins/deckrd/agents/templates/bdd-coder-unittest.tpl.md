@@ -148,6 +148,6 @@ For complete workflow details, see:
 
 <!-- textlint-disable -->
 
-- Main agent doc: `plugins/deckrd-coder/agents/bdd-coder.md`
+- Main agent doc: `plugins/deckrd/agents/bdd-coder.md`
 - Core principle: "Append-first principle" in Core Principles section
 - Workflow: "Phase 3: RED-GREEN-REFACTOR Loop" section
