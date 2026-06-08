@@ -10,7 +10,7 @@ description: >
   Do NOT implement multiple tasks in one invocation — one task per call.
 metadata:
   author: aglabo
-  version: 0.1.0
+  version: 0.2.0
   license: MIT
 ---
 
