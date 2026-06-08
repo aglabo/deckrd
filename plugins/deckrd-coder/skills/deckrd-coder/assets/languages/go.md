@@ -19,9 +19,8 @@ language: go
 | Lint       | `golangci-lint run ./...`        |
 | Vet        | `go vet ./...`                   |
 | Format     | `gofmt -w .` or `goimports -w .` |
-| Test       | `go test ./...`                  |
-| Test+Cover | `go test -cover ./...`           |
-| Test+Race  | `go test -race ./...`            |
+| Test       | `go test -cover ./...`           |
+| Test+Race  | `go test -race -cover ./...`     |
 
 ## Test Framework
 
@@ -52,6 +51,16 @@ func TestFunctionName(t *testing.T) {
 | Module system  | Go modules (`go.mod`)          |
 | Package naming | Lowercase, no underscores      |
 | Error handling | Explicit `error` return values |
+
+## Test Quality (Go-specific)
+
+For canonical host-safety, idempotency, and mock discipline principles, see:
+[../test-quality.md](../test-quality.md)
+
+- **Tempdir**: Use `t.TempDir()` — automatically cleaned up after each test, even on failure.
+- **Env vars**: Use `t.Setenv("VAR", "val")` — automatically restored after the test.
+- **Clock injection**: Accept `time.Time` or `func() time.Time` as a parameter instead
+  of calling `time.Now()` directly in the function under test.
 
 ## Project Detection
 

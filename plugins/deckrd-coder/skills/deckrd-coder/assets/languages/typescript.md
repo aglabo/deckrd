@@ -19,8 +19,7 @@ language: typescript
 | Lint       | `eslint "**/*.{ts,tsx}"`                     |
 | Type Check | `tsc --noEmit`                               |
 | Format     | `prettier --write "**/*.{ts,tsx,json}"`      |
-| Test       | `vitest run` or `jest`                       |
-| Test+Cover | `vitest run --coverage` or `jest --coverage` |
+| Test       | `vitest run --coverage` or `jest --coverage` |
 
 ## Test Framework
 
@@ -53,6 +52,30 @@ describe('Given <context>', () => {
 | Module system   | ESM (`"type": "module"`) or CommonJS |
 | Config files    | `tsconfig.json`, `eslint.config.js`  |
 | Package manager | `pnpm` (preferred), `npm`, or `yarn` |
+
+## Test Quality (TypeScript-specific)
+
+For canonical host-safety, idempotency, and mock discipline principles, see:
+[../test-quality.md](../test-quality.md)
+
+### Clock Injection (Vitest)
+
+```typescript
+beforeEach(() => vi.setSystemTime(new Date('2024-01-01T00:00:00Z')));
+afterEach(() => vi.useRealTimers());
+```
+
+### Tempdir Isolation (Node.js)
+
+```typescript
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+
+let _testDir: string;
+beforeEach(() => { _testDir = mkdtempSync(path.join(tmpdir(), 'test-')); });
+afterEach(() => rmSync(_testDir, { recursive: true, force: true }));
+```
 
 ## Project Detection
 
