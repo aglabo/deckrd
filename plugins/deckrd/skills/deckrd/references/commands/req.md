@@ -212,6 +212,36 @@ If the user requests revisions (or accepts any suggestion):
 1. User approves with "Y", "承認", "OK", "done", or equivalent
 2. 3 review rounds completed — present the document as-is and ask for explicit approval
 
+### Phase 5: Second Opinion via Codex
+
+After Phase 4 approval, invoke `/codex-review req` for an independent critical review.
+
+This step is **REQUIRED** before transitioning to `spec` when the requirements:
+
+- Affect external interfaces
+- Involve data persistence
+- Reference external systems or third-party services
+
+In all other cases, this step is **RECOMMENDED**.
+
+**Execution:**
+
+```bash
+/codex-review req
+```
+
+Focus: `risk` — challenge assumptions, surface blind spots, identify missing constraints.
+
+**Handling findings:**
+
+- **Accept**: Note which findings to act on before running `spec`
+- **Reject**: Always provide a rationale — silent rejection is not allowed
+- If findings require revisions, return to Phase 3 and regenerate; then re-run Phase 4
+
+See [`deckrd-rule-second-opinion.md`](../../../../../../../../.claude/rules/deckrd-rule-second-opinion.md) for the full rule.
+
+---
+
 ## Input
 
 User provides goals, ideas, or problem description in free-form text.
@@ -244,7 +274,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh @requirements <user_input> [-
 
 ## Session Update
 
-After Phase 4 approval, update `.session.json`:
+After Phase 5 (or Phase 4 if Phase 5 is skipped), update `.session.json`:
 
 ```json
 {
