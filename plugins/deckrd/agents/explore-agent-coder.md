@@ -45,7 +45,7 @@ Read `.deckrd/profile.json`:
 - `language`: primary language
 
 If found, load the corresponding language rule file.
-Path: `plugins/deckrd-coder/skills/deckrd-coder/assets/languages/<language>.md`
+Path: `plugins/deckrd/skills/deckrd-coder/assets/languages/<language>.md`
 
 ### Step 2: Dynamic Detection
 
