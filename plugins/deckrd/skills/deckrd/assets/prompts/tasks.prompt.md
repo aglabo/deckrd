@@ -158,6 +158,6 @@ Each task MUST include:
 - NEVER include progress tracking tables
 - NEVER create overly granular tasks (combine related assertions)
 - NEVER skip error handling scenarios
-- NEVER omit edge case coverage
+- NEVER omit edge case coverage (include boundary values, state transitions, and false-negative verification)
 - NEVER use function/method names from specifications if they differ from implementation.md
 - NEVER ignore implementation.md when naming test targets
