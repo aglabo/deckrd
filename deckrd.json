@@ -1,7 +1,7 @@
 {
   "name": "deckrd",
   "description": "Your goals to tasks framework",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "stage": "experimental",
   "artifact": {
     "type": "skills",
