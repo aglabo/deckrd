@@ -11,7 +11,7 @@
 # shellcheck disable=SC1090,SC1091
 # cspell:words mydefault myvalue rtstore envval projval
 
-_RUNTIME_LIBS_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/plugins/_runtime/libs" && pwd)"
+_RUNTIME_LIBS_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/skills/_runtime/libs" && pwd)"
 
 Include "../spec_helper.sh"
 

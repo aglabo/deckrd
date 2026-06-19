@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# src: ./plugins/_runtime/libs/__tests__/functional/bootstrap.lib.functional.spec.sh
+# src: ./skills/_runtime/libs/__tests__/functional/bootstrap.lib.functional.spec.sh
 # @(#) : ShellSpec functional tests for bootstrap.lib.sh
 #        Multi-variable chain verification, deckrd-coder detection, side effects.
 #        Each section covers one functional concern with Normal/Edge cases.
@@ -11,7 +11,7 @@
 
 # shellcheck disable=SC1091
 
-_RUNTIME_LIBS_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/plugins/_runtime/libs" && pwd)"
+_RUNTIME_LIBS_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/skills/_runtime/libs" && pwd)"
 
 Include "../spec_helper.sh"
 
