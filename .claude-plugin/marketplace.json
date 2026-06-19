@@ -1,12 +1,12 @@
 {
-  "name": "deckrd-tools",
+  "name": "deckrd",
   "owner": {
     "name": "aglabo",
     "url": "https://github.com/aglabo/deckrd"
   },
   "metadata": {
     "description": "deckrd tools - your goals to tasks framework, and related tools",
-    "version": "0.3.0"
+    "version": "0.4.0"
   },
   "plugins": [
     {
@@ -16,9 +16,9 @@
       "strict": true
     },
     {
-      "name": "deckrd-coder",
-      "description": "Deckrd task implementation skill - extracts specified tasks from tasks.md and implements them using strict BDD process. Internally applies bdd-coder decision rules.",
-      "source": "./skills/deckrd-coder",
+      "name": "bdd-coder",
+      "description": "BDD implementation skill — strict Red-Green-Refactor cycle for any coding task",
+      "source": "./skills/bdd-coder",
       "strict": true
     }
   ]
