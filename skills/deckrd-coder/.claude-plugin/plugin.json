@@ -1,0 +1,10 @@
+{
+  "name": "deckrd-coder",
+  "description": "Deckrd task implementation skill - BDD-style coding agent for deckrd tasks",
+  "version": "0.2.1",
+  "author": {
+    "name": "atsushifx",
+    "email": "atsushifx@gmail.com"
+  },
+  "license": "MIT"
+}
