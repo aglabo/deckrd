@@ -19,7 +19,7 @@ version: 0.1.0
 ```text
 deckrd/
 ├── plugins/deckrd/          # Main plugin (skills, scripts, assets)
-├── plugins/deckrd-coder/    # BDD coding helper plugin
+├── plugins/bdd-coder/       # BDD implementation plugin (independent, same marketplace)
 ├── docs/                    # user-guides, developer-guides, specs, contributing, onboarding
 ├── configs/                 # Linter/formatter configs
 └── temp/idd/                # IDD framework working files
@@ -30,7 +30,7 @@ deckrd/
 | Plugin                   | Commands                                                          | Session                      |
 | ------------------------ | ----------------------------------------------------------------- | ---------------------------- |
 | `plugins/deckrd/`        | `/deckrd` (init, module, req, dr, spec, impl, tasks, status, rev) | `.local/deckrd/session.json` |
-| `plugins/deckrd-coder/`  | `/deckrd-coder <task-id>`                                         | —                            |
+| `plugins/bdd-coder/`     | `/bdd-coder:bdd-coder` — BDD implementation for any coding task   | —                            |
 | IDD Framework (external) | `/idd/issue:*`, `/idd-pr`, `/idd-commit-message`                  | `temp/idd/`                  |
 
 IDD Framework location: `~/.claude/plugins/marketplaces/claude-idd-framework-marketplace/plugins/claude-idd-framework`
@@ -60,13 +60,14 @@ IDD Framework location: `~/.claude/plugins/marketplaces/claude-idd-framework-mar
 
 ## Tool Selection
 
-| Task                 | Tool                                                |
-| -------------------- | --------------------------------------------------- |
-| Bash code analysis   | serena-mcp                                          |
-| Code generation      | codex-mcp                                           |
-| Documentation search | Read, Grep                                          |
-| deckrd commands      | `plugins/deckrd/skills/deckrd/references/commands/` |
-| IDD commands         | IDD Framework path above                            |
+| Task                 | Tool                                               |
+| -------------------- | -------------------------------------------------- |
+| Bash code analysis   | serena-mcp                                         |
+| Code generation      | codex-mcp                                          |
+| Documentation search | Read, Grep                                         |
+| deckrd commands      | `skills/deckrd/skills/deckrd/references/commands/` |
+| bdd-coder skill      | `skills/bdd-coder/skills/bdd-coder/`               |
+| IDD commands         | IDD Framework path above                           |
 
 ## Key Docs
 
