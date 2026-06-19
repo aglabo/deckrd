@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# src: ./plugins/_runtime/libs/__tests__/unit/bootstrap.lib.spec.sh
+# src: ./skills/_runtime/libs/__tests__/unit/bootstrap.lib.spec.sh
 # @(#) : ShellSpec unit tests for bootstrap.lib.sh
 #
 # Unit test design:
@@ -24,7 +24,7 @@
 
 # shellcheck disable=SC1091
 
-_RUNTIME_LIBS_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/plugins/_runtime/libs" && pwd)"
+_RUNTIME_LIBS_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/skills/_runtime/libs" && pwd)"
 
 Include "../spec_helper.sh"
 
@@ -299,14 +299,14 @@ Describe "bootstrap.lib.sh"
     Describe "Given: PROJECT_ROOT=/tmp/proj、RUNTIME_LIB_DIR 未設定"
       Before "export PROJECT_ROOT=/tmp/proj; unset RUNTIME_LIB_DIR; bootstrap_init"
 
-      It "[Normal] PROJECT_ROOT/plugins/_runtime/libs になる"
+      It "[Normal] PROJECT_ROOT/skills/_runtime/libs になる"
         # shellcheck disable=SC2153
         When call echo "$RUNTIME_LIB_DIR"
-        The output should equal "/tmp/proj/plugins/_runtime/libs"
+        The output should equal "/tmp/proj/skills/_runtime/libs"
       End
 
       It "[Normal] PROJECT_ROOT との関係式が成立する"
-        When call test "$RUNTIME_LIB_DIR" = "${PROJECT_ROOT}/plugins/_runtime/libs"
+        When call test "$RUNTIME_LIB_DIR" = "${PROJECT_ROOT}/skills/_runtime/libs"
         The status should equal 0
       End
 
@@ -330,7 +330,7 @@ Describe "bootstrap.lib.sh"
 
       It "[Edge] パスが正しく連結される"
         When call echo "$RUNTIME_LIB_DIR"
-        The output should equal "/tmp/my project/plugins/_runtime/libs"
+        The output should equal "/tmp/my project/skills/_runtime/libs"
       End
     End
 
@@ -339,7 +339,7 @@ Describe "bootstrap.lib.sh"
 
       It "[Edge] DECKRD_ROOT に依存せず PROJECT_ROOT が基点になる"
         When call echo "$RUNTIME_LIB_DIR"
-        The output should equal "/tmp/proj/plugins/_runtime/libs"
+        The output should equal "/tmp/proj/skills/_runtime/libs"
       End
     End
   End

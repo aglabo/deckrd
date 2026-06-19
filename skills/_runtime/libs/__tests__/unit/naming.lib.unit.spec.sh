@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# src: ./plugins/_runtime/libs/__tests__/naming.lib.spec.sh
+# src: ./skills/_runtime/libs/__tests__/naming.lib.spec.sh
 # @(#) : ShellSpec tests for naming.lib.sh
 #
 # Copyright (c) 2026- aglabo <https://github.com/aglabo>
@@ -9,7 +9,7 @@
 
 # shellcheck disable=SC1091
 
-_RUNTIME_LIBS_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/plugins/_runtime/libs" && pwd)"
+_RUNTIME_LIBS_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/skills/_runtime/libs" && pwd)"
 
 Include "../spec_helper.sh"
 
@@ -40,7 +40,7 @@ Describe "naming.lib.sh"
 
         It "Then: [Normal] 返値が hackers.dic 内のエントリである"
           result=$(hacker_random)
-          When call grep -qx "$result" "${SHELLSPEC_PROJECT_ROOT}/plugins/_generated/hackers.dic"
+          When call grep -qx "$result" "${SHELLSPEC_PROJECT_ROOT}/skills/_generated/hackers.dic"
           The status should equal 0
         End
       End
