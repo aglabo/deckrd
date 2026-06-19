@@ -29,7 +29,7 @@ teardown_deckrd_tmpdir() {
 }
 
 # Assets directory (source of truth for generated files)
-ASSETS_DIR="${SHELLSPEC_PROJECT_ROOT}/plugins/deckrd/skills/deckrd/assets"
+ASSETS_DIR="${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/skills/deckrd/assets"
 export ASSETS_DIR
 
 # Helper: return the path to an asset file
