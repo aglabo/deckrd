@@ -526,7 +526,7 @@ For each accepted removal or rewrite:
 
 ### Phase 4: Second Opinion via Codex
 
-After Phase 3 cleanup is approved, invoke `/codex-review spec` before transitioning to `impl`.
+After Phase 3 cleanup is approved, invoke `/deckrd:deckrd-review spec` before transitioning to `impl`.
 
 This step is **REQUIRED** when the specifications:
 
@@ -539,7 +539,7 @@ In all other cases, this step is **RECOMMENDED** before every `spec → impl` tr
 **Execution:**
 
 ```bash
-/codex-review spec
+/deckrd:deckrd-review spec
 ```
 
 Focus: balanced review — correctness, completeness, consistency across behavioral contracts.
