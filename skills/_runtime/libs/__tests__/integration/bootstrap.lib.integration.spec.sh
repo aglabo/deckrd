@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# src: ./plugins/_runtime/libs/__tests__/integration/bootstrap.lib.integration.spec.sh
+# src: ./skills/_runtime/libs/__tests__/integration/bootstrap.lib.integration.spec.sh
 # @(#) : ShellSpec integration tests for bootstrap.lib.sh
 #        git execution dependency, BASH_SOURCE fallback, idempotency.
 #        Tests rely on real git repository state and external process behavior.
@@ -11,7 +11,7 @@
 
 # shellcheck disable=SC1091
 
-_RUNTIME_LIBS_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/plugins/_runtime/libs" && pwd)"
+_RUNTIME_LIBS_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/skills/_runtime/libs" && pwd)"
 
 Include "../spec_helper.sh"
 
