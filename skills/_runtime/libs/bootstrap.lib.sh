@@ -36,7 +36,7 @@ _resolve_project_root() {
 
 # _resolve_deckrd_root - Resolve DECKRD_ROOT from caller path
 #
-# Detects whether bootstrap was sourced from a deckrd-coder context.
+# Detects whether bootstrap was sourced from a bdd-coder context.
 # Falls back to deckrd plugin root otherwise.
 #
 # @arg $1 string caller_path  Path of the script that sourced bootstrap.lib.sh.
@@ -50,8 +50,8 @@ _resolve_deckrd_root() {
   local caller_path="${1:-${BASH_SOURCE[1]:-}}"
   local project_root="${2:-${PROJECT_ROOT:-}}"
 
-  if [[ "$caller_path" == */deckrd-coder/* ]]; then
-    printf '%s' "${project_root}/skills/deckrd-coder/skills/deckrd-coder"
+  if [[ "$caller_path" == */bdd-coder/* ]]; then
+    printf '%s' "${project_root}/skills/deckrd/skills/bdd-coder"
   else
     printf '%s' "${project_root}/skills/deckrd/skills/deckrd"
   fi
