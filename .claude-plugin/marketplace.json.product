@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "deckrd tools - your goals to tasks framework, and related tools",
-    "version": "0.2.1"
+    "version": "0.3.0"
   },
   "plugins": [
     {

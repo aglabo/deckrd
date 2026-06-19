@@ -2,6 +2,17 @@
 
 <!-- textlint-disable ja-technical-writing/sentence-length -->
 
+## [0.3.0] - 2026-06-19
+
+### ♻️ Refactor
+
+- *(plugins)* Migrate `deckrd` and `deckrd-coder` assets from `plugins/` to `skills/` directory — aligns with Agent Skills standard structure and enables installation via `gh skills` and `npx skills`
+- *(plugins)* Split `deckrd-coder` into an independent plugin — can now be installed and managed separately from `deckrd`
+- *(runtime/libs)* Move shared runtime libraries to `skills/_runtime/libs/` — single source of truth across both plugins
+- *(scripts)* Update all bootstrap paths and test spec paths from `plugins/_runtime/` to `skills/_runtime/`
+
+---
+
 ## [0.2.1] - 2026-06-18
 
 ### 🚀 Features

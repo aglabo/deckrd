@@ -1,38 +1,43 @@
-# v0.2.1
+# v0.3.0
 
 ## Overview
 
-タスク生成の品質を向上させるリリースです。Decision Records の活用、カバレッジ検証、カテゴリバランスチェックが `/deckrd tasks` と `/deckrd-coder` に追加されました。
+プラグインアセットを `skills/` ディレクトリ構造に移行し、`gh skills` および `npx skills` による簡単インストールに対応したリリースです。
 
 ---
 
 ## What's New
 
-### Decision Records をタスク生成に活用できるようになりました
+### `gh skills` / `npx skills` でインストールできるようになりました
 
-`/deckrd tasks` 実行時に Decision Records (DR) ドキュメントを入力として渡せるようになりました。DR に記録された設計判断が観察可能な振る舞いとして自動的にタスクへ反映されます。
+GitHub リポジトリを指定するだけで deckrd と deckrd-coder をインストールできます。
 
-### タスク生成前のカバレッジ検証
+```bash
+# gh skills
+gh skills install aglabo/deckrd
 
-生成されたタスクが仕様書のすべてのセクションをカバーしているかを自動検証します。カバーされていない箇所が残っている場合、タスクは出力されません。
+# npx skills
+npx skills add aglabo/deckrd
+```
 
-### テストカテゴリのバランス検証
+### プラグインを `skills/` ディレクトリに統合
 
-各テスト対象について Normal / Error / Edge の3カテゴリが揃っているかを確認します。不足しているカテゴリがあれば、完了レポートに統計として表示されます。
+`deckrd` と `deckrd-coder` を `plugins/` から `skills/` へ移動し、Agent Skills の標準ディレクトリ構造に準拠しました。Claude Plugin (`claude plugin marketplace add`) によるインストールも引き続き利用できます。
 
-### チェックリスト生成の品質ゲート強化
+```bash
+claude plugin marketplace add aglabo/deckrd
+```
 
-`/deckrd-coder` が生成するチェックリストに2段階の検証フェーズが追加されました。
+### `deckrd-coder` を独立プラグインとして分離
 
-- **Spec Coverage Review** — 仕様書の各セクションがチェックリストに反映されているかを確認
-- **Category Balance Review** — Error / Edge ケースの漏れを検出
-
-### Claude 操作の安全設定
-
-Claude がデフォルトで `plan` モードで動作するようになりました。変更はすべてユーザーの明示的な承認が必要です。また、`git commit` / `git push` などの書き込み系コマンドは実行が制限されています。
+`deckrd-coder` が `deckrd` から独立したプラグインになりました。それぞれ個別にインストール・管理できます。
 
 ---
 
 ## Breaking Changes
 
-なし。既存の `/deckrd` コマンドはそのまま使用できます。
+### プラグインパスの変更
+
+内部ランタイムのパスが `plugins/_runtime/` から `skills/_runtime/` に変更されました。カスタムスクリプトで `plugins/_runtime/libs/bootstrap.lib.sh` を直接参照している場合は `skills/_runtime/libs/bootstrap.lib.sh` に更新してください。
+
+標準の `/deckrd` コマンド・`/deckrd-coder` コマンドはそのまま使用できます。
