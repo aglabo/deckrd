@@ -261,19 +261,19 @@ Describe "bootstrap.lib.sh"
     It "[Normal] deckrd-coder パスから source → DECKRD_ROOT が deckrd-coder になる"
       When call run_coder_tmpscript DECKRD_ROOT
       The status should equal 0
-      The output should end with "/plugins/deckrd-coder/skills/deckrd-coder"
+      The output should end with "/skills/deckrd-coder/skills/deckrd-coder"
     End
 
     It "[Normal] deckrd-coder パスから source → DECKRD_SCRIPTS_DIR が deckrd-coder/scripts になる"
       When call run_coder_tmpscript DECKRD_SCRIPTS_DIR
       The status should equal 0
-      The output should end with "/plugins/deckrd-coder/skills/deckrd-coder/scripts"
+      The output should end with "/skills/deckrd-coder/skills/deckrd-coder/scripts"
     End
 
     It "[Normal] deckrd-coder パスから source → DECKRD_LIB_DIR が deckrd-coder/scripts/libs になる"
       When call run_coder_tmpscript DECKRD_LIB_DIR
       The status should equal 0
-      The output should end with "/plugins/deckrd-coder/skills/deckrd-coder/scripts/libs"
+      The output should end with "/skills/deckrd-coder/skills/deckrd-coder/scripts/libs"
     End
 
     It "[Normal] deckrd-coder パスでも DECKRD_ROOT 事前設定値が優先される"
@@ -353,13 +353,13 @@ Describe "bootstrap.lib.sh"
     Describe "Given: PROJECT_ROOT=/tmp/proj、DECKRD_ROOT 未設定"
       Before "export PROJECT_ROOT=/tmp/proj; unset DECKRD_ROOT; bootstrap_init"
 
-      It "[Normal] PROJECT_ROOT/plugins/deckrd/skills/deckrd になる"
+      It "[Normal] PROJECT_ROOT/skills/deckrd/skills/deckrd になる"
         When call echo "$DECKRD_ROOT"
-        The output should equal "/tmp/proj/plugins/deckrd/skills/deckrd"
+        The output should equal "/tmp/proj/skills/deckrd/skills/deckrd"
       End
 
       It "[Normal] PROJECT_ROOT との関係式が成立する"
-        When call test "$DECKRD_ROOT" = "${PROJECT_ROOT}/plugins/deckrd/skills/deckrd"
+        When call test "$DECKRD_ROOT" = "${PROJECT_ROOT}/skills/deckrd/skills/deckrd"
         The status should equal 0
       End
 
@@ -392,7 +392,7 @@ Describe "bootstrap.lib.sh"
 
       It "[Edge] パスが正しく連結される"
         When call echo "$DECKRD_ROOT"
-        The output should equal "/tmp/my project/plugins/deckrd/skills/deckrd"
+        The output should equal "/tmp/my project/skills/deckrd/skills/deckrd"
       End
     End
   End
