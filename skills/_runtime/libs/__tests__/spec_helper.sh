@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# src: ./plugins/_runtime/libs/__tests__/spec_helper.sh
+# src: ./skills/_runtime/libs/__tests__/spec_helper.sh
 # @(#) : ShellSpec helper for _runtime/libs tests
 #
 # Copyright (c) 2026- aglabo <https://github.com/aglabo>
