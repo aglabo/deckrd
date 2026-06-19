@@ -2,7 +2,7 @@
   "name": "deckrd-tools",
   "owner": {
     "name": "aglabo",
-    "url": "https://github.com/aglabo"
+    "url": "https://github.com/aglabo/deckrd"
   },
   "metadata": {
     "description": "deckrd tools - your goals to tasks framework, and related tools",
@@ -12,7 +12,7 @@
     {
       "name": "deckrd",
       "description": "your goals to tasks framework",
-      "source": "./plugins/deckrd",
+      "source": "./skills/deckrd",
       "strict": true
     },
     {

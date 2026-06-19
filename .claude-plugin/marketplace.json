@@ -12,7 +12,7 @@
     {
       "name": "deckrd",
       "description": "your goals to tasks framework",
-      "source": "./plugins/deckrd",
+      "source": "./skills/deckrd",
       "strict": true
     },
     {
