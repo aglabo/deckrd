@@ -1,18 +1,18 @@
 ---
 title: WORKFLOW - 内部フロー詳細
-description: deckrd-coder マネジメント層の内部フロー
+description: bdd-coder マネジメント層の内部フロー
 ---
 
 <!-- textlint-disable
   ja-technical-writing/max-comma,
   ja-technical-writing/no-exclamation-question-mark -->
 
-## WORKFLOW - deckrd-coder マネジメント層
+## WORKFLOW - bdd-coder マネジメント層
 
-deckrd-coder はオーケストレーション専用レイヤーです。
+bdd-coder はオーケストレーション専用レイヤーです。
 BDD サイクル (テスト・実装・リファクタ) は bdd-coder エージェントに委譲します。
 
-deckrd-coder の責務:
+bdd-coder の責務:
 
 - 開発環境の把握と管理
 - チェックリストの読み込みとタスク管理
@@ -43,11 +43,11 @@ Phase 6: ワークフロー終了
 | ------- | -------------------- | ----------------- | -------------------------------------------- |
 | Phase 0 | 開発言語・環境を把握 | explore-agent     | ENV PROFILE (env-profile.md)                 |
 | Phase 1 | チェックリストを生成 | checklist-builder | `temp/tasks/<slug>-<adjective>-checklist.md` |
-| Phase 2 | 依存関係を分析       | deckrd-coder      | 実行グループ (直列 / 並列)                   |
+| Phase 2 | 依存関係を分析       | bdd-coder         | 実行グループ (直列 / 並列)                   |
 | Phase 3 | bdd-coder に委譲     | bdd-coder         | 各タスクのステータスレポート                 |
-| Phase 4 | 全体品質を検証       | deckrd-coder      | 品質ゲート合格確認                           |
-| Phase 5 | 完了状態を確認       | deckrd-coder      | セッション終了前の最終確認                   |
-| Phase 6 | セッション終了       | deckrd-coder      | 開発ツール・状態をリセット                   |
+| Phase 4 | 全体品質を検証       | bdd-coder         | 品質ゲート合格確認                           |
+| Phase 5 | 完了状態を確認       | bdd-coder         | セッション終了前の最終確認                   |
+| Phase 6 | セッション終了       | bdd-coder         | 開発ツール・状態をリセット                   |
 
 ## Before You Begin (MANDATORY — Phase 0 の前に実行)
 
@@ -79,7 +79,7 @@ The agent:
 1. Reads `.deckrd/profile.json` if present (`project`, `language`)
 
 2. Loads the language rule file if language is found:
-   `plugins/deckrd/skills/deckrd-coder/assets/languages/<language>.md`
+   `plugins/deckrd/skills/bdd-coder/assets/languages/<language>.md`
 
 3. Detects language from manifest files
    (`package.json`, `Cargo.toml`, `setup.py`, etc.)
@@ -130,7 +130,7 @@ Phase 2 以降で使用する。
 
 ## Phase 2: タスク分析・依存関係マッピング
 
-deckrd-coder から bdd-coder エージェントへ効率的に情報を受け渡すため、タスク間の依存関係を分析する。
+bdd-coder から bdd-coder エージェントへ効率的に情報を受け渡すため、タスク間の依存関係を分析する。
 
 実行内容:
 
@@ -256,6 +256,6 @@ Agent definition: [../../../../agents/code-reviewer.md](../../../../agents/code-
 
 - 開発ツール・状態をリセット
 - セッション情報をクリア
-- コミットはユーザーが手動実施 (deckrd-coder は git 操作禁止)
+- コミットはユーザーが手動実施 (bdd-coder は git 操作禁止)
 
 出力: セッション終了。

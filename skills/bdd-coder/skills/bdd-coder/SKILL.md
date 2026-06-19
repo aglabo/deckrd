@@ -1,23 +1,23 @@
 ---
-name: deckrd-coder
+name: bdd-coder
 description: >
-  BDD-style task implementation agent for Deckrd sessions.
-  Use when the user gives ANY coding instruction — natural-language or explicit Task ID.
+  BDD-style implementation agent. Use when the user gives ANY coding instruction —
+  natural-language, explicit Task ID, or custom task list.
   Always spawns checklist-builder first to generate a checklist, then runs BDD implementation.
   Examples: "implement X", "add function Y", "create Z", "write code for W",
-  "implement task T01-02", "run deckrd-coder", "start BDD implementation".
+  "implement task T01-02", "run bdd-coder", "start BDD implementation".
   Do NOT commit or push — implementation only, no git operations.
   Do NOT implement multiple tasks in one invocation — one task per call.
 metadata:
   author: aglabo
-  version: 0.3.0
+  version: 0.4.0
   license: MIT
 ---
 
 <!-- textlint-disable
   ja-technical-writing/sentence-length -->
 
-# deckrd-coder
+# bdd-coder
 
 Implements tasks using strict BDD: Red → Green → Refactor.
 Always generates a checklist first via checklist-builder, then delegates BDD implementation to bdd-coder.
@@ -26,7 +26,7 @@ Always generates a checklist first via checklist-builder, then delegates BDD imp
 
 Before every phase, YOU MUST output:
 
-> "I am executing /deckrd-coder [TASK_ID] — Phase [N]: [Phase Name]."
+> "I am executing /bdd-coder:bdd-coder [TASK_ID] — Phase [N]: [Phase Name]."
 
 No announcement = violation. Restart with announcement.
 
@@ -48,23 +48,23 @@ Once Phase 1 (Checklist Build) starts, stop asking scope questions.
 "implement config file parser"
 
 # Explicit Task ID (from tasks.md)
-/deckrd-coder T01-02
-/deckrd-coder T01-02 --checklist <path>   # skip checklist-builder, use existing checklist
+/bdd-coder:bdd-coder T01-02
+/bdd-coder:bdd-coder T01-02 --checklist <path>   # skip checklist-builder, use existing checklist
 ```
 
 ## Execution Flow
 
-deckrd-coder is an orchestration layer with the following fixed phase order:
+bdd-coder is an orchestration layer with the following fixed phase order:
 
 | Phase | Name               | Agent             | What happens                                            |
 | ----- | ------------------ | ----------------- | ------------------------------------------------------- |
 | 0     | Environment        | explore-agent     | Detect language, test framework, lint, type-check setup |
 | 1     | Checklist Build    | checklist-builder | Generate checklist from instruction or Task ID          |
-| 2     | Dependency Map     | deckrd-coder      | Classify checklist tasks into serial / parallel groups  |
+| 2     | Dependency Map     | bdd-coder         | Classify checklist tasks into serial / parallel groups  |
 | 3     | bdd-coder Dispatch | bdd-coder         | Spawn bdd-coder per task; collect status reports        |
-| 4     | Quality Gate       | deckrd-coder      | Global lint + type-check + all tests pass               |
-| 5     | Done Check         | deckrd-coder      | Confirm all checklist items complete                    |
-| 6     | Session End        | deckrd-coder      | Reset state; remind user to commit manually             |
+| 4     | Quality Gate       | bdd-coder         | Global lint + type-check + all tests pass               |
+| 5     | Done Check         | bdd-coder         | Confirm all checklist items complete                    |
+| 6     | Session End        | bdd-coder         | Reset state; remind user to commit manually             |
 
 Gate Rule: phases must run in order. No skipping.
 
@@ -130,7 +130,7 @@ Do NOT proceed to the next task while any task remains `BLOCKED`.
 
 **Existing checklist (skip checklist-builder):**
 
-> `/deckrd-coder T01-02 --checklist temp/tasks/my-checklist.md`
+> `/bdd-coder:bdd-coder T01-02 --checklist temp/tasks/my-checklist.md`
 > → 既存チェックリストをそのまま使用 → bdd-coder で実装
 
 ## Troubleshooting

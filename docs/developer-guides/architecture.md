@@ -32,8 +32,7 @@ deckrd is a plugin-based framework that provides document-driven development wor
 deckrd/
 ├── Plugins/                  # Plugin modules
 │   ├── deckrd/              # Main workflow plugin
-│   ├── bdd-coder/           # BDD methodology
-│   └── deckrd-coder/        # Coding helpers
+│   └── bdd-coder/           # BDD implementation (integrated into deckrd)
 ├── Configuration/            # Tool configs
 │   ├── .mcp.json           # MCP servers
 │   ├── lefthook.yml        # Git hooks
@@ -107,13 +106,13 @@ Easy to add new plugins:
 
 - Semantic code search
 - Natural language query-based code exploration
-- Used by: root, deckrd-coder
+- Used by: root, bdd-coder
 
 **lsmcp**:
 
 - File system access
 - File read/write operations
-- Used by: deckrd, deckrd-coder
+- Used by: deckrd, bdd-coder
 
 ### Layer 4: Configuration & Quality Gates
 

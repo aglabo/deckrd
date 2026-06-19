@@ -5,8 +5,8 @@ description: >
   Strict BDD implementation agent for single-task execution.
   Enforces Red-Green-Refactor cycle per assertion, append-first test grouping,
   and quality gates. Progress tracked in temp/bdd-coder/bdd-todo.md.
-  Spawned by deckrd-coder for each checklist task. Language-agnostic.
-  Do NOT invoke directly — use deckrd-coder skill.
+  Spawned by bdd-coder skill for each checklist task. Language-agnostic.
+  Do NOT invoke directly — use /deckrd:bdd-coder skill.
 tools: Bash, Read, Write, Edit, Grep, Glob, TodoWrite
 model: inherit
 color: blue

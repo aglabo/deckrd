@@ -1,5 +1,5 @@
 ---
-title: FAQ - /deckrd-coder スキル よくある質問
+title: FAQ - /bdd-coder スキル よくある質問
 ---
 
 <!--textlint-disable
@@ -10,11 +10,11 @@ title: FAQ - /deckrd-coder スキル よくある質問
 **A**: **いいえ。1 message = 1 task が原則です。**
 
 ```bash
-(NG) /deckrd-coder T01-02 T01-03 T01-04
+(NG) /bdd-coder T01-02 T01-03 T01-04
 
-(OK) /deckrd-coder T01-02          # 完了待ち
-(OK) /deckrd-coder T01-03          # 完了待ち
-(OK) /deckrd-coder T01-04          # 完了待ち
+(OK) /bdd-coder T01-02          # 完了待ち
+(OK) /bdd-coder T01-03          # 完了待ち
+(OK) /bdd-coder T01-04          # 完了待ち
 ```
 
 複数タスクを同時指定するとメモリ制約により品質が低下します。

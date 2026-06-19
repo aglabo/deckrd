@@ -236,10 +236,10 @@ Status:
 - Features: Red-Green-Refactor cycle enforcement
 - Integration: TodoWrite integration for progress tracking
 
-### deckrd-coder
+### bdd-coder (`/deckrd:bdd-coder`)
 
-- Purpose: Optional coding helper plugin
-- Features: Task execution assistance
+- Purpose: BDD implementation skill integrated into the deckrd plugin
+- Features: Task execution via strict Red-Green-Refactor cycle
 
 ## Best Practices
 

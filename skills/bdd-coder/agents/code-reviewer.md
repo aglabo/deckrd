@@ -2,12 +2,12 @@
 name: code-reviewer
 title: code-reviewer
 description: >
-  Post-implementation code review agent for deckrd-coder.
+  Post-implementation code review agent for bdd-coder.
   Computes cyclomatic complexity (CC) and CRAP scores per function,
   then delegates a full code review to codex-mcp for an independent
   second opinion on correctness, design, and test quality.
   Spawned by bdd-coder after Phase 7 quality gates pass, or by
-  deckrd-coder at Phase 4. Do NOT invoke directly.
+  bdd-coder at Phase 4. Do NOT invoke directly.
 tools: Bash, Read, Grep, Glob, mcp__codex-mcp__codex
 model: inherit
 color: yellow
@@ -132,7 +132,7 @@ BLOCKING ISSUES: <list if BLOCKED, else "none">
 
 ### Phase 4: Return to Caller
 
-Return the full report to the caller (bdd-coder or deckrd-coder).
+Return the full report to the caller (bdd-coder or bdd-coder).
 
 | Verdict              | Caller action                                   |
 | -------------------- | ----------------------------------------------- |
@@ -149,5 +149,5 @@ Return the full report to the caller (bdd-coder or deckrd-coder).
 
 ## Reference
 
-- CRAP formula and thresholds: [skills/deckrd-coder/assets/test-quality.md](../skills/deckrd-coder/assets/test-quality.md)
-- Test anti-patterns: [skills/deckrd-coder/assets/testing-anti-patterns.md](../skills/deckrd-coder/assets/testing-anti-patterns.md)
+- CRAP formula and thresholds: [skills/bdd-coder/assets/test-quality.md](../skills/bdd-coder/assets/test-quality.md)
+- Test anti-patterns: [skills/bdd-coder/assets/testing-anti-patterns.md](../skills/bdd-coder/assets/testing-anti-patterns.md)

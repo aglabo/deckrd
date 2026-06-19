@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # src: ./skills/_runtime/libs/__tests__/functional/bootstrap.lib.functional.spec.sh
 # @(#) : ShellSpec functional tests for bootstrap.lib.sh
-#        Multi-variable chain verification, deckrd-coder detection, side effects.
+#        Multi-variable chain verification, bdd-coder detection, side effects.
 #        Each section covers one functional concern with Normal/Edge cases.
 #
 # Copyright (c) 2026- aglabo <https://github.com/aglabo>
@@ -133,46 +133,46 @@ Describe "bootstrap.lib.sh"
   End
 
   # ------------------------------------------------------------------ #
-  #  deckrd-coder パス検出                                              #
+  #  bdd-coder パス検出                                                #
   # ------------------------------------------------------------------ #
-  Describe "deckrd-coder パス検出"
+  Describe "bdd-coder パス検出"
     Before setup_coder_tmpscript
     After teardown_coder_tmpscript
 
-    It "[Normal] deckrd-coder パスから source → DECKRD_ROOT が deckrd-coder になる"
+    It "[Normal] bdd-coder パスから source → DECKRD_ROOT が bdd-coder になる"
       When call run_coder_tmpscript DECKRD_ROOT
       The status should equal 0
-      The output should end with "/skills/deckrd-coder/skills/deckrd-coder"
+      The output should end with "/skills/deckrd/skills/bdd-coder"
     End
 
-    It "[Normal] deckrd-coder パスから source → DECKRD_SCRIPTS_DIR が deckrd-coder/scripts になる"
+    It "[Normal] bdd-coder パスから source → DECKRD_SCRIPTS_DIR が bdd-coder/scripts になる"
       When call run_coder_tmpscript DECKRD_SCRIPTS_DIR
       The status should equal 0
-      The output should end with "/skills/deckrd-coder/skills/deckrd-coder/scripts"
+      The output should end with "/skills/deckrd/skills/bdd-coder/scripts"
     End
 
-    It "[Normal] deckrd-coder パスから source → DECKRD_LIB_DIR が deckrd-coder/scripts/libs になる"
+    It "[Normal] bdd-coder パスから source → DECKRD_LIB_DIR が bdd-coder/scripts/libs になる"
       When call run_coder_tmpscript DECKRD_LIB_DIR
       The status should equal 0
-      The output should end with "/skills/deckrd-coder/skills/deckrd-coder/scripts/libs"
+      The output should end with "/skills/deckrd/skills/bdd-coder/scripts/libs"
     End
 
-    It "[Normal] deckrd-coder パスでも DECKRD_LOCAL_DATA は PROJECT_ROOT 起点になる"
+    It "[Normal] bdd-coder パスでも DECKRD_LOCAL_DATA は PROJECT_ROOT 起点になる"
       When call run_coder_tmpscript DECKRD_LOCAL_DATA "PROJECT_ROOT=/tmp/proj"
       The status should equal 0
       The output should equal "/tmp/proj/.local/deckrd"
     End
 
-    It "[Normal] deckrd-coder パスでも DECKRD_DOCS_DIR は PROJECT_ROOT 起点になる"
+    It "[Normal] bdd-coder パスでも DECKRD_DOCS_DIR は PROJECT_ROOT 起点になる"
       When call run_coder_tmpscript DECKRD_DOCS_DIR "PROJECT_ROOT=/tmp/proj"
       The status should equal 0
       The output should equal "/tmp/proj/docs/.deckrd"
     End
 
-    It "[Normal] deckrd-coder パスでも DECKRD_ROOT 事前設定値が優先される"
+    It "[Normal] bdd-coder パスでも DECKRD_ROOT 事前設定値が優先される"
       When run bash -c "
-        mkdir -p /tmp/plugins/deckrd-coder
-        tmpscript=\"\$(mktemp /tmp/plugins/deckrd-coder/XXXXXX.sh)\"
+        mkdir -p /tmp/plugins/bdd-coder
+        tmpscript=\"\$(mktemp /tmp/plugins/bdd-coder/XXXXXX.sh)\"
         printf 'export DECKRD_ROOT=/tmp/custom\n. \"%s\" && echo \"\$DECKRD_ROOT\"\n' \"$SCRIPT\" > \"\$tmpscript\"
         result=\$(bash \"\$tmpscript\")
         rm -f \"\$tmpscript\"

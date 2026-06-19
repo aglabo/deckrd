@@ -2,20 +2,20 @@
 name: explore-agent
 title: explore-agent
 description: >
-  Read-only environment detection agent for deckrd-coder.
+  Read-only environment detection agent for bdd-coder.
   Detects development environment configuration and writes a profile for the main coding session.
   Supports scope: pattern-detection only.
-  Spawned by deckrd-coder skill to detect language, test framework, and tool commands.
+  Spawned by bdd-coder skill to detect language, test framework, and tool commands.
 tools: Read, Grep, Glob, Bash
 model: inherit
 color: green
 ---
 
-## explore-agent (deckrd-coder)
+## explore-agent (bdd-coder)
 
 <!-- markdownlint-disable line-length -->
 
-Read-only environment detection agent for deckrd-coder.
+Read-only environment detection agent for bdd-coder.
 Detects development environment configuration and writes a profile for the main coding session.
 
 ## Role
@@ -45,7 +45,7 @@ Read `.deckrd/profile.json`:
 - `language`: primary language
 
 If found, load the corresponding language rule file.
-Path: `../skills/deckrd-coder/assets/languages/<language>.md`
+Path: `../skills/bdd-coder/assets/languages/<language>.md`
 
 ### Step 2: Dynamic Detection
 

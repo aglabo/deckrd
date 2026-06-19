@@ -214,7 +214,7 @@ If the user requests revisions (or accepts any suggestion):
 
 ### Phase 5: Second Opinion via Codex
 
-After Phase 4 approval, invoke `/codex-review req` for an independent critical review.
+After Phase 4 approval, invoke `/deckrd:deckrd-review req` for an independent critical review.
 
 This step is **REQUIRED** before transitioning to `spec` when the requirements:
 
@@ -227,7 +227,7 @@ In all other cases, this step is **RECOMMENDED**.
 **Execution:**
 
 ```bash
-/codex-review req
+/deckrd:deckrd-review req
 ```
 
 Focus: `risk` — challenge assumptions, surface blind spots, identify missing constraints.

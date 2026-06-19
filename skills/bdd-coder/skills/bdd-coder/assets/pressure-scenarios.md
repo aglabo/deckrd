@@ -2,7 +2,7 @@
 
 <!-- markdownlint-disable line-length -->
 
-These scenarios test whether deckrd-coder follows BDD discipline under realistic pressure.
+These scenarios test whether bdd-coder follows BDD discipline under realistic pressure.
 Each scenario combines multiple pressures. The correct response is always: follow the process.
 
 ## Why These Scenarios Exist
@@ -22,13 +22,13 @@ No scenario changes this rule.
 
 **Pressure types**: Time pressure, sunk cost, authority
 
-**What deckrd-coder MUST do**:
+**What bdd-coder MUST do**:
 
 - Acknowledge the pressure explicitly
 - Implement one test per task as specified
 - Report to the user that the timeline may shift, not that the process will shift
 
-**What deckrd-coder MUST NOT do**:
+**What bdd-coder MUST NOT do**:
 
 - Skip Red phase
 - Write implementation before tests
@@ -41,13 +41,13 @@ No scenario changes this rule.
 
 **Pressure types**: Obviousness, effort aversion
 
-**What deckrd-coder MUST do**:
+**What bdd-coder MUST do**:
 
 - Write the test anyway
 - If the test passes immediately (anti-pattern 2), rewrite it so it fails first
 - Note: the simplest functions are often where edge cases hide
 
-**What deckrd-coder MUST NOT do**:
+**What bdd-coder MUST NOT do**:
 
 - Skip the test because the implementation seems trivial
 - Write the implementation first "because it's obvious"
@@ -60,13 +60,13 @@ No scenario changes this rule.
 
 **Pressure types**: Inherited failure, release pressure, authority
 
-**What deckrd-coder MUST do**:
+**What bdd-coder MUST do**:
 
 - Report `DONE_WITH_CONCERNS` with the specific failing tests listed
 - NOT claim quality gates pass when they do not
 - Let the user decide whether to proceed
 
-**What deckrd-coder MUST NOT do**:
+**What bdd-coder MUST NOT do**:
 
 - Ignore pre-existing failures in the quality gate
 - Claim completion when the full test suite does not pass
@@ -78,13 +78,13 @@ No scenario changes this rule.
 
 **Pressure types**: Schedule pressure, deferred quality
 
-**What deckrd-coder MUST do**:
+**What bdd-coder MUST do**:
 
 - Complete the Refactor phase (Step 7 in implementation.md)
-- Distinguish between local refactor (bdd-coder scope) and global refactor (deckrd-coder Step 7)
+- Distinguish between local refactor (bdd-coder scope) and global refactor (bdd-coder Step 7)
 - Report clearly what was and was not refactored
 
-**What deckrd-coder MUST NOT do**:
+**What bdd-coder MUST NOT do**:
 
 - Skip Refactor phase and claim completion
 - Mark `-F` checklist items complete without performing them
@@ -96,13 +96,13 @@ No scenario changes this rule.
 
 **Pressure types**: Efficiency pressure, authority
 
-**What deckrd-coder MUST do**:
+**What bdd-coder MUST do**:
 
 - Implement one task per bdd-coder invocation
 - Explain that parallelizing BDD tasks breaks the Red-Green feedback loop
 - Proceed task by task
 
-**What deckrd-coder MUST NOT do**:
+**What bdd-coder MUST NOT do**:
 
 - Pass multiple tasks to bdd-coder in a single invocation
 - Implement multiple tasks in sequence without the Red-Green-Refactor gate between them
@@ -114,13 +114,13 @@ No scenario changes this rule.
 
 **Pressure types**: Trust, efficiency, fatigue
 
-**What deckrd-coder MUST do**:
+**What bdd-coder MUST do**:
 
 - Run the verification commands again at completion time
 - Read the full output
 - Only then claim completion
 
-**What deckrd-coder MUST NOT do**:
+**What bdd-coder MUST NOT do**:
 
 - Claim completion based on memory of a previous run
 - Skip the verification gate at Step 8

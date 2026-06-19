@@ -33,12 +33,12 @@ teardown_naming_cache() {
   unset NAMING_TMPDIR DECKRD_LOCAL_DATA _FILENAME_CACHE_DIR
 }
 
-# ---- deckrd-coder path detection helpers ----
+# ---- bdd-coder path detection helpers ----
 
-# Before: create a temp script file under a deckrd-coder path
+# Before: create a temp script file under a bdd-coder path
 setup_coder_tmpscript() {
-  mkdir -p /tmp/plugins/deckrd-coder
-  _CODER_TMPSCRIPT="$(mktemp /tmp/plugins/deckrd-coder/XXXXXX.sh)"
+  mkdir -p /tmp/plugins/bdd-coder
+  _CODER_TMPSCRIPT="$(mktemp /tmp/plugins/bdd-coder/XXXXXX.sh)"
   export _CODER_TMPSCRIPT
 }
 
@@ -48,7 +48,7 @@ teardown_coder_tmpscript() {
   unset _CODER_TMPSCRIPT
 }
 
-# Run bootstrap.lib.sh from deckrd-coder path and print the value of VAR_NAME.
+# Run bootstrap.lib.sh from bdd-coder path and print the value of VAR_NAME.
 # Usage: run_coder_tmpscript <VAR_NAME> [extra_export]
 # Requires: _CODER_TMPSCRIPT and SCRIPT to be set
 run_coder_tmpscript() {

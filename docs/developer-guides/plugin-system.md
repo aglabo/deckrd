@@ -130,7 +130,7 @@ plugins/{plugin-name}/
 
 ### 3. Helper Plugins
 
-**Example**: `plugins/deckrd-coder/`
+**Example**: `plugins/bdd-coder/`
 
 **Purpose**: Optional developer utilities
 
@@ -263,15 +263,15 @@ claude plugin install deckrd@deckrd
 
 MCP servers available during Claude Code command execution:
 
-- cocoindex-code: Semantic code search (used by deckrd-coder)
-- filesystem: File system access (used by deckrd and deckrd-coder)
+- cocoindex-code: Semantic code search (used by bdd-coder)
+- filesystem: File system access (used by deckrd and bdd-coder)
 
 MCP server configuration per plugin:
 
-| Plugin       | MCP config file                | Available servers          |
-| ------------ | ------------------------------ | -------------------------- |
-| deckrd       | plugins/deckrd/.mcp.json       | filesystem                 |
-| deckrd-coder | plugins/deckrd-coder/.mcp.json | filesystem, cocoindex-code |
+| Plugin    | MCP config file             | Available servers          |
+| --------- | --------------------------- | -------------------------- |
+| deckrd    | plugins/deckrd/.mcp.json    | filesystem                 |
+| bdd-coder | plugins/bdd-coder/.mcp.json | filesystem, cocoindex-code |
 
 ### With IDD Framework
 

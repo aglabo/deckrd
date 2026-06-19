@@ -75,7 +75,7 @@ Output file: `temp/deckrd-work/prior-art.md`
 
 ### `pattern-detection`
 
-Detect development environment configuration (used by deckrd-coder):
+Detect development environment configuration (used by bdd-coder):
 
 1. Locate repository root or sub-package root
 2. Detect language from manifest files
