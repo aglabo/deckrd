@@ -2,6 +2,29 @@
 
 <!-- textlint-disable ja-technical-writing/sentence-length -->
 
+## [0.4.0] - 2026-06-19
+
+### ♻️ Refactor
+
+- *(plugins)* Rename `deckrd-coder` to `bdd-coder` — command changes from `/deckrd-coder` to `/bdd-coder:bdd-coder`; functionality is unchanged
+- *(bootstrap)* Update path detection in `bootstrap.lib.sh` from `*/deckrd-coder/*` to `*/bdd-coder/*`
+
+### 🚀 Features
+
+- *(deckrd/commands)* Add `deckrd-review` skill — calls codex as an independent critical reviewer via `/deckrd:deckrd-review`; supports `--focus` option (`completeness` / `risk` / `consistency` / `feasibility`)
+- *(scripts)* Add `bump-version.sh` — automates semver updates across `plugin.json`, `SKILL.md`, and `marketplace*.json` files
+
+### ⚙️ Miscellaneous Tasks
+
+- *(marketplace)* Update marketplace name to `deckrd` and owner URL to production GitHub URL (`https://github.com/aglabo/deckrd`)
+- *(release)* Bump all plugin and skill versions to 0.4.0
+
+### 💥 Breaking Changes
+
+- *(plugins)* Rename command `/deckrd-coder` → `/bdd-coder:bdd-coder`
+
+---
+
 ## [0.3.0] - 2026-06-19
 
 ### ♻️ Refactor
