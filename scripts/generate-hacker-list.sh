@@ -11,7 +11,7 @@
 
 set -euo pipefail
 
-DEFAULT_INPUT="plugins/_data/hackers.meta.yaml"
+DEFAULT_INPUT="skills/_data/hackers.meta.yaml"
 
 usage() {
   cat <<EOF
@@ -28,9 +28,9 @@ ARGS:
   INPUT_FILE  Input YAML file (ignored if -i is set; default: ${DEFAULT_INPUT})
 
 EXAMPLES:
-  $(basename "$0") plugins/_data/hackers.meta.yaml
+  $(basename "$0") skills/_data/hackers.meta.yaml
   cat hackers.meta.yaml | $(basename "$0") -i
-  $(basename "$0") -o hacker-list.txt plugins/_data/hackers.meta.yaml
+  $(basename "$0") -o hacker-list.txt skills/_data/hackers.meta.yaml
 EOF
 }
 

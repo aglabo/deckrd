@@ -2,7 +2,7 @@
   "name": "deckrd-dev",
   "owner": {
     "name": "aglabo",
-    "url": "file:///C:/User/atsushifx/workspaces/develop/deckrd"
+    "url": "file:///C:/Users/atsushifx/workspaces/develop/deckrd"
   },
   "metadata": {
     "description": "deckrd tools - your goals to tasks framework, and related tools",
@@ -12,13 +12,13 @@
     {
       "name": "deckrd",
       "description": "your goals to tasks framework",
-      "source": "./plugins/deckrd",
+      "source": "./skills/deckrd",
       "strict": true
     },
     {
       "name": "deckrd-coder",
       "description": "Deckrd task implementation skill - extracts specified tasks from tasks.md and implements them using strict BDD process. Internally applies bdd-coder decision rules.",
-      "source": "./plugins/deckrd-coder",
+      "source": "./skills/deckrd-coder",
       "strict": true
     }
   ]
