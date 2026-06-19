@@ -4,12 +4,13 @@ description: "Guide for selecting the right tool for each development task in de
 category: "developer-guides"
 tags: ["tools", "mcp", "selection-guide", "cocoindex-code"]
 created: "2026-01-14"
-version: "0.1.0"
+version: "0.4.0"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
   - 0.0.4   2026-01-14  Initial version
   - 0.1.0   2026-03-21  Update from serena-mcp/lsmcp/codex-mcp to cocoindex-code/filesystem
+  - 0.4.0   2026-06-19  Update skill paths from plugins/ to skills/, rename deckrd-coder to bdd-coder
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.
@@ -34,47 +35,37 @@ The deckrd project uses multiple tools and MCP servers for different tasks. This
 | Read a file           | Read tool      | Direct access         |
 | Pattern search        | Grep tool      | Fast keyword search   |
 | List files            | Glob tool      | Pattern matching      |
-| File operations       | filesystem     | Read/write operations |
+| File operations       | filesystem MCP | Read/write operations |
+| Code generation       | codex-mcp      | AI-powered generation |
 | Format code           | dprint         | Consistent formatting |
 | Check commit messages | commitlint     | Conventional Commits  |
 | Detect secrets        | gitleaks       | Security scanning     |
 
 ## For Bash Script Analysis
 
-### Use serena-mcp
+### Use cocoindex-code
 
 **When**:
-
-- Analyzing bash scripts
-- Finding functions/symbols
-- Understanding code structure
-- Searching code patterns
-
-**Tools**:
-
-#### get_symbols_overview
-
-**Use for**: Getting high-level overview of a bash script
-
-```bash
-serena-mcp get_symbols_overview --relative-path "scripts/init.sh"
-```
-
-**Returns**: List of functions and symbols
-
-#### find_symbol
-
-**Use for**: Finding specific functions or symbols
-
-```bash
-serena-mcp find_symbol --name-path-pattern "main" --include-body true
-```
-
-**Returns**: Symbol definition with body
 
 - Searching for code using natural language
 - Function name or keyword is unknown
 - Looking for semantically related code
+
+### Use Grep / Glob
+
+**When**:
+
+- Known keyword or file pattern
+- Fast keyword search across files
+- Listing files by pattern
+
+```bash
+# Find function definition
+Grep "function _resolve_deckrd_root" --path skills/_runtime/
+
+# List all scripts
+Glob "skills/deckrd/skills/deckrd/scripts/*.sh"
+```
 
 ## For Documentation
 
@@ -93,7 +84,7 @@ serena-mcp find_symbol --name-path-pattern "main" --include-body true
 Read README.md
 
 # Read specific range
-Read setup.md --offset 10 --limit 50
+Read docs/developer-guides/architecture.md --offset 10 --limit 50
 ```
 
 ### Use Grep Tool
@@ -108,25 +99,10 @@ Read setup.md --offset 10 --limit 50
 
 ```bash
 # Search for keyword
-Grep "installation" --path docs/
+Grep "bdd-coder" --path docs/
 
 # With context
-Grep "error" --path logs/ -C 3
-```
-
-### Use serena-mcp search_for_pattern
-
-**When**:
-
-- Complex regex patterns
-- Need structured results
-- Searching code and docs
-
-**Example**:
-
-```bash
-serena-mcp search_for_pattern --substring-pattern "## Overview" \
-  --paths-include-glob "**/*.md"
+Grep "installation" --path docs/ -C 3
 ```
 
 ## For Configuration Files
@@ -139,61 +115,14 @@ serena-mcp search_for_pattern --substring-pattern "## Overview" \
 # Direct read
 Read .mcp.json
 Read lefthook.yml
+Read .claude-plugin/marketplace.json
 ```
 
-**Option 2: serena-mcp** (Complex)
+**Option 2: Grep** (Search within config)
 
 ```bash
-# Pattern matching in config
-serena-mcp search_for_pattern --substring-pattern "serena-mcp" \
-  --relative-path ".mcp.json"
-```
-
-## For TypeScript/JavaScript (Future)
-
-### Use lsmcp
-
-**When**:
-
-- TypeScript project added
-- Need IDE-like features
-- Refactoring TypeScript code
-
-**Tools**:
-
-#### search_symbols
-
-**Use for**: Finding classes, interfaces, functions
-
-```bash
-lsmcp search_symbols --query "MyClass" --kind "Class"
-```
-
-#### lsp_get_definitions
-
-**Use for**: Jump to definition
-
-```bash
-lsmcp lsp_get_definitions --root /path/to/project \
-  --relativePath "src/index.ts" --line 10 --symbolName "MyClass"
-```
-
-#### lsp_rename_symbol
-
-**Use for**: Refactoring
-
-```bash
-lsmcp lsp_rename_symbol --root /path/to/project \
-  --relativePath "src/index.ts" --textTarget "OldName" --newName "NewName"
-```
-
-#### lsp_get_diagnostics
-
-**Use for**: Finding errors and warnings
-
-```bash
-lsmcp lsp_get_diagnostics --root /path/to/project \
-  --relativePath "src/index.ts"
+# Search for specific key
+Grep "bdd-coder" --path .claude-plugin/
 ```
 
 ## For Code Generation
@@ -205,31 +134,45 @@ lsmcp lsp_get_diagnostics --root /path/to/project \
 - Need AI-powered generation
 - Template processing
 - Code suggestions
+- Independent second opinion on documents
 
 **Use Cases**:
 
 - Generate boilerplate code
 - Fill in templates
-- Create documentation from code
-- Suggest improvements
+- Critical review via `/deckrd:deckrd-review`
 
-## For Command/Plugin Search
+## For Command/Skill Search
 
 ### deckrd Commands
 
-**Location**: `plugins/deckrd/skills/deckrd/`
+**Location**: `skills/deckrd/skills/deckrd/`
 
 **Tools**:
 
 ```bash
 # Option 1: Glob (list files)
-Glob "plugins/deckrd/skills/deckrd/scripts/*.sh"
+Glob "skills/deckrd/skills/deckrd/scripts/*.sh"
 
 # Option 2: Grep (search commands)
-Grep "deckrd init" --path plugins/deckrd/
+Grep "deckrd init" --path skills/deckrd/
 
 # Option 3: cocoindex-code (semantic search)
 # query: "deckrd init command implementation"
+```
+
+### bdd-coder Commands
+
+**Location**: `skills/bdd-coder/skills/bdd-coder/`
+
+**Tools**:
+
+```bash
+# List skill files
+Glob "skills/bdd-coder/skills/bdd-coder/**/*.md"
+
+# Search for agent definitions
+Grep "checklist-builder" --path skills/bdd-coder/agents/
 ```
 
 ### IDD Framework Commands (External)
@@ -241,10 +184,7 @@ Grep "deckrd init" --path plugins/deckrd/
 **Tools**:
 
 ```bash
-# Option 1: lsmcp (for external plugin directory navigation)
-lsmcp list_dir --relativePath "." --recursive false
-
-# Option 2: Glob (list files)
+# Option 1: Glob (list files)
 Glob "~/.claude/plugins/marketplaces/**/commands/**/*.md"
 ```
 
@@ -266,9 +206,8 @@ Do you know the search keyword?
 ```text
 What do you need?
   ├─ Specific file? → Read tool
-  ├─ Find files by pattern? → serena-mcp find_file or Glob
-  ├─ List directory? → serena-mcp list_dir
-  ├─ Search content? → Grep or serena-mcp search_for_pattern
+  ├─ Find files by pattern? → Glob
+  ├─ Search content? → Grep or cocoindex-code
   └─ Generate code? → codex-mcp
 ```
 
@@ -276,11 +215,11 @@ What do you need?
 
 ```text
 What do you want to know?
-  ├─ Project structure? → serena-mcp list_dir (recursive)
-  ├─ Available commands? → Search plugin directories
+  ├─ Project structure? → Glob (recursive pattern)
+  ├─ Available commands? → Search skills/ directories
   ├─ Configuration? → Read .mcp.json, lefthook.yml
   ├─ Documentation? → Read docs/*.md
-  └─ Code patterns? → serena-mcp search_for_pattern
+  └─ Code patterns? → Grep or cocoindex-code
 ```
 
 ## Performance Considerations
@@ -292,20 +231,19 @@ What do you want to know?
 1. Use the Read tool directly for known file paths
 2. Use Glob / Grep for pattern-based searches
 3. Read only the required range (offset/limit)
-4. Read only what you need
 
 **Example** (Good):
 
 ```bash
 # Efficient: read known path directly
-Read plugins/deckrd/skills/deckrd/scripts/init.sh --limit 50
+Read skills/deckrd/skills/deckrd/scripts/init.sh --limit 50
 ```
 
 **Example** (Bad):
 
 ```bash
 # Inefficient: reads beyond what is needed
-Read plugins/deckrd/skills/deckrd/scripts/init.sh  # reads entire file
+Read skills/deckrd/skills/deckrd/scripts/init.sh  # reads entire file
 ```
 
 ### Execution Speed
@@ -332,20 +270,20 @@ Read plugins/deckrd/skills/deckrd/scripts/init.sh  # reads entire file
 
 ```bash
 # Step 1: Read the file
-Read plugins/deckrd/skills/deckrd/scripts/new-script.sh
+Read skills/deckrd/skills/deckrd/scripts/new-script.sh
 
 # Step 2: Search for a specific function
-Grep "function main" --path plugins/deckrd/skills/deckrd/scripts/new-script.sh -C 5
+Grep "main()" --path skills/deckrd/skills/deckrd/scripts/new-script.sh -C 5
 ```
 
 ### Scenario 2: Finding Command Implementation
 
 ```bash
 # Step 1: Find the file
-Glob "plugins/deckrd/skills/deckrd/scripts/*init*"
+Glob "skills/deckrd/skills/deckrd/scripts/*init*"
 
 # Step 2: Read the implementation
-Read plugins/deckrd/skills/deckrd/scripts/init.sh
+Read skills/deckrd/skills/deckrd/scripts/init.sh
 ```
 
 ### Scenario 3: Searching Documentation
@@ -358,12 +296,12 @@ Grep "MCP servers" --path docs/ --output-mode files_with_matches
 Read docs/specs/mcp-servers.md
 ```
 
-### Scenario 4: Analyzing External Plugin
+### Scenario 4: Finding bdd-coder Agent Logic
 
 ```bash
 # Semantic search with cocoindex-code
-# query: "session initialization function"
-# lang: "bash"
+# query: "checklist builder phase 3 spec coverage"
+# lang: "markdown"
 ```
 
 ## Anti-Patterns
@@ -394,34 +332,42 @@ Read docs/specs/mcp-servers.md
    Read docs/specs/mcp-servers.md
    ```
 
+4. **Using old plugins/ paths**
+
+   ```bash
+   # Bad: outdated path
+   Read plugins/deckrd/skills/deckrd/scripts/init.sh
+   # Good: current path
+   Read skills/deckrd/skills/deckrd/scripts/init.sh
+   ```
+
 ### ✅ Do Instead
 
 1. **Use dedicated tools**
 
    ```bash
    # Good
-   Read scripts/init.sh
-   Glob "**/*.sh"
+   Read skills/deckrd/skills/deckrd/scripts/init.sh
+   Glob "skills/**/*.sh"
    ```
 
 2. **Narrow the scope**
 
    ```bash
    # Good
-   serena-mcp search_for_pattern --substring-pattern "function" \
-     --relative-path "scripts/"
+   Grep "function" --path skills/deckrd/skills/deckrd/scripts/
    ```
 
-3. **Read known paths directly**
+3. **Use current skill paths**
 
    ```bash
    # Good
-   Read docs/specs/mcp-servers.md
+   Read skills/deckrd/skills/deckrd/references/commands/init.md
+   Read skills/bdd-coder/skills/bdd-coder/SKILL.md
    ```
 
 ## Related Documentation
 
 - [MCP Servers API Reference](../specs/mcp-servers.md) - Detailed API docs
-- [MCP Server Configuration](mcp-servers.md) - Setup and configuration
 - [Architecture](./architecture.md) - System design
 - [Development Workflow](./workflow.md) - Workflow integration

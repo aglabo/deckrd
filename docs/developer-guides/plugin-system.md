@@ -2,14 +2,15 @@
 title: "Plugin System Architecture"
 description: "Detailed documentation of the deckrd plugin architecture and implementation"
 category: "developer-guides"
-tags: ["plugins", "architecture", "modular"]
+tags: ["plugins", "skills", "architecture", "modular"]
 created: "2026-01-14"
-version: "0.1.0"
+version: "0.4.0"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
   - 0.0.4   2026-01-14  Initial version
   - 0.1.0   2026-03-21  Update Integration Points to cocoIndex-code/filesystem, update plugin.json/bootstrap.sh/session.sh/directory structure to match actual implementation
+  - 0.4.0   2026-06-19  Rename deckrd-coder to bdd-coder, update paths from plugins/ to skills/
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.
@@ -24,121 +25,104 @@ status: "published"
 
 ## Overview
 
-deckrd uses Claude Code's plugin system to provide modular, composable workflows. Each plugin is self-contained and follows standard structure conventions.
+deckrd uses Claude Code's Agent Skills system to provide modular, composable workflows. Each skill is self-contained and follows standard structure conventions.
 
-## Plugin Structure
+## Skill Structure
 
 ### Directory Layout
 
 ```text
-plugins/{plugin-name}/
+skills/{skill-name}/
 ├── .claude-plugin/
-│   └── config.json       # Plugin metadata
-├── skills/
-│   └── {plugin-name}/
-│       ├── references/   # Documentation
-│       │   ├── commands/ # Command docs
-│       │   └── workflow.md
-│       ├── scripts/      # Implementation scripts
-│       │   ├── libs/     # bootstrap.sh, session.sh, config.sh, etc.
-│       │   ├── subcommands/ # generate-doc.sh, etc.
-│       │   ├── init.sh
-│       │   ├── req.sh
-│       │   └── ...
-│       └── assets/       # Templates and prompts
-│           ├── templates/
-│           └── prompts/
+│   └── plugin.json       # Skill metadata
 ├── agents/               # Agent definitions
-│   └── {agent-name}.json
-└── README.md            # Plugin documentation
+│   └── {agent-name}.md
+└── skills/
+    └── {skill-name}/
+        ├── SKILL.md      # Skill entrypoint
+        ├── references/   # Documentation
+        │   ├── commands/ # Command docs
+        │   └── workflow.md
+        ├── scripts/      # Implementation scripts
+        │   ├── libs/     # bootstrap.lib.sh, etc.
+        │   ├── subcommands/
+        │   └── __tests__/
+        └── assets/       # Templates and prompts
+            ├── templates/
+            └── prompts/
 ```
 
 ### Required Files
 
-#### 1. `.claude-plugin/config.json`
+#### 1. `.claude-plugin/plugin.json`
 
-**Purpose**: Plugin metadata and configuration
-
-**Format**:
-
-```json
-{
-  "name": "deckrd",
-  "version": "0.0.4",
-  "description": "Document-driven development workflow",
-  "author": "atsushifx",
-  "license": "MIT",
-  "repository": "https://github.com/aglabo/deckrd",
-  "skills": ["deckrd"],
-  "agents": []
-}
-```
-
-#### 2. `deckrd.json` (Root)
-
-**Purpose**: Plugin artifact metadata
+**Purpose**: Skill metadata and version
 
 **Format**:
 
 ```json
 {
   "name": "deckrd",
-  "version": "0.0.4",
-  "artifact": {
-    "path": "plugins/deckrd"
-  }
+  "version": "0.4.0"
 }
 ```
 
-#### 3. `README.md`
+#### 2. `skills/{name}/SKILL.md`
 
-**Purpose**: Plugin documentation
+**Purpose**: Skill entrypoint — defines the skill's command, system prompt, and tool access
 
-**Content**:
+#### 3. `deckrd.json` (Root)
 
-- Installation instructions
-- Command reference
-- Usage examples
-- Troubleshooting
+**Purpose**: Marketplace artifact metadata
 
-## Plugin Types
+**Format**:
 
-### 1. Main Plugin (deckrd)
+```json
+{
+  "name": "deckrd",
+  "version": "0.4.0"
+}
+```
 
-**Location**: `plugins/deckrd/`
+## Skill Types
+
+### 1. Main Skill (deckrd)
+
+**Location**: `skills/deckrd/`
 
 **Purpose**: Core document-driven workflow
 
 **Components**:
 
-- Skills: `/deckrd` commands (init, req, dr, spec, impl, tasks, status)
+- Skills: `/deckrd` commands (init, req, dr, spec, impl, tasks, status, review)
 - Scripts: Bash implementation of each command
 - Templates: Document templates
 - Prompts: AI prompts for generation
 
-### 2. Methodology Plugins
+### 2. Methodology Skill (bdd-coder)
 
-**Example**: `plugins/bdd-coder/`
+**Location**: `skills/bdd-coder/`
 
-**Purpose**: Development methodology support (e.g., BDD)
-
-**Components**:
-
-- Agents: Methodology-specific agents
-- Scripts: Test generation, validation
-- Templates: Test templates
-
-### 3. Helper Plugins
-
-**Example**: `plugins/bdd-coder/`
-
-**Purpose**: Optional developer utilities
+**Purpose**: BDD implementation with strict Red-Green-Refactor cycle
 
 **Components**:
 
-- Skills: Helper commands
-- Scripts: Utility functions
-- Tools: Code generation helpers
+- Agents: checklist-builder, bdd-coder, code-reviewer, explore-agent
+- Templates: Test templates per language
+- References: BDD cycle documentation
+
+### 3. Shared Runtime
+
+**Location**: `skills/_runtime/`
+
+**Purpose**: Shared libraries used by both deckrd and bdd-coder
+
+**Components**:
+
+- `libs/bootstrap.lib.sh` — environment initialization
+- `libs/kv-store.lib.sh` — key-value state management
+- `libs/naming.lib.sh` — filename generation utilities
+- `libs/__tests__/` — unit and functional tests
 
 ## Command Implementation
 
@@ -155,9 +139,8 @@ Each command follows this pattern:
 
 set -euo pipefail
 
-# Constants
-readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly SESSION_FILE="docs/.deckrd/.session.json"
+# Source bootstrap
+source "${DECKRD_ROOT}/skills/_runtime/libs/bootstrap.lib.sh"
 
 # Functions
 main() {
@@ -171,7 +154,7 @@ main "$@"
 ### Command Lifecycle
 
 1. **User invokes command**: `/deckrd {command}`
-2. **Claude Code dispatches**: Calls corresponding script
+2. **Claude Code dispatches**: Calls corresponding skill
 3. **Script executes**: Reads session, performs operations
 4. **Script updates state**: Writes to session file
 5. **Script returns result**: Claude shows output to user
@@ -201,62 +184,66 @@ update_session() {
 
 ### Agent Structure
 
-```json
-{
-  "name": "{agent-name}",
-  "description": "{agent description}",
-  "prompt": "{agent system prompt}",
-  "tools": ["Read", "Write", "Edit", "Bash"],
-  "env": {}
-}
+Agent definitions are stored as Markdown files under `agents/`:
+
+```markdown
+---
+name: { agent-name }
+description: { agent description }
+tools: [Read, Write, Edit, Bash, Grep, Glob]
+---
+
+{agent system prompt}
 ```
 
-### Agent Types
+### Agent Types in deckrd
 
-#### 1. Workflow Agents
+#### explore-agent
 
-**Purpose**: Execute specific workflow steps
+**Purpose**: Read-only codebase investigation — protects main context window
 
-**Example**: requirements-generator
+**Scope**: codebase-extraction, codebase-survey, prior-art, pattern-detection
 
-- Analyzes user input
-- Generates requirements document
-- Updates session state
+### Agent Types in bdd-coder
 
-#### 2. Validation Agents
+#### checklist-builder
 
-**Purpose**: Verify document quality
+**Purpose**: Converts natural-language instructions into BDD implementation checklists
 
-**Example**: document-validator
+#### bdd-coder
 
-- Checks document completeness
-- Validates format
-- Suggests improvements
+**Purpose**: Strict BDD implementation — 1 message = 1 test, Red-Green-Refactor per assertion
 
-#### 3. Helper Agents
+#### code-reviewer
 
-**Purpose**: Support tasks
+**Purpose**: Post-implementation review — CC/CRAP scoring + Codex second opinion
 
-**Example**: template-processor
+#### explore-agent
 
-- Fills in template placeholders
-- Formats output
-- Ensures consistency
+**Purpose**: Environment detection — detects language, test framework, and tool commands
 
 ## Integration Points
 
 ### With Claude Code
 
-**Plugin Loading**:
+**Skill Installation**:
 
 ```bash
+# via gh skills
+gh skills install aglabo/deckrd
+
+# via claude plugin
+claude plugin marketplace add aglabo/deckrd
 claude plugin install deckrd@deckrd
+claude plugin install bdd-coder@deckrd
 ```
 
 **Command Invocation**:
 
 ```bash
-/deckrd init  # Dispatched to plugins/deckrd/skills/deckrd/scripts/init.sh
+/deckrd init        # deckrd skill
+/bdd-coder:bdd-coder T01-01   # bdd-coder skill
+/deckrd:deckrd-review req     # deckrd-review skill
 ```
 
 ### With MCP Servers
@@ -266,12 +253,12 @@ MCP servers available during Claude Code command execution:
 - cocoindex-code: Semantic code search (used by bdd-coder)
 - filesystem: File system access (used by deckrd and bdd-coder)
 
-MCP server configuration per plugin:
+MCP server configuration per skill:
 
-| Plugin    | MCP config file             | Available servers          |
-| --------- | --------------------------- | -------------------------- |
-| deckrd    | plugins/deckrd/.mcp.json    | filesystem                 |
-| bdd-coder | plugins/bdd-coder/.mcp.json | filesystem, cocoindex-code |
+| Skill     | MCP config file            | Available servers          |
+| --------- | -------------------------- | -------------------------- |
+| deckrd    | skills/deckrd/.mcp.json    | filesystem                 |
+| bdd-coder | skills/bdd-coder/.mcp.json | filesystem, cocoindex-code |
 
 ### With IDD Framework
 
@@ -279,65 +266,63 @@ MCP server configuration per plugin:
 
 - deckrd generates task list
 - IDD creates issues from tasks
+- bdd-coder implements tasks via BDD cycle
 - IDD manages PR lifecycle
-- deckrd documents decisions
 
-## Plugin Development
+## Skill Development
 
-### Creating a New Plugin
+### Creating a New Skill
 
 #### Step 1: Directory Structure
 
 ```bash
-mkdir -p plugins/my-plugin/.claude-plugin
-mkdir -p plugins/my-plugin/skills/my-plugin/{scripts,references,assets}
-mkdir -p plugins/my-plugin/agents
+mkdir -p skills/my-skill/.claude-plugin
+mkdir -p skills/my-skill/agents
+mkdir -p skills/my-skill/skills/my-skill/{scripts,references,assets}
 ```
 
 #### Step 2: Configuration
 
-Create `.claude-plugin/config.json`:
+Create `.claude-plugin/plugin.json`:
 
 ```json
 {
-  "name": "my-plugin",
-  "version": "0.0.1",
-  "description": "My custom plugin",
-  "author": "yourname",
-  "skills": ["my-plugin"]
+  "name": "my-skill",
+  "version": "0.1.0"
 }
 ```
 
-#### Step 3: Implement Commands
+#### Step 3: Skill Entrypoint
 
-Create `skills/my-plugin/scripts/command.sh`:
+Create `skills/my-skill/SKILL.md` with the skill's system prompt and tool access.
+
+#### Step 4: Implement Commands
+
+Create `skills/my-skill/skills/my-skill/scripts/command.sh`:
 
 ```bash
 #!/usr/bin/env bash
 # Your command implementation
 ```
 
-#### Step 4: Documentation
+#### Step 5: Register in Marketplace
 
-Create `README.md` with:
+Add to `.claude-plugin/marketplace.json`:
 
-- Installation
-- Commands
-- Examples
-
-#### Step 5: Test
-
-```bash
-claude plugin install my-plugin@my-plugin
-claude /my-plugin command
+```json
+{
+  "name": "my-skill",
+  "description": "My custom skill",
+  "source": "./skills/my-skill"
+}
 ```
 
-### Plugin Best Practices
+### Skill Best Practices
 
 #### 1. Self-Contained
 
 - Include all dependencies
-- No external file dependencies
+- Source shared libraries via bootstrap
 - Clear documentation
 
 #### 2. Consistent Structure
@@ -356,12 +341,6 @@ if [[ -z "${MODULE:-}" ]]; then
   echo "Error: MODULE not specified" >&2
   exit 1
 fi
-
-# Check prerequisites
-if [[ ! -f "$SESSION_FILE" ]]; then
-  echo "Error: Session not initialized" >&2
-  exit 1
-fi
 ```
 
 #### 4. Logging
@@ -377,106 +356,62 @@ log_error() {
 }
 ```
 
-#### 5. Documentation
+## Testing Skills
 
-- Document all commands
-- Provide examples
-- Include troubleshooting
-- Maintain README
+### Running Tests
 
-## Testing Plugins
-
-### Manual Testing
+Always use `pnpm run` scripts — never invoke runners directly:
 
 ```bash
-# Install plugin locally
-claude plugin install my-plugin@my-plugin
-
-# Test commands
-claude /my-plugin init
-claude /my-plugin status
-
-# Verify output
-cat docs/.my-plugin/.session.json
+pnpm run test:sh        # ShellSpec tests
+pnpm run lint:markdown  # Markdown lint
+dprint check            # Format check
 ```
 
-### Integration Testing
+### Test Structure
 
-```bash
-# Test with deckrd workflow
-/deckrd init
-/my-plugin integrate
-/deckrd status
-
-# Test with IDD framework
-/my-plugin create-issue
-/idd/issue:load
+```text
+skills/_runtime/libs/__tests__/
+├── unit/                 # Unit tests per library
+├── functional/           # Functional tests (real filesystem)
+└── spec_helper.sh        # Shared test helpers
 ```
 
 ## Distribution
 
 ### Marketplace Distribution
 
-#### 1. Package Plugin
-
-Create `deckrd.json` at root:
-
-```json
-{
-  "name": "my-plugin",
-  "version": "0.0.1",
-  "artifact": {
-    "path": "plugins/my-plugin"
-  }
-}
-```
-
-#### 2. Publish
+Skills are distributed via the `deckrd` marketplace:
 
 ```bash
-claude plugin publish
+# Install all skills
+gh skills install aglabo/deckrd
+
+# Install individual skill
+claude plugin install bdd-coder@deckrd
 ```
 
-#### 3. Install
+### Release Artifacts
 
-```bash
-claude plugin install my-plugin@my-plugin
-```
-
-### Local Distribution
-
-```bash
-# Copy to Claude plugin directory
-cp -r plugins/my-plugin ~/.claude/plugins/my-plugin
-
-# Reload Claude Code
-claude plugin list
-```
+Release zips are in `releases/v{version}/` and contain the full skill tree for offline installation.
 
 ## Plugin Lifecycle
 
 ### Installation
 
-1. User runs `claude plugin install`
-2. Claude downloads plugin
+1. User runs `gh skills install` or `claude plugin install`
+2. Claude downloads skill
 3. Claude validates structure
 4. Claude registers commands
 5. Commands available via `/`
 
-### Update
+### Version Management
 
-1. User runs `claude plugin update`
-2. Claude checks for new version
-3. Claude downloads update
-4. Claude reloads plugin
-5. New commands available
+Use `scripts/bump-version.sh` to update versions across all files:
 
-### Uninstall
-
-1. User runs `claude plugin uninstall`
-2. Claude removes plugin files
-3. Claude unregisters commands
-4. Commands no longer available
+```bash
+bash scripts/bump-version.sh 0.5.0
+```
 
 ## Security Considerations
 
@@ -486,7 +421,6 @@ claude plugin list
 # Sanitize user input
 sanitize_input() {
   local input=$1
-  # Remove dangerous characters
   echo "$input" | tr -dc '[:alnum:] -_.'
 }
 ```
@@ -494,14 +428,8 @@ sanitize_input() {
 ### File Operations
 
 ```bash
-# Use absolute paths
-readonly BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
-
-# Validate paths
-if [[ ! "$FILE" =~ ^"$BASE_DIR" ]]; then
-  echo "Error: Invalid path" >&2
-  exit 1
-fi
+# Use absolute paths via bootstrap
+source "${DECKRD_ROOT}/skills/_runtime/libs/bootstrap.lib.sh"
 ```
 
 ### Secret Handling

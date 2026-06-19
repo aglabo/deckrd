@@ -10,6 +10,7 @@ authors:
 changes:
   - 0.0.4   2026-01-14  Initial version
   - 0.1.0   2026-03-22  Version update
+  - 0.4.0   2026-06-19  Rename deckrd-coder to bdd-coder
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.
@@ -337,7 +338,7 @@ feat(auth): add user authentication with JWT
    /idd/issue:branch
 
 4. Implement with BDD
-   Use bdd-coder agent or manual implementation
+   /bdd-coder:bdd-coder T01-01   # one task at a time
 
 5. Commit with proper messages
    git add <files>

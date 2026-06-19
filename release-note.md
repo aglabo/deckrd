@@ -1,16 +1,46 @@
-# v0.3.0
+# v0.4.0
 
 ## Overview
 
-プラグインアセットを `skills/` ディレクトリ構造に移行し、`gh skills` および `npx skills` による簡単インストールに対応したリリースです。
+BDD 実装コマンドを `deckrd-coder` から `bdd-coder` にリネームしたリリースです。
+機能・動作はそのままに、コマンド名がより目的を明確に表す `bdd-coder` に変わりました。
+また、codex を使ったドキュメントのクリティカルレビュー機能 `deckrd-review` を新たに追加しました。
 
 ---
 
 ## What's New
 
-### `gh skills` / `npx skills` でインストールできるようになりました
+### `deckrd-coder` が `bdd-coder` にリネームされました
 
-GitHub リポジトリを指定するだけで deckrd と deckrd-coder をインストールできます。
+BDD 実装を行うコマンドが `/deckrd-coder` から `/bdd-coder:bdd-coder` に変わりました。
+機能・動作の変更はありません。コマンド名がより直感的になりました。
+
+```bash
+# 旧コマンド（v0.3.0 まで）
+/deckrd-coder
+
+# 新コマンド（v0.4.0 以降）
+/bdd-coder:bdd-coder
+```
+
+### `deckrd-review` スキルを追加
+
+`/deckrd:deckrd-review` コマンドで、codex を独立したクリティカルレビュアーとして呼び出せるようになりました。
+`/deckrd review` が Claude による一次レビューなのに対し、`deckrd-review` は codex が異なる視点から仮定に挑戦し、見落とした盲点を洗い出します。
+
+```bash
+# 要件ドキュメントを codex でレビュー
+/deckrd:deckrd-review req
+
+# リスクにフォーカスして仕様をレビュー
+/deckrd:deckrd-review spec --focus risk
+```
+
+`--focus` オプションで `completeness` / `risk` / `consistency` / `feasibility` の観点を指定できます。
+
+### マーケットプレイス設定を本番値に更新
+
+インストール用の GitHub URL が正式に設定されました。`gh skills` / `npx skills` / `claude plugin` のいずれでもインストールできます。
 
 ```bash
 # gh skills
@@ -18,26 +48,21 @@ gh skills install aglabo/deckrd
 
 # npx skills
 npx skills add aglabo/deckrd
-```
 
-### プラグインを `skills/` ディレクトリに統合
-
-`deckrd` と `deckrd-coder` を `plugins/` から `skills/` へ移動し、Agent Skills の標準ディレクトリ構造に準拠しました。Claude Plugin (`claude plugin marketplace add`) によるインストールも引き続き利用できます。
-
-```bash
+# claude plugin
 claude plugin marketplace add aglabo/deckrd
 ```
-
-### `deckrd-coder` を独立プラグインとして分離
-
-`deckrd-coder` が `deckrd` から独立したプラグインになりました。それぞれ個別にインストール・管理できます。
 
 ---
 
 ## Breaking Changes
 
-### プラグインパスの変更
+### コマンド名の変更
 
-内部ランタイムのパスが `plugins/_runtime/` から `skills/_runtime/` に変更されました。カスタムスクリプトで `plugins/_runtime/libs/bootstrap.lib.sh` を直接参照している場合は `skills/_runtime/libs/bootstrap.lib.sh` に更新してください。
+`deckrd-coder` コマンドが `bdd-coder` にリネームされました。
 
-標準の `/deckrd` コマンド・`/deckrd-coder` コマンドはそのまま使用できます。
+| 旧（v0.3.0 まで） | 新（v0.4.0 以降）      |
+| ----------------- | ---------------------- |
+| `/deckrd-coder`   | `/bdd-coder:bdd-coder` |
+
+機能の変更はありません。スクリプトや設定ファイルでコマンド名を参照している場合は更新してください。

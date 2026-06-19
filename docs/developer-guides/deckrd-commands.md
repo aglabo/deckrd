@@ -4,12 +4,13 @@ description: "Complete reference for deckrd document-driven workflow commands"
 category: "developer-guides"
 tags: ["deckrd", "commands", "reference", "cli"]
 created: "2026-01-14"
-version: "0.1.0"
+version: "0.4.0"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
   - 0.0.4   2026-01-14  Initial version
   - 0.1.0   2026-03-21  Fix session path and schema, add command list, add lang/ai_model fields to session schema
+  - 0.4.0   2026-06-19  Rename deckrd-coder to bdd-coder, add deckrd-review command, update paths to skills/
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.
@@ -28,16 +29,16 @@ Deckrd provides a document-driven workflow that transforms goals and ideas into 
 
 **Core Workflow**: Goals/Ideas → Requirements → Specifications → Implementation → Tasks
 
-## Plugin Location
+## Skill Location
 
-**Main Plugin**: `plugins/deckrd/`
+**Main Skill**: `skills/deckrd/`
 
 **Command Implementation**:
 
-- Commands: `plugins/deckrd/skills/deckrd/references/commands/`
-- Scripts: `plugins/deckrd/skills/deckrd/scripts/`
-- Templates: `plugins/deckrd/skills/deckrd/assets/templates/`
-- Prompts: `plugins/deckrd/skills/deckrd/assets/prompts/`
+- Commands: `skills/deckrd/skills/deckrd/references/commands/`
+- Scripts: `skills/deckrd/skills/deckrd/scripts/`
+- Templates: `skills/deckrd/skills/deckrd/assets/templates/`
+- Prompts: `skills/deckrd/skills/deckrd/assets/prompts/`
 
 ## Session Management
 
@@ -140,7 +141,7 @@ docs/.deckrd/myProject/authentication/
 
 **Workflow Step**: 5 of 6
 
-**Note**: This is the final step. tasks.md serves as your direct starting point for coding.
+**Note**: This is the final planning step. tasks.md serves as your direct starting point for coding with bdd-coder.
 
 ### /deckrd status
 
@@ -159,6 +160,19 @@ Status:
   ✓ Specifications
   ✓ Implementation
   → Tasks (in progress)
+```
+
+### /deckrd review
+
+**Usage**: `/deckrd review <phase>`
+
+**Purpose**: Review and improve a document at any workflow phase
+
+**Example**:
+
+```bash
+/deckrd review req
+/deckrd review spec
 ```
 
 ## Workflow Details
@@ -226,20 +240,29 @@ Status:
 - BDD-style executable tasks
 - Actionable blueprint for coding
 - Concrete tasks with acceptance criteria
-- Ready-to-code format
+- Ready-to-code format for bdd-coder
 
-## Related Plugins
+## Related Skills
 
-### bdd-coder
+### bdd-coder (`/bdd-coder:bdd-coder`)
 
-- Purpose: BDD methodology agent
-- Features: Red-Green-Refactor cycle enforcement
-- Integration: TodoWrite integration for progress tracking
+- Purpose: BDD implementation skill
+- Features: Strict Red-Green-Refactor cycle, 1 message = 1 test
+- Integration: Takes tasks.md as input, implements via BDD cycle
 
-### bdd-coder (`/deckrd:bdd-coder`)
+### deckrd-review (`/deckrd:deckrd-review`)
 
-- Purpose: BDD implementation skill integrated into the deckrd plugin
-- Features: Task execution via strict Red-Green-Refactor cycle
+- Purpose: Independent critical review via codex
+- Features: Adversarial review with `--focus` option (`completeness` / `risk` / `consistency` / `feasibility`)
+- When to use: After `/deckrd review`, before phase transitions, when design decisions are unclear
+
+```bash
+# Review requirements with risk focus
+/deckrd:deckrd-review req --focus risk
+
+# Review spec for completeness
+/deckrd:deckrd-review spec --focus completeness
+```
 
 ## Best Practices
 
@@ -248,6 +271,7 @@ Status:
 3. **Iterate as needed**: Revisit earlier steps if requirements change
 4. **Keep documents focused**: Each document has a specific purpose
 5. **Use decision records**: Capture important architectural decisions
+6. **Run deckrd-review**: Get codex second opinion before phase transitions
 
 ## Integration with IDD Framework
 
@@ -260,15 +284,14 @@ Use both together for a complete development cycle:
 
 1. Plan with deckrd (`/deckrd init` → `tasks`)
 2. Create issue with IDD (`/idd/issue:new`)
-3. Implement with BDD (`bdd-coder` agent)
+3. Implement with BDD (`/bdd-coder:bdd-coder` skill)
 4. Generate PR with IDD (`/idd-pr`)
 
 ## Additional Documentation
 
-- Plugin README: `plugins/deckrd/README.md`
-- Command References: `plugins/deckrd/skills/deckrd/references/commands/`
-- Workflow Guide: `plugins/deckrd/skills/deckrd/references/workflow.md`
-- Session Management: `plugins/deckrd/skills/deckrd/references/session.md`
+- Command References: `skills/deckrd/skills/deckrd/references/commands/`
+- Workflow Guide: `skills/deckrd/skills/deckrd/references/workflow.md`
+- Session Management: `skills/deckrd/skills/deckrd/references/session.md`
 
 ## Notes
 
