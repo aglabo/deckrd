@@ -2,6 +2,64 @@
 
 <!-- textlint-disable ja-technical-writing/sentence-length -->
 
+## [0.2.1] - 2026-06-18
+
+### 🚀 Features
+
+- *(deckrd/prompts)* `tasks` prompt: accept Decision Records (DR) as input — DR entries are converted to observable behavior coverage items automatically
+- *(deckrd/prompts)* `tasks` prompt: add source coverage verification — blocks output if any spec section or DR entry is uncovered
+- *(deckrd/prompts)* `tasks` prompt: add category balance verification — reports missing Normal / Error / Edge categories per test target
+- *(deckrd-coder/checklist-builder)* Add Phase 3.5 Spec Coverage Review — validates all spec sections are represented in the checklist
+- *(deckrd-coder/checklist-builder)* Add Phase 3.6 Category Balance Review — detects missing Error / Edge test cases and reports gaps in the completion summary
+
+---
+
+### ⚙️ Miscellaneous Tasks
+
+- *(configs)* Set Claude default mode to `plan` and restrict git write commands via permission settings
+- *(configs)* Improve CHANGELOG generation: include commit body, remove emoji prefixes from parsers
+
+---
+
+## [0.2.0] - 2026-06-08
+
+### 🚀 Features
+
+- *(deckrd-coder)* Introduce `checklist-builder` agent — converts natural-language instructions into BDD implementation checklists automatically
+- *(deckrd-coder)* `/deckrd-coder` now accepts natural-language instructions in addition to Task IDs
+- *(deckrd-coder)* Add `code-reviewer` agent — computes CC / CRAP scores per function and delegates a full code review to Codex after Phase 7
+- *(deckrd/commands)* `req` command: add Phase 5 Codex second-opinion step (required for external interfaces; recommended otherwise)
+- *(deckrd/commands)* `spec` command: add Phase 4 Codex second-opinion step
+- *(deckrd/prompts)* `tasks` prompt: support split-file implementation mode and add EARS-to-BDD mapping table
+- *(runtime/libs/naming)* Add `adjective_random()` function for random adjective generation in checklist filenames
+- *(runtime/libs/naming)* Rewrite filename generation with atomic cache to prevent duplicate filenames under concurrent execution
+- *(runtime/libs)* Add `jq_read` utility for CRLF normalization on Windows
+
+---
+
+### 🐛 Bug Fixes
+
+- *(ai-runner)* Increase `run_ai` default timeout from 5 s to 120 s — prevents premature timeout on slow AI responses
+- *(mcp)* Replace `pnpx` with `npx -y` in filesystem MCP configuration
+
+---
+
+### ♻️ Refactor
+
+- *(runtime/libs)* Consolidate shared libraries under `plugins/_runtime/libs/` — single source of truth for bootstrap, kv-store, naming, and utils
+- *(validate-env)* Add `jaq` support as an alternative to `jq`
+- *(scripts/libs)* Unify all error output to stderr across ai-runner, kv-store, naming, normalize-doc-type, and validate-env
+- *(deckrd-coder)* Move all deckrd-coder assets into the deckrd plugin for unified management
+
+---
+
+### ⚙️ Miscellaneous Tasks
+
+- Migrate pre-commit secret scanning from `gitleaks` to `betterleaks`
+- Switch MCP server from `serena-mcp` to `@modelcontextprotocol/server-filesystem`
+
+---
+
 ## [0.1.0] - 2026-03-22
 
 ### 🚀 Features
