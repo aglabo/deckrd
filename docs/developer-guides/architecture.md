@@ -4,12 +4,13 @@ description: "High-level architecture and design principles of the deckrd projec
 category: "developer-guides"
 tags: ["architecture", "design", "overview"]
 created: "2026-01-14"
-version: "0.1.0"
+version: "0.4.0"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
   - 0.0.4   2026-01-14  Initial version
   - 0.1.0   2026-03-21  Update schema, update Layer 3 MCP servers to cocoindex-code/filesystem, add lang/ai_model fields to session schema
+  - 0.4.0   2026-06-19  Rename deckrd-coder to bdd-coder, update paths from plugins/ to skills/
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.
@@ -30,9 +31,14 @@ deckrd is a plugin-based framework that provides document-driven development wor
 
 ```text
 deckrd/
-├── Plugins/                  # Plugin modules
-│   ├── deckrd/              # Main workflow plugin
-│   └── bdd-coder/           # BDD implementation (integrated into deckrd)
+├── skills/                   # Agent Skills modules
+│   ├── deckrd/              # Main workflow skill
+│   │   ├── agents/          # Agent definitions
+│   │   └── skills/deckrd/   # Commands, scripts, assets
+│   ├── bdd-coder/           # BDD implementation skill
+│   │   ├── agents/          # Agent definitions
+│   │   └── skills/bdd-coder/ # Commands, templates, references
+│   └── _runtime/            # Shared runtime libraries
 ├── Configuration/            # Tool configs
 │   ├── .mcp.json           # MCP servers
 │   ├── lefthook.yml        # Git hooks
@@ -45,7 +51,7 @@ deckrd/
 
 ### 1. Modularity
 
-Each plugin is self-contained with:
+Each skill is self-contained with:
 
 - Own command implementations
 - Own agent definitions
@@ -54,18 +60,19 @@ Each plugin is self-contained with:
 
 ### 2. Composability
 
-Plugins work together:
+Skills work together:
 
 - deckrd provides planning workflow
+- bdd-coder provides BDD implementation workflow
 - IDD framework provides execution workflow
 - MCP servers provide analysis tools
 
 ### 3. Extensibility
 
-Easy to add new plugins:
+Easy to add new skills:
 
-- Follow `.claude-plugin/` structure
-- Implement command scripts
+- Follow `skills/{name}/` structure
+- Implement skill definitions
 - Add agent definitions
 - Update documentation
 
@@ -82,17 +89,23 @@ Easy to add new plugins:
 - Agent execution engine
 - MCP client
 
-### Layer 2: Plugins
+### Layer 2: Skills
 
 **Purpose**: Provide domain-specific workflows
 
-**deckrd Plugin**:
+**deckrd Skill**:
 
 - Document generation workflow
 - Session state management
 - Template processing
 
-**IDD Framework Plugin** (External):
+**bdd-coder Skill**:
+
+- Strict BDD Red-Green-Refactor cycle
+- Checklist-based task implementation
+- Quality gate enforcement
+
+**IDD Framework Skill** (External):
 
 - GitHub integration
 - Issue/PR management
@@ -102,13 +115,13 @@ Easy to add new plugins:
 
 **Purpose**: Provide specialized analysis tools
 
-**serena-mcp**:
+**cocoindex-code**:
 
 - Semantic code search
 - Natural language query-based code exploration
-- Used by: root, bdd-coder
+- Used by: bdd-coder
 
-**lsmcp**:
+**filesystem**:
 
 - File system access
 - File read/write operations
@@ -153,6 +166,24 @@ Session State (.session.json)
 /deckrd tasks → tasks.md
 ```
 
+### BDD Implementation Workflow (bdd-coder)
+
+```text
+tasks.md
+    ↓
+/bdd-coder:bdd-coder <task-id>
+    ↓
+checklist-builder → implementation checklist
+    ↓
+RED: Write failing test
+    ↓
+GREEN: Minimal implementation
+    ↓
+REFACTOR: Clean up
+    ↓
+Quality Gates (test / lint / type-check)
+```
+
 ### Issue-Driven Workflow (IDD Framework)
 
 ```text
@@ -179,7 +210,7 @@ Create GitHub PR
 
 See [Plugin System Architecture](plugin-system.md) for detailed information about:
 
-- Plugin structure
+- Skill structure
 - Command implementation
 - Agent definitions
 - Configuration format
@@ -224,7 +255,6 @@ See [MCP Servers Reference](../specs/mcp-servers.md) for detailed information ab
 
 - `issues/` - Issue drafts
 - `pr/` - PR drafts
-- `todo.md` - Task tracking
 
 ## Quality Assurance
 
@@ -246,20 +276,20 @@ See [MCP Servers Reference](../specs/mcp-servers.md) for detailed information ab
 
 ### Manual Verification
 
-Developers can run:
+Developers should run via `pnpm run`:
 
 ```bash
 dprint check               # Formatting
-markdownlint-cli2 "**/*.md"  # Markdown
-textlint "**/*.md"         # Text quality
-cspell check "**/*"        # Spelling
+pnpm run lint:markdown     # Markdown
+pnpm run lint:text         # Text quality
+pnpm run test:sh           # ShellSpec tests
 ```
 
 ## Technology Stack
 
 ### Primary Language
 
-- **Bash** - Plugin scripts and commands
+- **Bash** - Skill scripts and commands
 - **Markdown** - Documentation
 - **JSON/JSONC/YAML** - Configuration
 
@@ -271,10 +301,11 @@ cspell check "**/*"        # Spelling
 - **markdownlint-cli2** - Markdown linter
 - **textlint** - Text quality checker
 - **cspell** - Spell checker
+- **ShellSpec** - Bash testing framework
 
 ### External Dependencies
 
-- **Claude Code CLI** - Plugin runtime
+- **Claude Code CLI** - Skill runtime
 - **MCP Servers** - Analysis tools
 - **GitHub CLI (gh)** - GitHub integration
 
@@ -306,28 +337,9 @@ cspell check "**/*"        # Spelling
 - Environment-based configuration
 - User-specific settings in `.local.json`
 
-## Future Architecture
-
-### Planned Additions
-
-1. **TypeScript Support**
-   - Add TypeScript implementation
-   - Full lsmcp integration
-   - Enhanced code intelligence
-
-2. **Plugin Marketplace**
-   - Distribute via Claude marketplace
-   - Version management
-   - Automatic updates
-
-3. **Web Dashboard** (Optional)
-   - Visual workflow tracking
-   - Document preview
-   - Quality metrics
-
 ## Related Documentation
 
-- [Plugin System](plugin-system.md) - Detailed plugin architecture
+- [Plugin System](plugin-system.md) - Detailed skill architecture
 - [MCP Servers](../specs/mcp-servers.md) - MCP API reference
 - [Code Quality](../contributing/code-quality.md) - Quality standards
 - [Development Workflow](./workflow.md) - Development process

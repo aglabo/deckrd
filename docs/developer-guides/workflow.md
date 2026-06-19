@@ -4,12 +4,13 @@ description: "Document-driven and issue-driven development workflow for deckrd p
 category: "developer-guides"
 tags: ["workflow", "deckrd", "idd-framework", "development"]
 created: "2026-01-14"
-version: "0.1.0"
+version: "0.4.0"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
   - 0.0.4   2026-01-14  Initial version
   - 0.1.0   2026-03-21  Fix session path and schema, fix IDD/deckrd workflow order, add lang/ai_model fields to session schema
+  - 0.4.0   2026-06-19  Rename deckrd-coder to bdd-coder, update command references
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.
@@ -118,6 +119,30 @@ See [Deckrd Commands Reference](./deckrd-commands.md) for detailed command docum
 }
 ```
 
+## BDD Implementation Workflow (bdd-coder)
+
+### Purpose
+
+Implement tasks from `tasks.md` using a strict Red-Green-Refactor BDD cycle.
+
+### Commands Reference
+
+```bash
+# Implement a single task
+/bdd-coder:bdd-coder T01-01
+
+# The skill automatically:
+# 1. Builds an implementation checklist (checklist-builder agent)
+# 2. Executes RED → GREEN → REFACTOR per test assertion
+# 3. Runs quality gates (test / lint / type-check)
+```
+
+### Workflow Stages
+
+tasks.md → checklist → RED (failing test) → GREEN (minimal impl) → REFACTOR (clean up) → Quality Gates
+
+**Important**: Run one task at a time. Do not combine multiple tasks in one invocation.
+
 ## IDD Framework Workflow: Execution and GitHub Integration
 
 ### Purpose
@@ -158,18 +183,20 @@ Issue Creation → Branch → Implementation → Commit → PR
 
 ```bash
 # Auto-create branch from issue
-git checkout -b {type}-{number}/{slug}
+git checkout -b {type}-{number}/{scope}/{slug}
 
-# Example: feature-123/add-status-command
+# Example: feat-42/auth/add-oauth
 ```
 
 #### 4. Implement Changes
 
-Follow the implementation plan from deckrd specifications:
+Follow the implementation plan from deckrd specifications, using bdd-coder for each task:
 
-- Make code changes
-- Write tests
-- Update documentation
+```bash
+/bdd-coder:bdd-coder T01-01
+/bdd-coder:bdd-coder T01-02
+# ... (run for each task)
+```
 
 #### 5. Commit Changes
 
@@ -179,10 +206,9 @@ Follow the implementation plan from deckrd specifications:
 
 # Analyzes staged changes
 # Suggests: type(scope): description
-# Includes: Co-Authored-By: Claude
 
 # Commit with generated message
-git add .
+git add <files>
 git commit -m "{generated-message}"
 ```
 
@@ -194,7 +220,6 @@ git commit -m "{generated-message}"
 
 # Analyzes commits and changes
 # Generates: Summary, Test Plan, Links
-# Includes: Claude Code badge
 
 # Create PR via gh cli
 gh pr create --title "{title}" --body "{generated-body}"
@@ -215,9 +240,8 @@ gh pr create --title "{title}" --body "{generated-body}"
 /deckrd req
 # → Creates: docs/status-command/requirements.md
 
-# 3. Review design
-/deckrd dr
-# → Creates: docs/status-command/design-review.md
+# 3. (Optional) Codex second opinion
+/deckrd:deckrd-review req --focus risk
 
 # 4. Write specifications
 /deckrd spec
@@ -232,7 +256,7 @@ gh pr create --title "{title}" --body "{generated-body}"
 # → Creates: docs/status-command/tasks.md
 ```
 
-#### Execution Phase (IDD Framework)
+#### Execution Phase (IDD Framework + bdd-coder)
 
 ```bash
 # 1. Create issue
@@ -242,26 +266,24 @@ gh pr create --title "{title}" --body "{generated-body}"
 # → Creates: GitHub issue #42
 
 # 2. Create branch
-git checkout -b feature-42/add-status-command
+git checkout -b feat-42/deckrd/add-status-command
 
-# 3. Implement (following tasks.md)
-# - Write status.sh script
-# - Add command handler
-# - Write tests
-# - Update documentation
+# 3. Implement (following tasks.md, one task at a time)
+/bdd-coder:bdd-coder T01-01
+/bdd-coder:bdd-coder T01-02
 
 # 4. Commit
-git add .
+git add <files>
 /idd-commit-message
 # → Suggests: "feat(deckrd): add status command support"
 git commit -m "feat(deckrd): add status command support
 
 Implements /deckrd status to show current module progress.
 
-Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
 
 # 5. Push and create PR
-git push origin feature-42/add-status-command
+git push origin feat-42/deckrd/add-status-command
 /idd-pr
 # → Generates PR description
 gh pr create --title "feat: Add /deckrd status command" --body "{generated}"
@@ -283,13 +305,19 @@ gh pr create --title "feat: Add /deckrd status command" --body "{generated}"
 - Simple enhancements
 - Routine maintenance
 
-### Combining Both
+### When to Use bdd-coder
+
+- Implementing tasks from tasks.md
+- Any coding task that benefits from strict BDD
+- When quality gates and test coverage are required
+
+### Combining All Three
 
 For complex features:
 
 1. Use deckrd for planning and documentation
-2. Use IDD for execution and GitHub integration
-3. Reference deckrd docs in IDD issues/PRs
+2. Use IDD for GitHub integration (issue → branch → PR)
+3. Use bdd-coder for implementation (strict Red-Green-Refactor)
 
 ## Working Directory Structure
 
@@ -313,9 +341,15 @@ docs/
 temp/idd/
 ├── issues/
 │   └── {number}-{slug}.md     # Issue working copy
-├── pr/
-│   └── {number}-pr.md         # PR draft
-└── todo.md                    # Task tracking
+└── pr/
+    └── {number}-pr.md         # PR draft
+```
+
+### bdd-coder Working Files
+
+```text
+temp/bdd-coder/
+└── bdd-todo.md                # BDD task progress tracking
 ```
 
 ## Quality Assurance
@@ -327,13 +361,13 @@ temp/idd/
 dprint fmt
 
 # Lint markdown
-markdownlint-cli2 "**/*.md"
+pnpm run lint:markdown
 
 # Check text quality
-textlint --config ./configs/textlintrc.yaml "**/*.md"
+pnpm run lint:text
 
-# Spell check
-cspell check "**/*.{sh,md,json,yml,yaml}"
+# Run tests
+pnpm run test:sh
 ```
 
 ### Pre-commit Hooks (Automatic)
@@ -341,13 +375,12 @@ cspell check "**/*.{sh,md,json,yml,yaml}"
 - gitleaks - Secret detection
 - secretlint - Sensitive data patterns
 - commitlint - Commit message validation
-- prepare-commit-msg - Auto-formatting
 
 ### Pre-PR Checklist
 
 - [ ] All deckrd documents created (if applicable)
 - [ ] All tasks from tasks.md completed
-- [ ] Tests written and passing
+- [ ] Tests written and passing (via bdd-coder quality gates)
 - [ ] Documentation updated
 - [ ] Code formatted and linted
 - [ ] Commits follow Conventional Commits
@@ -357,25 +390,24 @@ cspell check "**/*.{sh,md,json,yml,yaml}"
 
 ### Feature Development
 
-1. Plan with deckrd (init → req → dr → spec → impl → tasks)
+1. Plan with deckrd (init → req → [dr] → spec → impl → tasks)
 2. Create issue with IDD (/idd/issue:new)
-3. Implement following tasks.md
+3. Implement with bdd-coder (/bdd-coder:bdd-coder per task)
 4. Commit with /idd-commit-message
 5. Create PR with /idd-pr
 
 ### Bug Fix
 
 1. Create issue with IDD (/idd/issue:new, type: fix)
-2. Investigate and fix
+2. Investigate and fix (use bdd-coder if applicable)
 3. Commit with /idd-commit-message
 4. Create PR with /idd-pr
-5. (Optional) Document in deckrd if complex
 
 ### Documentation Update
 
 1. Create issue with IDD (/idd/issue:new, type: docs)
 2. Update documentation
-3. Verify with markdownlint/textlint
+3. Verify with pnpm run lint:markdown / lint:text
 4. Commit with /idd-commit-message
 5. Create PR with /idd-pr
 
