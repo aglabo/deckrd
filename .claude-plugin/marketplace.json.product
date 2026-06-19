@@ -18,7 +18,7 @@
     {
       "name": "deckrd-coder",
       "description": "Deckrd task implementation skill - extracts specified tasks from tasks.md and implements them using strict BDD process. Internally applies bdd-coder decision rules.",
-      "source": "./plugins/deckrd-coder",
+      "source": "./skills/deckrd-coder",
       "strict": true
     }
   ]

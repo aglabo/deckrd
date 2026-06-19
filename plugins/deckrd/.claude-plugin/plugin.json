@@ -1,0 +1,10 @@
+{
+  "name": "deckrd",
+  "description": "deckrd: your goal to tasks framework",
+  "version": "0.2.1",
+  "author": {
+    "name": "atsushifx",
+    "email": "atsushifx@gmail.com"
+  },
+  "license": "MIT"
+}
