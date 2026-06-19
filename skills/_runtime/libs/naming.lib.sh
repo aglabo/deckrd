@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# src: ./plugins/_runtime/libs/naming.lib.sh
+# src: ./skills/_runtime/libs/naming.lib.sh
 # @(#) : Naming library - pick a random hacker name from hackers.dic
 #
 # Copyright (c) 2026- aglabo <https://github.com/aglabo>
@@ -67,11 +67,11 @@ _ADJECTIVES=(
 # hacker_random - Pick a random hacker name from hackers.dic
 #
 # @arg $1 string (optional) Path to .dic file
-#                           Default: ${PROJECT_ROOT}/plugins/_generated/hackers.dic
+#                           Default: ${PROJECT_ROOT}/skills/_generated/hackers.dic
 # @stdout One hacker short name (e.g. "knuth")
 # @return 0 on success, 1 on error (file not found or empty)
 hacker_random() {
-  local dic="${1:-${PROJECT_ROOT}/plugins/_generated/hackers.dic}"
+  local dic="${1:-${PROJECT_ROOT}/skills/_generated/hackers.dic}"
 
   if [[ ! -f "$dic" ]]; then
     echo "Error: hacker_random: file not found: ${dic}" >&2

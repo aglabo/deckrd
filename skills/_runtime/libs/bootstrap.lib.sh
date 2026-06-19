@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# plugins/_runtime/libs/bootstrap.lib.sh - Shared runtime bootstrap for deckrd plugins
+# skills/_runtime/libs/bootstrap.lib.sh - Shared runtime bootstrap for deckrd plugins
 #
 # Copyright (c) 2026- aglabo <https://github.com/aglabo>
 #
@@ -20,7 +20,7 @@ readonly _BOOTSTRAP_LOADED=1
 # _resolve_project_root - Resolve PROJECT_ROOT via git or BASH_SOURCE fallback
 #
 # Priority: env var (already set) > git rev-parse > BASH_SOURCE 3-levels-up
-# BASH_SOURCE[0] is this file: plugins/_runtime/libs/bootstrap.lib.sh
+# BASH_SOURCE[0] is this file: skills/_runtime/libs/bootstrap.lib.sh
 # 3 levels up: libs/ -> _runtime/ -> plugins/ -> project root
 #
 # @stdout Resolved PROJECT_ROOT path
@@ -77,7 +77,7 @@ bootstrap_init() {
   export PROJECT_ROOT
 
   # RUNTIME_LIB_DIR: shared runtime libraries directory
-  RUNTIME_LIB_DIR="${RUNTIME_LIB_DIR:-${PROJECT_ROOT}/plugins/_runtime/libs}"
+  RUNTIME_LIB_DIR="${RUNTIME_LIB_DIR:-${PROJECT_ROOT}/skills/_runtime/libs}"
   export RUNTIME_LIB_DIR
 
   # DECKRD_ROOT: root of the plugin skill — detected from caller path

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# plugins/_runtime/libs/kv-store.lib.sh - Generic key-value store
+# skills/_runtime/libs/kv-store.lib.sh - Generic key-value store
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #
@@ -18,7 +18,7 @@ if [[ -n "${_KV_STORE_LOADED:-}" ]]; then
 fi
 readonly _KV_STORE_LOADED=1
 
-# shellcheck source=plugins/_runtime/libs/utils.lib.sh
+# shellcheck source=skills/_runtime/libs/utils.lib.sh
 # shellcheck disable=SC1091
 . "$(dirname "${BASH_SOURCE[0]}")/utils.lib.sh"
 

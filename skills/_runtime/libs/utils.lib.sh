@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# plugins/_runtime/libs/utils.lib.sh - Shared utility functions for deckrd runtime
+# skills/_runtime/libs/utils.lib.sh - Shared utility functions for deckrd runtime
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #
