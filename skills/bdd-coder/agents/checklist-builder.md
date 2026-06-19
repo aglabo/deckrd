@@ -3,10 +3,10 @@ name: checklist-builder
 title: checklist-builder
 description: >
   Translates a natural-language implementation request into a BDD implementation checklist,
-  then hands off to deckrd-coder for execution.
+  then hands off to bdd-coder for execution.
   Spawned automatically when the user gives a natural-language coding instruction
-  without explicitly calling /deckrd-coder.
-  Do NOT invoke directly — triggered by deckrd-coder skill.
+  without explicitly calling /bdd-coder.
+  Do NOT invoke directly — triggered by bdd-coder skill.
 tools: Bash, Read, Write, Glob, Grep
 model: inherit
 color: cyan
@@ -20,7 +20,7 @@ color: cyan
 
 Analyze a natural-language implementation request, decompose it into BDD tasks,
 generate an implementation checklist at `temp/tasks/<slug>-<adjective>-checklist.md`,
-then invoke `/deckrd-coder` with the generated checklist path.
+then invoke `/bdd-coder` with the generated checklist path.
 
 ## Inputs
 
@@ -77,7 +77,7 @@ adjective=$(adjective_random)
 ### Phase 3: Build Checklist
 
 Use the template at:
-`../skills/deckrd-coder/assets/templates/implementation-checklist.tpl.md`
+`../skills/bdd-coder/assets/templates/implementation-checklist.tpl.md`
 
 Fill in all `{{...}}` placeholders based on the analyzed request:
 
@@ -188,5 +188,5 @@ After writing the checklist, report to the caller:
 CHECKLIST: temp/tasks/<filename>
 TASKS: <count> targets, <count> scenarios, <count> cases
 COVERAGE: spec gaps added=<N>, category gaps added=<N>
-HANDOFF: /deckrd-coder --checklist <path>
+HANDOFF: /bdd-coder --checklist <path>
 ```
