@@ -51,9 +51,9 @@ _resolve_deckrd_root() {
   local project_root="${2:-${PROJECT_ROOT:-}}"
 
   if [[ "$caller_path" == */deckrd-coder/* ]]; then
-    printf '%s' "${project_root}/plugins/deckrd-coder/skills/deckrd-coder"
+    printf '%s' "${project_root}/skills/deckrd-coder/skills/deckrd-coder"
   else
-    printf '%s' "${project_root}/plugins/deckrd/skills/deckrd"
+    printf '%s' "${project_root}/skills/deckrd/skills/deckrd"
   fi
 }
 
