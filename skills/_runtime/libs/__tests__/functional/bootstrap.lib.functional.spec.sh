@@ -52,8 +52,8 @@ Describe "bootstrap.lib.sh"
       root_a=$(bash -c "export PROJECT_ROOT=/tmp/a; unset DECKRD_ROOT; . \"$SCRIPT\" && echo \"\$DECKRD_ROOT\"")
       root_b=$(bash -c "export PROJECT_ROOT=/tmp/b; unset DECKRD_ROOT; . \"$SCRIPT\" && echo \"\$DECKRD_ROOT\"")
       When call test "$root_a" != "$root_b" \
-        -a "$root_a" = "/tmp/a/plugins/deckrd/skills/deckrd" \
-        -a "$root_b" = "/tmp/b/plugins/deckrd/skills/deckrd"
+        -a "$root_a" = "/tmp/a/skills/deckrd/skills/deckrd" \
+        -a "$root_b" = "/tmp/b/skills/deckrd/skills/deckrd"
       The status should equal 0
     End
 
@@ -65,7 +65,7 @@ Describe "bootstrap.lib.sh"
     End
 
     It "[Normal] PROJECT_ROOT 設定 → DECKRD_ROOT と PROJECT_ROOT の関係式が成立する"
-      When run bash -c "export PROJECT_ROOT=/tmp/proj; unset DECKRD_ROOT; . \"$SCRIPT\" && [[ \"\$DECKRD_ROOT\" == \"\${PROJECT_ROOT}/plugins/deckrd/skills/deckrd\" ]] && echo ok"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj; unset DECKRD_ROOT; . \"$SCRIPT\" && [[ \"\$DECKRD_ROOT\" == \"\${PROJECT_ROOT}/skills/deckrd/skills/deckrd\" ]] && echo ok"
       The status should equal 0
       The output should equal "ok"
     End
@@ -142,19 +142,19 @@ Describe "bootstrap.lib.sh"
     It "[Normal] deckrd-coder パスから source → DECKRD_ROOT が deckrd-coder になる"
       When call run_coder_tmpscript DECKRD_ROOT
       The status should equal 0
-      The output should end with "/plugins/deckrd-coder/skills/deckrd-coder"
+      The output should end with "/skills/deckrd-coder/skills/deckrd-coder"
     End
 
     It "[Normal] deckrd-coder パスから source → DECKRD_SCRIPTS_DIR が deckrd-coder/scripts になる"
       When call run_coder_tmpscript DECKRD_SCRIPTS_DIR
       The status should equal 0
-      The output should end with "/plugins/deckrd-coder/skills/deckrd-coder/scripts"
+      The output should end with "/skills/deckrd-coder/skills/deckrd-coder/scripts"
     End
 
     It "[Normal] deckrd-coder パスから source → DECKRD_LIB_DIR が deckrd-coder/scripts/libs になる"
       When call run_coder_tmpscript DECKRD_LIB_DIR
       The status should equal 0
-      The output should end with "/plugins/deckrd-coder/skills/deckrd-coder/scripts/libs"
+      The output should end with "/skills/deckrd-coder/skills/deckrd-coder/scripts/libs"
     End
 
     It "[Normal] deckrd-coder パスでも DECKRD_LOCAL_DATA は PROJECT_ROOT 起点になる"
