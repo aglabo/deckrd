@@ -26,7 +26,7 @@ SKIP_INTEGRATION_TESTS="${SKIP_INTEGRATION_TESTS:-1}"
 # Search root for spec file discovery (override in tests to point at a temp dir)
 SPEC_SEARCH_ROOT="${SPEC_SEARCH_ROOT:-${PROJECT_ROOT}}"
 
-# shellcheck source=runners/libs/get-filelist.sh
+# shellcheck source=runners/libs/get-filelist.lib.sh
 . "${SCRIPT_ROOT}/libs/get-filelist.lib.sh"
 
 #
@@ -140,25 +140,25 @@ resolve_spec_files() {
 
   local first_arg="$1"
 
-  # ’Pˆê .spec.sh Ìt§@²CÙ¨ ‚»‚Ì‚Ü‚Üo—Í
+  # å˜ä¸€ .spec.sh ãƒ•ã‚¡ã‚¤ãƒ«ã¯ãã®ã¾ã¾å‡ºåŠ›
   if is_spec_file "$first_arg"; then
     printf '%s\n' "$first_arg"
     return 0
   fi
 
-  # glob Êßp½Xi*.spec.sh ‚ğŠÜ‚Ş globj¨ expand_spec_glob ‚Å“WŠJ
+  # glob ãƒ‘ã‚¹ï¼ˆ*.spec.sh ã‚’å«ã‚€ globï¼‰ã¯ expand_spec_glob ã§å±•é–‹
   if is_spec_glob "$first_arg"; then
     expand_spec_glob "$first_arg"
     return 0
   fi
 
-  # Ãe½XÄgí•ÊˆÈŠO ¨ ´G×‰°[ (stdout)
+  # ãƒ†ã‚¹ãƒˆç¨®åˆ¥ä»¥å¤– â†’ ã‚¨ãƒ©ãƒ¼ (stderr)
   if ! is_test_type "$first_arg"; then
-    printf "Error: Unknown argument '%s'. Expected a test type, spec file, or glob pattern.\n" "$first_arg"
+    printf "Error: Unknown argument '%s'. Expected a test type, spec file, or glob pattern.\n" "$first_arg" >&2
     return 1
   fi
 
-  # Ãe½XÄgí•Ê ¨ get_spec_files ‚Å“WŠJ
+  # ãƒ†ã‚¹ãƒˆç¨®åˆ¥ â†’ get_spec_files ã§å±•é–‹
   local test_type="$1"
   shift
   [[ "$test_type" == "system" ]] && SKIP_INTEGRATION_TESTS=0
