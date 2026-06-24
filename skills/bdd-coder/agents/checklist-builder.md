@@ -15,6 +15,7 @@ color: cyan
 <!-- textlint-disable
   ja-technical-writing/sentence-length -->
 <!-- markdownlint-disable line-length -->
+<!-- cspell:words MECE -->
 
 ## Role
 
@@ -94,77 +95,102 @@ Fill in all `{{...}}` placeholders based on the analyzed request:
 Guidelines:
 
 - Generate as many Scenarios and Cases as needed to cover the request fully.
-- Minimum coverage: at least one normal case, one error case, one edge case.
 - Each Case must have a concrete input/expected pair — no abstract placeholders in the output.
 - Follow the Task ID hierarchy: `T-<Target>-<Scenario>-<Case>`.
 - Append `-TF` items after every Scenario group; append `-CF` after all Scenarios.
+
+#### WBS 100% ルールと MECE 原則
+
+生成するチェックリストは各階層で MECE (漏れなし・ダブり無し) でなければならない。
+
+**各階層の 100% ルール:**
+
+| 階層     | 100% ルールの意味                                              |
+| -------- | -------------------------------------------------------------- |
+| Target   | 実装対象のすべての関数・クラスを T-XX に割り当てる。漏れなし。 |
+| Scenario | 各 T-XX の全振る舞いを Scenario として列挙する。重複なし。     |
+| Case     | 各 Scenario の全同値クラスを Case に割り当てる。重複なし。     |
+
+**同値分割 + 境界値分析 (Case の MECE 化手順):**
+
+1. 関数の入力ドメインを **同値クラス** に分割する:
+   - 有効クラス: 期待どおりに動作する入力群 (複数の値域がある場合はクラスごとに分割)
+   - 無効クラス: 型違い / null / undefined / 空文字 / 範囲外など (クラスごとに 1 Case)
+2. 境界値: 各クラスの上限・下限・その±1 を Case として追加する
+3. 同じ同値クラスから 2 つ以上の Case を作らない (ME の保証)
+4. すべての同値クラスに Case が 1 つ以上あることを確認する (CE の保証)
+
+**5 カテゴリ基準 (Case の分類ラベル):**
+
+| ラベル           | 対象                                                | 必須           |
+| ---------------- | --------------------------------------------------- | -------------- |
+| `[正常]`         | 有効入力の happy path (同値クラス × 境界値)         | 必須           |
+| `[異常]`         | 無効入力 / エラー状態 / 型違い / null / 空 / 過大   | 必須           |
+| `[エッジケース]` | 境界値 (min/max/min±1/max±1) 、特殊文字             | 必須           |
+| `[FN確認]`       | False-negative 確認 (実装を壊したとき RED になるか) | 対象がある場合 |
+| `[状態遷移]`     | 状態依存の振る舞い (初期→有効→終了、認可→非認可)    | 対象がある場合 |
 
 ### Phase 3.5: Spec Coverage Review
 
 After building the checklist draft, cross-check it against the specification to find missing test cases.
 
-**Step 1: Locate the specification**
+1. Locate the specification:
+   Look for a spec document relevant to the implementation target:
 
-Look for a spec document relevant to the implementation target:
+   - `docs/.deckrd/<module>/specifications/specifications.md`
+   - If no spec exists, skip this phase.
 
-- `docs/.deckrd/<module>/specifications/specifications.md`
-- If no spec exists, skip this phase.
+2. Extract spec-defined edge cases:
+   Read the spec and collect:
 
-**Step 2: Extract spec-defined edge cases**
+   - All entries in the **Edge Cases** table (Section 5 or equivalent)
+   - Any `Condition → Outcome` rules in the Decision Rules section that are not yet covered by a checklist item
 
-Read the spec and collect:
+3. Gap analysis:
+   For each spec-defined case, check whether the checklist already has a corresponding test:
 
-- All entries in the **Edge Cases** table (Section 5 or equivalent)
-- Any `Condition → Outcome` rules in the Decision Rules section that are not yet covered by a checklist item
+   - Match by: input value, boundary condition, or rule ID (e.g. R-003)
+   - If a spec case has NO matching checklist item → it is a **gap**
 
-**Step 3: Gap analysis**
+4. Add missing cases:
+   For each gap found:
 
-For each spec-defined case, check whether the checklist already has a corresponding test:
+   1. Add a new Case entry to the appropriate Scenario group in the checklist draft
+   2. Assign the next available Case ID (e.g. if T-01-04-01 exists, add T-01-04-02)
+   3. Fill in concrete Input / Expected values from the spec
 
-- Match by: input value, boundary condition, or rule ID (e.g. R-003)
-- If a spec case has NO matching checklist item → it is a **gap**
+   If no gaps are found, proceed to Phase 3.6 without changes.
 
-**Step 4: Add missing cases**
+### Phase 3.6: MECE Review
 
-For each gap found:
+チェックリスト草稿を MECE (漏れなし・ダブり無し) の観点で検証する。
 
-1. Add a new Case entry to the appropriate Scenario group in the checklist draft
-2. Assign the next available Case ID (e.g. if T-01-04-01 exists, add T-01-04-02)
-3. Fill in concrete Input / Expected values from the spec
+1. 重複検出 (ME チェック)
 
-If no gaps are found, proceed to Phase 3.6 without changes.
+   各 Target の Case 一覧を走査し、**同じ同値クラスを指す Case が複数ないか** を確認する。
 
-### Phase 3.6: Category Balance Review
+   - 同じ入力域を分割して 2 件以上に書いている場合 → 代表 1 件に統合し、残りを削除する
+   - 異なる Task ID でも Expected 値と入力の意味が同じ場合 → 統合する
+   - 統合後は次の空き Case ID を振り直す
 
-After the spec gap analysis, review the checklist draft for category balance per test target.
+2. 漏れ検出 (CE チェック)
 
-**Step 1: Classify all cases**
+   5 カテゴリ基準で、必須カテゴリが 0 件の Target を次の表に従い検出する。
 
-For each test target (T-XX), count cases by category:
+   | カテゴリ         | 必須 | 0 件の場合の対処                         |
+   | ---------------- | ---- | ---------------------------------------- |
+   | `[正常]`         | 必須 | happy path の最小 Case を追加            |
+   | `[異常]`         | 必須 | 最も起こりやすい無効入力 Case を追加     |
+   | `[エッジケース]` | 必須 | 境界値 (空入力 or 最大値) の Case を追加 |
+   | `[FN確認]`       | 任意 | 実装を破壊したとき RED になるか確認 Case |
+   | `[状態遷移]`     | 任意 | 状態変化を伴う振る舞いの Case を追加     |
 
-| Category | Identifier       | What it covers                                            |
-| -------- | ---------------- | --------------------------------------------------------- |
-| Normal   | `[正常]`         | Valid inputs, expected behavior                           |
-| Error    | `[異常]`         | Invalid inputs, failure states, rejected operations       |
-| Edge     | `[エッジケース]` | Boundary values, state transitions, false-negative checks |
+   追加する Case は具体的な Input / Expected を持つ (抽象プレースホルダー禁止) 。
+   新しい Case ID は対象 Scenario 内の次の空き番号を割り当てる。
 
-**Step 2: Detect imbalance**
+   1. で統合した Case がある場合は、Task ID Mapping テーブルも更新する。
 
-A test target is **imbalanced** if ANY category has zero cases.
-List each imbalanced target with its missing category.
-
-**Step 3: Infer and add missing cases**
-
-For each missing category:
-
-1. Re-read the instruction (or Task ID entry) to infer what the missing category should cover.
-   - Missing Normal: add the primary happy-path case if not already present.
-   - Missing Error: identify the most likely invalid input or failure mode.
-   - Missing Edge: identify a boundary value, empty input, or maximum-length input.
-2. Add the inferred case(s) to the checklist with concrete Input / Expected values.
-3. Assign the next available Case ID within the appropriate Scenario group.
-
-If all test targets already have at least one case per category, proceed to Phase 4 without changes.
+   すべての必須カテゴリが揃い、重複がなければ Phase 4 に進む。
 
 ### Phase 4: Write Checklist
 
