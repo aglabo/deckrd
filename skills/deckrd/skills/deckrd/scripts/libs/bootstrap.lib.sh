@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# skills/_runtime/libs/bootstrap.lib.sh - Shared runtime bootstrap for deckrd plugins
+# skills/deckrd/skills/deckrd/scripts/libs/bootstrap.lib.sh - Shared runtime bootstrap for deckrd plugins
 #
 # Copyright (c) 2026- aglabo <https://github.com/aglabo>
 #
@@ -19,9 +19,9 @@ readonly _BOOTSTRAP_LOADED=1
 
 # _resolve_project_root - Resolve PROJECT_ROOT via git or BASH_SOURCE fallback
 #
-# Priority: env var (already set) > git rev-parse > BASH_SOURCE 3-levels-up
-# BASH_SOURCE[0] is this file: skills/_runtime/libs/bootstrap.lib.sh
-# 3 levels up: libs/ -> _runtime/ -> plugins/ -> project root
+# Priority: env var (already set) > git rev-parse > BASH_SOURCE 6-levels-up
+# BASH_SOURCE[0] is this file: skills/deckrd/skills/deckrd/scripts/libs/bootstrap.lib.sh
+# 6 levels up: libs/ -> scripts/ -> deckrd/ -> skills/ -> deckrd/ -> skills/ -> project root
 #
 # @stdout Resolved PROJECT_ROOT path
 # @return 0 always
@@ -31,35 +31,30 @@ _resolve_project_root() {
     return 0
   fi
   git rev-parse --show-toplevel 2>/dev/null ||
-    (cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)
+    (cd "$(dirname "${BASH_SOURCE[0]}")/../../../../../.." && pwd)
 }
 
-# _resolve_deckrd_root - Resolve DECKRD_ROOT from caller path
+# _resolve_deckrd_root - Resolve DECKRD_ROOT relative to this file's location
 #
-# Detects whether bootstrap was sourced from a bdd-coder context.
-# Falls back to deckrd plugin root otherwise.
+# Always resolves to the deckrd skill root, regardless of the caller's path.
+# Resolution is relative to BASH_SOURCE[0] (this file), independent of PROJECT_ROOT.
 #
-# @arg $1 string caller_path  Path of the script that sourced bootstrap.lib.sh.
-#                             Defaults to BASH_SOURCE[1] (the direct caller).
-#                             Pass an explicit path in tests to isolate from runtime context.
-# @arg $2 string project_root Resolved PROJECT_ROOT.
-#                             Defaults to PROJECT_ROOT env var.
+# BASH_SOURCE[0] path: .../skills/deckrd/skills/deckrd/scripts/libs/bootstrap.lib.sh
+# dirname -> .../skills/deckrd/skills/deckrd/scripts/libs/
+# ../..   -> .../skills/deckrd/skills/deckrd/ (= DECKRD_ROOT)
+#
 # @stdout Resolved DECKRD_ROOT path
 # @return 0 always
 _resolve_deckrd_root() {
-  local caller_path="${1:-${BASH_SOURCE[1]:-}}"
-  local project_root="${2:-${PROJECT_ROOT:-}}"
+  local _skills_dir
+  _skills_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
-  if [[ "$caller_path" == */bdd-coder/* ]]; then
-    printf '%s' "${project_root}/skills/deckrd/skills/bdd-coder"
-  else
-    printf '%s' "${project_root}/skills/deckrd/skills/deckrd"
-  fi
+  printf '%s' "${_skills_dir}"
 }
 
 # bootstrap_init - Set all runtime variables (no readonly yet)
 #
-# Sets: PROJECT_ROOT, RUNTIME_LIB_DIR, DECKRD_ROOT, DECKRD_SCRIPTS_DIR,
+# Sets: PROJECT_ROOT, DECKRD_ROOT, DECKRD_SCRIPTS_DIR,
 #       DECKRD_LIB_DIR, DECKRD_DATA_DIR, DECKRD_LOCAL_DATA, DECKRD_DOCS_DIR, SYMBOL
 # All variables respect pre-existing values (env var > computed default).
 # Does NOT call readonly — call bootstrap_finalize() after to lock variables.
@@ -76,15 +71,11 @@ bootstrap_init() {
   fi
   export PROJECT_ROOT
 
-  # RUNTIME_LIB_DIR: shared runtime libraries directory
-  RUNTIME_LIB_DIR="${RUNTIME_LIB_DIR:-${PROJECT_ROOT}/skills/_runtime/libs}"
-  export RUNTIME_LIB_DIR
-
   # DECKRD_ROOT: root of the plugin skill — detected from caller path
   # _caller_path was captured at the top-level call site (BASH_SOURCE[1] there
   # correctly points to the script that sourced bootstrap.lib.sh).
   if [[ -z "${DECKRD_ROOT:-}" ]]; then
-    DECKRD_ROOT="$(_resolve_deckrd_root "${_caller_path}" "${PROJECT_ROOT}")"
+    DECKRD_ROOT="$(_resolve_deckrd_root "${_caller_path}")"
   fi
   export DECKRD_ROOT
 
@@ -129,7 +120,6 @@ bootstrap_init() {
 # @return 0 always
 bootstrap_finalize() {
   readonly PROJECT_ROOT
-  readonly RUNTIME_LIB_DIR
   readonly DECKRD_ROOT
   readonly DECKRD_SCRIPTS_DIR
   readonly DECKRD_LIB_DIR
