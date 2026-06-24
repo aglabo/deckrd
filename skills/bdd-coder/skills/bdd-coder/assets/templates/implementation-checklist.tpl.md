@@ -39,7 +39,7 @@ created: "{{ YYYY-MM-DD HH:MM:SS }}"
 ```text
 T-01: {{TEST_TARGET_NAME}}
   T-01-01: [正常] {{SCENARIO_BEHAVIOR_1}}
-    T-01-01-01: {{CASE_DESCRIPTION}}  (R/G/F)
+    T-01-01-01: {{CASE_DESCRIPTION}}  (R/G/F)   ← 同値クラスごとに 1 Case
     T-01-01-TF: Scenario テストリファクタリング
 
   T-01-02: [異常] {{SCENARIO_ERROR_BEHAVIOR}}
@@ -49,6 +49,16 @@ T-01: {{TEST_TARGET_NAME}}
   T-01-03: [エッジケース] {{SCENARIO_EDGE_BEHAVIOR}}
     T-01-03-01: {{CASE_EDGE_DESCRIPTION}}  (R/G/F)
     T-01-03-TF: エッジケーステストリファクタリング
+
+  <!-- Optional: 対象に状態遷移がある場合のみ追加 -->
+  T-01-04: [FN確認] 実装破壊時に RED になること
+    T-01-04-01: {{CASE_FN_DESCRIPTION}}  (R/G/F)
+    T-01-04-TF: FN確認テストリファクタリング
+
+  <!-- Optional: 対象に状態依存の振る舞いがある場合のみ追加 -->
+  T-01-05: [状態遷移] {{SCENARIO_STATE_BEHAVIOR}}
+    T-01-05-01: {{CASE_STATE_DESCRIPTION}}  (R/G/F)
+    T-01-05-TF: 状態遷移テストリファクタリング
 
   T-01-CF: 実装コードリファクタリング
 ```
@@ -127,15 +137,19 @@ T-01: {{TEST_TARGET_NAME}}
 
 ## 4. Task ID Mapping
 
-| Task ID    | Category            | Input                     | Expected                     |
-| ---------- | ------------------- | ------------------------- | ---------------------------- |
-| T-01-01-01 | 正常                | `{{INPUT_EXAMPLE}}`       | `{{EXPECTED_EXAMPLE}}`       |
-| T-01-01-TF | 正常 (テスト整理)   | —                         | テスト最適化                 |
-| T-01-02-01 | 異常                | `{{INPUT_ERROR_EXAMPLE}}` | `{{EXPECTED_ERROR_EXAMPLE}}` |
-| T-01-02-TF | 異常 (テスト整理)   | —                         | テスト最適化                 |
-| T-01-03-01 | エッジケース        | `{{INPUT_EDGE_EXAMPLE}}`  | `{{EXPECTED_EDGE_EXAMPLE}}`  |
-| T-01-03-TF | エッジ (テスト整理) | —                         | テスト最適化                 |
-| T-01-CF    | 実装コード整理      | —                         | 実装コード最適化             |
+| Task ID    | Category              | Input                     | Expected                     |
+| ---------- | --------------------- | ------------------------- | ---------------------------- |
+| T-01-01-01 | 正常                  | `{{INPUT_EXAMPLE}}`       | `{{EXPECTED_EXAMPLE}}`       |
+| T-01-01-TF | 正常 (テスト整理)     | —                         | テスト最適化                 |
+| T-01-02-01 | 異常                  | `{{INPUT_ERROR_EXAMPLE}}` | `{{EXPECTED_ERROR_EXAMPLE}}` |
+| T-01-02-TF | 異常 (テスト整理)     | —                         | テスト最適化                 |
+| T-01-03-01 | エッジケース          | `{{INPUT_EDGE_EXAMPLE}}`  | `{{EXPECTED_EDGE_EXAMPLE}}`  |
+| T-01-03-TF | エッジ (テスト整理)   | —                         | テスト最適化                 |
+| T-01-04-01 | FN確認 (任意)         | `{{INPUT_EXAMPLE}}`       | RED になること               |
+| T-01-04-TF | FN確認 (テスト整理)   | —                         | テスト最適化                 |
+| T-01-05-01 | 状態遷移 (任意)       | `{{INPUT_STATE_EXAMPLE}}` | `{{EXPECTED_STATE_EXAMPLE}}` |
+| T-01-05-TF | 状態遷移 (テスト整理) | —                         | テスト最適化                 |
+| T-01-CF    | 実装コード整理        | —                         | 実装コード最適化             |
 
 ---
 
