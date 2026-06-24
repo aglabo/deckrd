@@ -56,15 +56,15 @@ Once Phase 1 (Checklist Build) starts, stop asking scope questions.
 
 bdd-coder is an orchestration layer with the following fixed phase order:
 
-| Phase | Name               | Agent             | What happens                                            |
-| ----- | ------------------ | ----------------- | ------------------------------------------------------- |
-| 0     | Environment        | explore-agent     | Detect language, test framework, lint, type-check setup |
-| 1     | Checklist Build    | checklist-builder | Generate checklist from instruction or Task ID          |
-| 2     | Dependency Map     | bdd-coder         | Classify checklist tasks into serial / parallel groups  |
-| 3     | bdd-coder Dispatch | bdd-coder         | Spawn bdd-coder per task; collect status reports        |
-| 4     | Quality Gate       | bdd-coder         | Global lint + type-check + all tests pass               |
-| 5     | Done Check         | bdd-coder         | Confirm all checklist items complete                    |
-| 6     | Session End        | bdd-coder         | Reset state; remind user to commit manually             |
+| Phase | Name               | Agent             | What happens                                                          |
+| ----- | ------------------ | ----------------- | --------------------------------------------------------------------- |
+| 0     | Environment        | explore-agent     | Detect language, test framework, lint, type-check setup               |
+| 1     | Checklist Build    | checklist-builder | Generate checklist from instruction or Task ID                        |
+| 2     | Dependency Map     | bdd-coder         | Classify checklist tasks into serial / parallel groups                |
+| 3     | bdd-coder Dispatch | bdd-coder         | Spawn bdd-coder per task; collect status reports                      |
+| 4     | Quality Gate       | bdd-coder         | Global lint + type-check + all tests pass                             |
+| 5     | Done Check         | bdd-coder         | Confirm all checklist items complete; write back status to task files |
+| 6     | Session End        | bdd-coder         | Reset state; remind user to commit manually                           |
 
 Gate Rule: phases must run in order. No skipping.
 
@@ -106,6 +106,65 @@ If bdd-coder reports `BLOCKED`:
    - **Abort session**: user stops work → end the session and summarize open blockers.
 
 Do NOT proceed to the next task while any task remains `BLOCKED`.
+
+### Phase 5: Done Check — Task Status Write-back
+
+After all bdd-coder instances in Phase 3 report `DONE` or `DONE_WITH_CONCERNS`,
+and Phase 4 quality gate passes, write the implementation status back to the task files.
+
+#### Step 1: Check each Test Target
+
+For each Test Target (T-01, T-02, ...) that was implemented in this session:
+
+1. Read the checklist file at `temp/tasks/<slug>-checklist.md`
+2. Locate all checklist items under the Test Target (T-XX):
+   - In tasks.md: all Case checkboxes `- [ ] **T-XX-YY-ZZ**`
+   - In checklist file: all phase items `[T-XX-YY-ZZ-R]`, `[T-XX-YY-ZZ-G]`, `[T-XX-YY-ZZ-F]`,
+     `[T-XX-YY-ZZ-TF]` (per Scenario), and `[T-XX-CF]`
+3. Determine status:
+   - All items checked (`[x]`) → status = `done`
+   - Any item unchecked (`[ ]`) → status = `in-progress`
+
+#### Step 2: Write back to tasks.md (Task ID input only)
+
+If the session was started with a Task ID (e.g. `T01-02`), update `tasks.md`:
+
+1. Locate the **Task Summary** table at the top of `tasks.md`
+2. Find the row for the implemented Test Target (e.g. `T-01`)
+3. Update the `Status` column:
+   - `done` → write `done`
+   - `in-progress` → write `in-progress`
+
+```markdown
+## Task Summary
+
+| Test Target  | Scenarios | Cases | Status      |
+| ------------ | --------- | ----- | ----------- |
+| T-01: <name> | N         | M     | done        |
+| T-02: <name> | N         | M     | in-progress |
+```
+
+Do NOT modify any other part of `tasks.md`.
+
+#### Step 3: Write back to checklist file (all inputs)
+
+Regardless of input type, also update the checklist file header:
+
+1. Open `temp/tasks/<slug>-checklist.md`
+2. In the frontmatter, set `status` of the corresponding Test Target:
+   - If the file has a per-target status field, update it
+   - If not, add a comment line below the target heading:
+     `<!-- status: done -->` or `<!-- status: in-progress -->`
+
+#### Step 4: Report to user
+
+After all write-backs complete, output:
+
+```text
+STATUS WRITE-BACK:
+  T-01: done        (N/N items checked)
+  T-02: in-progress (M/N items checked — K items remain)
+```
 
 ## References
 
