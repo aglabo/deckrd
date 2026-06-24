@@ -8,7 +8,10 @@
 # https://opensource.org/licenses/MIT
 
 set -euo pipefail
-PROJECT_ROOT="${PROJECT_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || (cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd))}"
+
+# shellcheck source=runners/libs/init-vars.lib.sh
+. "$(dirname "${BASH_SOURCE[0]}")/libs/init-vars.lib.sh"
+
 main() {
   local mode="list"
   while [[ $# -gt 0 ]]; do

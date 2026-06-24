@@ -8,8 +8,12 @@
 # https://opensource.org/licenses/MIT
 
 set -euo pipefail
-PROJECT_ROOT="${PROJECT_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || (cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd))}"
-SHELLCHECKRC="${SHELLCHECKRC:-$PROJECT_ROOT/configs/shellcheckrc}"
+
+# shellcheck source=runners/libs/init-vars.lib.sh
+. "$(dirname "${BASH_SOURCE[0]}")/libs/init-vars.lib.sh"
+cd "${SCRIPT_ROOT}/.."
+
+SHELLCHECKRC="${SHELLCHECKRC:-${SCRIPT_ROOT}/../configs/shellcheckrc}"
 main() {
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -47,7 +51,7 @@ main() {
     echo "No .sh files found." >&2
     return 0
   fi
-  (cd "$PROJECT_ROOT" && shellcheck --rcfile="$SHELLCHECKRC" "${files[@]}")
+  (shellcheck --rcfile="$SHELLCHECKRC" "${files[@]}")
 }
 if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
   main "$@"
