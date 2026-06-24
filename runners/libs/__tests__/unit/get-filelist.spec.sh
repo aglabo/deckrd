@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 # runners/libs/tests/unit/get-filelist.spec.sh
-# @(#) : BDD unit tests for get-filelist.sh
+# @(#) : BDD unit tests for get-filelist.lib.sh
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 # shellcheck shell=bash
-# get-filelist.spec.sh — BDD spec for get-filelist.sh
+# get-filelist.spec.sh — BDD spec for get-filelist.lib.sh
 
 Include "${SHELLSPEC_PROJECT_ROOT}/runners/libs/__tests__/spec_helper.sh"
-Include "${SHELLSPEC_PROJECT_ROOT}/runners/libs/get-filelist.sh"
+Include "${SHELLSPEC_PROJECT_ROOT}/runners/libs/get-filelist.lib.sh"
 
 Describe 'get_filelist()'
   Before 'setup_temp_specs'
