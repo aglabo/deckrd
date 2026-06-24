@@ -6,6 +6,7 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 
+
 ##  General
 #   OS specific files
 .DS_Store
@@ -20,6 +21,7 @@ thumbs.db
 .history/
 .cache/
 # **/*cache
+
 
 #   backup/swap/temp
 $~*
@@ -39,10 +41,12 @@ $~*
 .env*
 .env.*
 
-# ignore release package
+# release
 releases/*
 !releases/.keep
 
+##  Git
+!**/.gitignore
 
 ## Development tools (installed locally)
 .tools/
@@ -55,12 +59,15 @@ releases/*
 
 ## Coding AI depended
 # SDD (Spec-Driven Development) files
-**/.cc-sdd/
 
 # claude code setting
 .claude/*
 
+# settings
+!.claude/**/settings.json
+
 # agents can tracking
+!**/CLAUDE*.md
 !.claude/agents/
 !.claude/agents/**
 !.claude/rules/
@@ -72,6 +79,7 @@ releases/*
 .cocoindex_code/
 .serena/
 .lsmcp/
+.codegraph/*
 
 ## Temporary directories are never tracked
 temp/

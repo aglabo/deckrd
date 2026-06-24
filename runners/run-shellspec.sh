@@ -11,8 +11,9 @@
 
 set -euo pipefail
 
-# Project root and constants
-PROJECT_ROOT="${PROJECT_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || (cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd))}"
+# shellcheck source=runners/libs/init-vars.lib.sh
+. "$(dirname "${BASH_SOURCE[0]}")/libs/init-vars.lib.sh"
+
 SHELLSPEC="${SHELLSPEC:-${PROJECT_ROOT}/.tools/shellspec/shellspec}"
 
 # Valid test type identifiers
@@ -26,7 +27,7 @@ SKIP_INTEGRATION_TESTS="${SKIP_INTEGRATION_TESTS:-1}"
 SPEC_SEARCH_ROOT="${SPEC_SEARCH_ROOT:-${PROJECT_ROOT}}"
 
 # shellcheck source=runners/libs/get-filelist.sh
-. "${PROJECT_ROOT}/runners/libs/get-filelist.sh"
+. "${SCRIPT_ROOT}/libs/get-filelist.lib.sh"
 
 #
 # @description Check if argument is a valid test type
@@ -103,7 +104,7 @@ get_spec_files() {
   if [[ "$test_type" == "all" ]]; then
     type_filter="tests"
   else
-    type_filter="(tests|__tests__)/${test_type}"
+    type_filter="tests/${test_type}"
   fi
   get_filelist "$SPEC_SEARCH_ROOT" "*.spec.sh" "$type_filter" "$@"
 }
@@ -133,31 +134,31 @@ parse_options() {
 #
 resolve_spec_files() {
   [[ $# -eq 0 ]] && {
-    printf 'Error: No arguments given.\n' >&2
+    printf 'Error: No arguments given.\n'
     return 1
   }
 
   local first_arg="$1"
 
-  # å˜ä¸€ .spec.sh ãƒ•ã‚¡ã‚¤ãƒ« â†’ ãã®ã¾ã¾å‡ºåŠ›
+  # ’Pˆê .spec.sh Ìt§@²CÙ¨ ‚»‚Ì‚Ü‚Üo—Í
   if is_spec_file "$first_arg"; then
     printf '%s\n' "$first_arg"
     return 0
   fi
 
-  # glob ãƒ‘ã‚¹ï¼ˆ*.spec.sh ã‚’å«ã‚€ globï¼‰â†’ expand_spec_glob ã§å±•é–‹
+  # glob Êßp½Xi*.spec.sh ‚ğŠÜ‚Ş globj¨ expand_spec_glob ‚Å“WŠJ
   if is_spec_glob "$first_arg"; then
     expand_spec_glob "$first_arg"
     return 0
   fi
 
-  # ãƒ†ã‚¹ãƒˆç¨®åˆ¥ä»¥å¤– â†’ ã‚¨ãƒ©ãƒ¼ (stdout)
+  # Ãe½XÄgí•ÊˆÈŠO ¨ ´G×‰°[ (stdout)
   if ! is_test_type "$first_arg"; then
-    printf "Error: Unknown argument '%s'. Expected a test type, spec file, or glob pattern.\n" "$first_arg" >&2
+    printf "Error: Unknown argument '%s'. Expected a test type, spec file, or glob pattern.\n" "$first_arg"
     return 1
   fi
 
-  # ãƒ†ã‚¹ãƒˆç¨®åˆ¥ â†’ get_spec_files ã§å±•é–‹
+  # Ãe½XÄgí•Ê ¨ get_spec_files ‚Å“WŠJ
   local test_type="$1"
   shift
   [[ "$test_type" == "system" ]] && SKIP_INTEGRATION_TESTS=0
