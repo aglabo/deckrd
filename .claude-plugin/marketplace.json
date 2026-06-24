@@ -1,8 +1,8 @@
 {
-  "name": "deckrd",
+  "name": "deckrd-dev",
   "owner": {
     "name": "aglabo",
-    "url": "https://github.com/aglabo/deckrd"
+    "url": "file:///C:/Users/atsushifx/workspaces/develop/deckrd"
   },
   "metadata": {
     "description": "deckrd tools - your goals to tasks framework, and related tools",

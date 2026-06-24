@@ -9,6 +9,7 @@
 #   - skills/*/.claude-plugin/plugin.json
 #   - skills/*/skills/*/SKILL.md (metadata.version)
 #   - .claude-plugin/marketplace*.json (metadata.version)
+#   - package.json
 
 set -euo pipefail
 
@@ -91,5 +92,17 @@ for _f in .claude-plugin/marketplace*.json; do
     _updated "$_OLD → $_NEW_VERSION" "$_f"
   fi
 done
+
+# 4. package.json
+_f="package.json"
+if [[ -f "$_f" ]]; then
+  _OLD=$(grep '"version"' "$_f" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || true)
+  if [[ "$_OLD" == "$_NEW_VERSION" ]]; then
+    _skipped "package.json" "$_f"
+  else
+    _bump_json "$_f" "$_NEW_VERSION"
+    _updated "$_OLD → $_NEW_VERSION" "$_f"
+  fi
+fi
 
 printf '\nDone.\n'

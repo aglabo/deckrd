@@ -6,6 +6,7 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 
+
 root = true
 
 # ─────────────────────────────
@@ -22,13 +23,16 @@ tab_width = 2
 # ─────────────────────────────
 # Exclude directories/files
 # ─────────────────────────────
+[node_modules/*]
+ignore = true
+
 [.tools/*]
 ignore = true
 
 [.local/*]
 ignore = true
 
-[*.spec.sh]
+[**/*.spec.sh]
 ignore = true
 
 # ─────────────────────────────
