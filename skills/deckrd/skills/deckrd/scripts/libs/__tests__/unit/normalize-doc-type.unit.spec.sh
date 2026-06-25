@@ -14,7 +14,7 @@ unset _RUNTIME_BOOTSTRAP
 
 Include ../spec_helper.sh
 
-SCRIPT="${DECKRD_LIB_DIR}/normalize-doc-type.sh"
+SCRIPT="${DECKRD_LIB_DIR}/normalize-doc-type.lib.sh"
 . "${SCRIPT}"
 
 Describe "normalize_doc_type"

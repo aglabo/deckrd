@@ -15,7 +15,7 @@ unset _RUNTIME_BOOTSTRAP
 
 Include ../spec_helper.sh
 
-SCRIPT="${DECKRD_LIB_DIR}/session.sh"
+SCRIPT="${DECKRD_LIB_DIR}/session.lib.sh"
 . "$SCRIPT"
 
 # Schema used in tests

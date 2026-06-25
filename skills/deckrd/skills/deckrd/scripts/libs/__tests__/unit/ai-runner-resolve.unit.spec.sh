@@ -15,7 +15,7 @@ unset _RUNTIME_BOOTSTRAP
 
 Include ../spec_helper.sh
 
-SCRIPT="${DECKRD_LIB_DIR}/ai-runner.sh"
+SCRIPT="${DECKRD_LIB_DIR}/ai-runner.lib.sh"
 . "$SCRIPT"
 
 Describe "ai-runner.sh"
