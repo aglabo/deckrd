@@ -46,7 +46,7 @@ unset _SCRIPT_DIR
 
 # Validate environment (requires jq)
 # shellcheck disable=SC1091
-. "${DECKRD_LIB_DIR}/validate-env.sh"
+. "${DECKRD_LIB_DIR}/validate-env.lib.sh"
 _validate_env_errmsg=$(validate_env) || {
   echo "$_validate_env_errmsg" >&2
   exit 1

@@ -15,8 +15,8 @@ unset _RUNTIME_BOOTSTRAP
 
 Include ../spec_helper.sh
 
-. "${DECKRD_LIB_DIR}/session.sh"
-. "${DECKRD_LIB_DIR}/config.sh"
+. "${DECKRD_LIB_DIR}/session.lib.sh"
+. "${DECKRD_LIB_DIR}/config.lib.sh"
 
 Describe "config.sh"
   Describe "config.sh loading"
