@@ -9,7 +9,7 @@
 # shellcheck disable=SC1090,SC1091,SC2288,SC2289
 # cspell:words reinit eqval uninit nofile emptyjson roundtrip noschema
 
-_RUNTIME_LIBS_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/skills/_runtime/libs" && pwd)"
+_RUNTIME_LIBS_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/skills/deckrd/scripts/libs" && pwd)"
 
 Include "../spec_helper.sh"
 

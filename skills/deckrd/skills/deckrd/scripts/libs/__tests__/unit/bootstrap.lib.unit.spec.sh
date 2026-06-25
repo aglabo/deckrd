@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# src: ./skills/_runtime/libs/__tests__/unit/bootstrap.lib.spec.sh
+# src: ./skills/deckrd/skills/deckrd/scripts/libs/__tests__/unit/bootstrap.lib.unit.spec.sh
 # @(#) : ShellSpec unit tests for bootstrap.lib.sh
 #
 # Unit test design:
@@ -24,7 +24,7 @@
 
 # shellcheck disable=SC1091
 
-_RUNTIME_LIBS_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/skills/_runtime/libs" && pwd)"
+_RUNTIME_LIBS_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/skills/deckrd/scripts/libs" && pwd)"
 
 Include "../spec_helper.sh"
 
@@ -69,16 +69,16 @@ Describe "bootstrap.lib.sh"
   Describe "export 検証"
 
     Describe "Given: PROJECT_ROOT=/tmp/proj で bootstrap_init を呼ぶ"
-      Before "export PROJECT_ROOT=/tmp/proj; unset DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_LIB_DIR DECKRD_DATA_DIR DECKRD_LOCAL_DATA DECKRD_DOCS_DIR SYMBOL RUNTIME_LIB_DIR; bootstrap_init"
+      Before "export PROJECT_ROOT=/tmp/proj; unset DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_LIB_DIR DECKRD_DATA_DIR DECKRD_LOCAL_DATA DECKRD_DOCS_DIR SYMBOL; bootstrap_init"
 
       It "[Normal] PROJECT_ROOT が export されている"
         When call bash -c 'export -p | grep -q "^declare -x PROJECT_ROOT=" && echo ok'
         The output should equal "ok"
       End
 
-      It "[Normal] RUNTIME_LIB_DIR が export されている"
-        When call bash -c 'export -p | grep -q "^declare -x RUNTIME_LIB_DIR=" && echo ok'
-        The output should equal "ok"
+      It "[Normal] RUNTIME_LIB_DIR が export されていない"
+        When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && export -p | grep -q 'RUNTIME_LIB_DIR' && echo found || echo not-found"
+        The output should equal "not-found"
       End
 
       It "[Normal] DECKRD_ROOT が export されている"
@@ -159,10 +159,10 @@ Describe "bootstrap.lib.sh"
       The output should equal "readonly"
     End
 
-    It "[Normal] finalize 後は RUNTIME_LIB_DIR が readonly になっている"
+    It "[Normal] finalize 後は RUNTIME_LIB_DIR が readonly になっていない"
       When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && ( RUNTIME_LIB_DIR=x ) 2>/dev/null && echo writable || echo readonly"
       The status should equal 0
-      The output should equal "readonly"
+      The output should equal "writable"
     End
 
     It "[Normal] finalize 後は DECKRD_ROOT が readonly になっている"
@@ -225,12 +225,6 @@ Describe "bootstrap.lib.sh"
       The output should equal "ok"
     End
 
-    It "[Normal] RUNTIME_LIB_DIR が変化しない"
-      When run bash -c "export PROJECT_ROOT=/tmp/proj; export DECKRD_ROOT=/tmp/deckrd; . \"$SCRIPT\" --no-finalize; FIRST=\"\$RUNTIME_LIB_DIR\"; bootstrap_init; [[ \"\$RUNTIME_LIB_DIR\" == \"\$FIRST\" ]] && echo ok"
-      The status should equal 0
-      The output should equal "ok"
-    End
-
     It "[Normal] DECKRD_ROOT が変化しない"
       When run bash -c "export PROJECT_ROOT=/tmp/proj; export DECKRD_ROOT=/tmp/deckrd; . \"$SCRIPT\" --no-finalize; FIRST=\"\$DECKRD_ROOT\"; bootstrap_init; [[ \"\$DECKRD_ROOT\" == \"\$FIRST\" ]] && echo ok"
       The status should equal 0
@@ -252,28 +246,29 @@ Describe "bootstrap.lib.sh"
 
   # ------------------------------------------------------------------ #
   #  BASH_SOURCE 依存: bdd-coder パス検出                              #
-  #  source したスクリプトのパスで DECKRD_ROOT が切り替わる             #
+  #  bootstrap.lib.sh の物理位置 (deckrd スキル) を基点とするため      #
+  #  呼び出し元が bdd-coder パスでも DECKRD_ROOT は常に deckrd になる  #
   # ------------------------------------------------------------------ #
   Describe "BASH_SOURCE 依存: bdd-coder パス検出"
     Before setup_coder_tmpscript
     After teardown_coder_tmpscript
 
-    It "[Normal] bdd-coder パスから source → DECKRD_ROOT が bdd-coder になる"
+    It "[Normal] bdd-coder パスから source → DECKRD_ROOT は deckrd になる"
       When call run_coder_tmpscript DECKRD_ROOT
       The status should equal 0
-      The output should end with "/skills/deckrd/skills/bdd-coder"
+      The output should end with "/skills/deckrd/skills/deckrd"
     End
 
-    It "[Normal] bdd-coder パスから source → DECKRD_SCRIPTS_DIR が bdd-coder/scripts になる"
+    It "[Normal] bdd-coder パスから source → DECKRD_SCRIPTS_DIR は deckrd/scripts になる"
       When call run_coder_tmpscript DECKRD_SCRIPTS_DIR
       The status should equal 0
-      The output should end with "/skills/deckrd/skills/bdd-coder/scripts"
+      The output should end with "/skills/deckrd/skills/deckrd/scripts"
     End
 
-    It "[Normal] bdd-coder パスから source → DECKRD_LIB_DIR が bdd-coder/scripts/libs になる"
+    It "[Normal] bdd-coder パスから source → DECKRD_LIB_DIR は deckrd/scripts/libs になる"
       When call run_coder_tmpscript DECKRD_LIB_DIR
       The status should equal 0
-      The output should end with "/skills/deckrd/skills/bdd-coder/scripts/libs"
+      The output should end with "/skills/deckrd/skills/deckrd/scripts/libs"
     End
 
     It "[Normal] bdd-coder パスでも DECKRD_ROOT 事前設定値が優先される"
@@ -291,60 +286,6 @@ Describe "bootstrap.lib.sh"
   End
 
   # ------------------------------------------------------------------ #
-  #  RUNTIME_LIB_DIR                                                   #
-  #  依存: PROJECT_ROOT のみ                                           #
-  # ------------------------------------------------------------------ #
-  Describe "RUNTIME_LIB_DIR"
-
-    Describe "Given: PROJECT_ROOT=/tmp/proj、RUNTIME_LIB_DIR 未設定"
-      Before "export PROJECT_ROOT=/tmp/proj; unset RUNTIME_LIB_DIR; bootstrap_init"
-
-      It "[Normal] PROJECT_ROOT/skills/_runtime/libs になる"
-        # shellcheck disable=SC2153
-        When call echo "$RUNTIME_LIB_DIR"
-        The output should equal "/tmp/proj/skills/_runtime/libs"
-      End
-
-      It "[Normal] PROJECT_ROOT との関係式が成立する"
-        When call test "$RUNTIME_LIB_DIR" = "${PROJECT_ROOT}/skills/_runtime/libs"
-        The status should equal 0
-      End
-
-      It "[Normal] export -p で export されている"
-        When call bash -c 'export -p | grep -q "^declare -x RUNTIME_LIB_DIR=" && echo ok'
-        The output should equal "ok"
-      End
-    End
-
-    Describe "Given: RUNTIME_LIB_DIR=/tmp/custom-libs を事前設定"
-      Before "export PROJECT_ROOT=/tmp/proj; export RUNTIME_LIB_DIR=/tmp/custom-libs; bootstrap_init"
-
-      It "[Normal] 事前設定値が維持される"
-        When call echo "$RUNTIME_LIB_DIR"
-        The output should equal "/tmp/custom-libs"
-      End
-    End
-
-    Describe "Given: PROJECT_ROOT にスペースを含むパス"
-      Before "export PROJECT_ROOT='/tmp/my project'; unset RUNTIME_LIB_DIR; bootstrap_init"
-
-      It "[Edge] パスが正しく連結される"
-        When call echo "$RUNTIME_LIB_DIR"
-        The output should equal "/tmp/my project/skills/_runtime/libs"
-      End
-    End
-
-    Describe "Given: DECKRD_ROOT=/tmp/other を設定 (PROJECT_ROOT から独立)"
-      Before "export PROJECT_ROOT=/tmp/proj; export DECKRD_ROOT=/tmp/other; unset RUNTIME_LIB_DIR; bootstrap_init"
-
-      It "[Edge] DECKRD_ROOT に依存せず PROJECT_ROOT が基点になる"
-        When call echo "$RUNTIME_LIB_DIR"
-        The output should equal "/tmp/proj/skills/_runtime/libs"
-      End
-    End
-  End
-
-  # ------------------------------------------------------------------ #
   #  DECKRD_ROOT                                                        #
   #  依存: PROJECT_ROOT (未設定時の自動計算はソースパス依存)            #
   # ------------------------------------------------------------------ #
@@ -353,14 +294,10 @@ Describe "bootstrap.lib.sh"
     Describe "Given: PROJECT_ROOT=/tmp/proj、DECKRD_ROOT 未設定"
       Before "export PROJECT_ROOT=/tmp/proj; unset DECKRD_ROOT; bootstrap_init"
 
-      It "[Normal] PROJECT_ROOT/skills/deckrd/skills/deckrd になる"
-        When call echo "$DECKRD_ROOT"
-        The output should equal "/tmp/proj/skills/deckrd/skills/deckrd"
-      End
-
-      It "[Normal] PROJECT_ROOT との関係式が成立する"
-        When call test "$DECKRD_ROOT" = "${PROJECT_ROOT}/skills/deckrd/skills/deckrd"
-        The status should equal 0
+      It "[Normal] DECKRD_ROOT が /skills/deckrd/skills/deckrd で終わる"
+        # shellcheck disable=SC2016
+        When call bash -c '[[ "$DECKRD_ROOT" == */skills/deckrd/skills/deckrd ]] && echo ok'
+        The output should equal "ok"
       End
 
       It "[Normal] export -p で export されている"
@@ -387,12 +324,19 @@ Describe "bootstrap.lib.sh"
       End
     End
 
-    Describe "Given: PROJECT_ROOT にスペースを含むパス"
-      Before "export PROJECT_ROOT='/tmp/my project'; unset DECKRD_ROOT; bootstrap_init"
+    Describe "Given: PROJECT_ROOT=/tmp/bogus、DECKRD_ROOT 未設定 (BASH_SOURCE 依存の確認)"
+      Before "export PROJECT_ROOT=/tmp/bogus; unset DECKRD_ROOT; bootstrap_init"
 
-      It "[Edge] パスが正しく連結される"
-        When call echo "$DECKRD_ROOT"
-        The output should equal "/tmp/my project/skills/deckrd/skills/deckrd"
+      It "[Normal] DECKRD_ROOT が /tmp/bogus を含まない"
+        # shellcheck disable=SC2016
+        When call bash -c '[[ "$DECKRD_ROOT" != */tmp/bogus* ]] && echo ok'
+        The output should equal "ok"
+      End
+
+      It "[Normal] DECKRD_ROOT が /skills/deckrd/skills/deckrd で終わる"
+        # shellcheck disable=SC2016
+        When call bash -c '[[ "$DECKRD_ROOT" == */skills/deckrd/skills/deckrd ]] && echo ok'
+        The output should equal "ok"
       End
     End
   End

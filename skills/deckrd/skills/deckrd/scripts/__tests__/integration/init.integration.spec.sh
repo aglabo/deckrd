@@ -9,7 +9,7 @@
 
 # shellcheck disable=SC1090
 
-_RUNTIME_BOOTSTRAP="${SHELLSPEC_PROJECT_ROOT}/skills/_runtime/libs/bootstrap.lib.sh"
+_RUNTIME_BOOTSTRAP="${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/skills/deckrd/scripts/libs/bootstrap.lib.sh"
 . "$_RUNTIME_BOOTSTRAP" "--no-finalize"
 unset _RUNTIME_BOOTSTRAP
 

@@ -40,10 +40,10 @@
 set -o pipefail
 
 # Load bootstrap (defines SYMBOL, PROJECT_ROOT, DECKRD_LOCAL_DATA, DECKRD_LIB_DIR, etc.)
+_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
-_PROJECT_ROOT="$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)"
-. "${_PROJECT_ROOT}/skills/_runtime/libs/bootstrap.lib.sh"
-unset _PROJECT_ROOT
+. "${_SCRIPT_DIR}/libs/bootstrap.lib.sh"
+unset _SCRIPT_DIR
 
 . "${DECKRD_LIB_DIR}/validate-env.sh"
 _validate_env_errmsg=$(validate_env) || {
