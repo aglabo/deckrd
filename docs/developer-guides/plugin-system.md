@@ -140,7 +140,7 @@ Each command follows this pattern:
 set -euo pipefail
 
 # Source bootstrap
-source "${DECKRD_ROOT}/skills/_runtime/libs/bootstrap.lib.sh"
+. "${DECKRD_ROOT}/skills/deckrd/skills/deckrd/scripts/libs/bootstrap.lib.sh"
 
 # Functions
 main() {
@@ -371,7 +371,7 @@ dprint check            # Format check
 ### Test Structure
 
 ```text
-skills/_runtime/libs/__tests__/
+skills/deckrd/skills/deckrd/scripts/libs/__tests__/
 ├── unit/                 # Unit tests per library
 ├── functional/           # Functional tests (real filesystem)
 └── spec_helper.sh        # Shared test helpers
@@ -429,7 +429,7 @@ sanitize_input() {
 
 ```bash
 # Use absolute paths via bootstrap
-source "${DECKRD_ROOT}/skills/_runtime/libs/bootstrap.lib.sh"
+. "${DECKRD_ROOT}/skills/deckrd/skills/deckrd/scripts/libs/bootstrap.lib.sh"
 ```
 
 ### Secret Handling

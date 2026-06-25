@@ -9,13 +9,13 @@
 # shellcheck disable=SC1090
 # shellcheck disable=SC2287
 
-_RUNTIME_BOOTSTRAP="${SHELLSPEC_PROJECT_ROOT}/skills/_runtime/libs/bootstrap.lib.sh"
+_RUNTIME_BOOTSTRAP="${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/skills/deckrd/scripts/libs/bootstrap.lib.sh"
 . "$_RUNTIME_BOOTSTRAP"
 unset _RUNTIME_BOOTSTRAP
 
 Include ../spec_helper.sh
 
-SCRIPT="${DECKRD_LIB_DIR}/ai-runner.sh"
+SCRIPT="${DECKRD_LIB_DIR}/ai-runner.lib.sh"
 . "$SCRIPT"
 
 Describe "ai-runner.sh"

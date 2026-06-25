@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# get-filelist.sh — file list and argument normalization library
+# get-filelist.lib.sh — file list and argument normalization library
 # Provides path normalization, glob-to-regex conversion, and file list retrieval
 
 # Guard against double sourcing

@@ -18,7 +18,7 @@ readonly _CONFIG_LOADED=1
 
 # Load kv-store as the backing implementation
 # shellcheck disable=SC1091
-. "${RUNTIME_LIB_DIR}/kv-store.lib.sh"
+. "${DECKRD_LIB_DIR}/kv-store.lib.sh"
 
 # Config schema
 readonly _CONFIG_SCHEMA="

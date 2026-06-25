@@ -8,13 +8,13 @@
 
 # shellcheck disable=SC1090
 
-_RUNTIME_BOOTSTRAP="${SHELLSPEC_PROJECT_ROOT}/skills/_runtime/libs/bootstrap.lib.sh"
+_RUNTIME_BOOTSTRAP="${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/skills/deckrd/scripts/libs/bootstrap.lib.sh"
 . "$_RUNTIME_BOOTSTRAP"
 unset _RUNTIME_BOOTSTRAP
 
 Include ../spec_helper.sh
 
-SCRIPT="${DECKRD_LIB_DIR}/validate-env.sh"
+SCRIPT="${DECKRD_LIB_DIR}/validate-env.lib.sh"
 . "$SCRIPT"
 
 Describe "validate-env.sh"
@@ -43,7 +43,7 @@ Describe "validate-env.sh"
       Describe "When: validate_env を呼ぶ"
         It "Then: [Error] return 1 を返し、stderr に 'jq or jaq is required' を含む"
           # 新規サブシェルで validate-env.sh を source し、jq/jaq を隠して validate_env を呼ぶ
-          When run /usr/bin/bash -c "command() { [[ \"\$*\" == *jq* || \"\$*\" == *jaq* ]] && return 1; builtin command \"\$@\"; }; export -f command; . '${DECKRD_LIB_DIR}/validate-env.sh'; validate_env"
+          When run /usr/bin/bash -c "command() { [[ \"\$*\" == *jq* || \"\$*\" == *jaq* ]] && return 1; builtin command \"\$@\"; }; export -f command; . '${DECKRD_LIB_DIR}/validate-env.lib.sh'; validate_env"
           The status should equal 1
           The stderr should include "jq or jaq is required"
         End

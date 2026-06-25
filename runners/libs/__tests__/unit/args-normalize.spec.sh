@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 # runners/libs/tests/unit/args-normalize.spec.sh
-# @(#) : BDD unit tests for args normalization functions in get-filelist.sh
+# @(#) : BDD unit tests for args normalization functions in get-filelist.lib.sh
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 # shellcheck shell=bash
-# args-normalize.spec.sh — BDD spec for argument normalization functions in get-filelist.sh
+# args-normalize.spec.sh — BDD spec for argument normalization functions in get-filelist.lib.sh
 
-Include "${SHELLSPEC_PROJECT_ROOT}/runners/libs/get-filelist.sh"
+Include "${SHELLSPEC_PROJECT_ROOT}/runners/libs/get-filelist.lib.sh"
 
 Describe 'args_to_filter()'
   Describe '* wildcard conversion'

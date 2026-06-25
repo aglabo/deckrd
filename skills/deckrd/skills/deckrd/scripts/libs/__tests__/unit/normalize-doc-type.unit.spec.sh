@@ -8,13 +8,13 @@
 
 # shellcheck disable=SC1090,SC1091
 
-_RUNTIME_BOOTSTRAP="${SHELLSPEC_PROJECT_ROOT}/skills/_runtime/libs/bootstrap.lib.sh"
+_RUNTIME_BOOTSTRAP="${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/skills/deckrd/scripts/libs/bootstrap.lib.sh"
 . "$_RUNTIME_BOOTSTRAP" "--no-finalize"
 unset _RUNTIME_BOOTSTRAP
 
 Include ../spec_helper.sh
 
-SCRIPT="${DECKRD_LIB_DIR}/normalize-doc-type.sh"
+SCRIPT="${DECKRD_LIB_DIR}/normalize-doc-type.lib.sh"
 . "${SCRIPT}"
 
 Describe "normalize_doc_type"

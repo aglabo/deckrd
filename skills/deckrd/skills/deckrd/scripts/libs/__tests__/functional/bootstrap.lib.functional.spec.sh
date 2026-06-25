@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# src: ./skills/_runtime/libs/__tests__/functional/bootstrap.lib.functional.spec.sh
+# src: ./skills/deckrd/skills/deckrd/scripts/libs/__tests__/functional/bootstrap.lib.functional.spec.sh
 # @(#) : ShellSpec functional tests for bootstrap.lib.sh
 #        Multi-variable chain verification, bdd-coder detection, side effects.
 #        Each section covers one functional concern with Normal/Edge cases.
@@ -11,7 +11,7 @@
 
 # shellcheck disable=SC1091
 
-_RUNTIME_LIBS_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/skills/_runtime/libs" && pwd)"
+_RUNTIME_LIBS_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/skills/deckrd/scripts/libs" && pwd)"
 
 Include "../spec_helper.sh"
 
@@ -44,17 +44,14 @@ Describe "bootstrap.lib.sh"
   End
 
   # ------------------------------------------------------------------ #
-  #  DECKRD_ROOT ← PROJECT_ROOT 連鎖                                   #
+  #  DECKRD_ROOT ← BASH_SOURCE 基点                                    #
   # ------------------------------------------------------------------ #
-  Describe "DECKRD_ROOT: PROJECT_ROOT 連鎖"
+  Describe "DECKRD_ROOT: BASH_SOURCE 基点"
 
-    It "[Normal] PROJECT_ROOT 変更 → DECKRD_ROOT が追従する"
-      root_a=$(bash -c "export PROJECT_ROOT=/tmp/a; unset DECKRD_ROOT; . \"$SCRIPT\" && echo \"\$DECKRD_ROOT\"")
-      root_b=$(bash -c "export PROJECT_ROOT=/tmp/b; unset DECKRD_ROOT; . \"$SCRIPT\" && echo \"\$DECKRD_ROOT\"")
-      When call test "$root_a" != "$root_b" \
-        -a "$root_a" = "/tmp/a/skills/deckrd/skills/deckrd" \
-        -a "$root_b" = "/tmp/b/skills/deckrd/skills/deckrd"
+    It "[Normal] DECKRD_ROOT が /skills/deckrd/skills/deckrd で終わる"
+      When run bash -c "unset DECKRD_ROOT; unset PROJECT_ROOT; . \"$SCRIPT\" && [[ \"\$DECKRD_ROOT\" == */skills/deckrd/skills/deckrd ]] && echo ok"
       The status should equal 0
+      The output should equal "ok"
     End
 
     It "[Normal] DECKRD_ROOT を固定すると PROJECT_ROOT 変更に影響されない"
@@ -64,8 +61,9 @@ Describe "bootstrap.lib.sh"
       The status should equal 0
     End
 
-    It "[Normal] PROJECT_ROOT 設定 → DECKRD_ROOT と PROJECT_ROOT の関係式が成立する"
-      When run bash -c "export PROJECT_ROOT=/tmp/proj; unset DECKRD_ROOT; . \"$SCRIPT\" && [[ \"\$DECKRD_ROOT\" == \"\${PROJECT_ROOT}/skills/deckrd/skills/deckrd\" ]] && echo ok"
+    It "[Edge] PROJECT_ROOT=/tmp/bogus を設定しても DECKRD_ROOT は BASH_SOURCE 基点のまま"
+      # shellcheck disable=SC2016
+      When run bash -c "export PROJECT_ROOT=/tmp/bogus; unset DECKRD_ROOT; . \"$SCRIPT\" && [[ \"\$DECKRD_ROOT\" != */tmp/bogus* ]] && [[ \"\$DECKRD_ROOT\" == */skills/deckrd/skills/deckrd ]] && echo ok"
       The status should equal 0
       The output should equal "ok"
     End
@@ -139,22 +137,22 @@ Describe "bootstrap.lib.sh"
     Before setup_coder_tmpscript
     After teardown_coder_tmpscript
 
-    It "[Normal] bdd-coder パスから source → DECKRD_ROOT が bdd-coder になる"
+    It "[Normal] bdd-coder パスから source → DECKRD_ROOT は deckrd になる"
       When call run_coder_tmpscript DECKRD_ROOT
       The status should equal 0
-      The output should end with "/skills/deckrd/skills/bdd-coder"
+      The output should end with "/skills/deckrd/skills/deckrd"
     End
 
-    It "[Normal] bdd-coder パスから source → DECKRD_SCRIPTS_DIR が bdd-coder/scripts になる"
+    It "[Normal] bdd-coder パスから source → DECKRD_SCRIPTS_DIR は deckrd/scripts になる"
       When call run_coder_tmpscript DECKRD_SCRIPTS_DIR
       The status should equal 0
-      The output should end with "/skills/deckrd/skills/bdd-coder/scripts"
+      The output should end with "/skills/deckrd/skills/deckrd/scripts"
     End
 
-    It "[Normal] bdd-coder パスから source → DECKRD_LIB_DIR が bdd-coder/scripts/libs になる"
+    It "[Normal] bdd-coder パスから source → DECKRD_LIB_DIR は deckrd/scripts/libs になる"
       When call run_coder_tmpscript DECKRD_LIB_DIR
       The status should equal 0
-      The output should end with "/skills/deckrd/skills/bdd-coder/scripts/libs"
+      The output should end with "/skills/deckrd/skills/deckrd/scripts/libs"
     End
 
     It "[Normal] bdd-coder パスでも DECKRD_LOCAL_DATA は PROJECT_ROOT 起点になる"
@@ -200,10 +198,10 @@ Describe "bootstrap.lib.sh"
       The output should equal "ok"
     End
 
-    It "[Normal] 公開変数 9 つが全て export されている"
+    It "[Normal] 公開変数 8 つが全て export されている"
       When run bash -c "
         . \"$SCRIPT\"
-        expected='PROJECT_ROOT RUNTIME_LIB_DIR DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_LIB_DIR DECKRD_DATA_DIR DECKRD_LOCAL_DATA DECKRD_DOCS_DIR SYMBOL'
+        expected='PROJECT_ROOT DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_LIB_DIR DECKRD_DATA_DIR DECKRD_LOCAL_DATA DECKRD_DOCS_DIR SYMBOL'
         for var in \$expected; do
           [[ -n \"\${!var+x}\" ]] || { echo \"missing: \$var\"; exit 1; }
         done
@@ -213,10 +211,10 @@ Describe "bootstrap.lib.sh"
       The output should equal "ok"
     End
 
-    It "[Normal] PROJECT_ROOT〜DECKRD_DOCS_DIR の 8 変数が全て readonly になっている"
+    It "[Normal] PROJECT_ROOT〜DECKRD_DOCS_DIR の 7 変数が全て readonly になっている"
       When run bash -c "
         . \"$SCRIPT\"
-        readonly_vars='PROJECT_ROOT RUNTIME_LIB_DIR DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_LIB_DIR DECKRD_DATA_DIR DECKRD_LOCAL_DATA DECKRD_DOCS_DIR'
+        readonly_vars='PROJECT_ROOT DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_LIB_DIR DECKRD_DATA_DIR DECKRD_LOCAL_DATA DECKRD_DOCS_DIR'
         for var in \$readonly_vars; do
           ( eval \"\$var=x\" ) 2>/dev/null && { echo \"not readonly: \$var\"; exit 1; }
         done

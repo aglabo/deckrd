@@ -71,7 +71,7 @@ Rules:
 Select the adjective using the Bash tool:
 
 ```bash
-source "${PROJECT_ROOT}/skills/_runtime/libs/naming.lib.sh"
+. "${PROJECT_ROOT}/skills/deckrd/skills/deckrd/scripts/libs/naming.lib.sh"
 adjective=$(adjective_random)
 ```
 

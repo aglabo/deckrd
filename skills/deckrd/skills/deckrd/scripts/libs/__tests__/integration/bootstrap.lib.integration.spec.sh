@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# src: ./skills/_runtime/libs/__tests__/integration/bootstrap.lib.integration.spec.sh
+# src: ./skills/deckrd/skills/deckrd/scripts/libs/__tests__/integration/bootstrap.lib.integration.spec.sh
 # @(#) : ShellSpec integration tests for bootstrap.lib.sh
 #        git execution dependency, BASH_SOURCE fallback, idempotency.
 #        Tests rely on real git repository state and external process behavior.
@@ -11,7 +11,7 @@
 
 # shellcheck disable=SC1091
 
-_RUNTIME_LIBS_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/skills/_runtime/libs" && pwd)"
+_RUNTIME_LIBS_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/skills/deckrd/scripts/libs" && pwd)"
 
 Include "../spec_helper.sh"
 
@@ -119,12 +119,6 @@ Describe "bootstrap.lib.sh"
 
     It "[Normal] 2回 source → DECKRD_LIB_DIR が変化しない"
       When run bash -c ". \"$SCRIPT\" && FIRST=\"\$DECKRD_LIB_DIR\" && . \"$SCRIPT\" && [[ \"\$DECKRD_LIB_DIR\" == \"\$FIRST\" ]] && echo ok"
-      The status should equal 0
-      The output should equal "ok"
-    End
-
-    It "[Normal] 2回 source → RUNTIME_LIB_DIR が変化しない"
-      When run bash -c ". \"$SCRIPT\" && FIRST=\"\$RUNTIME_LIB_DIR\" && . \"$SCRIPT\" && [[ \"\$RUNTIME_LIB_DIR\" == \"\$FIRST\" ]] && echo ok"
       The status should equal 0
       The output should equal "ok"
     End

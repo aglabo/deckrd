@@ -9,14 +9,14 @@
 # shellcheck disable=SC1090,SC1091
 # cspell:words myproject
 
-_RUNTIME_BOOTSTRAP="${SHELLSPEC_PROJECT_ROOT}/skills/_runtime/libs/bootstrap.lib.sh"
+_RUNTIME_BOOTSTRAP="${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/skills/deckrd/scripts/libs/bootstrap.lib.sh"
 . "$_RUNTIME_BOOTSTRAP" "--no-finalize"
 unset _RUNTIME_BOOTSTRAP
 
 Include ../spec_helper.sh
 
-. "${DECKRD_LIB_DIR}/session.sh"
-. "${DECKRD_LIB_DIR}/config.sh"
+. "${DECKRD_LIB_DIR}/session.lib.sh"
+. "${DECKRD_LIB_DIR}/config.lib.sh"
 
 Describe "config.sh"
   Describe "config.sh loading"

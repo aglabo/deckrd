@@ -37,18 +37,19 @@
 set -eo pipefail
 
 # Load bootstrap (defines SYMBOL, PROJECT_ROOT, DECKRD_LOCAL_DATA, DECKRD_LIB_DIR, etc.)
-_PROJECT_ROOT="$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)"
-. "${_PROJECT_ROOT}/skills/_runtime/libs/bootstrap.lib.sh"
-unset _PROJECT_ROOT
+_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1091
+. "${_SCRIPT_DIR}/../libs/bootstrap.lib.sh"
+unset _SCRIPT_DIR
 
 # ============================================================================
 # Library Dependencies
 # ============================================================================
 
-. "${DECKRD_LIB_DIR}/session.sh"
-. "${DECKRD_LIB_DIR}/config.sh"
-. "${DECKRD_LIB_DIR}/ai-runner.sh"
-. "${DECKRD_LIB_DIR}/normalize-doc-type.sh"
+. "${DECKRD_LIB_DIR}/session.lib.sh"
+. "${DECKRD_LIB_DIR}/config.lib.sh"
+. "${DECKRD_LIB_DIR}/ai-runner.lib.sh"
+. "${DECKRD_LIB_DIR}/normalize-doc-type.lib.sh"
 
 # ============================================================================
 # deckrd Path Initialization
@@ -64,6 +65,7 @@ SESSION_FILE="${DECKRD_LOCAL_DATA}/session.json"
 
 ##
 # @description deckrd assets directory
+# shellcheck disable=SC2153
 DECKRD_ASSETS_DIR="${SCRIPT_DIR}/../assets"
 readonly DECKRD_ASSETS_DIR
 
