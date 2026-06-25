@@ -46,10 +46,10 @@ unset _SCRIPT_DIR
 # Library Dependencies
 # ============================================================================
 
-. "${DECKRD_LIB_DIR}/session.sh"
-. "${DECKRD_LIB_DIR}/config.sh"
-. "${DECKRD_LIB_DIR}/ai-runner.sh"
-. "${DECKRD_LIB_DIR}/normalize-doc-type.sh"
+. "${DECKRD_LIB_DIR}/session.lib.sh"
+. "${DECKRD_LIB_DIR}/config.lib.sh"
+. "${DECKRD_LIB_DIR}/ai-runner.lib.sh"
+. "${DECKRD_LIB_DIR}/normalize-doc-type.lib.sh"
 
 # ============================================================================
 # deckrd Path Initialization
