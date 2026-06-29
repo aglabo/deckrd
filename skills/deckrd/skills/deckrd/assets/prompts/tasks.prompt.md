@@ -158,10 +158,22 @@ Use category prefixes in describe blocks:
    - Identify any observable behavior mandated or excluded by the DR
    - Each such behavior is a **coverage item**; generate at least one task for it
 
-4. **Break down** each specification into:
-   - Test target (describe block level 1)
-   - Given/When scenarios (describe block level 2)
-   - Then assertions (it block level)
+4. **Break down** each specification into a WBS hierarchy — apply the **100% rule** and **MECE principle** at every level:
+
+   | Level          | WBS element             | MECE rule                                                                 |
+   | -------------- | ----------------------- | ------------------------------------------------------------------------- |
+   | Test target    | describe block level 1  | Every function/class in IMPLEMENTATION must appear as exactly one T-XX    |
+   | Scenario       | describe block level 2  | All observable behaviors per target must appear; no two scenarios overlap |
+   | Assertion      | it block level          | Each scenario's equivalence classes must be covered exactly once          |
+
+   Equivalence-class checklist per scenario (use to ensure CE — no gaps):
+   - Valid input classes (one case per distinct value range)
+   - Invalid input classes (null / undefined / wrong type / out-of-range — one case each)
+   - Boundary values (min, max, min±1, max±1 where applicable)
+
+   Mutual-exclusion check (ME — no duplicates): two cases are duplicates if they share
+   the same input domain AND the same expected outcome — merge them into one.
+
    - **Use exact function/method names from IMPLEMENTATION document(s)**
 
 5. **Generate tasks** with:
@@ -219,6 +231,8 @@ Each task MUST include:
 - NEVER include BDD sample/reference implementation sections
 - NEVER include progress tracking tables
 - NEVER create overly granular tasks (combine related assertions)
+- NEVER generate two tasks that cover the same equivalence class (MECE — ME violation)
+- NEVER leave a required category or equivalence class without a task (MECE — CE violation)
 - NEVER skip error handling scenarios
 - NEVER omit edge case coverage (include boundary values, state transitions, and false-negative verification)
 - NEVER omit a task for any row in spec Section 5 (Edge Cases)
