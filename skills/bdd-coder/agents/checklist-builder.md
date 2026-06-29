@@ -7,7 +7,8 @@ description: >
   Spawned automatically when the user gives a natural-language coding instruction
   without explicitly calling /bdd-coder.
   Do NOT invoke directly — triggered by bdd-coder skill.
-tools: Bash, Read, Write, Glob, Grep
+tools: Bash, Read, Write, Glob, Grep,
+  mcp__codegraph-mcp__codegraph_explore, mcp__cocoindex-code__search, mcp__serena-mcp__get_symbols_overview, mcp__serena-mcp__find_symbol, mcp__serena-mcp__find_referencing_symbols
 model: inherit
 color: cyan
 ---
@@ -50,6 +51,12 @@ Determine input type, then extract task information:
    - Target: function, class, or module to implement
    - Behaviors: normal cases, error cases, edge cases
    - Constraints: language, framework, existing code to extend
+3. If the instruction mentions extending or modifying existing code,
+   use `mcp__cocoindex-code__search` to locate relevant implementations:
+   - query: `"<Target> implementation"`
+   - query: `"<Target> related functions patterns"`
+     Use results to refine Behaviors and Constraints (concrete function names, signatures, edge cases).
+     If the target is purely new (no existing code to extend), skip this step.
 
 If target or behaviors are ambiguous, ask ONE clarifying question before proceeding.
 
@@ -138,7 +145,12 @@ After building the checklist draft, cross-check it against the specification to 
    Look for a spec document relevant to the implementation target:
 
    - `docs/.deckrd/<module>/specifications/specifications.md`
-   - If no spec exists, skip this phase.
+   - If the module name is unknown or the file does not exist at the expected path,
+     use `mcp__cocoindex-code__search` to find the spec:
+     - query: `"specification edge cases <Target>"`
+     - lang: `"markdown"`
+       Use the first matching result as the spec source for step 2.
+   - If no spec exists even after search, skip this phase.
 
 2. Extract spec-defined edge cases:
    Read the spec and collect:
