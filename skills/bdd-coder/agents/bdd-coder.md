@@ -86,6 +86,16 @@ Repeat steps 3.1–3.7 for each `state: todo` item:
 
 **3.2** Write test code only (apply append-first rule). Do NOT touch implementation.
 
+**Anti-patterns to avoid when writing tests:**
+
+- **Initial-value assertion** — testing only that a field equals its default. No behavior is exercised.
+- **Mock passthrough assertion** — asserting only that the result equals what the mock returned.
+  This validates mock setup, not behavior.
+- **Implementation mirror** — tracing private internal state or call order instead of observable output.
+
+If a candidate assertion falls into one of these categories, do NOT write it.
+Write the assertion only if it exercises a real behavior path that can break.
+
 **3.3 RED** — Run tests. Verify new assertion FAILS. Update `state: red`.
 
 **3.4 GREEN** — Write minimum implementation to pass. Run tests. Verify PASS. Update `state: green`.
@@ -103,6 +113,19 @@ Repeat steps 3.1–3.7 for each `state: todo` item:
 
 ### Phase 5: Refactor Test Code
 
+**Step 0: Remove low-value tests**
+
+Review each `it` block. Delete it if it matches one of these anti-patterns:
+
+- **Initial-value assertion** — only checks a default/initial value; exercises no behavior.
+- **Mock passthrough assertion** — only checks that `result === mock.returnValue`; validates mock setup, not behavior.
+- **Implementation mirror** — traces private internal structure or call order; will break on any refactor.
+
+For each deleted test, note in your working log:
+`Removed: <category> — <one-sentence reason>`
+
+Do NOT delete a test if it is the only test covering a particular boundary or branch.
+
 1. Simplify with `it.each`, remove duplication
 2. Splitting `it.each` into separate `it` blocks is encouraged if it improves readability
    — split within the same Then block only; never add new Given/When blocks
@@ -110,8 +133,25 @@ Repeat steps 3.1–3.7 for each `state: todo` item:
 
 ### Phase 6: Refactor Implementation Code
 
-1. Extract common logic, improve naming, align with project conventions
-2. Verify all tests still pass
+1. **Library substitution** — review each implementation file changed in Phase 3–4:
+   - Identify inline logic that duplicates an existing library function
+     (string manipulation, path handling, array operations, etc.)
+   - Replace with the library call. Priority order:
+     1. Project shared utilities (`shared/` / `utils/` / `libs/` equivalents)
+     2. Module-local helpers already defined in the same codebase
+     3. Standard library / language built-ins
+   - If no library covers the case, leave the inline logic as-is (do NOT extract a new helper)
+2. **Conditional consolidation** — replace chains of `if/else if` on the same variable or expression
+   with `switch/case` (or the language equivalent: `match`, `when`, etc.):
+   - Apply only when all branches test the same subject (e.g. `if x === 'a' … else if x === 'b'`)
+   - Do NOT apply when branches have unrelated conditions or mixed subjects
+3. **Functional loop conversion** — replace imperative loops with functional equivalents:
+   - `for`/`while` that builds a result → `map` / `filter` / `reduce` / `flatMap`
+   - Sequential async loops (`for…of` + `await`) → `Promise.all` + `map` when iterations are independent
+   - Leave loops as-is when side effects are intentional (I/O, mutation of external state)
+     or when the language has no idiomatic functional alternative
+4. Extract common logic, improve naming, align with project conventions
+5. Verify all tests still pass
 
 ### Phase 7: Quality Gates
 
@@ -172,8 +212,10 @@ NOTES: <required if not DONE>
 
 ### Phase 5–6
 
+- [ ] Low-value tests removed (initial-value, mock-passthrough, implementation-mirror anti-patterns)
 - [ ] Test code refactored (parameterization, duplication removed)
-- [ ] Implementation code refactored
+- [ ] Implementation code: inline logic replaced with existing library calls where applicable
+- [ ] Implementation code refactored (naming, common logic extracted)
 - [ ] All tests pass after refactor
 
 ### Phase 7
