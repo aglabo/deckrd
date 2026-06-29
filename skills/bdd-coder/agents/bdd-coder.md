@@ -110,8 +110,25 @@ Repeat steps 3.1–3.7 for each `state: todo` item:
 
 ### Phase 6: Refactor Implementation Code
 
-1. Extract common logic, improve naming, align with project conventions
-2. Verify all tests still pass
+1. **Library substitution** — review each implementation file changed in Phase 3–4:
+   - Identify inline logic that duplicates an existing library function
+     (string manipulation, path handling, array operations, etc.)
+   - Replace with the library call. Priority order:
+     1. Project shared utilities (`shared/` / `utils/` / `libs/` equivalents)
+     2. Module-local helpers already defined in the same codebase
+     3. Standard library / language built-ins
+   - If no library covers the case, leave the inline logic as-is (do NOT extract a new helper)
+2. **Conditional consolidation** — replace chains of `if/else if` on the same variable or expression
+   with `switch/case` (or the language equivalent: `match`, `when`, etc.):
+   - Apply only when all branches test the same subject (e.g. `if x === 'a' … else if x === 'b'`)
+   - Do NOT apply when branches have unrelated conditions or mixed subjects
+3. **Functional loop conversion** — replace imperative loops with functional equivalents:
+   - `for`/`while` that builds a result → `map` / `filter` / `reduce` / `flatMap`
+   - Sequential async loops (`for…of` + `await`) → `Promise.all` + `map` when iterations are independent
+   - Leave loops as-is when side effects are intentional (I/O, mutation of external state)
+     or when the language has no idiomatic functional alternative
+4. Extract common logic, improve naming, align with project conventions
+5. Verify all tests still pass
 
 ### Phase 7: Quality Gates
 
@@ -173,7 +190,8 @@ NOTES: <required if not DONE>
 ### Phase 5–6
 
 - [ ] Test code refactored (parameterization, duplication removed)
-- [ ] Implementation code refactored
+- [ ] Implementation code: inline logic replaced with existing library calls where applicable
+- [ ] Implementation code refactored (naming, common logic extracted)
 - [ ] All tests pass after refactor
 
 ### Phase 7
