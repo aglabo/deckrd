@@ -1,9 +1,4 @@
----
-title: "Deckrd Rule: Identifier System"
-description: Stable identifier formats for design artifacts
----
-
-## Deckrd Rule: Identifier System
+# Deckrd Rule: Identifier System
 
 Design artifacts must use stable identifiers.
 
@@ -23,12 +18,10 @@ Rules:
 
 Example:
 
-```yaml
 ---
 id: REQ-001
 title: CLI Input Support
 status: approved
 ---
-```
 
 Downstream documents must reference upstream IDs.

@@ -1,9 +1,4 @@
----
-title: "Deckrd Rule: Commit Linkage"
-description: Each implementation document corresponds to exactly one commit
----
-
-## Deckrd Rule: Commit Linkage
+# Deckrd Rule: Commit Linkage
 
 Each implementation document corresponds to exactly one commit.
 

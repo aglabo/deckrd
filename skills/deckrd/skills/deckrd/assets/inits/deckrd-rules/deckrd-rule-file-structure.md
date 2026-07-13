@@ -1,9 +1,4 @@
----
-title: "Deckrd Rule: File Structure"
-description: Required directory structure for deckrd repositories
----
-
-## Deckrd Rule: File Structure
+# Deckrd Rule: File Structure
 
 Repositories using Deckrd must include the following structure.
 

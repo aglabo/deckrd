@@ -1,9 +1,4 @@
----
-title: "Deckrd Rule: Traceability"
-description: Required traceability chain across the design pipeline
----
-
-## Deckrd Rule: Traceability
+# Deckrd Rule: Traceability
 
 Deckrd projects must maintain traceability across the design chain.
 
