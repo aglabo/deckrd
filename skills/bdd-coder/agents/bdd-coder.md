@@ -19,24 +19,24 @@ color: blue
 
 ## Core Principles
 
-1. **1 task = assertion-level breakdown** — Phase 2 splits one task into individual
+1. 1 task = assertion-level breakdown — Phase 2 splits one task into individual
    assertions; each goes through its own RED-GREEN-REFACTOR cycle.
 
-2. **`temp/bdd-coder/bdd-todo.md` is the single source of truth** — created in Phase 2,
+2. `temp/bdd-coder/bdd-todo.md` is the single source of truth — created in Phase 2,
    updated at every step. Resume capability depends entirely on this file.
 
-3. **Strict RED → GREEN → REFACTOR → next assertion** — no skipping, no parallelization.
+3. Strict RED → GREEN → REFACTOR → next assertion — no skipping, no parallelization.
 
-4. **Append-first** — 2nd+ assertions in the same Given/When context MUST append to the
+4. Append-first — 2nd+ assertions in the same Given/When context MUST append to the
    existing test block (via `it.each` or additional expects), not create a new one.
    Exception: new block only if Given/When differs, intent changes, or naming breaks.
 
-5. **Language-agnostic auto-detection** — Phase 1 detects framework, language, toolchain.
+5. Language-agnostic auto-detection — Phase 1 detects framework, language, toolchain.
    No manual configuration required.
 
-6. **No commit policy** — agent never runs `git add` or `git commit`.
+6. No commit policy — agent never runs `git add` or `git commit`.
 
-7. **4-level test hierarchy** — `describe(Given) > describe(When) > describe(Then: TaskID) > it(assertion)`
+7. 4-level test hierarchy — `describe(Given) > describe(When) > describe(Then: TaskID) > it(assertion)`
 
 ## Test Hierarchy Routing
 
@@ -82,29 +82,31 @@ When processing task `T<xx>-<yy>-<zz>`:
 
 Repeat steps 3.1–3.7 for each `state: todo` item:
 
-**3.1** Read next `state: todo` item from `bdd-todo.md`
+```text
+3.1 Read next `state: todo` item from `bdd-todo.md`
 
-**3.2** Write test code only (apply append-first rule). Do NOT touch implementation.
+3.2 Write test code only (apply append-first rule). Do NOT touch implementation:
 
-**Anti-patterns to avoid when writing tests:**
+    Anti-patterns to avoid when writing tests:
 
-- **Initial-value assertion** — testing only that a field equals its default. No behavior is exercised.
-- **Mock passthrough assertion** — asserting only that the result equals what the mock returned.
-  This validates mock setup, not behavior.
-- **Implementation mirror** — tracing private internal state or call order instead of observable output.
+    - Initial-value assertion — testing only that a field equals its default. No behavior is exercised.
+    - Mock passthrough assertion — asserting only that the result equals what the mock returned.
+      This validates mock setup, not behavior.
+    - Implementation mirror — tracing private internal state or call order instead of observable output.
 
-If a candidate assertion falls into one of these categories, do NOT write it.
-Write the assertion only if it exercises a real behavior path that can break.
+    If a candidate assertion falls into one of these categories, do NOT write it.
+    Write the assertion only if it exercises a real behavior path that can break.
 
-**3.3 RED** — Run tests. Verify new assertion FAILS. Update `state: red`.
+3.3 RED — Run tests. Verify new assertion FAILS. Update `state: red`.
 
-**3.4 GREEN** — Write minimum implementation to pass. Run tests. Verify PASS. Update `state: green`.
+3.4 GREEN — Write minimum implementation to pass. Run tests. Verify PASS. Update `state: green`.
 
-**3.5** Light refactor test code (names, comments, duplication). Verify still passes.
+3.5 Light refactor test code (names, comments, duplication). Verify still passes.
 
-**3.6** Light refactor implementation code. Verify tests still pass.
+3.6 Light refactor implementation code. Verify tests still pass.
 
-**3.7** Update `state: done`. If more `state: todo` remain → back to 3.1. Else → Phase 4.
+3.7 Update `state: done`. If more `state: todo` remain → back to 3.1. Else → Phase 4.
+```
 
 ### Phase 4: Verify All GREEN
 
@@ -113,16 +115,18 @@ Write the assertion only if it exercises a real behavior path that can break.
 
 ### Phase 5: Refactor Test Code
 
-**Step 0: Remove low-value tests**
+```text
+Step 0: Remove low-value tests
 
 Review each `it` block. Delete it if it matches one of these anti-patterns:
 
-- **Initial-value assertion** — only checks a default/initial value; exercises no behavior.
-- **Mock passthrough assertion** — only checks that `result === mock.returnValue`; validates mock setup, not behavior.
-- **Implementation mirror** — traces private internal structure or call order; will break on any refactor.
+- Initial-value assertion — only checks a default/initial value; exercises no behavior.
+- Mock passthrough assertion — only checks that `result === mock.returnValue`; validates mock setup, not behavior.
+- Implementation mirror — traces private internal structure or call order; will break on any refactor.
 
 For each deleted test, note in your working log:
 `Removed: <category> — <one-sentence reason>`
+```
 
 Do NOT delete a test if it is the only test covering a particular boundary or branch.
 
@@ -133,7 +137,7 @@ Do NOT delete a test if it is the only test covering a particular boundary or br
 
 ### Phase 6: Refactor Implementation Code
 
-1. **Library substitution** — review each implementation file changed in Phase 3–4:
+1. Library substitute — review each implementation file changed in Phase 3–4:
    - Identify inline logic that duplicates an existing library function
      (string manipulation, path handling, array operations, etc.)
    - Replace with the library call. Priority order:
@@ -141,11 +145,11 @@ Do NOT delete a test if it is the only test covering a particular boundary or br
      2. Module-local helpers already defined in the same codebase
      3. Standard library / language built-ins
    - If no library covers the case, leave the inline logic as-is (do NOT extract a new helper)
-2. **Conditional consolidation** — replace chains of `if/else if` on the same variable or expression
+2. Conditional consolidation — replace chains of `if/else if` on the same variable or expression
    with `switch/case` (or the language equivalent: `match`, `when`, etc.):
    - Apply only when all branches test the same subject (e.g. `if x === 'a' … else if x === 'b'`)
    - Do NOT apply when branches have unrelated conditions or mixed subjects
-3. **Functional loop conversion** — replace imperative loops with functional equivalents:
+3. Functional loop conversion — replace imperative loops with functional equivalents:
    - `for`/`while` that builds a result → `map` / `filter` / `reduce` / `flatMap`
    - Sequential async loops (`for…of` + `await`) → `Promise.all` + `map` when iterations are independent
    - Leave loops as-is when side effects are intentional (I/O, mutation of external state)

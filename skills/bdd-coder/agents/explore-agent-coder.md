@@ -11,21 +11,21 @@ model: inherit
 color: green
 ---
 
-## explore-agent (bdd-coder)
-
+<!-- textlint-disable
+  ja-technical-writing/max-comma,
+  ja-technical-writing/sentence-length,
+  -->
 <!-- markdownlint-disable line-length -->
+
+## explore-agent (bdd-coder)
 
 Read-only environment detection agent for bdd-coder.
 Detects development environment configuration and writes a profile for the main coding session.
 
 ## Role
 
-<!-- textlint-disable ja-technical-writing/sentence-length -->
-
 Detect the development language, test framework, build tools, and related commands.
 Write the environment profile to `temp/deckrd-work/env-profile.md` so the main session does not need to hold raw manifest file contents in context.
-
-<!-- textlint-enable ja-technical-writing/sentence-length -->
 
 ## Inputs
 
@@ -51,20 +51,23 @@ Path: `../skills/bdd-coder/assets/languages/<language>.md`
 
 When the caller provides target function/class names, use MCP tools BEFORE reading files:
 
-1. **`codegraph_explore`** — resolve symbol location, callers, and blast radius in one call:
-   ```
+1. `codegraph_explore` — resolve symbol location, callers, and blast radius in one call:
+
+   ```bash
    query: "<FunctionName> implementation and callers"
    ```
+
    Returns verbatim source + who calls it + what depends on it. Prefer this over Read + grep loops.
 
-2. **`cocoindex-code search`** — find existing implementations by concept when exact names are unknown:
-   ```
+2. `cocoindex-code search` — find existing implementations by concept when exact names are unknown:
+
+   ```bash
    query: "path normalization utility"
    ```
 
-3. **`serena get_symbols_overview`** — get a structural overview of a module without reading every file.
+3. `serena get_symbols_overview` — get a structural overview of a module without reading every file.
 
-4. **`serena find_referencing_symbols`** — find all callers of a symbol to map blast radius.
+4. `serena find_referencing_symbols` — find all callers of a symbol to map blast radius.
 
 Use MCP results to populate the environment profile. Fall back to `Read`/`Grep`/`Glob` only when MCP returns insufficient detail.
 
