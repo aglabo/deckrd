@@ -9,6 +9,7 @@
 #   - skills/*/.claude-plugin/plugin.json
 #   - skills/*/skills/*/SKILL.md (metadata.version)
 #   - .claude-plugin/marketplace*.json (metadata.version)
+#   - deckrd.json
 #   - package.json
 
 set -euo pipefail
@@ -93,7 +94,19 @@ for _f in .claude-plugin/marketplace*.json; do
   fi
 done
 
-# 4. package.json
+# 4. deckrd.json
+_f="deckrd.json"
+if [[ -f "$_f" ]]; then
+  _OLD=$(grep '"version"' "$_f" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || true)
+  if [[ "$_OLD" == "$_NEW_VERSION" ]]; then
+    _skipped "deckrd.json" "$_f"
+  else
+    _bump_json "$_f" "$_NEW_VERSION"
+    _updated "$_OLD → $_NEW_VERSION" "$_f"
+  fi
+fi
+
+# 5. package.json
 _f="package.json"
 if [[ -f "$_f" ]]; then
   _OLD=$(grep '"version"' "$_f" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || true)
