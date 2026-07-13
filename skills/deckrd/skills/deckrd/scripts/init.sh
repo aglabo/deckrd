@@ -228,15 +228,16 @@ init_directory() {
   for src_file in "$src_dir"/* "$src_dir"/.*; do
     [[ -e "$src_file" ]] || continue
     [[ "$(basename "$src_file")" == "." || "$(basename "$src_file")" == ".." ]] && continue
-    local filename dest_file
+    local filename dest_filename dest_file
     filename="$(basename "$src_file")"
-    dest_file="${dest_dir}/${filename}"
+    dest_filename="${filename%.org}"
+    dest_file="${dest_dir}/${dest_filename}"
     if [[ -e "$dest_file" ]]; then
-      echo "  [init/${label}] skip (exists): ${filename}" >&2
+      echo "  [init/${label}] skip (exists): ${dest_filename}" >&2
       skipped=$((skipped + 1))
     else
       cp "$src_file" "$dest_file"
-      echo "  [init/${label}] copied: ${filename}" >&2
+      echo "  [init/${label}] copied: ${dest_filename}" >&2
       copied=$((copied + 1))
     fi
   done
