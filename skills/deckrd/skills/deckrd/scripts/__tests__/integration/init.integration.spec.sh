@@ -146,6 +146,43 @@ Describe "init.sh: main() integration"
     End
   End
 
+  Describe "Given: deckrd-rules source has .gitignore.org"
+    setup_isolated_claude_rules() {
+      setup_deckrd_tmpdir
+      export CLAUDE_RULES_DIR="${DECKRD_TMPDIR}/.claude/rules"
+    }
+    After "teardown_deckrd_tmpdir"
+
+    Describe "When: .claude/rules is empty"
+      Before "setup_isolated_claude_rules"
+
+      It "[Normal] Should: copy .gitignore.org as .gitignore (renamed) and copy deckrd-rule-*.md as-is"
+        When run bash "$SCRIPT" myapp webapp
+        The status should equal 0
+        The stderr should include "[init/deckrd-rules] copied: .gitignore"
+        The path "${CLAUDE_RULES_DIR}/.gitignore" should be exist
+        The path "${CLAUDE_RULES_DIR}/.gitignore.org" should not be exist
+        The path "${CLAUDE_RULES_DIR}/deckrd-rule-bdd-cycle.md" should be exist
+      End
+    End
+
+    Describe "When: .claude/rules/.gitignore already exists"
+      setup_with_existing_claude_rules_gitignore() {
+        setup_isolated_claude_rules
+        mkdir -p "$CLAUDE_RULES_DIR"
+        touch "${CLAUDE_RULES_DIR}/.gitignore"
+      }
+      Before "setup_with_existing_claude_rules_gitignore"
+
+      It "[Edge] Should: skip with stripped filename 'skip (exists): .gitignore'"
+        When run bash "$SCRIPT" myapp webapp
+        The status should equal 0
+        The stderr should include "[init/deckrd-rules] skip (exists): .gitignore"
+        The stderr should not include "skip (exists): .gitignore.org"
+      End
+    End
+  End
+
   Describe "Given: session.json already exists"
     After "teardown_deckrd_tmpdir"
 
