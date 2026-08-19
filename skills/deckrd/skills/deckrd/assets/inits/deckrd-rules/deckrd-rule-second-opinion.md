@@ -1,8 +1,14 @@
-# Deckrd Rule: Second Opinion via Codex
+---
+title: "Deckrd Rule: Second Opinion via Codex"
+description: "When to request an independent codex review and how to handle its findings"
+version: 1.0.0
+---
 
 <!-- textlint-disable
   ja-technical-writing/sentence-length,
   -->
+
+## Deckrd Rule: Second Opinion via Codex
 
 Use `/deckrd:deckrd-review` to get an independent critical review from codex
 When Claude's own analysis may be insufficient or biased.

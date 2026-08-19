@@ -1,4 +1,10 @@
-# Deckrd Rule: File Structure
+---
+title: "Deckrd Rule: File Structure"
+description: "Per-module directory layout for Deckrd artifacts under the document root"
+version: 1.0.0
+---
+
+## Deckrd Rule: File Structure
 
 Deckrd artifacts live under the initialized document root, `docs/.deckrd/`.
 Documents are stored per module, one directory level per namespace and module.

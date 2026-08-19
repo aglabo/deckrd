@@ -17,6 +17,9 @@ allowed-tools:
 argument-hint: "<file_or_phase> [--focus completeness|risk|consistency|feasibility]"
 ---
 
+<!-- textlint-disable
+  ja-technical-writing/sentence-length -->
+
 # /deckrd:deckrd-review — Second Opinion via Codex
 
 ## Overview
@@ -84,7 +87,7 @@ Select prompt template based on `--focus`:
 
 **no focus (balanced):**
 
-```
+```text
 You are an independent critical reviewer. Analyze this document and provide a concise
 second opinion that challenges assumptions and surfaces blind spots.
 
@@ -102,7 +105,7 @@ Document type: <target>
 
 **completeness:**
 
-```
+```text
 You are a Coverage Auditor. Review this document for missing scenarios.
 
 Identify:
@@ -119,7 +122,7 @@ Document type: <target>
 
 **risk:**
 
-```
+```text
 You are a Devil's Advocate. Challenge every major assumption and identify failure modes.
 
 Identify:
@@ -135,7 +138,7 @@ Document type: <target>
 
 **consistency:**
 
-```
+```text
 You are a Consistency Checker. Review for internal contradictions and terminology drift.
 
 Identify:
@@ -151,7 +154,7 @@ Document type: <target>
 
 **feasibility:**
 
-```
+```text
 You are an Implementation Realist. Review for feasibility issues.
 
 Identify:
@@ -170,7 +173,7 @@ Document type: <target>
 Call `mcp__codex-mcp__codex` with the constructed prompt.
 Display codex's findings clearly, preceded by:
 
-```
+```text
 ── Codex Second Opinion ──────────────────────────
 Focus: <focus or "balanced">   Target: <resolved file>
 ──────────────────────────────────────────────────
@@ -180,7 +183,7 @@ Focus: <focus or "balanced">   Target: <resolved file>
 
 After displaying findings, show the choice prompt and wait for user input:
 
-```
+```text
 What would you like to do?
   a  Accept   — note findings to act on
   r  Reject   — dismiss (reason required)

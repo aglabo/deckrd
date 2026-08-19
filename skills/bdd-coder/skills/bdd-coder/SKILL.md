@@ -101,9 +101,9 @@ If bdd-coder reports `BLOCKED`:
 1. Collect the blocking issues from the bdd-coder report.
 2. Report to the user with the exact CRITICAL findings and the affected task ID.
 3. Wait for one of the following user instructions:
-   - **Fix and retry**: user provides guidance → re-run bdd-coder Phase 3–7 for the same task.
-   - **Skip task**: user decides to defer → mark task as `SKIPPED` and continue with the next task.
-   - **Abort session**: user stops work → end the session and summarize open blockers.
+   - Fix and retry: user provides guidance → re-run bdd-coder Phase 3–7 for the same task.
+   - Skip task: user decides to defer → mark task as `SKIPPED` and continue with the next task.
+   - Abort session: user stops work → end the session and summarize open blockers.
 
 Do NOT proceed to the next task while any task remains `BLOCKED`.
 

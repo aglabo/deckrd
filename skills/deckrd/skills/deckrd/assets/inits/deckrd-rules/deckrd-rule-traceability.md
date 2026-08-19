@@ -1,4 +1,10 @@
-# Deckrd Rule: Traceability
+---
+title: "Deckrd Rule: Traceability"
+description: "Required REQ to SPEC to TASK to IMPL to TEST to COMMIT dependency flow"
+version: 1.0.0
+---
+
+## Deckrd Rule: Traceability
 
 Deckrd projects must maintain traceability across the design chain.
 

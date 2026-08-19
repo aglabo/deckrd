@@ -1,4 +1,10 @@
-# Deckrd Rule: Test and Lint Runners
+---
+title: "Deckrd Rule: Test and Lint Runners"
+description: "Always run tests and linters through pnpm scripts, never the underlying tools"
+version: 1.0.0
+---
+
+## Deckrd Rule: Test and Lint Runners
 
 Always use `pnpm run` scripts. Never invoke runners or tools directly.
 

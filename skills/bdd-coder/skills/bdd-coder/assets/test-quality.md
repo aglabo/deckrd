@@ -1,5 +1,6 @@
 # Test Quality Principles
 
+<!-- cspell:words gocyclo -->
 <!-- textlint-disable ja-technical-writing/sentence-length -->
 
 Cross-cutting test quality rules for all languages and frameworks.
@@ -95,14 +96,14 @@ Coverage alone does not measure test quality. The CRAP score combines cyclomatic
 
 ### Formula
 
-```
+```bash
 CRAP = CC² × (1 - coverage/100)³ + CC
 ```
 
 Where:
 
-- **CC** — Cyclomatic Complexity of the function (number of independent paths through the code)
-- **coverage** — branch/line coverage percentage for that function (0–100)
+- CC — Cyclomatic Complexity of the function (number of independent paths through the code)
+- coverage — branch/line coverage percentage for that function (0–100)
 
 ### Interpretation
 
@@ -142,7 +143,7 @@ CC = 1 + (number of `if` / `case` / `while` / `for` / `&&` / `||` branches in th
 
 If per-function coverage cannot be obtained, substitute `coverage = 0`:
 
-```
+```bash
 CRAP = CC² × (1 - 0)³ + CC = CC² + CC = CC × (CC + 1)
 ```
 
@@ -162,7 +163,7 @@ Mark the report with `cov=N/A` and note that coverage tooling was unavailable.
 
 Include per-function CRAP scores in the quality gate report:
 
-```
+```bash
 CRAP SCORES:
   functionA  CC=3  cov=95%  CRAP=3.0   [PASS]
   functionB  CC=8  cov=60%  CRAP=34.2  [CRITICAL — must fix]

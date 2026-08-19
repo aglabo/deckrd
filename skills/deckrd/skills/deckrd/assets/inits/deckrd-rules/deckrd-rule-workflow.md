@@ -1,9 +1,15 @@
-# Deckrd Rule: Workflow
+---
+title: "Deckrd Rule: Workflow"
+description: "Command order gate, BDD-first principle, and branch and commit conventions"
+version: 1.0.0
+---
 
 <!-- textlint-disable
   ja-technical-writing/sentence-length,
   ja-technical-writing/max-comma,
   -->
+
+## Deckrd Rule: Workflow
 
 ## Command Order (Gate Rule)
 

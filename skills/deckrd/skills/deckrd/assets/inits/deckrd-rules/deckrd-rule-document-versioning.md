@@ -1,9 +1,15 @@
-# Deckrd Rule: Document Versioning
+---
+title: "Deckrd Rule: Document Versioning"
+description: "SemVer versioning rules and Change History synchronization for Deckrd documents"
+version: 1.0.0
+---
 
 <!-- cspell:words desynchronizes -->
 <!-- textlint-disable
     ja-technical-writing/sentence-length
     -->
+
+## Deckrd Rule: Document Versioning
 
 Deckrd documents that carry a Change History must be versioned with SemVer.
 

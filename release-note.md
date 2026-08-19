@@ -12,7 +12,7 @@ BDD 実装コマンドを `deckrd-coder` から `bdd-coder` にリネームし�
 
 ### `deckrd-coder` が `bdd-coder` にリネームされました
 
-BDD 実装を行うコマンドが `/deckrd-coder` から `/bdd-coder:bdd-coder` に変わりました。
+BDD で実装するコマンドが `/deckrd-coder` から `/bdd-coder:bdd-coder` に変わりました。
 機能・動作の変更はありません。コマンド名がより直感的になりました。
 
 ```bash
