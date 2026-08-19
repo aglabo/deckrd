@@ -421,6 +421,19 @@ SPLIT PLAN:
 - specifications-admin.md     covers FR-09, FR-10
 ```
 
+#### Step 1-4: Capture Version Baselines
+
+`generate-doc.sh` overwrites each output file. The generated document therefore
+always carries the template value `version: 1.0.0` and an empty Change History.
+
+For **each file** in SPLIT PLAN that already exists on disk — including
+`specifications-index.md`, which is generated from the same versioned template:
+
+- Copy its frontmatter `version` and its entire `## Change History` table
+- Store them per file as **BASELINE VERSION** and **BASELINE HISTORY**
+
+Files absent from disk are first generations and have no baseline.
+
 ---
 
 ### Phase 2: Document Generation
@@ -532,10 +545,21 @@ For each accepted removal or rewrite:
 
 ### Phase 3-5: Version Bump
 
-Regeneration during the Phase 3 review loop stays at `1.0.0`.
-Bumps begin only after the user approves.
+Regeneration during the Phase 3 review loop does not bump.
+Restore and bump after the user approves.
 
-On approval, if this run edited an existing `specifications.md`:
+On approval, run the steps below for **every file** written in Phase 2 — each
+split file and `specifications-index.md`, not only an unsuffixed
+`specifications.md`. Each file is versioned independently.
+
+**No baseline** (first generation) — keep `1.0.0` and the initial row.
+
+**Baseline captured in Step 1-4**:
+
+1. Write that file's **BASELINE HISTORY** back over its generated Change History table
+2. Classify this run's change to that file with the table below
+3. Bump from that file's **BASELINE VERSION** — never from the reset `1.0.0`
+4. Write the result to frontmatter `version` and add exactly one Change History row
 
 | Change                           | Bump  |
 | -------------------------------- | ----- |
@@ -543,11 +567,11 @@ On approval, if this run edited an existing `specifications.md`:
 | Spec rule / DD / edge case added | MINOR |
 | Clarification, rationale, typo   | PATCH |
 
-Update frontmatter `version` and add exactly one Change History row.
-First generation stays `1.0.0` with the initial row only.
-
 Does `based-on` cite an older version than **REQ VERSION**?
 Then update it and treat the refresh as at least PATCH.
+
+A split file left unbumped gives downstream documents no way to identify its
+revision. Skipping any file is a defect.
 
 See deckrd-rule-document-versioning.md.
 

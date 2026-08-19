@@ -135,7 +135,11 @@ created: <ISO-8601 date>
 ```
 
 Also seed a `## Change History` section with the `1.0.0` initial row
-(see `decision-record.template.md`).
+(see `decision-record.template.md`). Name the DR this run appends in that row's
+description — for example `Initial release with DR-001: <title>` — so the first
+decision is recorded.
+
+A file created in this run does NOT get a version bump. See Version Bump below.
 
 **If file exists**, parse and validate front matter:
 
@@ -166,7 +170,7 @@ deckrd/assets/
 
 - **Append only** for DR sections - no edits, no rewrites
 - Exception: frontmatter `version` and the Change History table MUST be updated
-  (adding a DR is MINOR — see deckrd-rule-document-versioning.md)
+  (adding a DR to an existing file is MINOR — see Version Bump below)
 - Append after the **LAST DR section**, above `## Change History`
 - Use the established DR template structure
 - Do NOT include implementation code
@@ -211,7 +215,13 @@ deckrd/assets/
 
 ## Version Bump
 
-Adding a DR is MINOR. After appending the DR section:
+Bump only when `decision-records.md` existed before this run.
+
+**File created in this run** — no bump. It stays at `1.0.0` with the initial row
+seeded at creation. Bumping here would start the document at `1.1.0` and
+contradict the rule that the initial release is `1.0.0`.
+
+**File already existed** — adding a DR is MINOR. After appending the DR section:
 
 1. Bump frontmatter `version` MINOR (e.g. 1.2.0 → 1.3.0)
 2. Add exactly one Change History row: `| <date> | <new version> | Add DR-<ID>: <title> |`

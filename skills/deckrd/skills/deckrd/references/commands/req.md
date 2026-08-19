@@ -45,7 +45,12 @@ Before collecting user input, delegate codebase investigation to explore-agent:
 
 1. Read `docs/.deckrd/.session.json` to confirm the active module
 2. Check for existing `requirements.md` under the active module path
-   - If found: treat this session as a **revision** of existing requirements
+   - If found: treat this session as a **revision** of existing requirements.
+     Before Phase 3 overwrites the file, copy its frontmatter `version` and its
+     entire `## Change History` table to
+     `temp/deckrd-work/requirements-baseline.md`.
+     Store them as **BASELINE VERSION** and **BASELINE HISTORY**
+   - If not found: this is a first generation — leave BASELINE VERSION unset
 3. Spawn **explore-agent** with:
    - `scope`: `codebase-survey`
    - `directory`: project root
@@ -214,10 +219,21 @@ If the user requests revisions (or accepts any suggestion):
 
 ### Phase 4-5: Version Bump
 
-Regeneration during the Phase 4 review loop stays at `1.0.0` — bumps begin only
-after the user approves.
+`generate-doc.sh` overwrites the output file. Every regeneration in the Phase 4
+review loop therefore resets `version` to the template value `1.0.0` and drops the
+Change History. Do not bump during the loop. Restore and bump after approval.
 
-On approval, if this run edited an existing `requirements.md`:
+On approval:
+
+**First generation** (BASELINE VERSION unset) — keep `1.0.0` and the initial row.
+
+**Revision** (BASELINE VERSION set) — the file on disk now holds the reset value,
+not the released one:
+
+1. Write **BASELINE HISTORY** back over the generated Change History table
+2. Classify this run's change with the table below
+3. Bump from **BASELINE VERSION** — never from the reset `1.0.0`
+4. Write the result to frontmatter `version` and add exactly one Change History row
 
 | Change                               | Bump  |
 | ------------------------------------ | ----- |
@@ -225,8 +241,8 @@ On approval, if this run edited an existing `requirements.md`:
 | Requirement / AC added               | MINOR |
 | Clarification, Open Question, typo   | PATCH |
 
-Update frontmatter `version` and add exactly one Change History row.
-First generation stays `1.0.0` with the initial row only.
+Bumping from the reset `1.0.0` corrupts the Change History and invalidates every
+downstream `based-on: requirements.md v<x.y.z>` reference.
 
 See deckrd-rule-document-versioning.md.
 

@@ -284,6 +284,15 @@ Determine whether the implementation should be split into multiple files:
 Use numbered files only when the user or Phase E explicitly identifies
 multiple independent implementation phases that warrant separate documents.
 
+Record the decision as **OUTPUT FILES**.
+
+`generate-doc.sh` overwrites each output file. The generated document therefore
+always carries the template value `version: 1.0.0` and an empty Change History.
+For each file in OUTPUT FILES that already exists on disk, copy its frontmatter
+`version` and its entire `## Change History` table before generating. Store them
+per file as **BASELINE VERSION** and **BASELINE HISTORY**.
+Files absent from disk are first generations and have no baseline.
+
 #### Step G-2: Generate Document
 
 Build the combined prompt context from all prior phases:
@@ -319,19 +328,27 @@ grounded in the actual codebase and confirmed decisions.
 
 ### Phase H: Version Bump
 
-Regeneration during the Phase D, E, and F feedback loops stays at `1.0.0` —
-bumps begin only after the user approves.
+Regeneration during the Phase D, E, and F feedback loops does not bump.
+Restore and bump after the user approves.
 
-On approval, if this run edited an existing `implementation.md`:
+On approval, run the steps below for **every file** in OUTPUT FILES — each of
+`implementation-1.md`, `implementation-2.md`, and so on in split mode, not only an
+unsuffixed `implementation.md`. Each file is versioned independently.
+
+**No baseline** (first generation) — keep `1.0.0` and the initial row.
+
+**Baseline captured in Step G-1**:
+
+1. Write that file's **BASELINE HISTORY** back over its generated Change History table
+2. Classify this run's change to that file with the table below
+3. Bump from that file's **BASELINE VERSION** — never from the reset `1.0.0`
+4. Write the result to frontmatter `version` and add exactly one Change History row
 
 | Change                                    | Bump  |
 | ----------------------------------------- | ----- |
 | Decided approach discarded                | MAJOR |
 | Phase / commit / decision criterion added | MINOR |
 | Clarification, rationale, typo            | PATCH |
-
-Update frontmatter `version` and add exactly one Change History row.
-First generation stays `1.0.0` with the initial row only.
 
 If `based-on` cites an older `specifications.md` version than **SPEC VERSION**,
 update it and treat the refresh as at least PATCH.
