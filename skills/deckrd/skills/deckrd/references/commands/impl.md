@@ -57,8 +57,9 @@ and extract:
 - All Functional Requirements and their behavioral constraints
 - Non-Functional Requirements and design constraints
 - Open Questions inherited from the spec phase
+- Frontmatter `version` (three-part; required)
 
-Store extracted summary as **SPEC SUMMARY**.
+Store extracted summary as **SPEC SUMMARY** and the version as **SPEC VERSION**.
 
 #### Step A-2: Investigate Codebase (explore-agent 委譲)
 
@@ -115,12 +116,12 @@ If nothing is found, record `PRIOR ART: none` and continue.
 Using SPEC SUMMARY + CODEBASE CONTEXT + PRIOR ART, draft an implementation
 direction:
 
-1. **Implementation unit decomposition** — break the feature into distinct
+1. Implementation unit decomposition — break the feature into distinct
    implementation units
-2. **Architecture fit** — how the units map onto the existing codebase
-3. **Technical approach** — what patterns and techniques to apply
-4. **Dependency order** — which units must be built before others
-5. **Risk / ambiguity list** — unclear points that need user input
+2. Architecture fit — how the units map onto the existing codebase
+3. Technical approach — what patterns and techniques to apply
+4. Dependency order — which units must be built before others
+5. Risk / ambiguity list — unclear points that need user input
 
 Store as **IMPLEMENTATION DRAFT**:
 
@@ -176,7 +177,7 @@ If the user provides feedback:
 
 1. User declares "十分", "以上です", "OK", "承認", "done", or equivalent.
 2. Stagnation detection: If 2 consecutive rounds produce no changes to IMPLEMENTATION DRAFT,
-   YOU MUST ask: "No new changes detected for 2 rounds. Do you approve the current draft? (Y / feedback)"
+   YOU MUST ask: "No new changes detected for 2 rounds. Do you approve the current draft? (Y/feedback)"
    This forced confirmation prevents infinite loops.
 
 Unlike spec Phase D (max 3 rounds), this loop continues **without limit**
@@ -289,6 +290,7 @@ Build the combined prompt context from all prior phases:
 
 ```text
 SPEC SUMMARY:              <Phase A>
+SPEC VERSION:              <Phase A>
 CODEBASE CONTEXT:          <Phase A>
 PRIOR ART:                 <Phase B>
 CONFIRMED IMPLEMENTATION:  <Phase D>
@@ -296,6 +298,9 @@ PHASE PLAN:                <Phase E>
 COMMIT PLAN:               <Phase F>
 SPECIFICATIONS:            @specifications/specifications.md
 ```
+
+In the generated file, `based-on` MUST read `specifications.md v<SPEC VERSION>` —
+replace the `{{SPEC_VERSION}}` placeholder. Never leave it literal.
 
 Execute:
 
@@ -309,6 +314,29 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh @impl \
 
 Pass all accumulated context so the AI can produce an implementation plan
 grounded in the actual codebase and confirmed decisions.
+
+---
+
+### Phase H: Version Bump
+
+Regeneration during the Phase D, E, and F feedback loops stays at `1.0.0` —
+bumps begin only after the user approves.
+
+On approval, if this run edited an existing `implementation.md`:
+
+| Change                                    | Bump  |
+| ----------------------------------------- | ----- |
+| Decided approach discarded                | MAJOR |
+| Phase / commit / decision criterion added | MINOR |
+| Clarification, rationale, typo            | PATCH |
+
+Update frontmatter `version` and add exactly one Change History row.
+First generation stays `1.0.0` with the initial row only.
+
+If `based-on` cites an older `specifications.md` version than **SPEC VERSION**,
+update it and treat the refresh as at least PATCH.
+
+See deckrd-rule-document-versioning.md.
 
 ---
 

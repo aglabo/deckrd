@@ -129,9 +129,13 @@ Exit with error. Do NOT create or modify files.
 title: Decision Records
 module: <moduleId>
 status: Active
+version: 1.0.0
 created: <ISO-8601 date>
 ---
 ```
+
+Also seed a `## Change History` section with the `1.0.0` initial row
+(see `decision-record.template.md`).
 
 **If file exists**, parse and validate front matter:
 
@@ -160,8 +164,10 @@ deckrd/assets/
 
 ## Append Rules
 
-- **Append only** - no edits, no rewrites
-- Append to the **END** of the file
+- **Append only** for DR sections - no edits, no rewrites
+- Exception: frontmatter `version` and the Change History table MUST be updated
+  (adding a DR is MINOR — see deckrd-rule-document-versioning.md)
+- Append after the **LAST DR section**, above `## Change History`
 - Use the established DR template structure
 - Do NOT include implementation code
 - Do NOT restate requirements
@@ -203,6 +209,15 @@ deckrd/assets/
 ---
 ```
 
+## Version Bump
+
+Adding a DR is MINOR. After appending the DR section:
+
+1. Bump frontmatter `version` MINOR (e.g. 1.2.0 → 1.3.0)
+2. Add exactly one Change History row: `| <date> | <new version> | Add DR-<ID>: <title> |`
+
+See deckrd-rule-document-versioning.md.
+
 ## Error Handling
 
 | Condition                                   | Action                          |
@@ -224,7 +239,7 @@ deckrd/assets/
 
 - Do NOT auto-summarize chat history
 - Do NOT generate DRs implicitly
-- Do NOT support DR editing or deletion
+- Do NOT support DR editing or deletion (frontmatter `version` and Change History excepted)
 - Do NOT skip confirmation for tasks step
 
 ## Workflow Integration

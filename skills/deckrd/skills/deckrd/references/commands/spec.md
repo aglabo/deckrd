@@ -3,12 +3,13 @@ title: spec Command
 description: Derive technically verifiable behavioral specifications from requirements
 ---
 
-## spec Command
-
 <!-- textlint-disable
     ja-technical-writing/no-exclamation-question-mark,
+    ja-technical-writing/sentence-length,
     ja-technical-writing/max-comma -->
 <!-- markdownlint-disable line-length -->
+
+## spec Command
 
 Derive technically verifiable behavioral goals and constraints from requirements.
 
@@ -52,8 +53,9 @@ Read `requirements/requirements.md` in full and extract:
 - Non-Functional Requirements and constraints
 - Stakeholders and usage scenarios
 - Open Questions inherited from the req phase
+- Frontmatter `version` (three-part; required)
 
-Store extracted summary as **REQ SUMMARY**.
+Store extracted summary as **REQ SUMMARY** and the version as **REQ VERSION**.
 
 #### Step A-2: Investigate Codebase (explore-agent 委譲)
 
@@ -109,12 +111,12 @@ If nothing is found, record `PRIOR ART: none` and continue.
 
 Using REQ SUMMARY + CODEBASE CONTEXT + PRIOR ART, draft a design direction:
 
-1. **Feature decomposition** — break the requirements into distinct behavioral units
-2. **Architecture fit** — how the feature maps onto the existing structure
-3. **Interface design** — what inputs, outputs, and side effects each unit has
-4. **Constraint mapping** — which NFRs / DRs constrain the design
-5. **Risk / ambiguity list** — unclear points that need user input
-6. **ASCII diagram** — draw an initial component diagram showing unit relationships:
+1. Feature decomposition — break the requirements into distinct behavioral units
+2. Architecture fit — how the feature maps onto the existing structure
+3. Interface design — what inputs, outputs, and side effects each unit has
+4. Constraint mapping — which NFRs / DRs constrain the design
+5. Risk / ambiguity list — unclear points that need user input
+6. ASCII diagram — draw an initial component diagram showing unit relationships:
 
    ```text
    +----------+     +----------+
@@ -427,6 +429,7 @@ Build the combined prompt context from all prior phases:
 
 ```text
 REQ SUMMARY:          <Phase A>
+REQ VERSION:          <Phase A>
 CODEBASE CONTEXT:     <Phase A>
 PRIOR ART:            <Phase B>
 CONFIRMED DESIGN:     <Phase D>
@@ -436,6 +439,9 @@ FUNCTION DECISIONS:   <Phase 0-F>
 SPLIT PLAN:           <Phase 1>
 REQUIREMENTS:         @requirements/requirements.md
 ```
+
+In the generated file, `based-on` MUST read `requirements.md v<REQ VERSION>` —
+replace the `{{REQ_VERSION}}` placeholder. Never leave it literal.
 
 For **each file** in SPLIT PLAN, execute:
 
@@ -524,6 +530,27 @@ For each accepted removal or rewrite:
 
 ---
 
+### Phase 3-5: Version Bump
+
+Regeneration during the Phase 3 review loop stays at `1.0.0`.
+Bumps begin only after the user approves.
+
+On approval, if this run edited an existing `specifications.md`:
+
+| Change                           | Bump  |
+| -------------------------------- | ----- |
+| Behavior removed or redefined    | MAJOR |
+| Spec rule / DD / edge case added | MINOR |
+| Clarification, rationale, typo   | PATCH |
+
+Update frontmatter `version` and add exactly one Change History row.
+First generation stays `1.0.0` with the initial row only.
+
+Does `based-on` cite an older version than **REQ VERSION**?
+Then update it and treat the refresh as at least PATCH.
+
+See deckrd-rule-document-versioning.md.
+
 ### Phase 4: Second Opinion via Codex
 
 After Phase 3 cleanup is approved, invoke `/deckrd:deckrd-review spec` before transitioning to `impl`.
@@ -546,8 +573,8 @@ Focus: balanced review — correctness, completeness, consistency across behavio
 
 **Handling findings:**
 
-- **Accept**: Note which findings to act on before running `impl`
-- **Reject**: Always provide a rationale — silent rejection is not allowed
+- Accept: Note which findings to act on before running `impl`
+- Reject: Always provide a rationale — silent rejection is not allowed
 - If findings require revisions, return to Phase 2 and regenerate; then re-run Phases 3–4
 
 See [`deckrd-rule-second-opinion.md`](../../../../../../../../.claude/rules/deckrd-rule-second-opinion.md) for the full rule.

@@ -107,14 +107,14 @@ Conduct an interactive Q&A loop to fill information gaps.
 
 **Question priority order** (ask in this order, skip if already known):
 
-1. **EARS/GIVEN** — For each FR candidate, ask: "Under what condition does this apply?"
+1. EARS/GIVEN — For each FR candidate, ask: "Under what condition does this apply?"
    Example: "This behavior — is it available to all users, or only authenticated ones?"
-2. **EARS/type** — For each FR candidate without a type, ask which fits:
+2. EARS/type — For each FR candidate without a type, ask which fits:
    Example: "Does this trigger on a specific user action (WHEN), or hold continuously
    during a system state (WHILE), or is it something the system must never do (NOT DO)?"
-3. **Scope** — In-scope vs out-of-scope boundary
-4. **Constraints** — Technical or business constraints
-5. **Stakeholders** — Who will use the system
+3. Scope — In-scope vs out-of-scope boundary
+4. Constraints — Technical or business constraints
+5. Stakeholders — Who will use the system
 
 **Termination conditions** (stop as soon as either is met):
 
@@ -212,6 +212,24 @@ If the user requests revisions (or accepts any suggestion):
 1. User approves with "Y", "承認", "OK", "done", or equivalent
 2. 3 review rounds completed — present the document as-is and ask for explicit approval
 
+### Phase 4-5: Version Bump
+
+Regeneration during the Phase 4 review loop stays at `1.0.0` — bumps begin only
+after the user approves.
+
+On approval, if this run edited an existing `requirements.md`:
+
+| Change                               | Bump  |
+| ------------------------------------ | ----- |
+| Requirement removed, scope redefined | MAJOR |
+| Requirement / AC added               | MINOR |
+| Clarification, Open Question, typo   | PATCH |
+
+Update frontmatter `version` and add exactly one Change History row.
+First generation stays `1.0.0` with the initial row only.
+
+See deckrd-rule-document-versioning.md.
+
 ### Phase 5: Second Opinion via Codex
 
 After Phase 4 approval, invoke `/deckrd:deckrd-review req` for an independent critical review.
@@ -234,8 +252,8 @@ Focus: `risk` — challenge assumptions, surface blind spots, identify missing c
 
 **Handling findings:**
 
-- **Accept**: Note which findings to act on before running `spec`
-- **Reject**: Always provide a rationale — silent rejection is not allowed
+- Accept: Note which findings to act on before running `spec`
+- Reject: Always provide a rationale — silent rejection is not allowed
 - If findings require revisions, return to Phase 3 and regenerate; then re-run Phase 4
 
 See [`deckrd-rule-second-opinion.md`](../../../../../../../../.claude/rules/deckrd-rule-second-opinion.md) for the full rule.
