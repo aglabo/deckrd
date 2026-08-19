@@ -33,6 +33,10 @@ Downstream documents must reference upstream IDs.
 "IDs must be unique" is unenforceable by reading alone. Derive the check from the
 documents themselves. Do not maintain a hand-written ledger of allocated IDs.
 
+Deckrd artifacts live under the initialized document root,
+`docs/.deckrd/<namespace>/<module>/`. The commands below search that root.
+Substitute the configured root if the project overrides it.
+
 ### Namespacing
 
 Do not reuse a base ID when the same subject appears in more than one module.
@@ -50,7 +54,7 @@ frontmatter `id:` declaration counts as an allocation.
 Before introducing a new namespace segment, confirm it is unused.
 
 ```bash
-grep -rl "REQ-<new-namespace>-" --include=*.md deckrd/
+grep -rl "REQ-<new-namespace>-" --include=*.md docs/.deckrd/
 ```
 
 ### Duplicate Detection
@@ -58,7 +62,7 @@ grep -rl "REQ-<new-namespace>-" --include=*.md deckrd/
 Extract every declared ID and report any allocated more than once. Output must be empty.
 
 ```bash
-grep -rhoE "^id:[[:space:]]*\S+" --include=*.md deckrd/ \
+grep -rhoE "^id:[[:space:]]*\S+" --include=*.md docs/.deckrd/ \
   | tr -c 'A-Za-z0-9-' '\n' \
   | grep -xE "(REQ|SPEC|TASK|IMPL|TEST)(-[A-Z0-9]+)*-[0-9]{3}" \
   | sort | uniq -d
@@ -67,7 +71,7 @@ grep -rhoE "^id:[[:space:]]*\S+" --include=*.md deckrd/ \
 If an ID is reported, locate its declarations.
 
 ```bash
-grep -rn "<reported ID>" --include=*.md deckrd/
+grep -rn "<reported ID>" --include=*.md docs/.deckrd/
 ```
 
 Three details are load-bearing. Dropping any one causes missed duplicates or false positives.
