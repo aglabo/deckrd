@@ -2,6 +2,8 @@
 title: "Design Specification: {{FEATURE_NAME}}"
 based-on: requirements.md v{{REQ_VERSION}}
 status: Draft
+version: 1.0.0
+created: "{{ DATE }}"
 ---
 
 ## 1. Overview
@@ -112,10 +114,10 @@ Implementation details are explicitly out of scope.
 
 **Consider promoting a DD when:**
 
-1. **Cross-specification Impact** — The decision affects multiple specifications or modules
-2. **Architectural Significance** — The decision constrains future design choices
-3. **Non-trivial Alternatives** — Multiple viable options existed
-4. **Stakeholder Visibility Required** — The decision should be reviewable by external parties
+1. Cross-specification Impact — The decision affects multiple specifications or modules
+2. Architectural Significance — The decision constrains future design choices
+3. Non-trivial Alternatives — Multiple viable options existed
+4. Stakeholder Visibility Required — The decision should be reviewable by external parties
 
 **Keep as DD when:**
 
@@ -195,6 +197,11 @@ No reordering is permitted.
 ---
 
 ## 8. Change History
+
+<!-- SemVer: MAJOR = behavior removed / redefined, MINOR = spec item added,
+     PATCH = clarification only. Keep frontmatter `version` equal to the newest row.
+     `based-on` must cite a three-part version that exists in requirements.md.
+     See deckrd-rule-document-versioning.md -->
 
 | Date     | Version | Description           |
 | -------- | ------- | --------------------- |

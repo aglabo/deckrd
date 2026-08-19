@@ -1,7 +1,8 @@
 ---
 title: "Decision Records"
 status: Active
-created: { { DATE } }
+version: 1.0.0
+created: "{{ DATE }}"
 ---
 
 > This document records architectural and design decisions.
@@ -85,4 +86,17 @@ created: { { DATE } }
 <!--
 Repeat DR sections as needed.
 IDs MUST be sequential: DR-01, DR-02, ...
+
+Versioning (SemVer, see deckrd-rule-document-versioning.md):
+  MINOR — a new DR is added
+  PATCH — an existing DR's wording or rationale is clarified
+  MAJOR — an accepted DR is superseded or reversed
+
+Keep frontmatter `version` equal to the newest Change History row below.
 -->
+
+## Change History
+
+| Date     | Version | Description     |
+| -------- | ------- | --------------- |
+| {{DATE}} | 1.0.0   | Initial release |

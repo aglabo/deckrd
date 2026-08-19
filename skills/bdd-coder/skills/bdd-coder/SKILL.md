@@ -116,7 +116,7 @@ and Phase 4 quality gate passes, write the implementation status back to the tas
 
 For each Test Target (T-01, T-02, ...) that was implemented in this session:
 
-1. Read the checklist file at `temp/tasks/<slug>-checklist.md`
+1. Read the checklist file at `temp/tasks/<slug>-<adjective>-checklist.md`
 2. Locate all checklist items under the Test Target (T-XX):
    - In tasks.md: all Case checkboxes `- [ ] **T-XX-YY-ZZ**`
    - In checklist file: all phase items `[T-XX-YY-ZZ-R]`, `[T-XX-YY-ZZ-G]`, `[T-XX-YY-ZZ-F]`,
@@ -150,7 +150,7 @@ Do NOT modify any other part of `tasks.md`.
 
 Regardless of input type, also update the checklist file header:
 
-1. Open `temp/tasks/<slug>-checklist.md`
+1. Open `temp/tasks/<slug>-<adjective>-checklist.md`
 2. In the frontmatter, set `status` of the corresponding Test Target:
    - If the file has a per-target status field, update it
    - If not, add a comment line below the target heading:
@@ -189,7 +189,7 @@ STATUS WRITE-BACK:
 
 **Existing checklist (skip checklist-builder):**
 
-> `/bdd-coder:bdd-coder T01-02 --checklist temp/tasks/my-checklist.md`
+> `/bdd-coder:bdd-coder T01-02 --checklist temp/tasks/my-happy-checklist.md`
 > → 既存チェックリストをそのまま使用 → bdd-coder で実装
 
 ## Troubleshooting

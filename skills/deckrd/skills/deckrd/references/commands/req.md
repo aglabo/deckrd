@@ -45,7 +45,12 @@ Before collecting user input, delegate codebase investigation to explore-agent:
 
 1. Read `docs/.deckrd/.session.json` to confirm the active module
 2. Check for existing `requirements.md` under the active module path
-   - If found: treat this session as a **revision** of existing requirements
+   - If found: treat this session as a **revision** of existing requirements.
+     Before Phase 3 overwrites the file, copy its frontmatter `version` and its
+     entire `## Change History` table to
+     `temp/deckrd-work/requirements-baseline.md`.
+     Store them as **BASELINE VERSION** and **BASELINE HISTORY**
+   - If not found: this is a first generation — leave BASELINE VERSION unset
 3. Spawn **explore-agent** with:
    - `scope`: `codebase-survey`
    - `directory`: project root
@@ -107,14 +112,14 @@ Conduct an interactive Q&A loop to fill information gaps.
 
 **Question priority order** (ask in this order, skip if already known):
 
-1. **EARS/GIVEN** — For each FR candidate, ask: "Under what condition does this apply?"
+1. EARS/GIVEN — For each FR candidate, ask: "Under what condition does this apply?"
    Example: "This behavior — is it available to all users, or only authenticated ones?"
-2. **EARS/type** — For each FR candidate without a type, ask which fits:
+2. EARS/type — For each FR candidate without a type, ask which fits:
    Example: "Does this trigger on a specific user action (WHEN), or hold continuously
    during a system state (WHILE), or is it something the system must never do (NOT DO)?"
-3. **Scope** — In-scope vs out-of-scope boundary
-4. **Constraints** — Technical or business constraints
-5. **Stakeholders** — Who will use the system
+3. Scope — In-scope vs out-of-scope boundary
+4. Constraints — Technical or business constraints
+5. Stakeholders — Who will use the system
 
 **Termination conditions** (stop as soon as either is met):
 
@@ -212,6 +217,35 @@ If the user requests revisions (or accepts any suggestion):
 1. User approves with "Y", "承認", "OK", "done", or equivalent
 2. 3 review rounds completed — present the document as-is and ask for explicit approval
 
+### Phase 4-5: Version Bump
+
+`generate-doc.sh` overwrites the output file. Every regeneration in the Phase 4
+review loop therefore resets `version` to the template value `1.0.0` and drops the
+Change History. Do not bump during the loop. Restore and bump after approval.
+
+On approval:
+
+**First generation** (BASELINE VERSION unset) — keep `1.0.0` and the initial row.
+
+**Revision** (BASELINE VERSION set) — the file on disk now holds the reset value,
+not the released one:
+
+1. Write **BASELINE HISTORY** back over the generated Change History table
+2. Classify this run's change with the table below
+3. Bump from **BASELINE VERSION** — never from the reset `1.0.0`
+4. Write the result to frontmatter `version` and add exactly one Change History row
+
+| Change                               | Bump  |
+| ------------------------------------ | ----- |
+| Requirement removed, scope redefined | MAJOR |
+| Requirement / AC added               | MINOR |
+| Clarification, Open Question, typo   | PATCH |
+
+Bumping from the reset `1.0.0` corrupts the Change History and invalidates every
+downstream `based-on: requirements.md v<x.y.z>` reference.
+
+See deckrd-rule-document-versioning.md.
+
 ### Phase 5: Second Opinion via Codex
 
 After Phase 4 approval, invoke `/deckrd:deckrd-review req` for an independent critical review.
@@ -234,8 +268,8 @@ Focus: `risk` — challenge assumptions, surface blind spots, identify missing c
 
 **Handling findings:**
 
-- **Accept**: Note which findings to act on before running `spec`
-- **Reject**: Always provide a rationale — silent rejection is not allowed
+- Accept: Note which findings to act on before running `spec`
+- Reject: Always provide a rationale — silent rejection is not allowed
 - If findings require revisions, return to Phase 3 and regenerate; then re-run Phase 4
 
 See [`deckrd-rule-second-opinion.md`](../../../../../../../../.claude/rules/deckrd-rule-second-opinion.md) for the full rule.

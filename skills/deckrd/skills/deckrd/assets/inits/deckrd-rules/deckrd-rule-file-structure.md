@@ -1,28 +1,40 @@
 # Deckrd Rule: File Structure
 
-Repositories using Deckrd must include the following structure.
+Deckrd artifacts live under the initialized document root, `docs/.deckrd/`.
+Documents are stored per module, one directory level per namespace and module.
 
-deckrd/
+```text
+docs/.deckrd/
+  .session.json
+  <namespace>/
+    <module>/
+      requirements/
+      specifications/
+      implementation/
+      tasks/
+      decision-records.md
+```
 
-requirements/
-specifications/
-tasks/
-implementations/
-tests/
+`docs/.deckrd/` is the default root.
+A project may override it via the `deckrd_base` session setting.
+Every rule that names this path means the configured root.
 
 Example:
 
-requirements/
-req-001-cli-input.md
+```text
+docs/.deckrd/chatlog/normalize/
+  requirements/requirements.md
+  specifications/specifications.md
+  implementation/implementation.md
+  tasks/tasks.md
+  decision-records.md
+```
 
-specifications/
-spec-001-cli-input-format.md
+When a specification is split, the directory holds one file per area.
+An index file is always added (see the spec command):
 
-tasks/
-task-001-parser-design.md
-
-implementations/
-impl-001-cli-parser.md
-
-tests/
-test-001-cli-input.md
+```text
+specifications/specifications-index.md
+specifications/specifications-auth.md
+specifications/specifications-notify.md
+```
