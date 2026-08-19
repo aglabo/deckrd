@@ -1,4 +1,10 @@
-# Deckrd Rule: Commit Linkage
+---
+title: "Deckrd Rule: Commit Linkage"
+description: "One implementation document per commit, with required design identifier references"
+version: 1.0.0
+---
+
+## Deckrd Rule: Commit Linkage
 
 Each implementation document corresponds to exactly one commit.
 

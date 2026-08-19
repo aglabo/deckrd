@@ -1,8 +1,14 @@
-# Deckrd Rule: Document Naming
+---
+title: "Deckrd Rule: Document Naming"
+description: "Naming convention for all Deckrd documents"
+version: 1.0.0
+---
+
+## Deckrd Rule: Document Naming
 
 All Deckrd documents must follow the naming convention:
 
-<prefix>-<number>-<slug>.md
+`<prefix>-<number>-<slug>.md`
 
 Prefixes:
 

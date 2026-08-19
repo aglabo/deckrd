@@ -1,4 +1,10 @@
-# Deckrd Rule: BDD 開発サイクル（RGRサイクル）
+---
+title: "Deckrd Rule: BDD 開発サイクル（RGRサイクル）"
+description: "BDD RGR サイクルの適用トリガー・免除条件と bdd-coder エージェントへの委譲ルール"
+version: 1.0.0
+---
+
+## Deckrd Rule: BDD 開発サイクル（RGRサイクル）
 
 ## 適用トリガー
 
