@@ -1,10 +1,15 @@
 # Deckrd Rule: Workflow
 
+<!-- textlint-disable
+  ja-technical-writing/sentence-length,
+  ja-technical-writing/max-comma,
+  -->
+
 ## Command Order (Gate Rule)
 
 Steps must run in order. No skipping.
 
-```
+```text
 init → module → req → [dr] → spec → impl → tasks
 ```
 
@@ -76,7 +81,7 @@ Code is written after `tasks` using `/bdd-coder:bdd-coder`.
 
 ## タスク完了時チェックリスト
 
-0. BDD RGRサイクルを完了している（`deckrd-rule-bdd-cycle.md` 参照）
+0. BDD RGR サイクルを完了している（`deckrd-rule-bdd-cycle.md` 参照）
 1. フォーマット確認（プロジェクトのフォーマッタでチェック）
 2. ユニットテスト実行（全テストがパスすることを確認）
 3. ユーザーに完了を伝え、コミットはユーザーに委ねる

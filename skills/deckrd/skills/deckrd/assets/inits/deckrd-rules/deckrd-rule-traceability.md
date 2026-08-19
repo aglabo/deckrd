@@ -22,5 +22,6 @@ Defines a commit-sized implementation unit.
 
 Test (TEST)
 Defines verification criteria.
+Test code implementing these criteria follows deckrd-rule-testing-guidelines.md.
 
 Each document must reference upstream IDs.

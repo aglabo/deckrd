@@ -1,7 +1,11 @@
 # Deckrd Rule: Second Opinion via Codex
 
+<!-- textlint-disable
+  ja-technical-writing/sentence-length,
+  -->
+
 Use `/deckrd:deckrd-review` to get an independent critical review from codex
-when Claude's own analysis may be insufficient or biased.
+When Claude's own analysis may be insufficient or biased.
 
 ## When to Invoke (REQUIRED)
 
@@ -45,8 +49,8 @@ Claude (`/deckrd review`) and codex (`/deckrd:deckrd-review <phase>`) play diffe
 
 ## Handling Codex Findings
 
-- **Accept**: Note which findings to act on before the next command
-- **Reject**: Always provide a reason — silent rejection is not allowed
-- **Follow-up**: Use `q` to ask codex clarifying questions in the same session
-- **Never** skip second opinion on `req` or `spec` before moving to the next phase
+- Accept: Note which findings to act on before the next command
+- Reject: Always provide a reason — silent rejection is not allowed
+- Follow-up: Use `q` to ask codex clarifying questions in the same session
+- Never skip second opinion on `req` or `spec` before moving to the next phase
   on features that affect external interfaces or data persistence
