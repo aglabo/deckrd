@@ -2,7 +2,7 @@
 title: "Requirements: {{FEATURE_NAME}}"
 module: "{{ MODULE_OR_DOMAIN }}"
 status: Draft
-version: 1.0
+version: 1.0.0
 created: "{{ DATE }}"
 ---
 
@@ -42,10 +42,13 @@ created: "{{ DATE }}"
 
 ## 3. Design Decisions (Summary)
 
-| ID    | Decision               | Linked Record            |
-| ----- | ---------------------- | ------------------------ |
-| DR-01 | {{DECISION_SUMMARY_1}} | decision-record.md#DR-01 |
-| DR-02 | {{DECISION_SUMMARY_2}} | decision-record.md#DR-02 |
+<!-- Decision Records live at the module root (`<modulePath>/decision-records.md`),
+     shared by req / spec / impl / tasks. From `requirements/`, link with `../`. -->
+
+| ID    | Decision               | Linked Record                |
+| ----- | ---------------------- | ---------------------------- |
+| DR-01 | {{DECISION_SUMMARY_1}} | ../decision-records.md#DR-01 |
+| DR-02 | {{DECISION_SUMMARY_2}} | ../decision-records.md#DR-02 |
 
 ## 4. Functional Requirements
 
@@ -173,6 +176,11 @@ Scenario: {{AC_SCENARIO_TITLE_3}}
 | REQ-C-001  | N/A            | Constraint     |
 
 ## 11. Change History
+
+<!-- SemVer: MAJOR = requirement removed / approach discarded,
+     MINOR = requirement / AC / DR added, PATCH = clarification only.
+     Keep frontmatter `version` equal to the newest row below.
+     See deckrd-rule-document-versioning.md -->
 
 | Date     | Version | Description     |
 | -------- | ------- | --------------- |

@@ -2,6 +2,8 @@
 title: "Design Specification: {{FEATURE_NAME}}"
 based-on: requirements.md v{{REQ_VERSION}}
 status: Draft
+version: 1.0.0
+created: "{{ DATE }}"
 ---
 
 ## 1. Overview
@@ -195,6 +197,11 @@ No reordering is permitted.
 ---
 
 ## 8. Change History
+
+<!-- SemVer: MAJOR = behavior removed / redefined, MINOR = spec item added,
+     PATCH = clarification only. Keep frontmatter `version` equal to the newest row.
+     `based-on` must cite a three-part version that exists in requirements.md.
+     See deckrd-rule-document-versioning.md -->
 
 | Date     | Version | Description           |
 | -------- | ------- | --------------------- |

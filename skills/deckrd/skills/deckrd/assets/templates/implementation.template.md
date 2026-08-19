@@ -1,7 +1,9 @@
 ---
 title: "Implementation Plan: {{FEATURE_NAME}}"
-Based on: specifications.md v{{SPEC_VERSION}}
-Status: Draft
+based-on: specifications.md v{{SPEC_VERSION}}
+status: Draft
+version: 1.0.0
+created: "{{ DATE }}"
 ---
 
 ## 1. Overview
@@ -42,6 +44,11 @@ Status: Draft
 
 ## 3. Change History
 
+<!-- SemVer: MAJOR = approach discarded, MINOR = decision criterion added,
+     PATCH = clarification only. Keep frontmatter `version` equal to the newest row.
+     `based-on` must cite a three-part version that exists in specifications.md.
+     See deckrd-rule-document-versioning.md -->
+
 | Date     | Version | Description                 |
 | -------- | ------- | --------------------------- |
-| {{DATE}} | 1.0     | Initial implementation plan |
+| {{DATE}} | 1.0.0   | Initial implementation plan |
