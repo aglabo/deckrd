@@ -16,7 +16,7 @@ set -euo pipefail
 main() {
   local -a targets=("$@")
 
-  textlint --config "${XDG_CONFIG_HOME}/linters/textlint/textlintrc.yaml" "${targets[@]+"${targets[@]}"}"
+  textlint --config "${XDG_CONFIG_HOME}/linters/textlint/textlintrc.yaml" --cache --cache-location .cache/textlint/textlintcache ${targets[@]+${targets[@]}}
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
