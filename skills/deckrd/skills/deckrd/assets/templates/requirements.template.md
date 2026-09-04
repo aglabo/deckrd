@@ -180,7 +180,7 @@ Scenario: {{AC_SCENARIO_TITLE_3}}
 <!-- SemVer: MAJOR = requirement removed / approach discarded,
      MINOR = requirement / AC / DR added, PATCH = clarification only.
      Keep frontmatter `version` equal to the newest row below.
-     See deckrd-rule-document-versioning.md -->
+     See docs/.deckrd/rules/deckrd-rule-document-versioning.md -->
 
 | Date     | Version | Description     |
 | -------- | ------- | --------------- |

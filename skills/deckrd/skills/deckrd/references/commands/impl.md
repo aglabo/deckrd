@@ -353,7 +353,7 @@ unsuffixed `implementation.md`. Each file is versioned independently.
 If `based-on` cites an older `specifications.md` version than **SPEC VERSION**,
 update it and treat the refresh as at least PATCH.
 
-See deckrd-rule-document-versioning.md.
+See docs/.deckrd/rules/deckrd-rule-document-versioning.md.
 
 ---
 

@@ -10,8 +10,8 @@
 # @file init.sh
 # @brief Bootstrap and initialize DECKRD project structure
 # @description
-#   1. Bootstrap: copy deckrd-rules to .claude/rules/ and docs templates
-#      to docs/.deckrd/ (no overwrite)
+#   1. Bootstrap: copy deckrd-rules to docs/.deckrd/rules/, the rules index
+#      to .claude/rules/deckrd-rules/, and docs templates to docs/.deckrd/ (no overwrite)
 #   2. Create docs/.deckrd/ base directory structure
 #   3. Write .local/deckrd/.project.json with project settings
 #   4. Initialize .local/deckrd/session.json
@@ -64,9 +64,11 @@ unset _validate_env_errmsg
 init_vars() {
   INITS_DIR="${INITS_DIR:-${DECKRD_ROOT}/assets/inits}"
   RULES_SRC_DIR="${RULES_SRC_DIR:-${INITS_DIR}/deckrd-rules}"
+  RULES_INDEX_SRC_DIR="${RULES_INDEX_SRC_DIR:-${INITS_DIR}/deckrd-rules-index}"
   DOCS_SRC_DIR="${DOCS_SRC_DIR:-${INITS_DIR}/docs}"
   LOCAL_SRC_DIR="${LOCAL_SRC_DIR:-${INITS_DIR}/local-deckrd}"
-  CLAUDE_RULES_DIR="${CLAUDE_RULES_DIR:-${PROJECT_ROOT}/.claude/rules}"
+  DECKRD_RULES_DIR="${DECKRD_RULES_DIR:-${DECKRD_DOCS_DIR}/rules}"
+  CLAUDE_RULES_INDEX_DIR="${CLAUDE_RULES_INDEX_DIR:-${PROJECT_ROOT}/.claude/rules/deckrd-rules}"
   PROJECT_FILE="${PROJECT_FILE:-${DECKRD_LOCAL_DATA}/.project.json}"
   SESSION_FILE="${SESSION_FILE:-${DECKRD_LOCAL_DATA}/session.json}"
   BASE_SUBDIRS=("notes" "temp")
@@ -250,7 +252,8 @@ init_directory() {
 # @stderr Progress messages
 init_directories() {
   echo "Init: creating directories and installing assets..." >&2
-  init_directory "$CLAUDE_RULES_DIR" "$RULES_SRC_DIR" "deckrd-rules"
+  init_directory "$DECKRD_RULES_DIR" "$RULES_SRC_DIR" "deckrd-rules"
+  init_directory "$CLAUDE_RULES_INDEX_DIR" "$RULES_INDEX_SRC_DIR" "deckrd-rules-index"
   init_directory "$DECKRD_DOCS_DIR" "$DOCS_SRC_DIR" "docs"
   init_directory "$DECKRD_LOCAL_DATA" "$LOCAL_SRC_DIR" "local-deckrd"
   for subdir in "${BASE_SUBDIRS[@]}"; do

@@ -196,9 +196,11 @@ meta:
 │   ├── project.json          ← プロジェクト設定
 │   └── session.json          ← 進捗・アクティブモジュール
 │
-├── .claude/rules/            ← deckrd ルール (init で配置)
+├── .claude/rules/deckrd-rules/
+│   └── deckrd-rules-index.md ← ルールの目次 (常時ロード)
 │
 └── docs/.deckrd/
+    ├── rules/                ← deckrd ルール本体 (必要時に読む)
     └── <namespace>/<module>/
         ├── requirements/
         │   └── requirements.md

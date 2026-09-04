@@ -195,7 +195,7 @@ When review phase is `harden`:
 4. DR-ID is auto-assigned (max existing + 1)
 5. `decision-records.md` frontmatter `version` is bumped MINOR and one Change
    History row is added per appended DR
-   (see deckrd-rule-document-versioning.md)
+   (see docs/.deckrd/rules/deckrd-rule-document-versioning.md)
 
 The `explore` and `fix` phases bump nothing: review output is a separate report
 document and the reviewed file is never edited in place. A PATCH bump on the

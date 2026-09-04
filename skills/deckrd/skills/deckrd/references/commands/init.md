@@ -51,13 +51,27 @@ Bootstrap and initialize a DECKRD project.
 
 Copies deckrd assets into the project on first run. Existing files are never overwritten.
 
-1. **deckrd-rules** → `.claude/rules/`
+1. **deckrd-rules (bodies)** → `docs/.deckrd/rules/`
 
    ```bash
-   assets/inits/deckrd-rules/*.md  →  .claude/rules/  (skip if exists)
+   assets/inits/deckrd-rules/*  →  docs/.deckrd/rules/  (skip if exists)
    ```
 
-2. **docs templates** → `docs/.deckrd/`
+2. **deckrd-rules index** → `.claude/rules/deckrd-rules/`
+
+   Only the index goes under `.claude/rules/`. Claude Code discovers every `.md`
+   there recursively and injects it into the session context verbatim. Rule
+   bodies stay out of it and are read on demand from `docs/.deckrd/rules/`.
+
+   ```bash
+   assets/inits/deckrd-rules-index/deckrd-rules-index.md
+     →  .claude/rules/deckrd-rules/  (skip if exists)
+   ```
+
+   This asset dir intentionally carries no `.gitignore.org`, unlike
+   `deckrd-rules/`: the index is meant to be tracked by the target project.
+
+3. **docs templates** → `docs/.deckrd/`
 
    ```bash
    assets/inits/docs/*  →  docs/.deckrd/  (skip if exists)

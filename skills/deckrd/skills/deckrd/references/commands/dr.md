@@ -226,7 +226,7 @@ contradict the rule that the initial release is `1.0.0`.
 1. Bump frontmatter `version` MINOR (e.g. 1.2.0 → 1.3.0)
 2. Add exactly one Change History row: `| <date> | <new version> | Add DR-<ID>: <title> |`
 
-See deckrd-rule-document-versioning.md.
+See docs/.deckrd/rules/deckrd-rule-document-versioning.md.
 
 ## Error Handling
 

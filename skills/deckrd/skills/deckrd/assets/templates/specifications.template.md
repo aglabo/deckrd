@@ -201,7 +201,7 @@ No reordering is permitted.
 <!-- SemVer: MAJOR = behavior removed / redefined, MINOR = spec item added,
      PATCH = clarification only. Keep frontmatter `version` equal to the newest row.
      `based-on` must cite a three-part version that exists in requirements.md.
-     See deckrd-rule-document-versioning.md -->
+     See docs/.deckrd/rules/deckrd-rule-document-versioning.md -->
 
 | Date     | Version | Description           |
 | -------- | ------- | --------------------- |

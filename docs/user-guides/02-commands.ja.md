@@ -135,9 +135,11 @@ docs/.deckrd/<ns>/<mod>/  (ディレクトリ作成)
 │                                                 │
 │  docs/.deckrd/                                  │
 │  ├── notes/                                     │
-│  └── temp/                                      │
+│  ├── temp/                                      │
+│  └── rules/         ← deckrd ルール本体          │
 │                                                 │
-│  .claude/rules/     ← deckrd ルールファイル群    │
+│  .claude/rules/deckrd-rules/                    │
+│  └── deckrd-rules-index.md ← ルールの目次        │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -158,6 +160,63 @@ docs/.deckrd/<ns>/<mod>/  (ディレクトリ作成)
 
 > 注意:
 > リポジトリごとに 1 回だけ実行します。
+
+### ルールの置き場所と読み込み
+
+`.claude/rules/` に置いたファイルは、Claude Code がサブディレクトリまで再帰的に探索し、全文をそのまま毎セッションのコンテキストへ注入します。ルールが増えるほど固定コストが積み上がるため、deckrd は
+本体を `docs/.deckrd/rules/` に置き、`.claude/rules/deckrd-rules/` には目次
+`deckrd-rules-index.md` 1 本だけを配置します。エージェントは目次を見て、必要なルールだけを読み込みます。
+
+### 既存プロジェクトの移行
+
+旧構成（ルール本体が `.claude/rules/` にある）から移行する場合、**この手順を踏まないと
+コンテキスト削減の効果は出ません**。`init` は既存ファイルを上書きしないため、
+再実行しただけでは旧ファイルが残り、全文注入も続きます。
+
+**順序が重要です。** 逆順や削除を先に行うとルールを失います。
+
+1. 対象プロジェクトで `/deckrd init` を再実行する
+2. `docs/.deckrd/rules/` に本体が、
+   `.claude/rules/deckrd-rules/deckrd-rules-index.md` に目次が
+   置かれたことを目視で確認する
+3. **確認できてから** `.claude/rules/deckrd-rule-*.md` を削除する
+4. **旧構成の目次 `.claude/rules/deckrd-rules.md` も削除する**
+
+   手順 3 のワイルドカードは `deckrd-rule-*.md` であり、旧目次の
+   `deckrd-rules.md` にはマッチしません。`init` は既存ファイルを削除しないため、
+   放置すると新旧 2 つの目次が同時に注入されます。
+
+5. **旧構成の `.claude/rules/.gitignore` を削除する**
+
+   旧 `init` が配置したこのファイルには `deckrd-*` の 1 行が入っており、
+   新目次のディレクトリ `deckrd-rules/` ごと git から除外してしまいます。
+   目次が追跡されないと、チームの他のメンバーに遅延ロードの入口が渡りません。
+
+   git は除外された親ディレクトリの中身を再包含できないため、
+   `.claude/rules/deckrd-rules/.gitignore` に `!deckrd-rules-index.md` を書いても
+   救えません。**親側のファイルを消すのが唯一の解決策です。**
+
+6. 目次が git 管理下にあることを確認する
+
+   ```bash
+   git add -An .claude/rules/deckrd-rules/
+   ```
+
+   `deckrd-rules-index.md` が出力されれば追跡されます。何も出ない場合はまだ
+   ignore されています（`git check-ignore -v` は否定パターンにマッチした場合も
+   終了コード 0 を返すため、追跡可否の判定には使えません）。
+
+   `.claude/` を丸ごと ignore しているプロジェクトでは目次が配布されず、
+   遅延ロードの入口が失われます。その場合は否定パターンを追加してください。
+   git は除外された親ディレクトリの中身を再包含できないため、
+   階層ごとに除外と再包含を並べる必要があります。
+
+   ```gitignore
+   .claude/*
+   !.claude/rules/
+   .claude/rules/*
+   !.claude/rules/deckrd-rules/
+   ```
 
 ---
 

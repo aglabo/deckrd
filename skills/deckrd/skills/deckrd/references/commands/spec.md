@@ -573,7 +573,7 @@ Then update it and treat the refresh as at least PATCH.
 A split file left unbumped gives downstream documents no way to identify its
 revision. Skipping any file is a defect.
 
-See deckrd-rule-document-versioning.md.
+See docs/.deckrd/rules/deckrd-rule-document-versioning.md.
 
 ### Phase 4: Second Opinion via Codex
 
@@ -601,7 +601,7 @@ Focus: balanced review — correctness, completeness, consistency across behavio
 - Reject: Always provide a rationale — silent rejection is not allowed
 - If findings require revisions, return to Phase 2 and regenerate; then re-run Phases 3–4
 
-See [`deckrd-rule-second-opinion.md`](../../../../../../../../.claude/rules/deckrd-rule-second-opinion.md) for the full rule.
+See `docs/.deckrd/rules/deckrd-rule-second-opinion.md` for the full rule.
 
 ---
 
