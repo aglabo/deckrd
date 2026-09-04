@@ -65,9 +65,11 @@ init_vars() {
   INITS_DIR="${INITS_DIR:-${DECKRD_ROOT}/assets/inits}"
   RULES_SRC_DIR="${RULES_SRC_DIR:-${INITS_DIR}/deckrd-rules}"
   RULES_INDEX_SRC_DIR="${RULES_INDEX_SRC_DIR:-${INITS_DIR}/deckrd-rules-index}"
+  CLAUDE_RULES_SRC_DIR="${CLAUDE_RULES_SRC_DIR:-${INITS_DIR}/claude-rules}"
   DOCS_SRC_DIR="${DOCS_SRC_DIR:-${INITS_DIR}/docs}"
   LOCAL_SRC_DIR="${LOCAL_SRC_DIR:-${INITS_DIR}/local-deckrd}"
   DECKRD_RULES_DIR="${DECKRD_RULES_DIR:-${DECKRD_DOCS_DIR}/rules}"
+  CLAUDE_RULES_DIR="${CLAUDE_RULES_DIR:-${PROJECT_ROOT}/.claude/rules/claude-rules}"
   CLAUDE_RULES_INDEX_DIR="${CLAUDE_RULES_INDEX_DIR:-${PROJECT_ROOT}/.claude/rules/deckrd-rules}"
   PROJECT_FILE="${PROJECT_FILE:-${DECKRD_LOCAL_DATA}/.project.json}"
   SESSION_FILE="${SESSION_FILE:-${DECKRD_LOCAL_DATA}/session.json}"
@@ -253,6 +255,7 @@ init_directory() {
 init_directories() {
   echo "Init: creating directories and installing assets..." >&2
   init_directory "$DECKRD_RULES_DIR" "$RULES_SRC_DIR" "deckrd-rules"
+  init_directory "$CLAUDE_RULES_DIR" "$CLAUDE_RULES_SRC_DIR" "claude-rules"
   init_directory "$CLAUDE_RULES_INDEX_DIR" "$RULES_INDEX_SRC_DIR" "deckrd-rules-index"
   init_directory "$DECKRD_DOCS_DIR" "$DOCS_SRC_DIR" "docs"
   init_directory "$DECKRD_LOCAL_DATA" "$LOCAL_SRC_DIR" "local-deckrd"

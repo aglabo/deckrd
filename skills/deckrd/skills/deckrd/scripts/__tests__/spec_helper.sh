@@ -14,13 +14,14 @@
 # ============================================================================
 
 # Helper: create an isolated temp directory and set DECKRD_DOCS / DECKRD_LOCAL / DECKRD_LOCAL_DATA /
-#         DECKRD_RULES_DIR / CLAUDE_RULES_INDEX_DIR
+#         DECKRD_RULES_DIR / CLAUDE_RULES_DIR / CLAUDE_RULES_INDEX_DIR
 setup_deckrd_tmpdir() {
   DECKRD_TMPDIR="$(mktemp -d)"
   export DECKRD_DOCS_DIR="${DECKRD_TMPDIR}/docs/.deckrd"
   export DECKRD_LOCAL="${DECKRD_TMPDIR}/.local/deckrd"
   export DECKRD_LOCAL_DATA="${DECKRD_TMPDIR}/.local/deckrd"
   export DECKRD_RULES_DIR="${DECKRD_DOCS_DIR}/rules"
+  export CLAUDE_RULES_DIR="${DECKRD_TMPDIR}/.claude/rules/claude-rules"
   export CLAUDE_RULES_INDEX_DIR="${DECKRD_TMPDIR}/.claude/rules/deckrd-rules"
   mkdir -p "$DECKRD_DOCS_DIR" "$DECKRD_LOCAL"
 }
@@ -28,7 +29,7 @@ setup_deckrd_tmpdir() {
 # Helper: clean up temp directory
 teardown_deckrd_tmpdir() {
   [[ -n "${DECKRD_TMPDIR:-}" && -d "$DECKRD_TMPDIR" ]] && rm -rf "$DECKRD_TMPDIR"
-  unset DECKRD_TMPDIR DECKRD_DOCS_DIR DECKRD_LOCAL DECKRD_LOCAL_DATA DECKRD_RULES_DIR CLAUDE_RULES_INDEX_DIR
+  unset DECKRD_TMPDIR DECKRD_DOCS_DIR DECKRD_LOCAL DECKRD_LOCAL_DATA DECKRD_RULES_DIR CLAUDE_RULES_DIR CLAUDE_RULES_INDEX_DIR
 }
 
 # Assets directory (source of truth for generated files)

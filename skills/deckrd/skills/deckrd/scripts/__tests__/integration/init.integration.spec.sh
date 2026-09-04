@@ -161,6 +161,14 @@ Describe "init.sh: main() integration"
         The path "${DECKRD_RULES_DIR}/.gitignore.org" should not be exist
       End
 
+      It "[Normal] Should: install injected rules into CLAUDE_RULES_DIR"
+        When run bash "$SCRIPT" myapp webapp
+        The status should equal 0
+        The stderr should include "[init/claude-rules] copied: claude-rule-command-execute.md"
+        The path "${CLAUDE_RULES_DIR}/claude-rule-command-execute.md" should be exist
+        The path "${CLAUDE_RULES_DIR}/deckrd-rule-bdd-cycle.md" should not be exist
+      End
+
       It "[Normal] Should: install only the index into CLAUDE_RULES_INDEX_DIR, not the rule bodies"
         When run bash "$SCRIPT" myapp webapp
         The status should equal 0
