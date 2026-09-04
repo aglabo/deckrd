@@ -12,3 +12,8 @@
 # deckrd
 deckrd-*
 
+
+# this file itself
+#   deckrd's own docs/.deckrd/rules is a symlink to the plugin asset directory,
+#   so re-running init generates this .gitignore inside the asset tree
+.gitignore

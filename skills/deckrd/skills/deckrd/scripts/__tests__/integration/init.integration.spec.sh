@@ -142,37 +142,41 @@ Describe "init.sh: main() integration"
       The status should equal 0
       The stderr should include "Init complete"
       The contents of file "${DECKRD_LOCAL_DATA}/.gitignore" \
-        should equal "$(load_asset "inits/local-deckrd/.gitignore")"
+        should equal "$(load_asset "inits/local-deckrd/.gitignore.org")"
     End
   End
 
-  Describe "Given: deckrd-rules source has .gitignore.org"
-    setup_isolated_claude_rules() {
-      setup_deckrd_tmpdir
-      export CLAUDE_RULES_DIR="${DECKRD_TMPDIR}/.claude/rules"
-    }
+  Describe "Given: deckrd-rules assets are installed"
     After "teardown_deckrd_tmpdir"
 
-    Describe "When: .claude/rules is empty"
-      Before "setup_isolated_claude_rules"
+    Describe "When: both rules directories are empty"
+      Before "setup_deckrd_tmpdir"
 
-      It "[Normal] Should: copy .gitignore.org as .gitignore (renamed) and copy deckrd-rule-*.md as-is"
+      It "[Normal] Should: install rule bodies into DECKRD_RULES_DIR, renaming .gitignore.org"
         When run bash "$SCRIPT" myapp webapp
         The status should equal 0
         The stderr should include "[init/deckrd-rules] copied: .gitignore"
-        The path "${CLAUDE_RULES_DIR}/.gitignore" should be exist
-        The path "${CLAUDE_RULES_DIR}/.gitignore.org" should not be exist
-        The path "${CLAUDE_RULES_DIR}/deckrd-rule-bdd-cycle.md" should be exist
+        The path "${DECKRD_RULES_DIR}/deckrd-rule-bdd-cycle.md" should be exist
+        The path "${DECKRD_RULES_DIR}/.gitignore" should be exist
+        The path "${DECKRD_RULES_DIR}/.gitignore.org" should not be exist
+      End
+
+      It "[Normal] Should: install only the index into CLAUDE_RULES_INDEX_DIR, not the rule bodies"
+        When run bash "$SCRIPT" myapp webapp
+        The status should equal 0
+        The stderr should include "[init/deckrd-rules-index] copied: deckrd-rules-index.md"
+        The path "${CLAUDE_RULES_INDEX_DIR}/deckrd-rules-index.md" should be exist
+        The path "${CLAUDE_RULES_INDEX_DIR}/deckrd-rule-bdd-cycle.md" should not be exist
       End
     End
 
-    Describe "When: .claude/rules/.gitignore already exists"
-      setup_with_existing_claude_rules_gitignore() {
-        setup_isolated_claude_rules
-        mkdir -p "$CLAUDE_RULES_DIR"
-        touch "${CLAUDE_RULES_DIR}/.gitignore"
+    Describe "When: DECKRD_RULES_DIR/.gitignore already exists"
+      setup_with_existing_rules_gitignore() {
+        setup_deckrd_tmpdir
+        mkdir -p "$DECKRD_RULES_DIR"
+        touch "${DECKRD_RULES_DIR}/.gitignore"
       }
-      Before "setup_with_existing_claude_rules_gitignore"
+      Before "setup_with_existing_rules_gitignore"
 
       It "[Edge] Should: skip with stripped filename 'skip (exists): .gitignore'"
         When run bash "$SCRIPT" myapp webapp
