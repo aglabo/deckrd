@@ -1,7 +1,7 @@
 ---
-title: "Deckrd Rule: Workflow"
-description: "Command order gate, BDD-first principle, and branch and commit conventions"
-version: 1.0.0
+title: "Deckrd Rule: ワークフロー"
+description: "コマンド順序ゲート、BDD ファースト原則、ブランチ・コミット規約"
+version: 2.0.0
 ---
 
 <!-- textlint-disable
@@ -9,62 +9,46 @@ version: 1.0.0
   ja-technical-writing/max-comma,
   -->
 
-## Deckrd Rule: Workflow
+## Deckrd Rule: ワークフロー
 
-## Command Order (Gate Rule)
+## コマンド順序（ゲートルール）
 
-Steps must run in order. No skipping.
+各ステップは順番に実行する。飛ばしてはならない。
 
 ```text
 init → module → req → [dr] → spec → impl → tasks
 ```
 
-- `init <project> <type>` — bootstrap project once. Creates project.json + session.
-- `module <ns>/<mod>` — create module directory and set active. Run per feature.
-- `req` → `spec` → `impl` → `tasks` — derive documents in sequence.
+- `init <project> <type>` — プロジェクトを 1 度だけ初期化する。`.project.json` とセッションを作る
+- `module <ns>/<mod>` — モジュールディレクトリを作り、アクティブにする。機能ごとに実行する
+- `req` → `spec` → `impl` → `tasks` — ドキュメントを順に導出する
 
-## Common Rationalizations
+### セッション
 
-| Rationalization                                         | Reality                                                                                  |
-| ------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| "This change is simple, no spec needed"                 | Even simple changes need acceptance criteria. A spec can be short — it can't be skipped. |
-| "I'll write the spec after implementing"                | That's documentation, not a spec. The spec's value is forcing clarity before code.       |
-| "Requirements will change anyway, no point writing now" | That's why req/spec are living documents. An outdated doc still beats no doc.            |
+アクティブなセッション: `.local/deckrd/session.json`
 
-## Session
+すべてのコマンドの前にセッションを読み、アクティブなモジュールと現在のステップを確認する。
 
-Active session: `.local/deckrd/session.json`
-Read session before every command to confirm active module and current step.
+### 経路の選択
 
-## Path Selection
+| 状況                               | 経路                                                 |
+| ---------------------------------- | ---------------------------------------------------- |
+| 新規機能                           | 標準フロー (`init` → `module` → `req` → … → `tasks`) |
+| 既存コードがありドキュメントがない | `rev --to req` の後、`req` から標準フロー            |
+| ドキュメントの品質を確認する       | `review <doc>`（任意のタイミング）                   |
 
-| Situation               | Path                                            |
-| ----------------------- | ----------------------------------------------- |
-| New feature             | Standard flow (init → module → req → … → tasks) |
-| Existing code, no docs  | `rev --to req` then standard from req           |
-| Review document quality | `review <doc>` (any time)                       |
+### impl はコードではない
 
-## Implementation vs Code
+`impl` が記録するのは判断基準だけであり、実際のコードではない。
+コードは `tasks` の後に `/bdd-coder:bdd-coder` で書く。
 
-`impl` records decision criteria only — NOT actual code.
-Code is written after `tasks` using `/bdd-coder:bdd-coder`.
-
-## BDD/RGR ファースト原則
+## BDD ファースト原則
 
 **すべてのコード変更作業は BDD/RGR サイクルに従う。**
 
-- コードを書く前に必ず `deckrd-rule-bdd-cycle.md` を確認し、作業が BDD サイクルの適用トリガーに該当するか判断する
-- 適用トリガーに該当する場合は `bdd-coder` エージェントを呼び出し、Red → Green → Refactor の各フェーズを確実に回す
-- 各フェーズの終わりに必ずテストを実行し、FAIL / PASS を確認してから次フェーズに進む
-- テストを実行せずに複数フェーズをまたいで実装を進めることは禁止する
-
-### フェーズごとの確認ゲート
-
-| フェーズ | 実施内容         | 次フェーズへの条件                     |
-| -------- | ---------------- | -------------------------------------- |
-| Red      | テストを書く     | テストが FAIL であることを確認         |
-| Green    | 最小実装をする   | テストが PASS になることを確認         |
-| Refactor | コードを整理する | テストが引き続き PASS であることを確認 |
+適用トリガー・免除条件・各フェーズの手順とゲート条件は
+[BDD 開発サイクル](deckrd-rule-bdd-cycle.md) が定める。コードを書く・直す・動かす前に
+必ずそちらを読み、作業が適用対象かを判断する。
 
 ## ブランチ戦略
 
@@ -72,12 +56,32 @@ Code is written after `tasks` using `/bdd-coder:bdd-coder`.
   - 例: `feat-42/auth/add-oauth`, `fix-55/api/fix-encoding`
 - `main` への直接 push 禁止
 
-## コミットメッセージ
+## コミット
 
-- Conventional Commits 準拠: `type(scope): description`
-- 使用可能な type: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`
-- 例: `feat(export): add noise filter for system logs`
-- Deckrd ドキュメント関連のコミットは [Commit Linkage](deckrd-rule-commit-linkage.md) の参照ルールにも従う
+### 粒度
+
+**実装ドキュメント 1 本 = コミット 1 個。**
+
+### メッセージ書式
+
+Conventional Commits に準拠する: `type(scope): description`
+
+使用可能な type: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`
+
+### 設計 ID の参照
+
+Deckrd ドキュメントに対応するコミットは、本文で設計 ID を参照する。
+
+```text
+feat(cli): add configuration parser
+
+Implements: IMPL-001
+Spec: SPEC-001
+Req: REQ-001
+Test: TEST-001
+```
+
+ID の書式は [ドキュメントモデル](deckrd-rule-document-model.md) に従う。
 
 ## Git 操作ルール
 
@@ -87,14 +91,17 @@ Code is written after `tasks` using `/bdd-coder:bdd-coder`.
 
 ## タスク完了時チェックリスト
 
-0. BDD RGR サイクルを完了している（`deckrd-rule-bdd-cycle.md` 参照）
-1. フォーマット確認（プロジェクトのフォーマッタでチェック）
-2. ユニットテスト実行（全テストがパスすることを確認）
-3. ユーザーに完了を伝え、コミットはユーザーに委ねる
+1. BDD RGR サイクルを完了している（[BDD 開発サイクル](deckrd-rule-bdd-cycle.md)）
+2. フォーマットを確認した（[Runners](deckrd-rule-runners.md) の経路で実行する）
+3. ユニットテストが全てパスする（同上）
+4. ユーザーに完了を伝え、コミットはユーザーに委ねる
 
-## Common Rationalizations（追加項目）
+## Common Rationalizations
 
-| 言い訳                                 | 反論                                                               |
-| -------------------------------------- | ------------------------------------------------------------------ |
-| 機能が完成してからまとめてコミットする | 巨大な単一コミットはレビュー・デバッグ・切り戻しが不可能に近くなる |
-| コミットメッセージの中身はどうでもいい | メッセージは将来の自分・他のエージェントへのドキュメントになる     |
+| 言い訳                                 | 反論                                                                                   |
+| -------------------------------------- | -------------------------------------------------------------------------------------- |
+| この変更は単純なので spec は要らない   | 単純な変更にも受け入れ基準は要る。spec は短くできるが、省略はできない                  |
+| spec は実装した後に書く                | それはドキュメントであって spec ではない。spec の価値はコード前に明確化を強制すること  |
+| どうせ要件は変わるので今書く意味がない | だから req / spec は生きたドキュメントにする。古いドキュメントでも無いよりはましである |
+| 機能が完成してからまとめてコミットする | 巨大な単一コミットはレビュー・デバッグ・切り戻しが不可能に近くなる                     |
+| コミットメッセージの中身はどうでもいい | メッセージは将来の自分・他のエージェントへのドキュメントになる                         |
