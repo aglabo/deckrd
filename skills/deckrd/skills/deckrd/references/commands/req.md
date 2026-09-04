@@ -244,7 +244,7 @@ not the released one:
 Bumping from the reset `1.0.0` corrupts the Change History and invalidates every
 downstream `based-on: requirements.md v<x.y.z>` reference.
 
-See deckrd-rule-document-versioning.md.
+See docs/.deckrd/rules/deckrd-rule-document-versioning.md.
 
 ### Phase 5: Second Opinion via Codex
 
@@ -272,7 +272,7 @@ Focus: `risk` — challenge assumptions, surface blind spots, identify missing c
 - Reject: Always provide a rationale — silent rejection is not allowed
 - If findings require revisions, return to Phase 3 and regenerate; then re-run Phase 4
 
-See [`deckrd-rule-second-opinion.md`](../../../../../../../../.claude/rules/deckrd-rule-second-opinion.md) for the full rule.
+See `docs/.deckrd/rules/deckrd-rule-second-opinion.md` for the full rule.
 
 ---
 
