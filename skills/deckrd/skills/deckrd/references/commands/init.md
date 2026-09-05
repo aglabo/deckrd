@@ -94,6 +94,22 @@ Copies deckrd assets into the project on first run. Existing files are never ove
    assets/inits/docs/*  →  docs/.deckrd/  (skip if exists)
    ```
 
+#### Migrating a project initialized before the rule consolidation
+
+`init` never overwrites an existing file, so re-running it does not refresh a
+stale rule set. Delete these first, then re-run `/deckrd init`:
+
+- `docs/.deckrd/rules/deckrd-rule-traceability.md`
+- `docs/.deckrd/rules/deckrd-rule-id-system.md`
+- `docs/.deckrd/rules/deckrd-rule-document-naming.md`
+- `docs/.deckrd/rules/deckrd-rule-file-structure.md`
+- `docs/.deckrd/rules/deckrd-rule-commit-linkage.md`
+- `.claude/rules/deckrd-rules/deckrd-rules-index.md`
+
+The index must go too. It is the only one of these injected into the session.
+An old copy keeps pointing Claude at the five deleted bodies. It never mentions
+`deckrd-rule-document-model.md`, even after the new body was copied in.
+
 ### Phase 1: Create base directory structure
 
 ```bash
