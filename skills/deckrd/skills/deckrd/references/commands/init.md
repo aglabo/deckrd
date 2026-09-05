@@ -66,9 +66,9 @@ Copies deckrd assets into the project on first run. Existing files are never ove
    Keep every file here short — it is injected verbatim into every session.
    Any rule whose trigger is "before writing code" belongs in `deckrd-rules/`.
 
-   It gets its own subdirectory for the same reason the index does: everything
-   deckrd installs stays separable from rules the target project writes itself
-   directly under `.claude/rules/`.
+   It gets its own subdirectory for the same reason the index does. Everything
+   deckrd installs stays separable from the rules a target project writes.
+   Those live directly under `.claude/rules/`.
 
    ```bash
    assets/inits/claude-rules/*  →  .claude/rules/claude-rules/  (skip if exists)
@@ -76,8 +76,8 @@ Copies deckrd assets into the project on first run. Existing files are never ove
 
 3. **deckrd-rules index** → `.claude/rules/deckrd-rules/`
 
-   Only the index goes under `.claude/rules/deckrd-rules/`. Claude Code discovers
-   every `.md` there recursively and injects it into the session context verbatim.
+   Only the index goes under `.claude/rules/deckrd-rules/`. Claude Code finds
+   every `.md` there recursively and injects it into the session verbatim.
    Rule bodies stay out of it and are read on demand from `docs/.deckrd/rules/`.
 
    ```bash
