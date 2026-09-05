@@ -57,11 +57,28 @@ Copies deckrd assets into the project on first run. Existing files are never ove
    assets/inits/deckrd-rules/*  →  docs/.deckrd/rules/  (skip if exists)
    ```
 
-2. **deckrd-rules index** → `.claude/rules/deckrd-rules/`
+2. **claude-rules** → `.claude/rules/claude-rules/`
 
-   Only the index goes under `.claude/rules/`. Claude Code discovers every `.md`
-   there recursively and injects it into the session context verbatim. Rule
-   bodies stay out of it and are read on demand from `docs/.deckrd/rules/`.
+   The one exception to "no rule bodies under `.claude/rules/`". A rule belongs
+   here only when its trigger fires *before* the rule could be read on demand:
+   `claude-rule-command-execute.md` governs how a slash command is dispatched,
+   so reading it after the command was already mis-dispatched is too late.
+   Keep every file here short — it is injected verbatim into every session.
+   Any rule whose trigger is "before writing code" belongs in `deckrd-rules/`.
+
+   It gets its own subdirectory for the same reason the index does. Everything
+   deckrd installs stays separable from the rules a target project writes.
+   Those live directly under `.claude/rules/`.
+
+   ```bash
+   assets/inits/claude-rules/*  →  .claude/rules/claude-rules/  (skip if exists)
+   ```
+
+3. **deckrd-rules index** → `.claude/rules/deckrd-rules/`
+
+   Only the index goes under `.claude/rules/deckrd-rules/`. Claude Code finds
+   every `.md` there recursively and injects it into the session verbatim.
+   Rule bodies stay out of it and are read on demand from `docs/.deckrd/rules/`.
 
    ```bash
    assets/inits/deckrd-rules-index/deckrd-rules-index.md
@@ -71,11 +88,27 @@ Copies deckrd assets into the project on first run. Existing files are never ove
    This asset dir intentionally carries no `.gitignore.org`, unlike
    `deckrd-rules/`: the index is meant to be tracked by the target project.
 
-3. **docs templates** → `docs/.deckrd/`
+4. **docs templates** → `docs/.deckrd/`
 
    ```bash
    assets/inits/docs/*  →  docs/.deckrd/  (skip if exists)
    ```
+
+#### Migrating a project initialized before the rule consolidation
+
+`init` never overwrites an existing file, so re-running it does not refresh a
+stale rule set. Delete these first, then re-run `/deckrd init`:
+
+- `docs/.deckrd/rules/deckrd-rule-traceability.md`
+- `docs/.deckrd/rules/deckrd-rule-id-system.md`
+- `docs/.deckrd/rules/deckrd-rule-document-naming.md`
+- `docs/.deckrd/rules/deckrd-rule-file-structure.md`
+- `docs/.deckrd/rules/deckrd-rule-commit-linkage.md`
+- `.claude/rules/deckrd-rules/deckrd-rules-index.md`
+
+The index must go too. It is the only one of these injected into the session.
+An old copy keeps pointing Claude at the five deleted bodies. It never mentions
+`deckrd-rule-document-model.md`, even after the new body was copied in.
 
 ### Phase 1: Create base directory structure
 

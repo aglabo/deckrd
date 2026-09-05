@@ -1,62 +1,64 @@
 ---
-title: "Deckrd Rule: Second Opinion via Codex"
-description: "When to request an independent codex review and how to handle its findings"
-version: 1.0.0
+title: "Deckrd Rule: codex によるセカンドオピニオン"
+description: "codex への独立レビュー依頼のタイミングと、指摘の扱い"
+version: 1.0.1
 ---
 
 <!-- textlint-disable
   ja-technical-writing/sentence-length,
+  ja-technical-writing/max-comma,
   -->
 
-## Deckrd Rule: Second Opinion via Codex
+## Deckrd Rule: codex によるセカンドオピニオン
 
-Use `/deckrd:deckrd-review` to get an independent critical review from codex
-When Claude's own analysis may be insufficient or biased.
+Claude 自身の分析が不十分・偏っている可能性がある場面では、`/deckrd:deckrd-review` で
+codex から独立した批判的レビューを取る。
 
-## When to Invoke (REQUIRED)
+## 必須で呼ぶ場面
 
-Invoke automatically in these situations:
+以下の状況では自動的に呼び出す。
 
-| Situation                                                          | Recommended focus |
-| ------------------------------------------------------------------ | ----------------- |
-| After `/deckrd review req` or `/deckrd review spec`                | `risk`            |
-| Before transitioning to the next phase (e.g., spec → impl)         | (none — balanced) |
-| When a design decision has no clear winner                         | `consistency`     |
-| When `/deckrd impl` or `/deckrd tasks` result feels underspecified | `completeness`    |
+| 状況                                                       | 推奨フォーカス     |
+| ---------------------------------------------------------- | ------------------ |
+| `/deckrd review req` または `/deckrd review spec` の後     | `risk`             |
+| 次フェーズへ移行する前（例: spec → impl）                  | （指定なし・総合） |
+| 設計判断に決め手がないとき                                 | `consistency`      |
+| `/deckrd impl` や `/deckrd tasks` の結果が薄いと感じたとき | `completeness`     |
 
-## When to Invoke (RECOMMENDED)
+## 推奨する場面
 
-Consider invoking in these situations:
+以下の状況では呼び出しを検討する。
 
-| Situation                                         | Recommended focus |
-| ------------------------------------------------- | ----------------- |
-| An implementation approach has failed twice       | `feasibility`     |
-| Requirements feel ambiguous after `/deckrd req`   | `completeness`    |
-| Specifications reference external systems heavily | `risk`            |
+| 状況                                   | 推奨フォーカス |
+| -------------------------------------- | -------------- |
+| 実装方針が 2 回失敗している            | `feasibility`  |
+| `/deckrd req` の後で要件が曖昧に感じる | `completeness` |
+| 仕様が外部システムに強く依存している   | `risk`         |
 
-## How Codex Differs from Claude Review
+## Claude レビューとの役割の違い
 
-Claude (`/deckrd review`) and codex (`/deckrd:deckrd-review <phase>`) play different roles:
+| 観点   | Claude レビュー (`/deckrd review`) | codex セカンドオピニオン |
+| ------ | ---------------------------------- | ------------------------ |
+| 立場   | 一次分析者・建設的                 | 独立した批判者・敵対的   |
+| 目的   | ドキュメントを成熟させる           | 前提そのものを疑う       |
+| 出力   | 指摘 + DR エントリ                 | リスク・欠落・盲点       |
+| トーン | 協調的                             | 悪魔の代弁者             |
 
-| Aspect      | Claude review                 | Codex second opinion            |
-| ----------- | ----------------------------- | ------------------------------- |
-| Perspective | Primary analyst, constructive | Independent critic, adversarial |
-| Goal        | Mature the document           | Challenge assumptions           |
-| Output      | Findings + DR entries         | Risks, gaps, blind spots        |
-| Tone        | Collaborative                 | Devil's advocate                |
+## 指摘の扱い
+
+| 対応       | 手順                                               |
+| ---------- | -------------------------------------------------- |
+| 受け入れる | 次のコマンドの前に、どの指摘に対処するかを記録する |
+| 却下する   | 必ず理由を示す。黙って無視することは許されない     |
+| 深掘りする | 同じセッション内で `q` を使い codex に追加質問する |
+
+外部インターフェースやデータ永続化に関わる機能では、`req` と `spec` のセカンドオピニオンを
+スキップして次フェーズへ進んではならない。
 
 ## Common Rationalizations
 
-| Rationalization                               | Reality                                                                                                                         |
-| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| "I'm confident, no need for a second opinion" | Confidence correlates poorly with correctness. Moments of certainty are exactly when blind spots hide.                          |
-| "Invoking codex is expensive"                 | Debugging a wrong decision downstream (spec/impl/commit) is more expensive than one review call.                                |
-| "A second opinion is just noise"              | Noise comes from an unscoped prompt, not from the practice itself. Don't skip it on the REQUIRED situations in the table above. |
-
-## Handling Codex Findings
-
-- Accept: Note which findings to act on before the next command
-- Reject: Always provide a reason — silent rejection is not allowed
-- Follow-up: Use `q` to ask codex clarifying questions in the same session
-- Never skip second opinion on `req` or `spec` before moving to the next phase
-  on features that affect external interfaces or data persistence
+| 言い訳                                     | 反論                                                                                 |
+| ------------------------------------------ | ------------------------------------------------------------------------------------ |
+| 自信があるのでセカンドオピニオンは要らない | 自信と正しさの相関は低い。確信しているときこそ盲点が隠れている                       |
+| codex を呼ぶのはコストが高い               | 誤った判断が下流（spec / impl / commit）でデバッグになるほうが高くつく               |
+| セカンドオピニオンはノイズにしかならない   | ノイズはスコープを絞らないプロンプトから出る。必須の場面まで省略する理由にはならない |

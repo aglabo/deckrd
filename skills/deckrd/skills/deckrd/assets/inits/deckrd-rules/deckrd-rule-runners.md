@@ -1,17 +1,44 @@
 ---
-title: "Deckrd Rule: Test and Lint Runners"
-description: "Always run tests and linters through pnpm scripts, never the underlying tools"
-version: 1.0.0
+title: "Deckrd Rule: テスト・リントの実行経路"
+description: "テスト・リント・フォーマットはプロジェクトが定義したスクリプト経由で実行する"
+version: 2.0.0
 ---
 
-## Deckrd Rule: Test and Lint Runners
+## Deckrd Rule: テスト・リントの実行経路
 
-Always use `pnpm run` scripts. Never invoke runners or tools directly.
+**テスト・リント・フォーマットは、プロジェクトが定義したスクリプト経由で実行する。
+下位のツールを直接起動してはならない。**
 
-| Task                  | Command                  | Do NOT use                              |
-| --------------------- | ------------------------ | --------------------------------------- |
-| Run tests (ShellSpec) | `pnpm run test:sh`       | `shellspec`, `runners/run-shellspec.sh` |
-| Lint markdown         | `pnpm run lint:markdown` | `runners/run-markdownlint.sh`           |
-| Lint text             | `pnpm run lint:text`     | `runners/run-textlint.sh`               |
-| Format check          | `dprint check`           | —                                       |
-| Format fix            | `dprint fmt`             | —                                       |
+理由: 設定ファイルのパス・引数・環境変数・対象ディレクトリはスクリプト側に埋め込まれている。
+ツールを直接叩くと、それらが抜けた状態で走り、CI と結果が食い違う。
+「ローカルでは通ったのに CI で落ちる」の典型的な原因になる。
+
+## プロジェクトの実行コマンド
+
+`init` の直後に、このプロジェクトの実行経路を記入する。
+記入するまで、テスト・リントの実行前に必ずプロジェクトのタスク定義
+（`package.json` の scripts、`Makefile`、`justfile`、`Taskfile` 等）を確認すること。
+
+| 用途             | 実行するコマンド | 直接叩いてはならないもの |
+| ---------------- | ---------------- | ------------------------ |
+| ユニットテスト   |                  |                          |
+| リント（コード） |                  |                          |
+| リント（文書）   |                  |                          |
+| フォーマット確認 |                  |                          |
+| フォーマット修正 |                  |                          |
+
+記入例:
+
+| 用途             | 実行するコマンド         | 直接叩いてはならないもの                |
+| ---------------- | ------------------------ | --------------------------------------- |
+| ユニットテスト   | `pnpm run test:sh`       | `shellspec`, `runners/run-shellspec.sh` |
+| リント（文書）   | `pnpm run lint:markdown` | `markdownlint`, `runners/run-*.sh`      |
+| フォーマット確認 | `dprint check`           | —                                       |
+
+## Common Rationalizations
+
+| 言い訳                                   | 反論                                                                           |
+| ---------------------------------------- | ------------------------------------------------------------------------------ |
+| 1 ファイルだけなのでツールを直接叩く     | 設定と対象範囲が抜けた実行になる。1 ファイルの絞り込みはスクリプトの引数で行う |
+| スクリプトは遅いので中身を直接実行する   | 遅さは最適化の対象であって、迂回の理由にはならない                             |
+| スクリプトが何をしているか読んだから同じ | 読んだ時点の内容でしかない。スクリプトは更新される                             |
