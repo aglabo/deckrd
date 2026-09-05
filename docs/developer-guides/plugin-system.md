@@ -107,6 +107,7 @@ skills/{skill-name}/
 
 **Components**:
 
+- Skills: bdd-coder (`/bdd-coder:bdd-coder`), bdd-coder-review (`/bdd-coder:bdd-coder-review`)
 - Agents: checklist-builder, bdd-coder, code-reviewer, explore-agent
 - Templates: Test templates per language
 - References: BDD cycle documentation
@@ -153,11 +154,11 @@ main "$@"
 
 ### Command Lifecycle
 
-1. **User invokes command**: `/deckrd {command}`
-2. **Claude Code dispatches**: Calls corresponding skill
-3. **Script executes**: Reads session, performs operations
-4. **Script updates state**: Writes to session file
-5. **Script returns result**: Claude shows output to user
+1. User invokes command: `/deckrd {command}`
+2. Claude Code dispatches: Calls corresponding skill
+3. Script executes: Reads session, performs operations
+4. Script updates state: Writes to session file
+5. Script returns result: Claude shows output to user
 
 ### Session Management
 
@@ -217,6 +218,9 @@ tools: [Read, Write, Edit, Bash, Grep, Glob]
 #### code-reviewer
 
 **Purpose**: Post-implementation review — CC/CRAP scoring + Codex second opinion
+
+**Entry points**: bdd-coder skill Phase 4 (automatic), or `/bdd-coder:bdd-coder-review` (on demand).
+Reviews the session's changes in aggregate. Never invoked directly by the user.
 
 #### explore-agent
 
