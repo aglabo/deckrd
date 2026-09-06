@@ -244,33 +244,10 @@ Changed files 列は bdd-coder の Status Report の `CHANGED_FILES` 行をそ�
 code-reviewer は **セッション全体で 1 回だけ** 起動する (タスクごとのループはしない)。起動パラメータ:
 
 - `task_id`: 単一タスク起動ならその ID。複数タスクにまたがる場合は `N/A`
-- `changed_files`: 後述の解決手順で得たパスのうち実装ファイル
-- `test_files`: 同じパス集合のうちテストファイル (ENV PROFILE のテストファイル規約で振り分け)
+- `changed_files`: 作業ツリーの差分 (`git diff --name-only`、`--cached` 分も併合) のうち実装ファイル
+- `test_files`: 同じ差分のうちテストファイル (ENV PROFILE のテストファイル規約で振り分け)
 - `env_profile`: `temp/deckrd-work/env-profile.md`
 - `coverage_cmd`: ENV PROFILE のカバレッジコマンド
-
-#### レビュー対象パスの解決
-
-レビュー範囲はこのセッションが変更したファイルに限る。次の順で解決する。
-
-| 順 | 方法                                                                             |
-| -- | -------------------------------------------------------------------------------- |
-| 1  | Phase 3 のステータス表の Changed files 列の和集合                                |
-| 2  | 1 が取れない場合、作業ツリーの全変更から SESSION BASELINE のパスを差し引いたもの |
-
-作業ツリーの全変更は、次の 3 つを併合して重複を除いたものとする。
-
-```bash
-git diff --name-only                        # 未ステージ
-git diff --name-only --cached               # ステージ済み
-git ls-files --others --exclude-standard    # 未追跡 (gitignore 対象は除く)
-```
-
-3 つ目を落とすと、bdd-coder が新規作成した実装ファイル・テストファイルがレビューされない。
-BDD の直後はこれが最も起きやすい取りこぼしである。
-
-削除されたパスは除外しない。削除はレビュー対象の変更であり、code-reviewer は
-`git diff -- <path>` でパッチを読む。
 
 同じレビューは `/bdd-coder:bdd-coder-review` で任意のタイミングでも実行できる。
 

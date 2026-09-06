@@ -8,7 +8,7 @@ description: >
   second opinion on correctness, design, and test quality.
   Spawned by the bdd-coder skill at Phase 4, or by /bdd-coder:bdd-coder-review
   on demand. Do NOT invoke directly.
-tools: Bash, Read, Grep, Glob, mcp__codex-mcp__codex
+tools: Bash, Read, Grep, Glob, mcp__plugin_deckrd_codex-mcp__codex, mcp__plugin_idd_codex-mcp__codex
 model: inherit
 color: yellow
 ---
@@ -89,7 +89,9 @@ Instead, classify by CC alone using the following table and mark the score as `c
 
 ### Phase 2: Code Review via codex-mcp
 
-Delegate a full review to `mcp__codex-mcp__codex` with the following prompt:
+Delegate a full review to the available codex MCP tool
+(`mcp__plugin_deckrd_codex-mcp__codex` or `mcp__plugin_idd_codex-mcp__codex`)
+with the following prompt:
 
 ```markdown
 Review the following implementation for task <task_id>.

@@ -6,7 +6,7 @@ description: >
   Detects development environment configuration and writes a profile for the main coding session.
   Supports scope: pattern-detection only.
   Spawned by bdd-coder skill to detect language, test framework, and tool commands.
-tools: Read, Grep, Glob, Bash, mcp__codegraph-mcp__codegraph_explore, mcp__cocoindex-code__search, mcp__serena-mcp__get_symbols_overview, mcp__serena-mcp__find_symbol, mcp__serena-mcp__find_referencing_symbols
+tools: Read, Grep, Glob, Bash, mcp__plugin_deckrd_cocoindex-code__search
 model: inherit
 color: green
 ---
@@ -51,23 +51,12 @@ Path: `../skills/bdd-coder/assets/languages/<language>.md`
 
 When the caller provides target function/class names, use MCP tools BEFORE reading files:
 
-1. `codegraph_explore` — resolve symbol location, callers, and blast radius in one call:
-
-   ```bash
-   query: "<FunctionName> implementation and callers"
-   ```
-
-   Returns verbatim source + who calls it + what depends on it. Prefer this over Read + grep loops.
-
-2. `cocoindex-code search` — find existing implementations by concept when exact names are unknown:
+1. `mcp__plugin_deckrd_cocoindex-code__search` — find existing implementations by concept
+   when exact names are unknown:
 
    ```bash
    query: "path normalization utility"
    ```
-
-3. `serena get_symbols_overview` — get a structural overview of a module without reading every file.
-
-4. `serena find_referencing_symbols` — find all callers of a symbol to map blast radius.
 
 Use MCP results to populate the environment profile. Fall back to `Read`/`Grep`/`Glob` only when MCP returns insufficient detail.
 
@@ -143,6 +132,6 @@ Return the **Commands table** and language name to the main session.
 
 <!-- textlint-enable @textlint-ja/ai-writing/no-ai-list-formatting -->
 
-- Allowed tools: `Read`, `Grep`, `Glob`, `Bash` (read-only only), `codegraph_explore`, `cocoindex-code search`, `serena get_symbols_overview`, `serena find_symbol`, `serena find_referencing_symbols`
+- Allowed tools: `Read`, `Grep`, `Glob`, `Bash` (read-only only), `mcp__plugin_deckrd_cocoindex-code__search`
 - MCP tools are preferred for symbol/caller lookups — use Read/Grep only as fallback
 - Output file exception: MAY write to `temp/deckrd-work/env-profile.md`
