@@ -2,15 +2,16 @@
 title: "MCP Servers API Reference"
 description: "Complete API reference for MCP servers used in deckrd project"
 category: "specs"
-tags: ["api", "mcp", "cocoindex-code", "filesystem"]
+tags: ["api", "mcp", "cocoindex-code", "filesystem", "codex-mcp"]
 created: "2026-01-14"
-version: "0.1.1"
+version: "0.2.0"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
   - 0.0.4   2026-01-14  Initial version
   - 0.1.0   2026-03-21  Update to cocoindex-code / filesystem
   - 0.1.1   2026-09-06  Fix stale plugins/ paths to skills/
+  - 0.2.0   2026-09-06  Remove serena-mcp / lsmcp sections, add cocoindex-code and tool naming
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.
@@ -28,505 +29,186 @@ status: "published"
 
 ## Overview
 
-This document provides detailed API reference for the three MCP servers used in the deckrd project.
+This document provides the API reference for the three MCP servers used in the deckrd project.
+All three are declared by the deckrd plugin in `skills/deckrd/.mcp.json`.
+
+| Server           | Purpose                    | Declared in               |
+| ---------------- | -------------------------- | ------------------------- |
+| `cocoindex-code` | Semantic code search       | `skills/deckrd/.mcp.json` |
+| `filesystem`     | File system access         | `skills/deckrd/.mcp.json` |
+| `codex-mcp`      | Independent AI code review | `skills/deckrd/.mcp.json` |
+
+The `bdd-coder` plugin declares no MCP server of its own; it uses the servers provided by
+whichever plugins are installed alongside it.
 
 See also: [MCP Server Configuration](./mcp-servers-config.md) for setup instructions.
 
-## serena-mcp
+## Tool Naming
 
-**Purpose**: Semantic code analysis for bash scripts
+Tool names differ depending on where the server is declared. Getting this wrong is silent:
+the call simply never resolves.
 
-**Configuration**: `.mcp.json` → `serena-mcp`
+| Declared in                | Tool name                               |
+| -------------------------- | --------------------------------------- |
+| Project `.mcp.json` (root) | `mcp__<server>__<tool>`                 |
+| A plugin's `.mcp.json`     | `mcp__plugin_<plugin>_<server>__<tool>` |
 
-**Memory Location**: `.serena/memories/`
+Because deckrd declares its servers inside the plugin, the scoped form is the only valid one:
 
-### Core APIs
-
-#### list_dir
-
-Lists files and directories in a given directory.
-
-**Parameters**:
-
-- `relative_path` (string, required) - Path relative to project root
-- `recursive` (boolean, required) - Whether to scan recursively
-- `skip_ignored_files` (boolean, optional) - Skip gitignored files
-
-**Example**:
-
-```bash
-serena-mcp list_dir --relative-path "skills/deckrd" --recursive true
+```text
+mcp__plugin_deckrd_cocoindex-code__search
+mcp__plugin_deckrd_filesystem__read_text_file
+mcp__plugin_deckrd_codex-mcp__codex
 ```
 
-#### find_file
+Two caveats when writing an agent's `tools:` or a skill's `allowed-tools:`:
 
-Finds files matching a given pattern.
+- **Deduplication.** When two installed plugins declare the same server command, only one
+  connects. The IDD framework also ships `codex mcp-server` as `codex-mcp`, so on a machine
+  with both plugins the live name may be `mcp__plugin_idd_codex-mcp__codex` instead.
+  List both scoped names; the one that does not resolve is ignored.
+- **Verify, do not guess.** Run `claude mcp list` to see which servers actually connected.
 
-**Parameters**:
+## cocoindex-code
 
-- `file_mask` (string, required) - Filename or pattern (* or ?)
-- `relative_path` (string, required) - Directory to search in
+**Purpose**: Semantic code search across the codebase.
 
-**Example**:
+**Command**: `ccc mcp`
 
-```bash
-serena-mcp find_file --file-mask "*.sh" --relative-path "scripts"
-```
+### search
 
-#### search_for_pattern
+Finds code by meaning rather than by text match. Accepts a natural language query or a
+code snippet, and returns matching chunks with file paths, line numbers, and relevance scores.
 
-Searches for regex patterns in files.
-
-**Parameters**:
-
-- `substring_pattern` (string, required) - Regex pattern
-- `relative_path` (string, optional) - Restrict to path
-- `restrict_search_to_code_files` (boolean, optional) - Code files only
-- `paths_include_glob` (string, optional) - Include glob pattern
-- `paths_exclude_glob` (string, optional) - Exclude glob pattern
-- `context_lines_before` (number, optional) - Lines before match
-- `context_lines_after` (number, optional) - Lines after match
-
-**Example**:
-
-```bash
-serena-mcp search_for_pattern --substring-pattern "function main"
-```
-
-#### get_symbols_overview
-
-Gets high-level overview of code symbols in a file.
+**Tool name**: `mcp__plugin_deckrd_cocoindex-code__search`
 
 **Parameters**:
 
-- `relative_path` (string, required) - File path
-- `depth` (number, optional) - Depth of child symbols (default: 0)
-
-**Example**:
-
-```bash
-serena-mcp get_symbols_overview --relative-path "scripts/init.sh"
-```
-
-#### find_symbol
-
-Retrieves information about symbols matching a name path pattern.
-
-**Parameters**:
-
-- `name_path_pattern` (string, required) - Symbol name/path pattern
-- `relative_path` (string, optional) - Restrict to file/directory
-- `depth` (number, optional) - Depth of descendants
-- `include_body` (boolean, optional) - Include source code
-- `include_info` (boolean, optional) - Include hover info
-- `substring_matching` (boolean, optional) - Use substring matching
-
-**Example**:
-
-```bash
-serena-mcp find_symbol --name-path-pattern "main" --include-body true
-```
-
-#### find_referencing_symbols
-
-Finds references to a symbol.
-
-**Parameters**:
-
-- `name_path` (string, required) - Symbol name path
-- `relative_path` (string, required) - File containing symbol
-- `include_info` (boolean, optional) - Include hover info
-
-**Example**:
-
-```bash
-serena-mcp find_referencing_symbols --name-path "main" --relative-path "init.sh"
-```
-
-### Editing APIs
-
-#### replace_symbol_body
-
-Replaces the body of a symbol.
-
-**Parameters**:
-
-- `name_path` (string, required) - Symbol to replace
-- `relative_path` (string, required) - File containing symbol
-- `body` (string, required) - New symbol body
-
-#### insert_after_symbol
-
-Inserts content after a symbol.
-
-**Parameters**:
-
-- `name_path` (string, required) - Symbol to insert after
-- `relative_path` (string, required) - File containing symbol
-- `body` (string, required) - Content to insert
-
-#### insert_before_symbol
-
-Inserts content before a symbol.
-
-**Parameters**:
-
-- `name_path` (string, required) - Symbol to insert before
-- `relative_path` (string, required) - File containing symbol
-- `body` (string, required) - Content to insert
-
-#### rename_symbol
-
-Renames a symbol throughout the codebase.
-
-**Parameters**:
-
-- `name_path` (string, required) - Symbol to rename
-- `relative_path` (string, required) - File containing symbol
-- `new_name` (string, required) - New symbol name
-
-### Memory APIs
-
-#### list_memories
-
-Lists available project memories.
-
-**Returns**: Array of memory filenames
-
-#### read_memory
-
-Reads content of a memory file.
-
-**Parameters**:
-
-- `memory_file_name` (string, required) - Memory filename
-
-#### write_memory
-
-Writes content to a memory file.
-
-**Parameters**:
-
-- `memory_file_name` (string, required) - Memory filename
-- `content` (string, required) - Memory content
-
-#### delete_memory
-
-Deletes a memory file.
-
-**Parameters**:
-
-- `memory_file_name` (string, required) - Memory filename
-
-#### edit_memory
-
-Edits memory content using regex replacement.
-
-**Parameters**:
-
-- `memory_file_name` (string, required) - Memory filename
-- `needle` (string, required) - Pattern to match
-- `repl` (string, required) - Replacement text
-- `mode` (string, required) - "literal" or "regex"
-
-## lsmcp
-
-**Purpose**: Language Server Protocol integration for TypeScript/JavaScript
-
-**Configuration**: `.mcp.json` → `lsmcp` with `-p typescript`
-
-**Cache Location**: `.lsmcp/`
-
-### Core LSP APIs
-
-#### lsp_get_hover
-
-Gets hover information at a specific position.
-
-**Parameters**:
-
-- `root` (string, required) - Project root directory
-- `relativePath` (string, required) - File path
-- `line` (number|string, required) - Line number (1-based) or line text
-- `textTarget` (string, optional) - Text to find hover info for
-
-#### lsp_get_definitions
-
-Gets definition(s) of a symbol.
-
-**Parameters**:
-
-- `root` (string, required) - Project root
-- `relativePath` (string, required) - File path
-- `line` (number|string, required) - Line number or text
-- `symbolName` (string, required) - Symbol name
-- `includeBody` (boolean, optional) - Include full body
-- `before` (number, optional) - Lines before
-- `after` (number, optional) - Lines after
-
-#### lsp_find_references
-
-Finds all references to a symbol.
-
-**Parameters**:
-
-- `root` (string, required) - Project root
-- `relativePath` (string, required) - File path
-- `line` (number|string, required) - Line number or text
-- `symbolName` (string, required) - Symbol name
-
-#### lsp_get_diagnostics
-
-Gets diagnostics (errors, warnings) for a file.
-
-**Parameters**:
-
-- `root` (string, required) - Project root
-- `relativePath` (string, required) - File path
-- `forceRefresh` (boolean, optional) - Force refresh (default: true)
-- `timeout` (number, optional) - Timeout in ms (default: 5000)
-
-#### lsp_get_document_symbols
-
-Gets all symbols in a document.
-
-**Parameters**:
-
-- `root` (string, required) - Project root
-- `relativePath` (string, required) - File path
-
-#### lsp_get_completion
-
-Gets code completion suggestions.
-
-**Parameters**:
-
-- `root` (string, required) - Project root
-- `relativePath` (string, required) - File path
-- `line` (number|string, required) - Line number or text
-- `textTarget` (string, optional) - Text at position
-- `includeAutoImport` (boolean, optional) - Include auto-imports
-- `resolve` (boolean, optional) - Resolve for details
-
-#### lsp_rename_symbol
-
-Renames a symbol across the codebase.
-
-**Parameters**:
-
-- `root` (string, required) - Project root
-- `relativePath` (string, required) - File path
-- `textTarget` (string, required) - Symbol to rename
-- `newName` (string, required) - New symbol name
-
-#### lsp_format_document
-
-Formats an entire document.
-
-**Parameters**:
-
-- `root` (string, required) - Project root
-- `relativePath` (string, required) - File path
-- `applyChanges` (boolean, optional) - Apply formatting (default: false)
-- `tabSize` (number, optional) - Tab size (default: 2)
-- `insertSpaces` (boolean, optional) - Use spaces (default: true)
-
-### Index APIs
-
-#### search_symbols
-
-Searches for symbols using indexed search.
-
-**Parameters**:
-
-- `root` (string, optional) - Project root
-- `query` or `name` (string, optional) - Symbol name/pattern
-- `kind` (string|array, optional) - Symbol kind(s) to filter
-- `file` (string, optional) - File to search within
-- `containerName` (string, optional) - Container name
-- `includeChildren` (boolean, optional) - Include child symbols
-- `includeExternal` (boolean, optional) - Include external libraries
-- `onlyExternal` (boolean, optional) - Only external symbols
-- `sourceLibrary` (string, optional) - Filter by library name
-
-**Symbol Kinds**:
-
-- File, Module, Namespace, Package
-- Class, Method, Property, Field, Constructor
-- Enum, EnumMember, Interface, Struct
-- Function, Variable, Constant
-- String, Number, Boolean, Array, Object
-- Event, Operator, TypeParameter
-
-#### get_symbol_details
-
-Gets comprehensive details about a symbol.
-
-**Parameters**:
-
-- `root` (string, optional) - Project root
-- `relativePath` (string, required) - File path
-- `line` (number|string, required) - Line number or text
-- `symbol` (string, required) - Symbol name
-
-#### replace_range
-
-Replaces a specific range of text.
-
-**Parameters**:
-
-- `root` (string, required) - Project root
-- `relativePath` (string, required) - File path
-- `startLine` (number, required) - Start line (1-based)
-- `startCharacter` (number, required) - Start char (0-based)
-- `endLine` (number, required) - End line (1-based)
-- `endCharacter` (number, required) - End char (0-based)
-- `newContent` (string, required) - Replacement content
-- `preserveIndentation` (boolean, optional) - Preserve indentation
-
-### External Library APIs
-
-#### index_external_libraries
-
-Indexes TypeScript declarations from node_modules.
-
-**Parameters**:
-
-- `root` (string, required) - Project root
-- `maxFiles` (number, optional) - Max files to index (default: 5000)
-- `includePatterns` (array, optional) - Glob patterns to include
-- `excludePatterns` (array, optional) - Glob patterns to exclude
-
-#### get_typescript_dependencies
-
-Lists TypeScript dependencies available in the project.
-
-**Parameters**:
-
-- `root` (string, required) - Project root
-
-#### resolve_symbol
-
-Resolves a symbol to its definition in external libraries.
-
-**Parameters**:
-
-- `root` (string, required) - Project root
-- `filePath` (string, required) - File containing import
-- `symbolName` (string, required) - Symbol name to resolve
-
-## codex-mcp
-
-**Purpose**: AI-powered code generation and template processing
-
-**Configuration**: `.mcp.json` → `codex-mcp`
-
-### APIs
-
-> Note: codex-mcp provides AI-powered generation APIs. Specific API methods depend on the codex-mcp version installed. Consult the codex-mcp documentation for detailed API reference.
-
-Semantic code search. Searches code using a natural language query.
-
-**Parameters**:
-
-- `query` (string, required) - Search query (natural language)
-- `lang` (string, optional) - Language filter
+- `query` (string, required) - Natural language query or code snippet
+- `limit` (integer, optional, default 5) - Maximum results, 1-100
+- `offset` (integer, optional, default 0) - Results to skip, for pagination
+- `languages` (string[], optional) - Language filter, e.g. `["python", "typescript"]`
+- `paths` (string[], optional) - Path filter using GLOB wildcards, e.g. `["src/utils/*"]`
+- `refresh_index` (boolean, optional, default true) - Incrementally update the index before searching
+
+Start with a small `limit`; if most results look relevant, paginate with `offset`.
+Set `refresh_index: false` for consecutive queries when the codebase has not changed.
 
 ## filesystem
 
-**Purpose**: File system access.
+**Purpose**: File system access, scoped to allowed directories.
 
-**Configuration**:
+**Command**: `npx -y @modelcontextprotocol/server-filesystem .`
 
-```json
-{
-  "filesystem": {
-    "command": "pnpx",
-    "args": ["@modelcontextprotocol/server-filesystem", "."]
-  }
-}
-```
+**Tool name prefix**: `mcp__plugin_deckrd_filesystem__`
 
-### APIs
+### Read APIs
 
-#### read_file
+| Tool                        | Purpose                               | Parameters                                      |
+| --------------------------- | ------------------------------------- | ----------------------------------------------- |
+| `read_text_file`            | Read a file as text                   | `path` (required), `head`, `tail`               |
+| `read_media_file`           | Read an image or audio file as base64 | `path` (required)                               |
+| `read_multiple_files`       | Read several files in one call        | `paths` (required)                              |
+| `list_directory`            | List directory entries                | `path` (required)                               |
+| `list_directory_with_sizes` | List entries with file sizes          | `path` (required), `sortBy`                     |
+| `directory_tree`            | Recursive tree as JSON                | `path` (required), `excludePatterns`            |
+| `search_files`              | Recursive glob search                 | `path`, `pattern` (required), `excludePatterns` |
+| `get_file_info`             | Size, timestamps, permissions         | `path` (required)                               |
+| `list_allowed_directories`  | Directories the server may access     | none                                            |
 
-Reads the content of the specified file.
+`read_file` also exists but is deprecated in favor of `read_text_file`.
+
+### Write APIs
+
+| Tool               | Purpose                                    | Parameters                           |
+| ------------------ | ------------------------------------------ | ------------------------------------ |
+| `write_file`       | Create or overwrite a file                 | `path`, `content` (required)         |
+| `edit_file`        | Line-based edits, returns a git-style diff | `path`, `edits` (required), `dryRun` |
+| `create_directory` | Create a directory, including parents      | `path` (required)                    |
+| `move_file`        | Move or rename                             | `source`, `destination` (required)   |
+
+Each entry in `edits` is `{ oldText, newText }`, and `oldText` must match exactly.
+Use `dryRun: true` to preview the diff before applying.
+
+## codex-mcp
+
+**Purpose**: Run an independent Codex session for second-opinion review and code generation.
+
+**Command**: `codex mcp-server`
+
+Used by `/deckrd:deckrd-review` and by the `code-reviewer` agent of `bdd-coder`.
+
+### codex
+
+Starts a Codex session.
+
+**Tool name**: `mcp__plugin_deckrd_codex-mcp__codex`
+(or `mcp__plugin_idd_codex-mcp__codex` when the IDD framework wins deduplication)
 
 **Parameters**:
 
-- `path` (string, required) - File path
+- `prompt` (string, required) - Initial user prompt
+- `model` (string, optional) - Model override, e.g. `gpt-5.2-codex`
+- `cwd` (string, optional) - Working directory for the session
+- `sandbox` (string, optional) - `read-only`, `workspace-write`, or `danger-full-access`
+- `approval-policy` (string, optional) - `untrusted`, `on-request`, or `never`
+- `base-instructions` / `developer-instructions` (string, optional) - Instruction overrides
+- `config` (object, optional) - Settings that override `CODEX_HOME/config.toml`
 
-#### write_file
+For review use, pass `sandbox: "read-only"` so the reviewer cannot modify the working tree.
 
-Writes content to a file.
+### codex-reply
 
-**Parameters**:
+Continues an existing Codex conversation.
 
-- `path` (string, required) - File path
-- `content` (string, required) - Content to write
-
-#### list_directory
-
-Lists the contents of a directory.
-
-**Parameters**:
-
-- `path` (string, required) - Directory path
-
-#### create_directory
-
-Creates a directory.
+**Tool name**: `mcp__plugin_deckrd_codex-mcp__codex-reply`
 
 **Parameters**:
 
-- `path` (string, required) - Path of the directory to create
+- `prompt` (string, required) - Next user prompt
+- `threadId` (string, required in practice) - Thread id returned by the `codex` call
 
 ## Usage Patterns
 
-### Bash Script Analysis (serena-mcp)
+### Locating existing code before implementing
 
 ```text
-# Search code using natural language
-query: "function that handles session initialization"
-
-# Search with language filter
-query: "error handling pattern"
-lang: "bash"
+mcp__plugin_deckrd_cocoindex-code__search
+  query: "function that handles session initialization"
+  paths: ["skills/deckrd/**"]
+  limit: 5
 ```
 
-### TypeScript Analysis (lsmcp)
+### Independent review of a change
 
 ```text
-# Read a file
-path: "skills/deckrd/skills/deckrd/scripts/init.sh"
-
-# List a directory
-path: "skills/deckrd/skills/"
+mcp__plugin_deckrd_codex-mcp__codex
+  prompt: "Review the following implementation for correctness and test quality: ..."
+  sandbox: "read-only"
 ```
 
 ## Performance Tips
 
 ### Token Usage
 
-1. **Use Memories**: Cache project context in memories
-2. **Symbolic Search**: Prefer `find_symbol` over full file reads
-3. **Pattern Search**: Use `search_for_pattern` for quick lookups
-4. **Lazy Loading**: Only load what you need
+1. Search before reading. Use `cocoindex-code` to narrow down which files matter.
+2. Bound every read. Use `head` / `tail` on `read_text_file` instead of reading whole files.
+3. Batch reads. `read_multiple_files` costs one round trip instead of several.
 
 ### Search Optimization
 
-1. **Natural language queries**: cocoindex-code uses semantic understanding to find related code even when the exact keyword is unknown
-2. **Language filter**: Use the `lang` parameter to narrow the search target
+1. `cocoindex-code` finds related code even when the exact keyword is unknown.
+2. Narrow the scope with `languages` and `paths` to cut irrelevant matches.
+3. Set `refresh_index: false` for repeated queries on an unchanged tree.
 
 ## Error Handling
 
-### Common Errors
-
-#### "File not found"
-
-- Rephrase the query and retry
-- Remove the `lang` filter to broaden the search scope
+| Symptom                          | Cause and remedy                                                              |
+| -------------------------------- | ----------------------------------------------------------------------------- |
+| The tool call never resolves     | Wrong tool name. Use the scoped form and confirm with `claude mcp list`       |
+| A codex tool is missing          | Deduplicated against another plugin. List both scoped names in `tools:`       |
+| `cocoindex-code` returns nothing | Rephrase the query, or drop the `languages` / `paths` filters                 |
+| `filesystem` access denied       | The path is outside the allowed directories; check `list_allowed_directories` |
 
 ## Related Documentation
 
