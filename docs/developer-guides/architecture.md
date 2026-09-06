@@ -4,13 +4,14 @@ description: "High-level architecture and design principles of the deckrd projec
 category: "developer-guides"
 tags: ["architecture", "design", "overview"]
 created: "2026-01-14"
-version: "0.4.0"
+version: "0.5.0"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
   - 0.0.4   2026-01-14  Initial version
   - 0.1.0   2026-03-21  Update schema, update Layer 3 MCP servers to cocoindex-code/filesystem, add lang/ai_model fields to session schema
   - 0.4.0   2026-06-19  Rename deckrd-coder to bdd-coder, update paths from plugins/ to skills/
+  - 0.5.0   2026-09-06  Add codex-mcp to Layer 3 MCP servers
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.
@@ -126,6 +127,13 @@ Easy to add new skills:
 - File system access
 - File read/write operations
 - Used by: deckrd, bdd-coder
+
+**codex-mcp**:
+
+- Independent AI code review via a separate Codex session
+- Used by: `/deckrd:deckrd-review`, bdd-coder's `code-reviewer` agent
+
+All three are declared in `skills/deckrd/.mcp.json`.
 
 ### Layer 4: Configuration & Quality Gates
 

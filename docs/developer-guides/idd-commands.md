@@ -4,13 +4,14 @@ description: "Complete reference for Issue-Driven Development framework commands
 category: "developer-guides"
 tags: ["idd-framework", "commands", "reference", "github"]
 created: "2026-01-14"
-version: "0.1.0"
+version: "0.5.0"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
   - 0.0.4   2026-01-14  Initial version
   - 0.1.0   2026-03-22  Version update
   - 0.4.0   2026-06-19  Rename deckrd-coder to bdd-coder
+  - 0.5.0   2026-09-06  Remove /sdd and /serena (absent from IDD 0.6.0), drop serena-mcp reference
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.
@@ -220,38 +221,6 @@ feat(auth): add user authentication with JWT
 - Create auth middleware
 ```
 
-## Spec-Driven Development
-
-### /sdd
-
-**Usage**: `/sdd`
-
-**Purpose**: Spec-Driven Development workflow with MCP integration
-
-**Features**:
-
-- Requirements definition to implementation
-- Consistent development support
-- MCP (serena-mcp, codex-mcp, lsmcp) integration
-
-**Use Case**: Efficient workflow from requirements to implementation
-
-## Serena Integration
-
-### /serena
-
-**Usage**: `/serena`
-
-**Purpose**: serena-mcp integrated structured application development
-
-**Features**:
-
-- Structured problem-solving
-- Semantic code analysis
-- Symbol-based code navigation
-
-**Use Case**: Complex codebase navigation and refactoring
-
 ## Validation & Debug
 
 ### /validate-debug
@@ -396,7 +365,7 @@ gh auth status
 
 ## Notes
 
-- IDD framework is bash-based (analyze with serena-mcp)
+- IDD framework is bash-based (analyze with cocoindex-code)
 - Temp directory (`temp/idd/`) stores working files
 - All commands integrate with GitHub via `gh` CLI
 - Agents use Task tool for complex multi-step workflows
