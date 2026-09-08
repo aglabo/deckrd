@@ -216,4 +216,457 @@ Describe "module.sh"
     End
   End
 
+  # --------------------------------------------------------------------------
+  # derive_test_scope
+  # --------------------------------------------------------------------------
+
+  Describe "derive_test_scope"
+
+    load_module_functions() {
+      # Mock: validate_env を常に成功させる
+      # shellcheck disable=SC2329
+      validate_env() { return 0; }
+      export -f validate_env
+
+      # module.sh を source して関数をロード
+      # shellcheck disable=SC1090
+      . "$SCRIPT"
+    }
+    Before "load_module_functions"
+
+    Describe "Given: module name containing a word separator"
+      Parameters
+        "is-collection" "IC"
+        "chat-log-normalize" "CLN"
+        "a-b-c-d-e-f" "ABCD"
+        "foo_bar" "FB"
+      End
+
+      Describe "When: call derive_test_scope"
+        It "[Normal] Should: exit with status 0 and output the uppercased word initials truncated to 4 characters"
+          When call derive_test_scope "$1"
+          The status should equal 0
+          The output should equal "$2"
+        End
+      End
+    End
+
+    Describe "Given: module name without a word separator"
+      Parameters
+        "libs" "LIB"
+        "runners" "RUN"
+        "subcommands" "SUB"
+        "cli" "CLI"
+        "normalize" "NOR"
+      End
+
+      Describe "When: call derive_test_scope"
+        It "[Normal] Should: exit with status 0 and output the first 3 characters uppercased"
+          When call derive_test_scope "$1"
+          The status should equal 0
+          The output should equal "$2"
+        End
+      End
+    End
+
+    Describe "Given: module name whose derived scope is shorter than 2 characters"
+      Describe "When: call derive_test_scope with 'a'"
+        It "[Error] Should: exit with status 1 and output an error to stderr"
+          When call derive_test_scope "a"
+          The status should equal 1
+          The stderr should include "Error"
+          The stderr should include "'a'"
+          The output should equal ""
+        End
+      End
+    End
+
+    Describe "Given: single word module name with only 2 characters"
+      Describe "When: call derive_test_scope with 'ab'"
+        It "[Edge] Should: exit with status 0 and output the 2 available characters uppercased"
+          When call derive_test_scope "ab"
+          The status should equal 0
+          The output should equal "AB"
+        End
+      End
+    End
+  End
+
+  # --------------------------------------------------------------------------
+  # collect_declared_scopes
+  # --------------------------------------------------------------------------
+
+  Describe "collect_declared_scopes"
+
+    load_module_functions_for_scopes() {
+      # Mock: validate_env を常に成功させる
+      # shellcheck disable=SC2329
+      validate_env() { return 0; }
+      export -f validate_env
+
+      # module.sh を source して関数をロード
+      # shellcheck disable=SC1090
+      . "$SCRIPT"
+    }
+
+    # Helper: 一時 docs ディレクトリに <namespace>/<module>/module.md を作る
+    # shellcheck disable=SC2329
+    write_module_md() {
+      local module_path="$1"
+      shift
+      mkdir -p "${DECKRD_DOCS_DIR}/${module_path}"
+      printf '%s\n' "$@" >"${DECKRD_DOCS_DIR}/${module_path}/module.md"
+    }
+
+    Before "setup_deckrd_tmpdir" "load_module_functions_for_scopes"
+    After "teardown_deckrd_tmpdir"
+
+    Describe "Given: multiple module.md files declaring test_scope"
+      # shellcheck disable=SC2329
+      setup_declared_modules() {
+        write_module_md "alpha/normalize" "---" "title: normalize" "test_scope: NOR" "---" "" "# normalize"
+        write_module_md "bravo/parser" "---" "title: parser" "test_scope: PAR" "---"
+      }
+      Before "setup_declared_modules"
+
+      Describe "When: call collect_declared_scopes"
+        It "[Normal] Should: exit with status 0 and output '<test_scope><TAB><relative module.md path>' per module"
+          When call collect_declared_scopes
+          The status should equal 0
+          The output should equal "$(printf 'NOR\talpha/normalize/module.md\nPAR\tbravo/parser/module.md')"
+        End
+      End
+    End
+
+    Describe "Given: a module.md whose test_scope value is padded with whitespace"
+      # shellcheck disable=SC2329
+      setup_padded_module() {
+        write_module_md "charlie/padded" "---" "test_scope:   PAD   " "---"
+      }
+      Before "setup_padded_module"
+
+      Describe "When: call collect_declared_scopes"
+        It "[Normal] Should: exit with status 0 and output the scope with surrounding whitespace stripped"
+          When call collect_declared_scopes
+          The status should equal 0
+          The output should equal "$(printf 'PAD\tcharlie/padded/module.md')"
+        End
+      End
+    End
+
+    Describe "Given: a module.md without a test_scope key alongside one that has it"
+      # shellcheck disable=SC2329
+      setup_mixed_modules() {
+        write_module_md "delta/plain" "---" "title: plain" "---" "" "# plain"
+        write_module_md "echo/scoped" "---" "test_scope: ECH" "---"
+      }
+      Before "setup_mixed_modules"
+
+      Describe "When: call collect_declared_scopes"
+        It "[Normal] Should: exit with status 0 and output only the module that declares test_scope"
+          When call collect_declared_scopes
+          The status should equal 0
+          The output should equal "$(printf 'ECH\techo/scoped/module.md')"
+        End
+      End
+    End
+
+    Describe "Given: no module.md exists under the docs directory"
+      Describe "When: call collect_declared_scopes"
+        It "[Edge] Should: exit with status 0 and output nothing"
+          When call collect_declared_scopes
+          The status should equal 0
+          The output should equal ""
+          The stderr should equal ""
+        End
+      End
+    End
+
+    Describe "Given: module.md files with test_scope written outside the frontmatter"
+      # shellcheck disable=SC2329
+      setup_body_text_modules() {
+        write_module_md "foxtrot/bodyonly" "---" "title: bodyonly" "---" "" "test_scope: BAD"
+        write_module_md "golf/both" "---" "test_scope: GOL" "---" "" "test_scope: BAD"
+        write_module_md "hotel/nofrontmatter" "test_scope: BAD" "" "# no frontmatter"
+      }
+      Before "setup_body_text_modules"
+
+      Describe "When: call collect_declared_scopes"
+        It "[Edge] Should: exit with status 0 and read test_scope only from the frontmatter"
+          When call collect_declared_scopes
+          The status should equal 0
+          The output should equal "$(printf 'GOL\tgolf/both/module.md')"
+        End
+      End
+    End
+  End
+
+
+  # --------------------------------------------------------------------------
+  # resolve_test_scope
+  # --------------------------------------------------------------------------
+
+  Describe "resolve_test_scope"
+
+    load_module_functions_for_resolve() {
+      # Mock: validate_env を常に成功させる
+      # shellcheck disable=SC2329
+      validate_env() { return 0; }
+      export -f validate_env
+
+      # module.sh を source して関数をロード
+      # shellcheck disable=SC1090
+      . "$SCRIPT"
+    }
+
+    # Helper: 一時 docs ディレクトリに <namespace>/<module>/module.md を作る
+    # shellcheck disable=SC2329
+    declare_module_scope() {
+      local module_path="$1"
+      local scope="$2"
+      mkdir -p "${DECKRD_DOCS_DIR}/${module_path}"
+      printf '%s\n' "---" "test_scope: ${scope}" "---" >"${DECKRD_DOCS_DIR}/${module_path}/module.md"
+    }
+
+    Before "setup_deckrd_tmpdir" "load_module_functions_for_resolve"
+    After "teardown_deckrd_tmpdir"
+
+    Describe "Given: an explicit test scope that no module has declared"
+      Describe "When: call resolve_test_scope with the explicit scope"
+        It "[Normal] Should: exit with status 0 and output the explicit scope"
+          When call resolve_test_scope "alpha/normalize" "XYZ"
+          The status should equal 0
+          The output should equal "XYZ"
+        End
+      End
+    End
+
+    Describe "Given: no explicit test scope is provided"
+      Describe "When: call resolve_test_scope with only the module path"
+        It "[Normal] Should: exit with status 0 and output the scope derived from the module name"
+          When call resolve_test_scope "alpha/normalize"
+          The status should equal 0
+          The output should equal "NOR"
+        End
+      End
+
+      Describe "When: call resolve_test_scope with an empty explicit scope"
+        It "[Edge] Should: exit with status 0 and output the scope derived from the module name"
+          When call resolve_test_scope "alpha/normalize" ""
+          The status should equal 0
+          The output should equal "NOR"
+        End
+      End
+    End
+
+    Describe "Given: an explicit test scope that is not 2-4 uppercase alphanumerics"
+      Parameters
+        "abc"
+        "A"
+        "ABCDE"
+        "A-B"
+      End
+
+      Describe "When: call resolve_test_scope with the malformed explicit scope"
+        It "[Error] Should: exit with status 1 and report the rejected scope on stderr"
+          When call resolve_test_scope "alpha/normalize" "$1"
+          The status should equal 1
+          The stderr should include "Error"
+          The stderr should include "$1"
+          The output should equal ""
+        End
+      End
+    End
+
+    Describe "Given: no explicit scope and a module name too short to derive a scope from"
+      Describe "When: call resolve_test_scope with only the module path"
+        It "[Error] Should: exit with status 1 and propagate the derivation error to stderr"
+          When call resolve_test_scope "alpha/a"
+          The status should equal 1
+          The stderr should include "cannot derive a test scope"
+          The output should equal ""
+        End
+      End
+    End
+
+    Describe "Given: another module already declares the candidate scope"
+      # shellcheck disable=SC2329
+      setup_conflicting_module() {
+        declare_module_scope "bravo/notation" "NOR"
+      }
+      Before "setup_conflicting_module"
+
+      Describe "When: call resolve_test_scope without an explicit scope"
+        It "[Error] Should: exit with status 1 and report the conflict, the owner module.md and the --test-scope hint"
+          When call resolve_test_scope "alpha/normalize"
+          The status should equal 1
+          The stderr should include "conflict"
+          The stderr should include "bravo/notation/module.md"
+          The stderr should include "--test-scope"
+          The output should equal ""
+        End
+      End
+
+      Describe "When: call resolve_test_scope with the same scope given explicitly"
+        It "[Error] Should: exit with status 1 and report the conflict, the owner module.md and the --test-scope hint"
+          When call resolve_test_scope "alpha/normalize" "NOR"
+          The status should equal 1
+          The stderr should include "conflict"
+          The stderr should include "bravo/notation/module.md"
+          The stderr should include "--test-scope"
+          The output should equal ""
+        End
+      End
+    End
+
+    Describe "Given: the module itself already declares the candidate scope"
+      # shellcheck disable=SC2329
+      setup_self_declared_module() {
+        declare_module_scope "alpha/normalize" "NOR"
+      }
+      Before "setup_self_declared_module"
+
+      Describe "When: call resolve_test_scope for that same module"
+        It "[Edge] Should: exit with status 0 and output the scope, ignoring its own declaration"
+          When call resolve_test_scope "alpha/normalize"
+          The status should equal 0
+          The output should equal "NOR"
+          The stderr should equal ""
+        End
+      End
+    End
+  End
+
+  # --------------------------------------------------------------------------
+  # create_module_meta / CLI wiring
+  # --------------------------------------------------------------------------
+
+  Describe "Given: a module path and no explicit test scope"
+    Before "setup_deckrd_tmpdir"
+    After "teardown_deckrd_tmpdir"
+
+    Describe "When: run module.sh with the module path"
+      It "[Normal] Should: exit with status 0 and write module.md declaring the derived test_scope"
+        When run bash "$SCRIPT" myns/mymod
+        The status should equal 0
+        The output should include "module.md"
+        The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/module.md" should include "title: mymod"
+        The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/module.md" should include "test_scope: MYM"
+        The contents of file "${DECKRD_LOCAL_DATA}/session.json" should include '"test_scope": "MYM"'
+      End
+    End
+  End
+
+  Describe "Given: a module path and an explicit test scope"
+    Before "setup_deckrd_tmpdir"
+    After "teardown_deckrd_tmpdir"
+
+    Describe "When: run module.sh with --test-scope"
+      It "[Normal] Should: exit with status 0 and write module.md declaring the explicit test_scope"
+        When run bash "$SCRIPT" myns/mymod --test-scope XY
+        The status should equal 0
+        The output should include "module.md"
+        The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/module.md" should include "test_scope: XY"
+      End
+    End
+  End
+
+  Describe "Given: another module already declares the requested test scope"
+    # shellcheck disable=SC2329
+    setup_conflicting_declaration() {
+      setup_deckrd_tmpdir
+      mkdir -p "${DECKRD_DOCS_DIR}/otherns/othermod"
+      printf '%s\n' "---" "test_scope: XY" "---" >"${DECKRD_DOCS_DIR}/otherns/othermod/module.md"
+    }
+    Before "setup_conflicting_declaration"
+    After "teardown_deckrd_tmpdir"
+
+    Describe "When: run module.sh with the taken scope via --test-scope"
+      It "[Error] Should: exit with status 1, report the conflicting module.md and write no module.md"
+        When run bash "$SCRIPT" myns/mymod --test-scope XY
+        The status should equal 1
+        The output should include "Initializing module"
+        The stderr should include "conflict"
+        The stderr should include "otherns/othermod/module.md"
+        The path "${DECKRD_DOCS_DIR}/myns/mymod/module.md" should not be exist
+      End
+    End
+  End
+
+  Describe "Given: an existing module.md declaring a test scope"
+    # shellcheck disable=SC2329
+    setup_existing_module_meta() {
+      setup_deckrd_tmpdir
+      mkdir -p "${DECKRD_DOCS_DIR}/myns/mymod"
+      printf '%s\n' "---" "title: mymod" "test_scope: ZZ" "---" >"${DECKRD_DOCS_DIR}/myns/mymod/module.md"
+    }
+    Before "setup_existing_module_meta"
+    After "teardown_deckrd_tmpdir"
+
+    Describe "When: re-initialize the module with --force"
+      It "[Edge] Should: exit with status 0 and keep the test_scope already declared in module.md"
+        When run bash "$SCRIPT" myns/mymod --force
+        The status should equal 0
+        The output should include "module.md"
+        The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/module.md" should include "test_scope: ZZ"
+      End
+    End
+  End
+
+  Describe "Given: --test-scope given without a value"
+    Before "setup_deckrd_tmpdir"
+    After "teardown_deckrd_tmpdir"
+
+    Describe "When: run module.sh with a trailing --test-scope"
+      It "[Error] Should: exit with status 1 and report that --test-scope requires a value"
+        When run bash "$SCRIPT" myns/mymod --test-scope
+        The status should equal 1
+        The output should include "Usage:"
+        The stderr should include "requires a value"
+      End
+    End
+  End
+
+  Describe "Given: a module initialized with an explicit test scope"
+    # shellcheck disable=SC2329
+    setup_module_with_explicit_scope() {
+      setup_deckrd_tmpdir_with_project
+      bash "$SCRIPT" myns/mymod --test-scope XY >/dev/null 2>&1
+    }
+    Before "setup_module_with_explicit_scope"
+    After "teardown_deckrd_tmpdir"
+
+    Describe "When: re-initialize the module with --force and no --test-scope"
+      It "[Normal] Should: keep the declared scope in both module.md and session.json"
+        When run bash "$SCRIPT" myns/mymod --force
+        The status should equal 0
+        The output should include "module.md"
+        The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/module.md" should include "test_scope: XY"
+        The contents of file "${DECKRD_LOCAL_DATA}/session.json" should include '"test_scope": "XY"'
+        The contents of file "${DECKRD_LOCAL_DATA}/session.json" should not include '"test_scope": "MYM"'
+      End
+    End
+  End
+
+  Describe "Given: a third module already declares the scope derived from the module name"
+    # shellcheck disable=SC2329
+    setup_derived_scope_taken_by_third_module() {
+      setup_deckrd_tmpdir_with_project
+      mkdir -p "${DECKRD_DOCS_DIR}/myns/mymod" "${DECKRD_DOCS_DIR}/thirdns/thirdmod"
+      printf '%s\n' "---" "title: mymod" "test_scope: XY" "---" >"${DECKRD_DOCS_DIR}/myns/mymod/module.md"
+      printf '%s\n' "---" "title: thirdmod" "test_scope: MYM" "---" >"${DECKRD_DOCS_DIR}/thirdns/thirdmod/module.md"
+    }
+    Before "setup_derived_scope_taken_by_third_module"
+    After "teardown_deckrd_tmpdir"
+
+    Describe "When: re-initialize the module with --force and no --test-scope"
+      It "[Edge] Should: exit with status 0 because the declared scope is used instead of the derived one"
+        When run bash "$SCRIPT" myns/mymod --force
+        The status should equal 0
+        The output should include "module.md"
+        The stderr should not include "conflict"
+        The contents of file "${DECKRD_LOCAL_DATA}/session.json" should include '"test_scope": "XY"'
+      End
+    End
+  End
 End

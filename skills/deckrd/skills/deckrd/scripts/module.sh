@@ -84,6 +84,10 @@ SUBCOMMAND=""
 # @description Force re-initialization
 FORCE=false
 
+##
+# @description Explicit test scope given via --test-scope (empty means derive it)
+TEST_SCOPE=""
+
 # ============================================================================
 # Functions
 # ============================================================================
@@ -109,6 +113,7 @@ Arguments:
 
 Options:
   --force   Re-initialize even if module directory already exists
+  --test-scope <SCOPE>  Test ID scope (2-4 uppercase alphanumerics); derived from the module name if omitted
   -h, --help  Show this help message
 
 Created directories:
@@ -116,7 +121,8 @@ Created directories:
     ├── requirements/
     ├── specifications/
     ├── implementation/
-    └── tasks/
+    ├── tasks/
+    └── module.md
 
 Session file:
   .local/deckrd/session.json
@@ -142,6 +148,15 @@ parse_args() {
     --force)
       FORCE=true
       shift
+      ;;
+    --test-scope)
+      if [[ $# -lt 2 || -z "$2" ]]; then
+        echo "Error: --test-scope requires a value" >&2
+        show_usage
+        exit 1
+      fi
+      TEST_SCOPE="$2"
+      shift 2
       ;;
     -*)
       echo "Error: Unknown option: $1" >&2
@@ -254,6 +269,138 @@ validate_and_normalize_with_fallback() {
 }
 
 ##
+# @description Derive a test ID scope abbreviation from a module name
+# @description Multi-word names use each word initial (max 4); single words use the first 3 characters
+# @arg $1 string Module name (the <module> part of <namespace>/<module>)
+# @stdout Scope abbreviation (uppercase, 2-4 characters)
+# @stderr Error message if the derived scope is shorter than 2 characters
+# @exitcode 0 Success
+# @exitcode 1 Derived scope is shorter than 2 characters
+derive_test_scope() {
+  local rest="$1"
+  local scope=""
+  local word
+
+  if [[ "$rest" != *[-_]* ]]; then
+    # Single word: take the first 3 characters
+    scope="${rest:0:3}"
+  else
+    # Multiple words: concatenate each initial, up to 4 characters
+    while [[ -n "$rest" ]]; do
+      word="${rest%%[-_]*}"
+      if [[ "$rest" == *[-_]* ]]; then
+        rest="${rest#*[-_]}"
+      else
+        rest=""
+      fi
+      if [[ -n "$word" ]]; then
+        scope+="${word:0:1}"
+      fi
+      if [[ ${#scope} -ge 4 ]]; then
+        break
+      fi
+    done
+  fi
+
+  scope="${scope^^}"
+  if [[ ${#scope} -lt 2 ]]; then
+    echo "Error: cannot derive a test scope from module name '$1'" >&2
+    echo "  A test scope needs at least 2 characters; derived '${scope}'." >&2
+    return 1
+  fi
+
+  echo "$scope"
+}
+
+##
+# @description Read test_scope from the YAML frontmatter of a module.md
+# @arg $1 string Path to a module.md file
+# @stdout The declared test scope, or nothing when there is no frontmatter test_scope
+# @exitcode 0 Always
+_read_frontmatter_scope() {
+  awk '
+    NR == 1 && $0 != "---" { exit }
+    NR > 1 && $0 == "---" { exit }
+    NR > 1 && sub(/^test_scope:[[:space:]]*/, "") {
+      gsub(/[[:space:]]+$/, "")
+      print
+      exit
+    }
+  ' "$1"
+}
+
+##
+# @description List the test scopes already declared by existing modules
+# @description Reads test_scope from the frontmatter of ${DECKRD_DOCS_DIR}/*/*/module.md
+# @stdout One line per declared scope: <test_scope><TAB><path relative to DECKRD_DOCS_DIR>
+# @exitcode 0 Always (no module.md means no output)
+collect_declared_scopes() {
+  local module_file scope
+
+  for module_file in "${DECKRD_DOCS_DIR}"/*/*/module.md; do
+    # nullglob is not set: an unmatched glob stays as a literal path
+    [[ -f "$module_file" ]] || continue
+    scope=$(_read_frontmatter_scope "$module_file")
+    [[ -n "$scope" ]] || continue
+    printf '%s\t%s\n' "$scope" "${module_file#"${DECKRD_DOCS_DIR}"/}"
+  done
+
+  return 0
+}
+
+##
+# @description Read the test scope a module already declares in its own module.md
+# @arg $1 string Normalized module path (namespace/module)
+# @stdout The declared test scope, or nothing when module.md or its test_scope is absent
+# @exitcode 0 Always (an absent declaration is not an error)
+read_declared_scope() {
+  local module_file="${DECKRD_DOCS_DIR}/$1/module.md"
+
+  [[ -f "$module_file" ]] || return 0
+  _read_frontmatter_scope "$module_file"
+}
+
+##
+# @description Resolve the test scope a module should declare
+# @description An explicit scope is validated as given; otherwise it is derived from the module name
+# @description The module's own module.md is excluded from conflict detection (--force re-initialization)
+# @arg $1 string Normalized module path (namespace/module)
+# @arg $2 string Explicit test scope (optional, may be empty)
+# @stdout The resolved scope (uppercase alphanumeric, 2-4 characters)
+# @stderr Error message if the explicit scope is malformed, underivable, or already taken
+# @exitcode 0 Success
+# @exitcode 1 Malformed explicit scope, underivable scope, or conflict with an existing module
+resolve_test_scope() {
+  local path="$1"
+  local explicit="${2:-}"
+  local candidate declared scope owner
+
+  if [[ -n "$explicit" ]]; then
+    if [[ ! "$explicit" =~ ^[A-Z0-9]{2,4}$ ]]; then
+      echo "Error: invalid test scope '${explicit}'" >&2
+      echo "  A test scope must be 2-4 uppercase letters or digits (e.g. NOR)." >&2
+      return 1
+    fi
+    candidate="$explicit"
+  else
+    candidate=$(derive_test_scope "${path#*/}") || return 1
+  fi
+
+  declared=$(collect_declared_scopes)
+  while IFS=$'\t' read -r scope owner; do
+    # The module's own declaration is not a conflict (--force re-initialization)
+    [[ "$owner" != "${path}/module.md" ]] || continue
+    [[ "$scope" == "$candidate" ]] || continue
+    echo "Error: test scope '${candidate}' conflicts with an existing module" >&2
+    echo "  already declared in: ${owner}" >&2
+    echo "  Use --test-scope <another scope> to choose a different one." >&2
+    return 1
+  done <<<"$declared"
+
+  echo "$candidate"
+}
+
+##
 # @description Create module directory structure
 # @arg $1 string Normalized module path (namespace/module)
 create_module_dirs() {
@@ -279,10 +426,55 @@ create_module_dirs() {
 }
 
 ##
+# @description Create the module metadata file (module.md)
+# @description An existing module.md is left untouched so that --force re-initialization keeps its test_scope
+# @arg $1 string Normalized module path (namespace/module)
+# @arg $2 string Resolved test scope
+# @stdout Path of the module metadata file
+# @exitcode 0 Success
+create_module_meta() {
+  local path="$1"
+  local scope="$2"
+  local module="${path#*/}"
+  local base="${DECKRD_DOCS_DIR}/${path}"
+  local meta_file="${base}/module.md"
+
+  if [[ -f "$meta_file" ]]; then
+    echo "Module meta: ${meta_file} (kept existing test_scope)"
+    return 0
+  fi
+
+  mkdir -p "$base"
+  cat >"$meta_file" <<EOF
+---
+title: ${module}
+test_scope: ${scope}
+owns:
+  - # TODO: このモジュールが所有するソース・テストのルートを書く（glob 可・複数可）
+---
+
+## ${module}
+
+（モジュールの概要をここに書く）
+
+## テスト対象の略語
+
+| 略語 | 対象 |
+| ---- | ---- |
+|      |      |
+EOF
+
+  echo "Module meta: ${meta_file}"
+}
+
+##
 # @description Update session.json with active module
+# @description Records the module test scope alongside the workflow state
 # @arg $1 string Normalized module path
+# @arg $2 string Resolved test scope
 update_session() {
   local path="$1"
+  local scope="$2"
   local timestamp
   timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
@@ -292,13 +484,15 @@ update_session() {
     # Update: set active module, add/reset module entry in modules hierarchy
     # shellcheck disable=SC2016
     ${jqexe:-jq} --arg path "$path" \
+      --arg scope "$scope" \
       --arg timestamp "$timestamp" \
       '.active = $path |
         .updated_at = $timestamp |
         .modules[$path] = {
           current_step: "module",
           completed: ["module"],
-          documents: {}
+          documents: {},
+          test_scope: $scope
         }' \
       "$SESSION_FILE" >"${SESSION_FILE}.tmp" &&
       mv "${SESSION_FILE}.tmp" "$SESSION_FILE"
@@ -307,6 +501,7 @@ update_session() {
     # shellcheck disable=SC2016
     ${jqexe:-jq} -n \
       --arg path "$path" \
+      --arg scope "$scope" \
       --arg timestamp "$timestamp" \
       '{
         active:      $path,
@@ -314,7 +509,8 @@ update_session() {
           ($path): {
             current_step: "module",
             completed:    ["module"],
-            documents:    {}
+            documents:    {},
+            test_scope:   $scope
           }
         },
         created_at:  $timestamp,
@@ -342,5 +538,13 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
 
   NORMALIZED=$(validate_and_normalize_with_fallback "$MODULE_PATH")
   create_module_dirs "$NORMALIZED"
-  update_session "$NORMALIZED"
+
+  # The module's own module.md is the source of truth when no scope is given explicitly
+  if [[ -z "$TEST_SCOPE" ]]; then
+    TEST_SCOPE=$(read_declared_scope "$NORMALIZED")
+  fi
+
+  RESOLVED_SCOPE=$(resolve_test_scope "$NORMALIZED" "$TEST_SCOPE") || exit 1
+  create_module_meta "$NORMALIZED" "$RESOLVED_SCOPE"
+  update_session "$NORMALIZED" "$RESOLVED_SCOPE"
 fi
