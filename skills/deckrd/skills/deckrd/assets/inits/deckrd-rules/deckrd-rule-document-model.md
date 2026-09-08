@@ -1,7 +1,7 @@
 ---
 title: "Deckrd Rule: ドキュメントモデル"
 description: "設計チェーン・ID 採番・ドキュメント命名・ディレクトリ配置を定める統一モデル"
-version: 1.0.0
+version: 1.1.0
 ---
 
 <!-- textlint-disable
@@ -91,6 +91,11 @@ REQ-NF-001   非機能要件の名前空間
 grep -rl "REQ-<new-namespace>-" --include=*.md docs/.deckrd/
 ```
 
+ここで定めるのはドキュメントの ID に限る。テストコードのケースに割り当てる
+テストケース ID の第 1 セグメント (`test_scope`) は、本ルールの名前空間ではなく
+モジュール直下の `module.md` が宣言する
+（[Testing Guidelines](deckrd-rule-testing-guidelines.md) 参照）。
+
 ### 重複検出
 
 「ID は一意」はドキュメントを読むだけでは担保できない。採番済み ID の台帳を手書きで
@@ -129,6 +134,7 @@ Deckrd の成果物は、初期化されたドキュメントルート `docs/.de
 docs/.deckrd/
   <namespace>/
     <module>/
+      module.md
       requirements/
       specifications/
       implementation/
@@ -139,10 +145,15 @@ docs/.deckrd/
 セッション状態はドキュメントルート配下ではなく `.local/deckrd/session.json` にある
 （[Workflow](deckrd-rule-workflow.md) 参照）。
 
+`module.md` はモジュールのメタデータを持つ。テストケース ID のスコープ宣言
+(`test_scope` / `owns`) はここに置く
+（[Testing Guidelines](deckrd-rule-testing-guidelines.md) 参照）。
+
 例:
 
 ```text
 docs/.deckrd/chatlog/normalize/
+  module.md
   requirements/requirements.md
   specifications/specifications.md
   implementation/implementation.md
