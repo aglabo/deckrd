@@ -23,6 +23,7 @@
     "release:note": "bash runners/run-git-cliff.sh release-notes",
     "scan:secrets": "concurrently \"betterleaks protect --config C:/Users/atsushifx/workspaces/develop/ci-platform/configs/betterleaks.toml\" \"secretlint --secretlintrc ./configs/secretlint.config.yaml **/*\"",
     "check:sh": "bash runners/run-shfmt.sh --list .",
+    "check:test-ids": "bash runners/run-check-test-ids.sh --all",
     "check:dprint": "dprint check",
     "format:dprint": "dprint fmt",
     "format:sh": "bash runners/run-shfmt.sh --format .",
