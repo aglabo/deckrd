@@ -1,5 +1,5 @@
 # src: .gitignore
-# @(#) : gitignore settings for cluude agents,skills, ...
+# @(#) : gitignore settings for claude agents,skills, ...
 #
 # Copyright (c) 2025- atsushifx <http://github.com/atsushifx>
 #
@@ -10,7 +10,7 @@
 *
 
 # Git settings
-!.git*
+!**/.gitignore
 
 # settings
 !settings.json
@@ -18,6 +18,9 @@
 # claude settings
 !rules/
 !rules/**
+!hooks/
+!hooks/**
+
 
 ## claude add-ons
 # Agents
