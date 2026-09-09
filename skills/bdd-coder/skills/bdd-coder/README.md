@@ -58,7 +58,11 @@ skills/bdd-coder/
     └── implementation.md             # 実装フローリファレンス
 ```
 
-関連エージェント (`plugins/deckrd/agents/` 配下):
+関連スキル (`skills/bdd-coder/skills/` 配下):
+
+- `bdd-coder-review/SKILL.md` — `/bdd-coder:bdd-coder-review`。code-reviewer を任意のタイミングで起動する
+
+関連エージェント (`skills/bdd-coder/agents/` 配下):
 
 - `bdd-coder.md` — Red-Green-Refactor 実装エージェント
 - `checklist-builder.md` — BDD チェックリスト生成エージェント
