@@ -99,7 +99,7 @@ Describe 'extract_case_ids()'
   AfterEach '_teardown_fixture_repo'
 
   Describe 'When: 正常系'
-    It 'Then: [Normal] ケース宣言行に書かれた ID をすべて出力する'
+    It 'Then: [Normal] T-RUN-ECI-01: ケース宣言行に書かれた ID をすべて出力する'
       _add_spec_file 'a.spec.sh' 'T-AAA-BB-01' 'T-AAA-BB-02'
       When call extract_case_ids "${TEST_ID_CHECK_ROOT}/a.spec.sh"
       The status should be success
@@ -107,7 +107,7 @@ Describe 'extract_case_ids()'
       The line 2 of output should equal 'T-AAA-BB-02'
     End
 
-    It 'Then: [Normal] 枝番付きの ID も抽出する'
+    It 'Then: [Normal] T-RUN-ECI-02: 枝番付きの ID も抽出する'
       _add_spec_file 'a.spec.sh' 'T-AAA-BB-03-01'
       When call extract_case_ids "${TEST_ID_CHECK_ROOT}/a.spec.sh"
       The output should equal 'T-AAA-BB-03-01'
@@ -115,26 +115,26 @@ Describe 'extract_case_ids()'
   End
 
   Describe 'When: エッジケース'
-    It 'Then: [Edge] コメント行の ID は割り当てとして扱わない'
+    It 'Then: [Edge] T-RUN-ECI-03: コメント行の ID は割り当てとして扱わない'
       _add_spec_file 'a.spec.sh' 'T-AAA-BB-01'
       _append_line 'a.spec.sh' '  # cross reference to T-AAA-BB-99'
       When call extract_case_ids "${TEST_ID_CHECK_ROOT}/a.spec.sh"
       The output should equal 'T-AAA-BB-01'
     End
 
-    It 'Then: [Edge] 同一ファイル内の重複を一意化せずに残す'
+    It 'Then: [Edge] T-RUN-ECI-04: 同一ファイル内の重複を一意化せずに残す'
       _add_spec_file 'a.spec.sh' 'T-AAA-BB-01' 'T-AAA-BB-01'
       When call extract_case_ids "${TEST_ID_CHECK_ROOT}/a.spec.sh"
       The lines of output should equal 2
     End
 
-    It 'Then: [Edge] prefix の付いたトークンを ID と誤認しない'
+    It 'Then: [Edge] T-RUN-ECI-05: prefix の付いたトークンを ID と誤認しない'
       _add_spec_file 'a.spec.sh' 'XT-AAA-BB-01'
       When call extract_case_ids "${TEST_ID_CHECK_ROOT}/a.spec.sh"
       The output should equal ''
     End
 
-    It 'Then: [Edge] ファイルを 1 つも渡されなければ何も出力しない'
+    It 'Then: [Edge] T-RUN-ECI-06: ファイルを 1 つも渡されなければ何も出力しない'
       When call extract_case_ids
       The status should be success
       The output should equal ''
@@ -150,13 +150,13 @@ Describe 'module.md frontmatter reader'
   AfterEach '_teardown_fixture_repo'
 
   Describe 'When: 正常系'
-    It 'Then: [Normal] read_module_scalar が宣言された test_scope を返す'
+    It 'Then: [Normal] T-RUN-FMR-01: read_module_scalar が宣言された test_scope を返す'
       _add_module 'ns/alpha' 'ALP' 'src/alpha/**'
       When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md" 'test_scope'
       The output should equal 'ALP'
     End
 
-    It 'Then: [Normal] read_module_owns が owns の glob をすべて返す'
+    It 'Then: [Normal] T-RUN-FMR-02: read_module_owns が owns の glob をすべて返す'
       _add_module 'ns/alpha' 'ALP' 'src/alpha/**' 'src/shared/*.sh'
       When call read_module_owns "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md"
       The line 1 of output should equal 'src/alpha/**'
@@ -165,7 +165,7 @@ Describe 'module.md frontmatter reader'
   End
 
   Describe 'When: 異常系'
-    It 'Then: [Error] 宣言されていないフィールドには空を返す'
+    It 'Then: [Error] T-RUN-FMR-03: 宣言されていないフィールドには空を返す'
       _add_module 'ns/alpha' 'ALP' 'src/alpha/**'
       When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md" 'nonexistent'
       The output should equal ''
@@ -184,7 +184,7 @@ Describe 'path_matches_glob()'
       'scripts/a.sh' 'scripts/*.sh' success
     End
 
-    It "Then: [Normal] $1 は $2 に所有される"
+    It "Then: [Normal] T-RUN-PMG-01: $1 は $2 に所有される"
       When call path_matches_glob "$1" "$2"
       The status should be "$3"
     End
@@ -199,7 +199,7 @@ Describe 'path_matches_glob()'
       'runners/aXsh' 'runners/a.sh' failure
     End
 
-    It "Then: [Edge] $1 は $2 に所有されない"
+    It "Then: [Edge] T-RUN-PMG-02: $1 は $2 に所有されない"
       When call path_matches_glob "$1" "$2"
       The status should be "$3"
     End
@@ -225,7 +225,7 @@ Describe 'check_scopes()'
   }
 
   Describe 'When: 正常系'
-    It 'Then: [Normal] 健全な擬似リポジトリは通り、検査した件数を出力する'
+    It 'Then: [Normal] T-RUN-CS-01: 健全な擬似リポジトリは通り、検査した件数を出力する'
       _setup_well_formed_repo
       When call check_scopes
       The status should be success
@@ -235,7 +235,7 @@ Describe 'check_scopes()'
   End
 
   Describe 'When: 異常系'
-    It 'Then: [Error] test_scope の重複を報告する'
+    It 'Then: [Error] T-RUN-CS-02: test_scope の重複を報告する'
       _add_module 'ns/alpha' 'DUP' 'alpha/**'
       _add_module 'ns/beta' 'DUP' 'beta/**'
       _add_spec_file 'alpha/a.spec.sh' 'T-DUP-AA-01'
@@ -248,7 +248,7 @@ Describe 'check_scopes()'
       The output should equal ''
     End
 
-    It 'Then: [Error] どのモジュールにも所有されないテストファイルを報告する'
+    It 'Then: [Error] T-RUN-CS-03: どのモジュールにも所有されないテストファイルを報告する'
       _setup_well_formed_repo
       _add_spec_file 'orphan/x.spec.sh' 'T-ALP-XX-01'
       When call check_scopes
@@ -257,7 +257,7 @@ Describe 'check_scopes()'
       The output should equal ''
     End
 
-    It 'Then: [Error] 2 つのモジュールに所有されるテストファイルを報告する'
+    It 'Then: [Error] T-RUN-CS-04: 2 つのモジュールに所有されるテストファイルを報告する'
       _add_module 'ns/alpha' 'ALP' 'shared/**'
       _add_module 'ns/beta' 'BET' 'shared/*.spec.sh'
       _add_spec_file 'shared/a.spec.sh' 'T-ALP-AA-01'
@@ -279,7 +279,7 @@ Describe 'check_module()'
   AfterEach '_teardown_fixture_repo'
 
   Describe 'When: 正常系'
-    It 'Then: [Normal] 重複も scope 違反も無いモジュールは通り、件数を出力する'
+    It 'Then: [Normal] T-RUN-CM-01: 重複も scope 違反も無いモジュールは通り、件数を出力する'
       _add_module 'ns/alpha' 'ALP' 'alpha/**'
       _add_spec_file 'alpha/a.spec.sh' 'T-ALP-AA-01' 'T-ALP-AA-02'
       _add_spec_file 'alpha/b.spec.sh' 'T-ALP-BB-01'
@@ -289,7 +289,7 @@ Describe 'check_module()'
       The stderr should equal ''
     End
 
-    It 'Then: [Normal] 他モジュールが所有する ID は検査対象に含めない'
+    It 'Then: [Normal] T-RUN-CM-02: 他モジュールが所有する ID は検査対象に含めない'
       _add_module 'ns/alpha' 'ALP' 'alpha/**'
       _add_module 'ns/beta' 'BET' 'beta/**'
       _add_spec_file 'alpha/a.spec.sh' 'T-ALP-AA-01'
@@ -302,7 +302,7 @@ Describe 'check_module()'
   End
 
   Describe 'When: 異常系'
-    It 'Then: [Error] モジュール内の ID 重複を報告する'
+    It 'Then: [Error] T-RUN-CM-03: モジュール内の ID 重複を報告する'
       _add_module 'ns/alpha' 'ALP' 'alpha/**'
       _add_spec_file 'alpha/a.spec.sh' 'T-ALP-AA-01'
       _add_spec_file 'alpha/b.spec.sh' 'T-ALP-AA-01'
@@ -313,7 +313,7 @@ Describe 'check_module()'
       The stderr should include 'alpha/b.spec.sh'
     End
 
-    It 'Then: [Error] 同一ファイル内の ID 重複を報告する'
+    It 'Then: [Error] T-RUN-CM-04: 同一ファイル内の ID 重複を報告する'
       _add_module 'ns/alpha' 'ALP' 'alpha/**'
       _add_spec_file 'alpha/a.spec.sh' 'T-ALP-AA-01' 'T-ALP-AA-01'
       When call check_module 'ns/alpha'
@@ -321,7 +321,7 @@ Describe 'check_module()'
       The stderr should include 'T-ALP-AA-01'
     End
 
-    It 'Then: [Error] 他モジュールの scope を騙る ID を報告する'
+    It 'Then: [Error] T-RUN-CM-05: 他モジュールの scope を騙る ID を報告する'
       _add_module 'ns/alpha' 'ALP' 'alpha/**'
       _add_module 'ns/beta' 'BET' 'beta/**'
       _add_spec_file 'alpha/a.spec.sh' 'T-BET-AA-01'
@@ -332,7 +332,7 @@ Describe 'check_module()'
       The stderr should include 'alpha/a.spec.sh'
     End
 
-    It 'Then: [Error] 宣言の無いモジュール参照は失敗する'
+    It 'Then: [Error] T-RUN-CM-06: 宣言の無いモジュール参照は失敗する'
       _add_module 'ns/alpha' 'ALP' 'alpha/**'
       When call check_module 'ns/missing'
       The status should be failure
@@ -341,7 +341,7 @@ Describe 'check_module()'
   End
 
   Describe 'When: エッジケース'
-    It 'Then: [Edge] ID が 0 件なら走査件数付きの警告を出して成功する'
+    It 'Then: [Edge] T-RUN-CM-07: ID が 0 件なら走査件数付きの警告を出して成功する'
       _add_module 'ns/alpha' 'ALP' 'alpha/**'
       _add_spec_file 'alpha/a.spec.sh'
       _add_spec_file 'alpha/b.spec.sh'
@@ -362,7 +362,7 @@ Describe 'check_duplicates()'
   AfterEach '_teardown_fixture_repo'
 
   Describe 'When: 正常系'
-    It 'Then: [Normal] 重複が無ければ通り、走査件数と ID 件数を出力する'
+    It 'Then: [Normal] T-RUN-CD-01: 重複が無ければ通り、走査件数と ID 件数を出力する'
       _add_module 'ns/alpha' 'ALP' 'alpha/**'
       _add_module 'ns/beta' 'BET' 'beta/**'
       _add_spec_file 'alpha/a.spec.sh' 'T-ALP-AA-01'
@@ -375,7 +375,7 @@ Describe 'check_duplicates()'
   End
 
   Describe 'When: 異常系'
-    It 'Then: [Error] モジュールをまたぐ ID の重複を報告する'
+    It 'Then: [Error] T-RUN-CD-02: モジュールをまたぐ ID の重複を報告する'
       _add_module 'ns/alpha' 'ALP' 'alpha/**'
       _add_module 'ns/beta' 'BET' 'beta/**'
       _add_spec_file 'alpha/a.spec.sh' 'T-ALP-AA-01'
@@ -389,7 +389,7 @@ Describe 'check_duplicates()'
   End
 
   Describe 'When: エッジケース'
-    It 'Then: [Edge] ID が 0 件なら走査件数付きの警告を出して成功する'
+    It 'Then: [Edge] T-RUN-CD-03: ID が 0 件なら走査件数付きの警告を出して成功する'
       _add_module 'ns/alpha' 'ALP' 'alpha/**'
       _add_spec_file 'alpha/a.spec.sh'
       _add_spec_file 'alpha/b.spec.sh'
@@ -410,7 +410,7 @@ Describe 'main()'
   AfterEach '_teardown_fixture_repo'
 
   Describe 'When: 正常系'
-    It 'Then: [Normal] --all は健全な擬似リポジトリで A・B・C をすべて通す'
+    It 'Then: [Normal] T-RUN-MN-01: --all は健全な擬似リポジトリで A・B・C をすべて通す'
       _add_module 'ns/alpha' 'ALP' 'alpha/**'
       _add_module 'ns/beta' 'BET' 'beta/**'
       _add_spec_file 'alpha/a.spec.sh' 'T-ALP-AA-01'
@@ -425,7 +425,7 @@ Describe 'main()'
   End
 
   Describe 'When: 異常系'
-    It 'Then: [Error] --all は検査 A の失敗 (scope 重複) を報告する'
+    It 'Then: [Error] T-RUN-MN-02: --all は検査 A の失敗 (scope 重複) を報告する'
       _add_module 'ns/alpha' 'DUP' 'alpha/**'
       _add_module 'ns/beta' 'DUP' 'beta/**'
       _add_spec_file 'alpha/a.spec.sh' 'T-DUP-AA-01'
@@ -435,7 +435,7 @@ Describe 'main()'
       The stdout should be defined
     End
 
-    It 'Then: [Error] --all は検査 B の失敗 (他モジュールの scope を騙る ID) を報告する'
+    It 'Then: [Error] T-RUN-MN-03: --all は検査 B の失敗 (他モジュールの scope を騙る ID) を報告する'
       _add_module 'ns/alpha' 'ALP' 'alpha/**'
       _add_module 'ns/beta' 'BET' 'beta/**'
       _add_spec_file 'alpha/a.spec.sh' 'T-BET-AA-01'
@@ -446,19 +446,19 @@ Describe 'main()'
       The stdout should be defined
     End
 
-    It 'Then: [Error] --module は引数が無ければ失敗する'
+    It 'Then: [Error] T-RUN-MN-04: --module は引数が無ければ失敗する'
       When call main --module
       The status should be failure
       The stderr should include '--module'
     End
 
-    It 'Then: [Error] 未知のモードは使い方を表示して失敗する'
+    It 'Then: [Error] T-RUN-MN-05: 未知のモードは使い方を表示して失敗する'
       When call main --bogus
       The status should be failure
       The stderr should include 'Usage'
     End
 
-    It 'Then: [Error] モードが無ければ使い方を表示して失敗する'
+    It 'Then: [Error] T-RUN-MN-06: モードが無ければ使い方を表示して失敗する'
       When call main
       The status should be failure
       The stderr should include 'Usage'

@@ -14,54 +14,54 @@ Include "${SHELLSPEC_PROJECT_ROOT}/runners/run-shellspec.sh"
 
 Describe 'is_test_type()'
   Describe 'valid test types'
-    It 'returns success for all'
+    It 'T-RUN-ITT-01: returns success for all'
       When call is_test_type 'all'
       The status should be success
     End
 
-    It 'returns success for unit'
+    It 'T-RUN-ITT-02: returns success for unit'
       When call is_test_type 'unit'
       The status should be success
     End
 
-    It 'returns success for functional'
+    It 'T-RUN-ITT-03: returns success for functional'
       When call is_test_type 'functional'
       The status should be success
     End
 
-    It 'returns success for integration'
+    It 'T-RUN-ITT-04: returns success for integration'
       When call is_test_type 'integration'
       The status should be success
     End
 
-    It 'returns success for system'
+    It 'T-RUN-ITT-05: returns success for system'
       When call is_test_type 'system'
       The status should be success
     End
 
-    It 'returns success for e2e'
+    It 'T-RUN-ITT-06: returns success for e2e'
       When call is_test_type 'e2e'
       The status should be success
     End
   End
 
   Describe 'invalid test types'
-    It 'returns failure for spec'
+    It 'T-RUN-ITT-07: returns failure for spec'
       When call is_test_type 'spec'
       The status should be failure
     End
 
-    It 'returns failure for empty string'
+    It 'T-RUN-ITT-08: returns failure for empty string'
       When call is_test_type ''
       The status should be failure
     End
 
-    It 'returns failure for uppercase ALL'
+    It 'T-RUN-ITT-09: returns failure for uppercase ALL'
       When call is_test_type 'ALL'
       The status should be failure
     End
 
-    It 'returns failure for unknowntype'
+    It 'T-RUN-ITT-10: returns failure for unknowntype'
       When call is_test_type 'unknowntype'
       The status should be failure
     End
@@ -70,34 +70,34 @@ End
 
 Describe 'is_spec_file()'
   Describe 'valid spec file paths'
-    It 'returns success for foo.spec.sh'
+    It 'T-RUN-ISF-01: returns success for foo.spec.sh'
       When call is_spec_file 'foo.spec.sh'
       The status should be success
     End
 
-    It 'returns success for path/to/bar.spec.sh'
+    It 'T-RUN-ISF-02: returns success for path/to/bar.spec.sh'
       When call is_spec_file 'path/to/bar.spec.sh'
       The status should be success
     End
   End
 
   Describe 'invalid spec file paths'
-    It 'returns failure for foo.sh'
+    It 'T-RUN-ISF-03: returns failure for foo.sh'
       When call is_spec_file 'foo.sh'
       The status should be failure
     End
 
-    It 'returns failure for unit'
+    It 'T-RUN-ISF-04: returns failure for unit'
       When call is_spec_file 'unit'
       The status should be failure
     End
 
-    It 'returns failure for spec.sh (no .spec. pattern)'
+    It 'T-RUN-ISF-05: returns failure for spec.sh (no .spec. pattern)'
       When call is_spec_file 'spec.sh'
       The status should be failure
     End
 
-    It 'returns failure for empty string'
+    It 'T-RUN-ISF-06: returns failure for empty string'
       When call is_spec_file ''
       The status should be failure
     End
@@ -109,36 +109,36 @@ Describe 'get_spec_files()'
   After 'teardown_temp_specs'
 
   Describe 'test type expansion'
-    It 'returns spec files under tests/ for all'
+    It 'T-RUN-GSF-01: returns spec files under tests/ for all'
       When call get_spec_files 'all'
       The output should include '.spec.sh'
       The status should be success
     End
 
-    It 'returns only unit spec files for unit'
+    It 'T-RUN-GSF-02: returns only unit spec files for unit'
       When call get_spec_files 'unit'
       The output should include 'tests/unit'
       The status should be success
     End
 
-    It 'does not include integration files for unit'
+    It 'T-RUN-GSF-03: does not include integration files for unit'
       When call get_spec_files 'unit'
       The output should not include 'tests/integration'
     End
 
-    It 'filters by glob pattern init* for unit'
+    It 'T-RUN-GSF-04: filters by glob pattern init* for unit'
       When call get_spec_files 'unit' 'init*'
       The output should include 'init'
       The status should be success
     End
 
-    It 'filters by exact name kv-store for unit'
+    It 'T-RUN-GSF-05: filters by exact name kv-store for unit'
       When call get_spec_files 'unit' 'kv-store'
       The output should include 'kv-store'
       The status should be success
     End
 
-    It 'output paths do not contain backslashes'
+    It 'T-RUN-GSF-06: output paths do not contain backslashes'
       When call get_spec_files 'all'
       # shellcheck disable=SC1003
       The output should not include '\'
@@ -150,26 +150,26 @@ Describe 'parse_options()'
   Before 'SKIP_INTEGRATION_TESTS=1'
 
   Describe '--integration flag handling'
-    It 'removes --integration and sets SKIP_INTEGRATION_TESTS=0'
+    It 'T-RUN-PO-01: removes --integration and sets SKIP_INTEGRATION_TESTS=0'
       When call parse_options 'unit' '--integration'
       The output should equal 'unit'
       The variable SKIP_INTEGRATION_TESTS should equal '0'
     End
 
-    It 'removes leading --integration flag'
+    It 'T-RUN-PO-02: removes leading --integration flag'
       When call parse_options '--integration' 'unit'
       The output should equal 'unit'
     End
   End
 
   Describe 'passthrough of other options'
-    It 'passes --focus through unchanged'
+    It 'T-RUN-PO-03: passes --focus through unchanged'
       When call parse_options 'unit' '--focus'
       The output should include 'unit'
       The output should include '--focus'
     End
 
-    It 'returns empty output for no arguments'
+    It 'T-RUN-PO-04: returns empty output for no arguments'
       When call parse_options
       The output should equal ''
     End
@@ -178,19 +178,19 @@ End
 
 Describe 'is_spec_glob()'
   Describe 'spec glob patterns'
-    It 'returns success for runners/libs/tests/unit/*.spec.sh'
+    It 'T-RUN-ISG-01: returns success for runners/libs/tests/unit/*.spec.sh'
       When call is_spec_glob 'runners/libs/tests/unit/*.spec.sh'
       The status should be success
     End
   End
 
   Describe 'non-spec-glob patterns'
-    It 'returns failure for init* (no .spec.sh)'
+    It 'T-RUN-ISG-02: returns failure for init* (no .spec.sh)'
       When call is_spec_glob 'init*'
       The status should be failure
     End
 
-    It 'returns failure for foo.spec.sh (no glob)'
+    It 'T-RUN-ISG-03: returns failure for foo.spec.sh (no glob)'
       When call is_spec_glob 'foo.spec.sh'
       The status should be failure
     End
@@ -202,13 +202,13 @@ Describe 'expand_spec_glob()'
   After 'teardown_temp_specs'
 
   Describe 'glob expansion'
-    It 'returns matching spec files for runners/libs/tests/unit/*.spec.sh'
+    It 'T-RUN-ESG-01: returns matching spec files for runners/libs/tests/unit/*.spec.sh'
       When call expand_spec_glob 'runners/libs/tests/unit/*.spec.sh'
       The output should include '.spec.sh'
       The status should be success
     End
 
-    It 'exits with 0 and warns for non-matching glob'
+    It 'T-RUN-ESG-02: exits with 0 and warns for non-matching glob'
       When call expand_spec_glob 'runners/libs/tests/unit/nonexistent*.spec.sh'
       The stderr should include 'Warning'
       The status should be success
@@ -220,7 +220,7 @@ Describe 'resolve_spec_files()'
   Before 'SKIP_INTEGRATION_TESTS=1'
 
   Describe 'single spec file passthrough'
-    It 'returns spec file unchanged for foo.spec.sh'
+    It 'T-RUN-RSF-01: returns spec file unchanged for foo.spec.sh'
       When call resolve_spec_files 'foo.spec.sh'
       The output should equal 'foo.spec.sh'
       The status should be success
@@ -228,7 +228,7 @@ Describe 'resolve_spec_files()'
   End
 
   Describe 'spec glob expansion'
-    It 'expands glob pattern runners/libs/tests/unit/*.spec.sh'
+    It 'T-RUN-RSF-02: expands glob pattern runners/libs/tests/unit/*.spec.sh'
       When call resolve_spec_files 'runners/libs/tests/unit/*.spec.sh'
       The output should include '.spec.sh'
       The status should be success
@@ -239,13 +239,13 @@ Describe 'resolve_spec_files()'
     Before 'setup_temp_specs'
     After 'teardown_temp_specs'
 
-    It 'expands unit to unit spec files'
+    It 'T-RUN-RSF-03: expands unit to unit spec files'
       When call resolve_spec_files 'unit'
       The output should include 'tests/unit'
       The status should be success
     End
 
-    It 'sets SKIP_INTEGRATION_TESTS=0 for system'
+    It 'T-RUN-RSF-04: sets SKIP_INTEGRATION_TESTS=0 for system'
       When call resolve_spec_files 'system'
       The variable SKIP_INTEGRATION_TESTS should equal '0'
       The output should include 'tests/system'
@@ -254,7 +254,7 @@ Describe 'resolve_spec_files()'
   End
 
   Describe 'error handling'
-    It 'exits with failure for unknown test type'
+    It 'T-RUN-RSF-05: exits with failure for unknown test type'
       When call resolve_spec_files 'unknowntype'
       The stderr should include 'Error'
       The status should be failure
