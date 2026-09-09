@@ -10,7 +10,7 @@ description: >
   Do NOT implement multiple tasks in one invocation — one task per call.
 metadata:
   author: aglabo
-  version: 0.4.1
+  version: 0.7.0
   license: MIT
 ---
 
@@ -56,15 +56,15 @@ Once Phase 1 (Checklist Build) starts, stop asking scope questions.
 
 bdd-coder is an orchestration layer with the following fixed phase order:
 
-| Phase | Name               | Agent             | What happens                                                          |
-| ----- | ------------------ | ----------------- | --------------------------------------------------------------------- |
-| 0     | Environment        | explore-agent     | Detect language, test framework, lint, type-check setup               |
-| 1     | Checklist Build    | checklist-builder | Generate checklist from instruction or Task ID                        |
-| 2     | Dependency Map     | bdd-coder         | Classify checklist tasks into serial / parallel groups                |
-| 3     | bdd-coder Dispatch | bdd-coder         | Spawn bdd-coder per task; collect status reports                      |
-| 4     | Quality Gate       | bdd-coder         | Global lint + type-check + all tests pass                             |
-| 5     | Done Check         | bdd-coder         | Confirm all checklist items complete; write back status to task files |
-| 6     | Session End        | bdd-coder         | Reset state; remind user to commit manually                           |
+| Phase | Name               | Agent                     | What happens                                                                   |
+| ----- | ------------------ | ------------------------- | ------------------------------------------------------------------------------ |
+| 0     | Environment        | explore-agent             | Detect language, test framework, lint, type-check setup                        |
+| 1     | Checklist Build    | checklist-builder         | Generate checklist from instruction or Task ID                                 |
+| 2     | Dependency Map     | bdd-coder                 | Classify checklist tasks into serial / parallel groups                         |
+| 3     | bdd-coder Dispatch | bdd-coder                 | Spawn bdd-coder per task; collect status reports                               |
+| 4     | Quality Gate       | bdd-coder + code-reviewer | Global lint + type-check + all tests pass, then code review                    |
+| 5     | Done Check         | bdd-coder                 | Confirm all checklist items complete; check off tasks.md and write back status |
+| 6     | Session End        | bdd-coder                 | Reset state; remind user to commit manually                                    |
 
 Gate Rule: phases must run in order. No skipping.
 
@@ -107,33 +107,119 @@ If bdd-coder reports `BLOCKED`:
 
 Do NOT proceed to the next task while any task remains `BLOCKED`.
 
+### Phase 4: Quality Gate
+
+Run the global gates, then the code review. Both must be satisfied before Phase 5.
+
+| Gate       | Must pass                                            |
+| ---------- | ---------------------------------------------------- |
+| Lint       | 0 errors                                             |
+| Type check | 0 errors                                             |
+| Tests      | ALL PASS (with coverage)                             |
+| Review     | code-reviewer returns `PASS` or `PASS_WITH_WARNINGS` |
+
+After the first three gates pass, spawn **code-reviewer ONCE** for the whole session — an
+aggregate review over every file changed in Phase 3, not one invocation per task.
+
+| Input           | Value                                                                          |
+| --------------- | ------------------------------------------------------------------------------ |
+| `task_id`       | The Task ID of this invocation, or `N/A` for multiple tasks                    |
+| `changed_files` | Implementation files from the session scope resolved below                     |
+| `test_files`    | Test files from that same scope, split by the ENV PROFILE test-file convention |
+| `env_profile`   | `temp/deckrd-work/env-profile.md` (Phase 0 output)                             |
+| `coverage_cmd`  | Coverage command from ENV PROFILE                                              |
+
+**Session scope**, in this order:
+
+1. The union of the `CHANGED_FILES` lists that Phase 3 collected from each bdd-coder.
+2. If those lists are unavailable, every working-tree change minus the SESSION BASELINE
+   captured in Phase 0.
+
+Never send the raw working-tree diff. A user who started the session with unrelated
+staged or unstaged edits would otherwise get those files reviewed, and unrelated findings
+could block the session.
+
+"Every working-tree change" means `git diff --name-only`, `git diff --name-only --cached`,
+and `git ls-files --others --exclude-standard`, merged and deduplicated. The third is
+required: a file bdd-coder just created is untracked and the first two do not list it.
+Keep deleted paths — code-reviewer reads their patch with `git diff -- <path>`.
+
+Checklist items, CRAP thresholds, and failure handling: [workflow.md](references/workflow.md) — Phase 4.
+Agent definition: [agents/code-reviewer.md](../../agents/code-reviewer.md).
+
+The same review is available on demand as `/bdd-coder:bdd-coder-review`; inside this flow it runs here.
+
+The per-task CRAP gate in [agents/bdd-coder.md](../../agents/bdd-coder.md) is the implementer's
+own gate over one task. Phase 4 recomputes CRAP across the aggregate diff. The two are
+intentionally separate — do not remove either as a duplicate.
+
+#### Where review findings go
+
+| Verdict              | Handling                                                                                                                                                                                            |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PASS`               | Proceed to Phase 5                                                                                                                                                                                  |
+| `PASS_WITH_WARNINGS` | Proceed to Phase 5 and include the findings in the Step 5 report block. Do NOT retroactively rewrite Phase 3 statuses or `tasks.md` checkboxes — Phase 5's source of truth stays the Phase 3 report |
+| `BLOCKED`            | Do NOT proceed to Phase 5. Present the CRITICAL findings and follow the Phase 3 `BLOCKED` handling (fix and retry / skip / abort)                                                                   |
+
 ### Phase 5: Done Check — Task Status Write-back
 
 After all bdd-coder instances in Phase 3 report `DONE` or `DONE_WITH_CONCERNS`,
 and Phase 4 quality gate passes, write the implementation status back to the task files.
 
-#### Step 1: Check each Test Target
+#### Step 1: Determine per-case completion status
 
-For each Test Target (T-01, T-02, ...) that was implemented in this session:
+The source of truth is the **Phase 3 status report table** — not the checkbox state of
+any file. Nothing updates `tasks.md` before this phase, so deciding completion from its
+checkboxes would always yield `in progress`. The checklist file IS updated per step by
+each bdd-coder instance, but a run that ended early can leave it behind the reports.
 
-1. Read the checklist file at `temp/tasks/<slug>-<adjective>-checklist.md`
-2. Locate all checklist items under the Test Target (T-XX):
-   - In tasks.md: all Case checkboxes `- [ ] **T-XX-YY-ZZ**`
-   - In checklist file: all phase items `[T-XX-YY-ZZ-R]`, `[T-XX-YY-ZZ-G]`, `[T-XX-YY-ZZ-F]`,
-     `[T-XX-YY-ZZ-TF]` (per Scenario), and `[T-XX-CF]`
-3. Determine status:
-   - All items checked (`[x]`) → status = `done`
-   - Any item unchecked (`[ ]`) → status = `in-progress`
+| Phase 3 status                 | Case result                 |
+| ------------------------------ | --------------------------- |
+| `DONE` / `DONE_WITH_CONCERNS`  | completed — check it        |
+| `BLOCKED` / `SKIPPED` / absent | not completed — leave as is |
 
-#### Step 2: Write back to tasks.md (Task ID input only)
+Checklist-file items (`[T-XX-YY-ZZ-R]`, `-G`, `-F`) may be read as corroboration,
+but MUST NOT override the Phase 3 report: a case reported `DONE` is checked even when
+the checklist file still shows `[ ]`.
 
-If the session was started with a Task ID (e.g. `T01-02`), update `tasks.md`:
+#### Step 2: Check case checkboxes in tasks.md (Task ID input only)
 
-1. Locate the **Task Summary** table at the top of `tasks.md`
-2. Find the row for the implemented Test Target (e.g. `T-01`)
-3. Update the `Status` column:
-   - `done` → write `done`
-   - `in-progress` → write `in-progress`
+If the session was started with a Task ID (e.g. `T01-02`), update the `tasks.md`
+resolved in Phase 1 (`docs/.deckrd/<namespace>/<module>/tasks/tasks.md`):
+
+1. For each completed case ID from Step 1, normalize it to the canonical
+   `T-XX-YY-ZZ` form, then locate its line
+   `- [ ] **T-XX-YY-ZZ**: <description>`.
+   An invocation-form ID (`T01-02`) names a Scenario, not a case: it covers every
+   case line under `T-01-02`.
+2. Replace the checkbox marker only: `- [ ]` becomes `- [x]`.
+   Leave the description and the `Target` / `Scenario` / `Expected` lines untouched.
+3. A line already marked `- [x]` stays as is — the write-back is idempotent.
+4. If a completed case ID has no matching line in `tasks.md`, skip it and report it in Step 5.
+
+```markdown
+- [x] **T-01-01-01**: <description>
+  - Target: `<function>`
+  - Scenario: Given <precondition>, When <action>
+  - Expected: Then <assertion>
+```
+
+#### Step 3: Recalculate Task Summary from the checkboxes
+
+Update the **Task Summary** table at the top of `tasks.md` for the Test Targets
+implemented in this invocation ONLY. Leave every other row untouched — a row set by
+hand, or one another session is working on, MUST NOT be recomputed.
+
+For each such Test Target `T-XX`, count its case lines `**T-XX-YY-ZZ**` in `tasks.md`:
+
+| Checked cases | Status                                                    |
+| ------------- | --------------------------------------------------------- |
+| all           | `done`                                                    |
+| some          | `in progress`                                             |
+| none          | leave the current Status unchanged (do not write it back) |
+
+The `none` row matters when every case came back `BLOCKED`: a target already marked
+`in progress` MUST NOT be regressed to `pending`.
 
 ```markdown
 ## Task Summary
@@ -141,29 +227,44 @@ If the session was started with a Task ID (e.g. `T01-02`), update `tasks.md`:
 | Test Target  | Scenarios | Cases | Status      |
 | ------------ | --------- | ----- | ----------- |
 | T-01: <name> | N         | M     | done        |
-| T-02: <name> | N         | M     | in-progress |
+| T-02: <name> | N         | M     | in progress |
 ```
 
-Do NOT modify any other part of `tasks.md`.
+Do NOT modify any part of `tasks.md` other than the case checkbox markers (Step 2)
+and the Status column of the affected Test Targets (Step 3).
 
-#### Step 3: Write back to checklist file (all inputs)
+#### Step 4: Write back to checklist file (all inputs)
 
-Regardless of input type, also update the checklist file header:
+Regardless of input type, also update the checklist file:
 
 1. Open `temp/tasks/<slug>-<adjective>-checklist.md`
-2. In the frontmatter, set `status` of the corresponding Test Target:
+2. For every case reported `DONE` / `DONE_WITH_CONCERNS` in Phase 3, confirm its
+   `-R` / `-G` / `-F` items are `[x]`. Check any the bdd-coder instance left behind,
+   and list them in the Step 5 report so the gap is visible.
+3. Check the Scenario and Target refactor items — these belong to this phase, not to
+   the bdd-coder instances, which each see only one Case:
+   - `[T-XX-YY-TF]` — when every Case under Scenario `T-XX-YY` has `-R` / `-G` / `-F` at `[x]`
+   - `[T-XX-CF]` — when every Scenario under Target `T-XX` has its `-TF` at `[x]`
+   - A gate that does not hold yet is normal, not an error: leave the item unchecked
+4. In the frontmatter, set `status` of the corresponding Test Target:
    - If the file has a per-target status field, update it
    - If not, add a comment line below the target heading:
      `<!-- status: done -->` or `<!-- status: in-progress -->`
 
-#### Step 4: Report to user
+#### Step 5: Report to user
 
 After all write-backs complete, output:
 
 ```text
-STATUS WRITE-BACK:
-  T-01: done        (N/N items checked)
-  T-02: in-progress (M/N items checked — K items remain)
+STATUS WRITE-BACK (tasks.md):
+  T-01-01-01  [x]
+  T-01-01-02  [x]
+  T-01: done        (2/2 cases checked)
+  T-02: in progress (1/3 cases checked — 2 cases remain)
+  T-03-01-01  not found in tasks.md — skipped
+
+CHECKLIST BACKFILL:
+  T-01-01-02-F  [x]  (left unchecked by the bdd-coder instance)
 ```
 
 ## References
@@ -172,6 +273,8 @@ STATUS WRITE-BACK:
 - Error recovery: [troubleshooting.md](references/troubleshooting.md)
 - Q&A: [faq.md](references/faq.md)
 - BDD sub-agent: [agents/bdd-coder.md](../../agents/bdd-coder.md)
+- Code reviewer: [agents/code-reviewer.md](../../agents/code-reviewer.md)
+- On-demand review command: [bdd-coder-review/SKILL.md](../bdd-coder-review/SKILL.md)
 - Checklist builder: [agents/checklist-builder.md](../../agents/checklist-builder.md)
 - Checklist template: [assets/templates/implementation-checklist.tpl.md](assets/templates/implementation-checklist.tpl.md)
 

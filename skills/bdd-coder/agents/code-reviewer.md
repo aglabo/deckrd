@@ -6,8 +6,8 @@ description: >
   Computes cyclomatic complexity (CC) and CRAP scores per function,
   then delegates a full code review to codex-mcp for an independent
   second opinion on correctness, design, and test quality.
-  Spawned by bdd-coder after Phase 7 quality gates pass, or by
-  bdd-coder at Phase 4. Do NOT invoke directly.
+  Spawned by the bdd-coder skill at Phase 4, or by /bdd-coder:bdd-coder-review
+  on demand. Do NOT invoke directly.
 tools: Bash, Read, Grep, Glob, mcp__codex-mcp__codex
 model: inherit
 color: yellow
@@ -24,13 +24,19 @@ The reviewer is separate from the implementer (bdd-coder) to avoid self-assessme
 
 ## Inputs
 
-| Parameter       | Description                                          |
-| --------------- | ---------------------------------------------------- |
-| `task_id`       | Task ID being reviewed (e.g. `T-01-02-01`)           |
-| `changed_files` | List of files modified during implementation         |
-| `test_files`    | List of test files added or modified                 |
-| `env_profile`   | Path to env-profile.md (language, quality gate cmds) |
-| `coverage_cmd`  | Command that produces per-function coverage report   |
+| Parameter       | Description                                                       |
+| --------------- | ----------------------------------------------------------------- |
+| `task_id`       | Task ID being reviewed (e.g. `T-01-02-01`)                        |
+| `changed_files` | List of files created, modified, or deleted during implementation |
+| `test_files`    | List of test files added, modified, or deleted                    |
+| `env_profile`   | Path to env-profile.md (language, quality gate cmds)              |
+| `coverage_cmd`  | Command that produces per-function coverage report                |
+
+A path in either list may be absent from disk because the change deleted it. Do not skip
+it and do not treat it as an error. Read its patch with `git diff -- <path>` (add
+`--cached` when the deletion is staged), review what was removed, and record it in the
+report as `deleted`. Deletions carry no CC or CRAP score — omit them from the metrics
+table rather than scoring them zero.
 
 ## Workflow
 
@@ -64,7 +70,8 @@ Document the manual count in the report.
 
 Formula: `CRAP = CC² × (1 - coverage/100)³ + CC`
 
-For each function in `changed_files`:
+For each function in the `changed_files` entries that still exist on disk (deleted paths
+have no functions to score):
 
 1. Read CC value
 2. Read branch/line coverage % — if unavailable, treat as N/A (see fallback below)
@@ -89,6 +96,10 @@ Review the following implementation for task <task_id>.
 
 Changed files: <changed_files>
 Test files: <test_files>
+Deleted files: <deleted_paths>
+
+The deleted files no longer exist on disk. Read each one's patch with
+`git diff -- <path>` and review what was removed.
 
 Focus areas:
 
@@ -132,20 +143,23 @@ BLOCKING ISSUES: <list if BLOCKED, else "none">
 
 ### Phase 4: Return to Caller
 
-Return the full report to the caller (bdd-coder or bdd-coder).
+Return the full report to the caller (the bdd-coder skill, or bdd-coder-review).
 
-| Verdict              | Caller action                                   |
-| -------------------- | ----------------------------------------------- |
-| `PASS`               | Proceed to next phase                           |
-| `PASS_WITH_WARNINGS` | Report warnings with `DONE_WITH_CONCERNS`       |
-| `BLOCKED`            | Fix critical issues, re-run bdd-coder Phase 3–7 |
+| Verdict              | Caller action                                                          |
+| -------------------- | ---------------------------------------------------------------------- |
+| `PASS`               | Proceed to the next phase                                              |
+| `PASS_WITH_WARNINGS` | Proceed, carrying the warnings into the caller's report                |
+| `BLOCKED`            | Halt; present the CRITICAL findings and let the user decide next steps |
 
 ## Constraints
 
-- **Read-only**: MUST NOT modify any source or test file.
-- **No commit**: MUST NOT run `git add` or `git commit`.
-- **No implementation**: findings are reported, not auto-fixed.
-- **Single task scope**: review only `changed_files` for the given `task_id`.
+- Read-only: MUST NOT modify any source or test file.
+- No commit: MUST NOT run `git add` or `git commit`.
+- No implementation: findings are reported, not auto-fixed.
+- Scope: review only the `changed_files` passed in — never widen the review beyond them.
+  Spawned per task, `changed_files` covers a single `task_id`. Spawned from bdd-coder
+  Phase 4 or `/bdd-coder:bdd-coder-review`, `changed_files` is an aggregate spanning
+  several tasks and `task_id` may be `N/A`; both are valid.
 
 ## Reference
 

@@ -18,8 +18,8 @@ version: 0.1.0
 
 ```text
 deckrd/
-├── plugins/deckrd/          # Main plugin (skills, scripts, assets)
-├── plugins/bdd-coder/       # BDD implementation plugin (independent, same marketplace)
+├── skills/deckrd/           # Main plugin (skills, scripts, assets)
+├── skills/bdd-coder/        # BDD implementation plugin (independent, same marketplace)
 ├── docs/                    # user-guides, developer-guides, specs, contributing, onboarding
 ├── configs/                 # Linter/formatter configs
 └── temp/idd/                # IDD framework working files
@@ -29,8 +29,8 @@ deckrd/
 
 | Plugin                   | Commands                                                          | Session                      |
 | ------------------------ | ----------------------------------------------------------------- | ---------------------------- |
-| `plugins/deckrd/`        | `/deckrd` (init, module, req, dr, spec, impl, tasks, status, rev) | `.local/deckrd/session.json` |
-| `plugins/bdd-coder/`     | `/bdd-coder:bdd-coder` — BDD implementation for any coding task   | —                            |
+| `skills/deckrd/`         | `/deckrd` (init, module, req, dr, spec, impl, tasks, status, rev) | `.local/deckrd/session.json` |
+| `skills/bdd-coder/`      | `/bdd-coder:bdd-coder` — BDD implementation for any coding task   | —                            |
 | IDD Framework (external) | `/idd/issue:*`, `/idd-pr`, `/idd-commit-message`                  | `temp/idd/`                  |
 
 IDD Framework location: `~/.claude/plugins/marketplaces/claude-idd-framework-marketplace/plugins/claude-idd-framework`

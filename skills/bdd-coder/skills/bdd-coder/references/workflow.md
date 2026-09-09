@@ -95,6 +95,21 @@ Store as **ENV PROFILE** for use in Phase 3 (bdd-coder への渡し), Phase 4, P
 
 出力: `temp/deckrd-work/env-profile.md`
 
+### Step 0-3: SESSION BASELINE の記録
+
+explore-agent の起動前後を問わず、**コードを 1 行も書く前に** 作業ツリーの汚れを記録する。
+
+```bash
+git status --porcelain=v1 --untracked-files=all
+```
+
+各行は先頭 2 文字がステータスコード、3 文字目以降がパスである。パス部分だけを取り出して
+集合にし、**SESSION BASELINE** として保持する。リネーム行 (`R  old -> new`) は
+`old` と `new` の両方を登録する。空集合が正常な状態である。
+
+用途は Phase 4 のフォールバックに限る。ユーザーがセッション開始時点で無関係な未コミット
+変更を抱えていた場合、それらをレビュー対象から外すために使う。
+
 ## Phase 1: チェックリスト作成 (checklist-builder 委譲)
 
 **checklist-builder** エージェントを起動してチェックリストを生成する。
@@ -179,11 +194,14 @@ bdd-coder(T-01-03) ┘
 
 各 bdd-coder から受け取ったレポートを記録:
 
-| Task ID    | Status             | Notes                   |
-| ---------- | ------------------ | ----------------------- |
-| T-01-02-01 | DONE               |                         |
-| T-01-02-02 | DONE_WITH_CONCERNS | 既存テスト 2 件が失敗中 |
-| T-01-02-03 | BLOCKED            | 型エラーが 3 回以上発生 |
+| Task ID    | Status             | Changed files                         | Notes                   |
+| ---------- | ------------------ | ------------------------------------- | ----------------------- |
+| T-01-02-01 | DONE               | `src/parser.ts`, `src/parser.spec.ts` |                         |
+| T-01-02-02 | DONE_WITH_CONCERNS | `src/lexer.ts`                        | 既存テスト 2 件が失敗中 |
+| T-01-02-03 | BLOCKED            | (なし)                                | 型エラーが 3 回以上発生 |
+
+Changed files 列は bdd-coder の Status Report の `CHANGED_FILES` 行をそのまま転記する。
+この列の和集合が Phase 4 のレビュー対象になるため、空欄のまま次へ進まない。
 
 ### BLOCKED 時のエスカレーション
 
@@ -223,13 +241,38 @@ bdd-coder(T-01-03) ┘
 **CRAP 計算式:** `CC² × (1 - coverage/100)³ + CC`
 詳細は [../assets/test-quality.md](../assets/test-quality.md) — CRAP Score セクションを参照。
 
-code-reviewer の起動パラメータ:
+code-reviewer は **セッション全体で 1 回だけ** 起動する (タスクごとのループはしない)。起動パラメータ:
 
-- `task_id`: 各タスクの ID
-- `changed_files`: Phase 3 で変更した実装ファイル一覧
-- `test_files`: Phase 3–5 で追加・変更したテストファイル一覧
+- `task_id`: 単一タスク起動ならその ID。複数タスクにまたがる場合は `N/A`
+- `changed_files`: 後述の解決手順で得たパスのうち実装ファイル
+- `test_files`: 同じパス集合のうちテストファイル (ENV PROFILE のテストファイル規約で振り分け)
 - `env_profile`: `temp/deckrd-work/env-profile.md`
 - `coverage_cmd`: ENV PROFILE のカバレッジコマンド
+
+#### レビュー対象パスの解決
+
+レビュー範囲はこのセッションが変更したファイルに限る。次の順で解決する。
+
+| 順 | 方法                                                                             |
+| -- | -------------------------------------------------------------------------------- |
+| 1  | Phase 3 のステータス表の Changed files 列の和集合                                |
+| 2  | 1 が取れない場合、作業ツリーの全変更から SESSION BASELINE のパスを差し引いたもの |
+
+作業ツリーの全変更は、次の 3 つを併合して重複を除いたものとする。
+
+```bash
+git diff --name-only                        # 未ステージ
+git diff --name-only --cached               # ステージ済み
+git ls-files --others --exclude-standard    # 未追跡 (gitignore 対象は除く)
+```
+
+3 つ目を落とすと、bdd-coder が新規作成した実装ファイル・テストファイルがレビューされない。
+BDD の直後はこれが最も起きやすい取りこぼしである。
+
+削除されたパスは除外しない。削除はレビュー対象の変更であり、code-reviewer は
+`git diff -- <path>` でパッチを読む。
+
+同じレビューは `/bdd-coder:bdd-coder-review` で任意のタイミングでも実行できる。
 
 Agent definition: [../../../../agents/code-reviewer.md](../../../../agents/code-reviewer.md)
 
@@ -247,6 +290,12 @@ Agent definition: [../../../../agents/code-reviewer.md](../../../../agents/code-
 - 型エラーなし確認: Run[type check command], read FULL output
 - チェックリストがすべて `[x]` 済み確認: Read checklist directly, count checked items
 - Refactor が完了したか確認 (Step 7 グローバルリファクタ)
+- Task ID 起動時: tasks.md の該当ケースのチェックボックスを `[x]` に更新
+  (判定源は Phase 3 のステータスレポート)
+- 今回実装した Test Target のみ、Task Summary の Status を
+  チェックボックスの充足率から再計算
+
+書き戻しの詳細な手順は [SKILL.md](../SKILL.md) の Phase 5 を参照。
 
 出力: コーディング完了状態。
 

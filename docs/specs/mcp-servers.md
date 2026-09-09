@@ -4,12 +4,13 @@ description: "Complete API reference for MCP servers used in deckrd project"
 category: "specs"
 tags: ["api", "mcp", "cocoindex-code", "filesystem"]
 created: "2026-01-14"
-version: "0.1.0"
+version: "0.1.1"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
   - 0.0.4   2026-01-14  Initial version
   - 0.1.0   2026-03-21  Update to cocoindex-code / filesystem
+  - 0.1.1   2026-09-06  Fix stale plugins/ paths to skills/
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.
@@ -54,7 +55,7 @@ Lists files and directories in a given directory.
 **Example**:
 
 ```bash
-serena-mcp list_dir --relative-path "plugins/deckrd" --recursive true
+serena-mcp list_dir --relative-path "skills/deckrd" --recursive true
 ```
 
 #### find_file
@@ -498,10 +499,10 @@ lang: "bash"
 
 ```text
 # Read a file
-path: "plugins/deckrd/skills/deckrd/scripts/init.sh"
+path: "skills/deckrd/skills/deckrd/scripts/init.sh"
 
 # List a directory
-path: "plugins/deckrd/skills/"
+path: "skills/deckrd/skills/"
 ```
 
 ## Performance Tips
