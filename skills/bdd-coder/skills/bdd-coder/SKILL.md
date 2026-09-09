@@ -10,7 +10,7 @@ description: >
   Do NOT implement multiple tasks in one invocation — one task per call.
 metadata:
   author: aglabo
-  version: 0.6.0
+  version: 0.7.0
   license: MIT
 ---
 
@@ -121,13 +121,28 @@ Run the global gates, then the code review. Both must be satisfied before Phase 
 After the first three gates pass, spawn **code-reviewer ONCE** for the whole session — an
 aggregate review over every file changed in Phase 3, not one invocation per task.
 
-| Input           | Value                                                                                          |
-| --------------- | ---------------------------------------------------------------------------------------------- |
-| `task_id`       | The Task ID of this invocation, or `N/A` for multiple tasks                                    |
-| `changed_files` | Implementation files in the working-tree diff (`git diff --name-only`, merged with `--cached`) |
-| `test_files`    | Test files from that same diff, split by the ENV PROFILE test-file convention                  |
-| `env_profile`   | `temp/deckrd-work/env-profile.md` (Phase 0 output)                                             |
-| `coverage_cmd`  | Coverage command from ENV PROFILE                                                              |
+| Input           | Value                                                                          |
+| --------------- | ------------------------------------------------------------------------------ |
+| `task_id`       | The Task ID of this invocation, or `N/A` for multiple tasks                    |
+| `changed_files` | Implementation files from the session scope resolved below                     |
+| `test_files`    | Test files from that same scope, split by the ENV PROFILE test-file convention |
+| `env_profile`   | `temp/deckrd-work/env-profile.md` (Phase 0 output)                             |
+| `coverage_cmd`  | Coverage command from ENV PROFILE                                              |
+
+**Session scope**, in this order:
+
+1. The union of the `CHANGED_FILES` lists that Phase 3 collected from each bdd-coder.
+2. If those lists are unavailable, every working-tree change minus the SESSION BASELINE
+   captured in Phase 0.
+
+Never send the raw working-tree diff. A user who started the session with unrelated
+staged or unstaged edits would otherwise get those files reviewed, and unrelated findings
+could block the session.
+
+"Every working-tree change" means `git diff --name-only`, `git diff --name-only --cached`,
+and `git ls-files --others --exclude-standard`, merged and deduplicated. The third is
+required: a file bdd-coder just created is untracked and the first two do not list it.
+Keep deleted paths — code-reviewer reads their patch with `git diff -- <path>`.
 
 Checklist items, CRAP thresholds, and failure handling: [workflow.md](references/workflow.md) — Phase 4.
 Agent definition: [agents/code-reviewer.md](../../agents/code-reviewer.md).

@@ -24,13 +24,19 @@ The reviewer is separate from the implementer (bdd-coder) to avoid self-assessme
 
 ## Inputs
 
-| Parameter       | Description                                          |
-| --------------- | ---------------------------------------------------- |
-| `task_id`       | Task ID being reviewed (e.g. `T-01-02-01`)           |
-| `changed_files` | List of files modified during implementation         |
-| `test_files`    | List of test files added or modified                 |
-| `env_profile`   | Path to env-profile.md (language, quality gate cmds) |
-| `coverage_cmd`  | Command that produces per-function coverage report   |
+| Parameter       | Description                                                       |
+| --------------- | ----------------------------------------------------------------- |
+| `task_id`       | Task ID being reviewed (e.g. `T-01-02-01`)                        |
+| `changed_files` | List of files created, modified, or deleted during implementation |
+| `test_files`    | List of test files added, modified, or deleted                    |
+| `env_profile`   | Path to env-profile.md (language, quality gate cmds)              |
+| `coverage_cmd`  | Command that produces per-function coverage report                |
+
+A path in either list may be absent from disk because the change deleted it. Do not skip
+it and do not treat it as an error. Read its patch with `git diff -- <path>` (add
+`--cached` when the deletion is staged), review what was removed, and record it in the
+report as `deleted`. Deletions carry no CC or CRAP score — omit them from the metrics
+table rather than scoring them zero.
 
 ## Workflow
 
@@ -64,7 +70,8 @@ Document the manual count in the report.
 
 Formula: `CRAP = CC² × (1 - coverage/100)³ + CC`
 
-For each function in `changed_files`:
+For each function in the `changed_files` entries that still exist on disk (deleted paths
+have no functions to score):
 
 1. Read CC value
 2. Read branch/line coverage % — if unavailable, treat as N/A (see fallback below)
@@ -89,6 +96,10 @@ Review the following implementation for task <task_id>.
 
 Changed files: <changed_files>
 Test files: <test_files>
+Deleted files: <deleted_paths>
+
+The deleted files no longer exist on disk. Read each one's patch with
+`git diff -- <path>` and review what was removed.
 
 Focus areas:
 

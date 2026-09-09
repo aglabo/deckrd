@@ -220,8 +220,14 @@ TASK: <Task ID>
 STATUS: <DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED>
 PHASES: R=<pass|fail> G=<pass|fail> F=<pass|fail>
 QUALITY_GATE: <pass|fail>
+CHANGED_FILES: <comma-separated paths, or "none">
 NOTES: <required if not DONE>
 ```
+
+`CHANGED_FILES` lists every file this task created, modified, or deleted, implementation
+and test alike. The caller unions these lists across tasks to scope the session code
+review, so a missing path means unreviewed code. Report paths relative to the repository
+root, and include newly created files even though they are still untracked.
 
 ## Completion Checklist
 
