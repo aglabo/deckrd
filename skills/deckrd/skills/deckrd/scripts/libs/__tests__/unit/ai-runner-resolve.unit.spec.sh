@@ -21,13 +21,13 @@ SCRIPT="${DECKRD_LIB_DIR}/ai-runner.lib.sh"
 Describe "ai-runner.sh"
   Describe "ai-runner.sh loading"
     Describe "When: スクリプトを読み込む"
-      It "Then: [Normal] resolve_ai_cli 関数が存在する"
+      It "Then: [Normal] T-LIB-ARLD-01: resolve_ai_cli 関数が存在する"
         When call type resolve_ai_cli
         The status should equal 0
         The output should include "resolve_ai_cli"
       End
 
-      It "Then: [Normal] run_ai 関数が存在する"
+      It "Then: [Normal] T-LIB-ARLD-02: run_ai 関数が存在する"
         When call type run_ai
         The status should equal 0
         The output should include "run_ai"
@@ -59,7 +59,7 @@ Describe "ai-runner.sh"
           "opencode/big-pickle" "opencode"
         End
 
-        It "Then: [Normal] $1 -> $2 を返す"
+        It "Then: [Normal] T-LIB-ARRC-01: $1 -> $2 を返す"
           When call resolve_ai_cli "$1"
           The status should equal 0
           The output should equal "$2"
@@ -78,7 +78,7 @@ Describe "ai-runner.sh"
           "opusplan" "claude"
         End
 
-        It "Then: [Normal] $1 -> $2 を返す"
+        It "Then: [Normal] T-LIB-ARRC-02: $1 -> $2 を返す"
           When call resolve_ai_cli "$1"
           The status should equal 0
           The output should equal "$2"
@@ -88,17 +88,17 @@ Describe "ai-runner.sh"
 
     Describe "Given: 不正なモデル名"
       Describe "When: resolve_ai_cli を呼ぶ"
-        It "Then: [Error] 未知モデルは exit 1 を返す"
+        It "Then: [Error] T-LIB-ARRC-03: 未知モデルは exit 1 を返す"
           When call resolve_ai_cli "unknown/model"
           The status should equal 1
         End
 
-        It "Then: [Error] 引数なしは exit 1 を返す"
+        It "Then: [Error] T-LIB-ARRC-04: 引数なしは exit 1 を返す"
           When call resolve_ai_cli
           The status should equal 1
         End
 
-        It "Then: [Error] 空文字列は exit 1 を返す"
+        It "Then: [Error] T-LIB-ARRC-05: 空文字列は exit 1 を返す"
           When call resolve_ai_cli ""
           The status should equal 1
         End
@@ -119,7 +119,7 @@ Describe "ai-runner.sh"
             "gpt-4;echo hacked" "codex"
           End
 
-          It "Then: [Edge] $1 -> $2 を返す"
+          It "Then: [Edge] T-LIB-ARRC-06: $1 -> $2 を返す"
             When call resolve_ai_cli "$1"
             The status should equal 0
             The output should equal "$2"
@@ -139,7 +139,7 @@ Describe "ai-runner.sh"
             "12345"
           End
 
-          It "Then: [Edge] $1 は exit 1 を返す"
+          It "Then: [Edge] T-LIB-ARRC-07: $1 は exit 1 を返す"
             When call resolve_ai_cli "$1"
             The status should equal 1
           End
@@ -150,7 +150,7 @@ Describe "ai-runner.sh"
 
   Describe "validate_ai_model"
     Describe "ai-runner.sh loading"
-      It "Then: [Normal] validate_ai_model 関数が存在する"
+      It "Then: [Normal] T-LIB-ARVM-01: validate_ai_model 関数が存在する"
         When call type validate_ai_model
         The status should equal 0
         The output should include "validate_ai_model"
@@ -181,7 +181,7 @@ Describe "ai-runner.sh"
           "opencode/big-pickle" "opencode/big-pickle"
         End
 
-        It "Then: [Normal] $1 -> $2 を返す"
+        It "Then: [Normal] T-LIB-ARVM-02: $1 -> $2 を返す"
           When call validate_ai_model "$1"
           The status should equal 0
           The output should equal "$2"
@@ -207,7 +207,7 @@ Describe "ai-runner.sh"
           "opencode/"
         End
 
-        It "Then: [Error] $1 は exit 1 を返す"
+        It "Then: [Error] T-LIB-ARVM-03: $1 は exit 1 を返す"
           When call validate_ai_model "$1"
           The status should equal 1
           The stderr should include "Error:"
@@ -217,13 +217,13 @@ Describe "ai-runner.sh"
 
     Describe "Given: 空引数"
       Describe "When: validate_ai_model を呼ぶ"
-        It "Then: [Error] 引数なしは exit 1 を返す"
+        It "Then: [Error] T-LIB-ARVM-04: 引数なしは exit 1 を返す"
           When call validate_ai_model
           The status should equal 1
           The stderr should include "Error:"
         End
 
-        It "Then: [Error] 空文字列は exit 1 を返す"
+        It "Then: [Error] T-LIB-ARVM-05: 空文字列は exit 1 を返す"
           When call validate_ai_model ""
           The status should equal 1
           The stderr should include "Error:"

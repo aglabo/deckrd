@@ -27,7 +27,7 @@ Describe "init.sh: main() integration"
     Before "setup_deckrd_tmpdir"
     After "teardown_deckrd_tmpdir"
 
-    It "[Error] Should: exit 1, stderr includes Usage and 'required', stdout is blank"
+    It "[Error] T-CLI-MAINI-01: Should: exit 1, stderr includes Usage and 'required', stdout is blank"
       When run bash "$SCRIPT"
       The status should equal 1
       # @note: --json モード追加時はこのアサーションを見直すこと
@@ -41,7 +41,7 @@ Describe "init.sh: main() integration"
     Before "setup_deckrd_tmpdir"
     After "teardown_deckrd_tmpdir"
 
-    It "[Error] Should: exit 1, stderr includes Usage and 'required', stdout is blank"
+    It "[Error] T-CLI-MAINI-02: Should: exit 1, stderr includes Usage and 'required', stdout is blank"
       When run bash "$SCRIPT" myapp
       The status should equal 1
       # @note: --json モード追加時はこのアサーションを見直すこと
@@ -55,7 +55,7 @@ Describe "init.sh: main() integration"
     Before "setup_deckrd_tmpdir"
     After "teardown_deckrd_tmpdir"
 
-    It "[Normal] Should: exit 0, stderr includes Usage, stdout is blank"
+    It "[Normal] T-CLI-MAINI-03: Should: exit 0, stderr includes Usage, stdout is blank"
       When run bash "$SCRIPT" --help
       The status should equal 0
       # @note: --json モード追加時はこのアサーションを見直すこと
@@ -68,7 +68,7 @@ Describe "init.sh: main() integration"
     Before "setup_deckrd_tmpdir"
     After "teardown_deckrd_tmpdir"
 
-    It "[Error] Should: exit 1, stderr includes Usage and 'Unknown option', stdout is blank"
+    It "[Error] T-CLI-MAINI-04: Should: exit 1, stderr includes Usage and 'Unknown option', stdout is blank"
       When run bash "$SCRIPT" myapp webapp --unknown
       The status should equal 1
       # @note: --json モード追加時はこのアサーションを見直すこと
@@ -82,7 +82,7 @@ Describe "init.sh: main() integration"
     Before "setup_deckrd_tmpdir"
     After "teardown_deckrd_tmpdir"
 
-    It "[Normal] stderr includes project name/type/Init complete/Session, stdout is blank"
+    It "[Normal] T-CLI-MAINI-05: stderr includes project name/type/Init complete/Session, stdout is blank"
       When run bash "$SCRIPT" myapp webapp
       The status should equal 0
       # @note: --json モード追加時はこのアサーションを見直すこと
@@ -93,7 +93,7 @@ Describe "init.sh: main() integration"
       The stderr should include "Session"
     End
 
-    It "[Normal] Should: create DECKRD_DOCS, notes/, temp/ directories"
+    It "[Normal] T-CLI-MAINI-06: Should: create DECKRD_DOCS, notes/, temp/ directories"
       When run bash "$SCRIPT" myapp webapp
       The status should equal 0
       The stderr should include "Init complete"
@@ -102,14 +102,14 @@ Describe "init.sh: main() integration"
       The path "${DECKRD_DOCS_DIR}/temp" should be directory
     End
 
-    It "[Normal] Should: create DECKRD_LOCAL_DATA directory"
+    It "[Normal] T-CLI-MAINI-07: Should: create DECKRD_LOCAL_DATA directory"
       When run bash "$SCRIPT" myapp webapp
       The status should equal 0
       The stderr should include "Init complete"
       The path "${DECKRD_LOCAL_DATA}" should be directory
     End
 
-    It "[Normal] Should: create .project.json with project, project-type, language"
+    It "[Normal] T-CLI-MAINI-08: Should: create .project.json with project, project-type, language"
       When run bash "$SCRIPT" myapp webapp
       The status should equal 0
       The stderr should include "Project written"
@@ -119,7 +119,7 @@ Describe "init.sh: main() integration"
       The contents of file "${DECKRD_LOCAL_DATA}/.project.json" should include "typescript"
     End
 
-    It "[Normal] Should: create session.json with v0.1.0 schema (active, lang, modules)"
+    It "[Normal] T-CLI-MAINI-09: Should: create session.json with v0.1.0 schema (active, lang, modules)"
       When run bash "$SCRIPT" myapp webapp
       The status should equal 0
       The stderr should include "Session"
@@ -129,7 +129,7 @@ Describe "init.sh: main() integration"
       The contents of file "${DECKRD_LOCAL_DATA}/session.json" should include "modules"
     End
 
-    It "[Normal] Should: create .gitignore in DECKRD_LOCAL_DATA containing '*kv'"
+    It "[Normal] T-CLI-MAINI-10: Should: create .gitignore in DECKRD_LOCAL_DATA containing '*kv'"
       When run bash "$SCRIPT" myapp webapp
       The status should equal 0
       The stderr should include "[init/local-deckrd] copied: .gitignore"
@@ -137,7 +137,7 @@ Describe "init.sh: main() integration"
       The contents of file "${DECKRD_LOCAL_DATA}/.gitignore" should include "*kv"
     End
 
-    It "[Normal] .gitignore が fixture と一致"
+    It "[Normal] T-CLI-MAINI-11: .gitignore が fixture と一致"
       When run bash "$SCRIPT" myapp webapp
       The status should equal 0
       The stderr should include "Init complete"
@@ -152,7 +152,7 @@ Describe "init.sh: main() integration"
     Describe "When: both rules directories are empty"
       Before "setup_deckrd_tmpdir"
 
-      It "[Normal] Should: install rule bodies into DECKRD_RULES_DIR, renaming .gitignore.org"
+      It "[Normal] T-CLI-MAINI-12: Should: install rule bodies into DECKRD_RULES_DIR, renaming .gitignore.org"
         When run bash "$SCRIPT" myapp webapp
         The status should equal 0
         The stderr should include "[init/deckrd-rules] copied: .gitignore"
@@ -161,7 +161,7 @@ Describe "init.sh: main() integration"
         The path "${DECKRD_RULES_DIR}/.gitignore.org" should not be exist
       End
 
-      It "[Normal] Should: install injected rules into CLAUDE_RULES_DIR"
+      It "[Normal] T-CLI-MAINI-13: Should: install injected rules into CLAUDE_RULES_DIR"
         When run bash "$SCRIPT" myapp webapp
         The status should equal 0
         The stderr should include "[init/claude-rules] copied: claude-rule-command-execute.md"
@@ -169,7 +169,7 @@ Describe "init.sh: main() integration"
         The path "${CLAUDE_RULES_DIR}/deckrd-rule-bdd-cycle.md" should not be exist
       End
 
-      It "[Normal] Should: install only the index into CLAUDE_RULES_INDEX_DIR, not the rule bodies"
+      It "[Normal] T-CLI-MAINI-14: Should: install only the index into CLAUDE_RULES_INDEX_DIR, not the rule bodies"
         When run bash "$SCRIPT" myapp webapp
         The status should equal 0
         The stderr should include "[init/deckrd-rules-index] copied: deckrd-rules-index.md"
@@ -186,7 +186,7 @@ Describe "init.sh: main() integration"
       }
       Before "setup_with_existing_rules_gitignore"
 
-      It "[Edge] Should: skip with stripped filename 'skip (exists): .gitignore'"
+      It "[Edge] T-CLI-MAINI-15: Should: skip with stripped filename 'skip (exists): .gitignore'"
         When run bash "$SCRIPT" myapp webapp
         The status should equal 0
         The stderr should include "[init/deckrd-rules] skip (exists): .gitignore"
@@ -204,7 +204,7 @@ Describe "init.sh: main() integration"
     }
     Before "setup_session"
 
-    It "[Normal] Should: exit 0 and stderr includes 'Session preserved'"
+    It "[Normal] T-CLI-MAINI-16: Should: exit 0 and stderr includes 'Session preserved'"
       When run bash "$SCRIPT" myapp webapp
       The status should equal 0
       The stderr should include "Session preserved"
@@ -220,7 +220,7 @@ Describe "init.sh: main() integration"
     }
     Before "setup_with_existing_gitignore"
 
-    It "[Normal] Should: exit 0 and stderr includes 'skip (exists): .gitignore'"
+    It "[Normal] T-CLI-MAINI-17: Should: exit 0 and stderr includes 'skip (exists): .gitignore'"
       When run bash "$SCRIPT" myapp webapp
       The status should equal 0
       The stderr should include "skip (exists): .gitignore"
@@ -232,31 +232,31 @@ Describe "init.sh: main() integration"
     Before "setup_deckrd_tmpdir"
     After "teardown_deckrd_tmpdir"
 
-    It "[Normal] --language go"
+    It "[Normal] T-CLI-MAINI-18: --language go"
       When run bash "$SCRIPT" myapp webapp --language go
       The status should equal 0
       The stderr should include "go"
     End
 
-    It "[Normal] --language python"
+    It "[Normal] T-CLI-MAINI-19: --language python"
       When run bash "$SCRIPT" myapp webapp --language python
       The status should equal 0
       The stderr should include "python"
     End
 
-    It "[Normal] --lang rust (alias)"
+    It "[Normal] T-CLI-MAINI-20: --lang rust (alias)"
       When run bash "$SCRIPT" myapp webapp --lang rust
       The status should equal 0
       The stderr should include "rust"
     End
 
-    It "[Normal] --language=python (= syntax)"
+    It "[Normal] T-CLI-MAINI-21: --language=python (= syntax)"
       When run bash "$SCRIPT" myapp webapp --language=python
       The status should equal 0
       The stderr should include "python"
     End
 
-    It "[Error] --language cobol (unsupported)"
+    It "[Error] T-CLI-MAINI-22: --language cobol (unsupported)"
       When run bash "$SCRIPT" myapp webapp --language cobol
       The status should equal 1
       # @note: --json モード追加時はこのアサーションを見直すこと
@@ -269,13 +269,13 @@ Describe "init.sh: main() integration"
     Before "setup_deckrd_tmpdir"
     After "teardown_deckrd_tmpdir"
 
-    It "[Normal] --ai-model claude-sonnet-4-5"
+    It "[Normal] T-CLI-MAINI-23: --ai-model claude-sonnet-4-5"
       When run bash "$SCRIPT" myapp webapp --ai-model claude-sonnet-4-5
       The status should equal 0
       The stderr should include "claude-sonnet-4-5"
     End
 
-    It "[Error] --ai-model org/model-name (unknown provider)"
+    It "[Error] T-CLI-MAINI-24: --ai-model org/model-name (unknown provider)"
       When run bash "$SCRIPT" myapp webapp --ai-model org/model-name
       The status should equal 1
       # @note: --json モード追加時はこのアサーションを見直すこと
@@ -283,7 +283,7 @@ Describe "init.sh: main() integration"
       The stderr should include "unknown AI model"
     End
 
-    It "[Error] --ai-model 'bad model!' (invalid characters)"
+    It "[Error] T-CLI-MAINI-25: --ai-model 'bad model!' (invalid characters)"
       When run bash "$SCRIPT" myapp webapp --ai-model "bad model!"
       The status should equal 1
       # @note: --json モード追加時はこのアサーションを見直すこと
@@ -296,14 +296,14 @@ Describe "init.sh: main() integration"
     Before "setup_deckrd_tmpdir"
     After "teardown_deckrd_tmpdir"
 
-    It "[Normal] default language is typescript"
+    It "[Normal] T-CLI-MAINI-26: default language is typescript"
       When run bash "$SCRIPT" myapp webapp
       The status should equal 0
       The stderr should include "Init complete"
       The contents of file "${DECKRD_LOCAL_DATA}/.project.json" should include "typescript"
     End
 
-    It "[Normal] default ai_model is sonnet"
+    It "[Normal] T-CLI-MAINI-27: default ai_model is sonnet"
       When run bash "$SCRIPT" myapp webapp
       The status should equal 0
       The stderr should include "Init complete"
@@ -322,7 +322,7 @@ Describe "init.sh: main() integration"
     }
     Before "setup_with_initial_run"
 
-    It "[Edge] Should: preserve created_at on re-run"
+    It "[Edge] T-CLI-MAINI-28: Should: preserve created_at on re-run"
       When run bash "$SCRIPT" myapp lib
       The status should equal 0
       The stderr should include "Project written"
@@ -334,7 +334,7 @@ Describe "init.sh: main() integration"
     Before "setup_deckrd_tmpdir"
     After "teardown_deckrd_tmpdir"
 
-    It "[Normal] successful run: stdout is blank"
+    It "[Normal] T-CLI-MAINI-29: successful run: stdout is blank"
       When run bash "$SCRIPT" myapp webapp
       The status should equal 0
       # @note: --json モード追加時はこのアサーションを見直すこと
@@ -342,7 +342,7 @@ Describe "init.sh: main() integration"
       The stderr should include "Init complete"
     End
 
-    It "[Error] no arguments: stdout is blank"
+    It "[Error] T-CLI-MAINI-30: no arguments: stdout is blank"
       When run bash "$SCRIPT"
       The status should equal 1
       # @note: --json モード追加時はこのアサーションを見直すこと
@@ -350,7 +350,7 @@ Describe "init.sh: main() integration"
       The stderr should include "Error:"
     End
 
-    It "[Error] invalid language: stdout is blank"
+    It "[Error] T-CLI-MAINI-31: invalid language: stdout is blank"
       When run bash "$SCRIPT" myapp webapp --language cobol
       The status should equal 1
       # @note: --json モード追加時はこのアサーションを見直すこと
@@ -358,7 +358,7 @@ Describe "init.sh: main() integration"
       The stderr should include "Error:"
     End
 
-    It "[Error] invalid ai-model: stdout is blank"
+    It "[Error] T-CLI-MAINI-32: invalid ai-model: stdout is blank"
       When run bash "$SCRIPT" myapp webapp --ai-model "bad model!"
       The status should equal 1
       # @note: --json モード追加時はこのアサーションを見直すこと

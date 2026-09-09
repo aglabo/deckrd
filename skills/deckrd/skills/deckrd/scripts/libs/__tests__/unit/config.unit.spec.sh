@@ -21,25 +21,25 @@ Include ../spec_helper.sh
 Describe "config.sh"
   Describe "config.sh loading"
     Describe "When: スクリプトを読み込む"
-      It "Then: [Normal] config_init 関数が存在する"
+      It "Then: [Normal] T-LIB-CLD-01: config_init 関数が存在する"
         When call type config_init
         The status should equal 0
         The output should include "config_init"
       End
 
-      It "Then: [Normal] config_get 関数が存在する"
+      It "Then: [Normal] T-LIB-CLD-02: config_get 関数が存在する"
         When call type config_get
         The status should equal 0
         The output should include "config_get"
       End
 
-      It "Then: [Normal] config_set 関数が存在する"
+      It "Then: [Normal] T-LIB-CLD-03: config_set 関数が存在する"
         When call type config_set
         The status should equal 0
         The output should include "config_set"
       End
 
-      It "Then: [Normal] config_all 関数が存在する"
+      It "Then: [Normal] T-LIB-CLD-04: config_all 関数が存在する"
         When call type config_all
         The status should equal 0
         The output should include "config_all"
@@ -52,14 +52,14 @@ Describe "config.sh"
       Before "config_init"
 
       Describe "When: config_get を呼ぶ"
-        It "Then: [Normal] セットした値が返る"
+        It "Then: [Normal] T-LIB-CGS-01: セットした値が返る"
           config_set "lang" "ja"
           When call config_get "lang"
           The status should equal 0
           The output should equal "ja"
         End
 
-        It "Then: [Error] スキーマ外のキーはエラーになる"
+        It "Then: [Error] T-LIB-CGS-02: スキーマ外のキーはエラーになる"
           When call config_get "no_such_key"
           The status should equal 1
           The stderr should include "not in schema"
@@ -67,14 +67,14 @@ Describe "config.sh"
       End
 
       Describe "When: config_set を呼ぶ"
-        It "Then: [Normal] スキーマ内キーに値をセットできる"
+        It "Then: [Normal] T-LIB-CGS-03: スキーマ内キーに値をセットできる"
           config_set "lang" "en"
           When call config_get "lang"
           The status should equal 0
           The output should equal "en"
         End
 
-        It "Then: [Normal] 既存キーを上書きできる"
+        It "Then: [Normal] T-LIB-CGS-04: 既存キーを上書きできる"
           config_set "lang" "first"
           config_set "lang" "second"
           When call config_get "lang"
@@ -82,14 +82,14 @@ Describe "config.sh"
           The output should equal "second"
         End
 
-        It "Then: [Normal] 空文字をセットできる"
+        It "Then: [Normal] T-LIB-CGS-05: 空文字をセットできる"
           config_set "doc_type" ""
           When call config_get "doc_type"
           The status should equal 0
           The output should equal ""
         End
 
-        It "Then: [Error] スキーマ外のキーはエラーになる"
+        It "Then: [Error] T-LIB-CGS-06: スキーマ外のキーはエラーになる"
           When call config_set "no_such_key" "val"
           The status should equal 1
           The stderr should include "not in schema"
@@ -103,13 +103,13 @@ Describe "config.sh"
       Before "config_init; config_set 'ai_model' 'sonnet'; config_set 'lang' 'ja'"
 
       Describe "When: config_all を呼ぶ"
-        It "Then: [Normal] ai_model=sonnet が出力に含まれる"
+        It "Then: [Normal] T-LIB-CALL-01: ai_model=sonnet が出力に含まれる"
           When call config_all
           The status should equal 0
           The output should include "ai_model=sonnet"
         End
 
-        It "Then: [Normal] lang=ja が出力に含まれる"
+        It "Then: [Normal] T-LIB-CALL-02: lang=ja が出力に含まれる"
           When call config_all
           The status should equal 0
           The output should include "lang=ja"
@@ -123,28 +123,28 @@ Describe "config.sh"
       Before "CONFIG=()"
 
       Describe "When: config_init を引数なしで呼ぶ"
-        It "Then: [Normal] ai_model のデフォルト値が sonnet になる"
+        It "Then: [Normal] T-LIB-CINI-01: ai_model のデフォルト値が sonnet になる"
           config_init
           When call config_get "ai_model"
           The status should equal 0
           The output should equal "sonnet"
         End
 
-        It "Then: [Normal] lang のデフォルト値が system になる"
+        It "Then: [Normal] T-LIB-CINI-02: lang のデフォルト値が system になる"
           config_init
           When call config_get "lang"
           The status should equal 0
           The output should equal "system"
         End
 
-        It "Then: [Normal] doc_type のデフォルト値が空文字になる"
+        It "Then: [Normal] T-LIB-CINI-03: doc_type のデフォルト値が空文字になる"
           config_init
           When call config_get "doc_type"
           The status should equal 0
           The output should equal ""
         End
 
-        It "Then: [Normal] prompt_mode のデフォルト値が 0 になる"
+        It "Then: [Normal] T-LIB-CINI-04: prompt_mode のデフォルト値が 0 になる"
           config_init
           When call config_get "prompt_mode"
           The status should equal 0
@@ -158,7 +158,7 @@ Describe "config.sh"
       After "teardown_deckrd_tmpdir"
 
       Describe "When: config_init をセッションファイルパスを指定して呼ぶ"
-        It "Then: [Normal] セッションの ai_model が CONFIG に読み込まれる"
+        It "Then: [Normal] T-LIB-CINI-05: セッションの ai_model が CONFIG に読み込まれる"
           kv_init "_test_session" $'\nactive|\nai_model|\nlang|\n'
           kv_set "_test_session" "active" "myproject"
           kv_set "_test_session" "ai_model" "opus"
@@ -170,7 +170,7 @@ Describe "config.sh"
           The output should equal "opus"
         End
 
-        It "Then: [Normal] セッションの lang が CONFIG に読み込まれる"
+        It "Then: [Normal] T-LIB-CINI-06: セッションの lang が CONFIG に読み込まれる"
           kv_init "_test_session" $'\nactive|\nai_model|\nlang|\n'
           kv_set "_test_session" "active" "myproject"
           kv_set "_test_session" "ai_model" "opus"
@@ -182,7 +182,7 @@ Describe "config.sh"
           The output should equal "ja"
         End
 
-        It "Then: [Normal] セッションの active から deckrd_base が計算される"
+        It "Then: [Normal] T-LIB-CINI-07: セッションの active から deckrd_base が計算される"
           kv_init "_test_session" $'\nactive|\nai_model|\nlang|\n'
           kv_set "_test_session" "active" "myproject"
           kv_set "_test_session" "ai_model" "opus"

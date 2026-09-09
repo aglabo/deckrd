@@ -29,31 +29,31 @@ Describe "session.sh"
 
   Describe "session.sh loading"
     Describe "When: スクリプトを読み込む"
-      It "Then: [Normal] session_init 関数が存在する"
+      It "Then: [Normal] T-LIB-SLD-01: session_init 関数が存在する"
         When call type session_init
         The status should equal 0
         The output should include "session_init"
       End
 
-      It "Then: [Normal] session_load 関数が存在する"
+      It "Then: [Normal] T-LIB-SLD-02: session_load 関数が存在する"
         When call type session_load
         The status should equal 0
         The output should include "session_load"
       End
 
-      It "Then: [Normal] session_save 関数が存在する"
+      It "Then: [Normal] T-LIB-SLD-03: session_save 関数が存在する"
         When call type session_save
         The status should equal 0
         The output should include "session_save"
       End
 
-      It "Then: [Normal] session_get 関数が存在する"
+      It "Then: [Normal] T-LIB-SLD-04: session_get 関数が存在する"
         When call type session_get
         The status should equal 0
         The output should include "session_get"
       End
 
-      It "Then: [Normal] session_set 関数が存在する"
+      It "Then: [Normal] T-LIB-SLD-05: session_set 関数が存在する"
         When call type session_set
         The status should equal 0
         The output should include "session_set"
@@ -66,27 +66,27 @@ Describe "session.sh"
       Before "declare -gA BUF=()"
 
       Describe "When: session_init を呼ぶ"
-        It "Then: [Normal] schema が SESSION_SCHEMA に登録される"
+        It "Then: [Normal] T-LIB-SINI-01: schema が SESSION_SCHEMA に登録される"
           session_init BUF "$SESSION_SCHEMA_TEST"
           When call test -n "${SESSION_SCHEMA[BUF]}"
           The status should equal 0
         End
 
-        It "Then: [Normal] active のデフォルト値 false が設定される"
+        It "Then: [Normal] T-LIB-SINI-02: active のデフォルト値 false が設定される"
           session_init BUF "$SESSION_SCHEMA_TEST"
           When call session_get BUF "active"
           The status should equal 0
           The output should equal "false"
         End
 
-        It "Then: [Normal] ai_model のデフォルト値 sonnet が設定される"
+        It "Then: [Normal] T-LIB-SINI-03: ai_model のデフォルト値 sonnet が設定される"
           session_init BUF "$SESSION_SCHEMA_TEST"
           When call session_get BUF "ai_model"
           The status should equal 0
           The output should equal "sonnet"
         End
 
-        It "Then: [Normal] lang のデフォルト値 en が設定される"
+        It "Then: [Normal] T-LIB-SINI-04: lang のデフォルト値 en が設定される"
           session_init BUF "$SESSION_SCHEMA_TEST"
           When call session_get BUF "lang"
           The status should equal 0
@@ -103,13 +103,13 @@ Describe "session.sh"
       Before "session_set BUF active myproject"
 
       Describe "When: session_get を呼ぶ"
-        It "Then: [Normal] セットした値が返る"
+        It "Then: [Normal] T-LIB-SGS-01: セットした値が返る"
           When call session_get BUF "active"
           The status should equal 0
           The output should equal "myproject"
         End
 
-        It "Then: [Error] スキーマ外キーは exit 1 を返す"
+        It "Then: [Error] T-LIB-SGS-02: スキーマ外キーは exit 1 を返す"
           When call session_get BUF "no_such_key"
           The status should equal 1
           The stderr should include "Error:"
@@ -118,14 +118,14 @@ Describe "session.sh"
     End
 
     Describe "When: session_set を呼ぶ"
-      It "Then: [Normal] 新規キーに値をセットできる"
+      It "Then: [Normal] T-LIB-SGS-03: 新規キーに値をセットできる"
         session_set BUF "ai_model" "claude-3-5"
         When call session_get BUF "ai_model"
         The status should equal 0
         The output should equal "claude-3-5"
       End
 
-      It "Then: [Normal] 既存キーを上書きできる"
+      It "Then: [Normal] T-LIB-SGS-04: 既存キーを上書きできる"
         session_set BUF "lang" "first"
         session_set BUF "lang" "second"
         When call session_get BUF "lang"
@@ -133,7 +133,7 @@ Describe "session.sh"
         The output should equal "second"
       End
 
-      It "Then: [Normal] 空文字をセットできる"
+      It "Then: [Normal] T-LIB-SGS-05: 空文字をセットできる"
         session_set BUF "lang" ""
         When call session_get BUF "lang"
         The status should equal 0
@@ -147,7 +147,7 @@ Describe "session.sh"
       Before "declare -gA UNREGISTERED=()"
 
       Describe "When: session_load を呼ぶ"
-        It "Then: [Error] exit 1 を返し Error: を stderr に出力する"
+        It "Then: [Error] T-LIB-SLOAD-01: exit 1 を返し Error: を stderr に出力する"
           When call session_load "/tmp/any.json" UNREGISTERED
           The status should equal 1
           The stderr should include "Error:"
@@ -159,18 +159,18 @@ Describe "session.sh"
       Before "declare -gA BUF=(); session_init BUF \"$SESSION_SCHEMA_TEST\""
 
       Describe "When: session_load を呼ぶ"
-        It "Then: [Normal] exit 0 を返しデフォルト値で初期化される"
+        It "Then: [Normal] T-LIB-SLOAD-02: exit 0 を返しデフォルト値で初期化される"
           When call session_load "/tmp/nonexistent_session_$$" BUF
           The status should equal 0
         End
 
-        It "Then: [Normal] active はデフォルト値 false になる"
+        It "Then: [Normal] T-LIB-SLOAD-03: active はデフォルト値 false になる"
           session_load "/tmp/nonexistent_session_$$" BUF
           When call session_get BUF "active"
           The output should equal "false"
         End
 
-        It "Then: [Normal] ai_model はデフォルト値 sonnet になる"
+        It "Then: [Normal] T-LIB-SLOAD-04: ai_model はデフォルト値 sonnet になる"
           session_load "/tmp/nonexistent_session_$$" BUF
           When call session_get BUF "ai_model"
           The output should equal "sonnet"
@@ -183,7 +183,7 @@ Describe "session.sh"
       After "teardown_deckrd_tmpdir"
 
       Describe "When: session_load を呼ぶ"
-        It "Then: [Normal] active キーが読み込まれる"
+        It "Then: [Normal] T-LIB-SLOAD-05: active キーが読み込まれる"
           printf '{"active":"myproject","ai_model":"opus","lang":"ja"}' \
             > "${DECKRD_LOCAL}/session.kv"
           session_load "${DECKRD_LOCAL}/session" BUF
@@ -192,7 +192,7 @@ Describe "session.sh"
           The output should equal "myproject"
         End
 
-        It "Then: [Normal] ai_model キーが読み込まれる"
+        It "Then: [Normal] T-LIB-SLOAD-06: ai_model キーが読み込まれる"
           printf '{"active":"myproject","ai_model":"opus","lang":"ja"}' \
             > "${DECKRD_LOCAL}/session.kv"
           session_load "${DECKRD_LOCAL}/session" BUF
@@ -201,7 +201,7 @@ Describe "session.sh"
           The output should equal "opus"
         End
 
-        It "Then: [Normal] lang キーが読み込まれる"
+        It "Then: [Normal] T-LIB-SLOAD-07: lang キーが読み込まれる"
           printf '{"active":"myproject","ai_model":"opus","lang":"ja"}' \
             > "${DECKRD_LOCAL}/session.kv"
           session_load "${DECKRD_LOCAL}/session" BUF
@@ -210,7 +210,7 @@ Describe "session.sh"
           The output should equal "ja"
         End
 
-        It "Then: [Normal] JSON に存在しないキーはデフォルト値になる"
+        It "Then: [Normal] T-LIB-SLOAD-08: JSON に存在しないキーはデフォルト値になる"
           printf '{"active":"only-active"}' \
             > "${DECKRD_LOCAL}/session.kv"
           session_load "${DECKRD_LOCAL}/session" BUF
@@ -228,14 +228,14 @@ Describe "session.sh"
       After "teardown_deckrd_tmpdir"
 
       Describe "When: session_save を呼ぶ"
-        It "Then: [Normal] ファイルが作成される"
+        It "Then: [Normal] T-LIB-SSAVE-01: ファイルが作成される"
           session_set BUF "active" "testproj"
           session_save "${DECKRD_LOCAL}/session" BUF
           When call test -f "${DECKRD_LOCAL}/session.kv"
           The status should equal 0
         End
 
-        It "Then: [Normal] ディレクトリが自動作成される"
+        It "Then: [Normal] T-LIB-SSAVE-02: ディレクトリが自動作成される"
           session_set BUF "active" "testproj"
           session_save "${DECKRD_LOCAL}/nested/dir/session" BUF
           When call test -f "${DECKRD_LOCAL}/nested/dir/session.kv"
@@ -249,7 +249,7 @@ Describe "session.sh"
       After "teardown_deckrd_tmpdir"
 
       Describe "When: save 後に load する"
-        It "Then: [Normal] active の値が復元される"
+        It "Then: [Normal] T-LIB-SSAVE-03: active の値が復元される"
           session_set BUF "active" "roundtrip-proj"
           session_set BUF "ai_model" "claude-3-5"
           session_set BUF "lang" "ja"

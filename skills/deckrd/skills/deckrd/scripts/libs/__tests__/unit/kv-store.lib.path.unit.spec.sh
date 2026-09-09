@@ -19,37 +19,37 @@ Describe "kv-store.lib.sh"
 
   Describe "kv-store.lib.sh loading"
     Describe "When: スクリプトを読み込む"
-      It "Then: [Normal] kv_init 関数が存在する"
+      It "Then: [Normal] T-LIB-KPLD-01: kv_init 関数が存在する"
         When call type kv_init
         The status should equal 0
         The output should include "kv_init"
       End
 
-      It "Then: [Normal] kv_get 関数が存在する"
+      It "Then: [Normal] T-LIB-KPLD-02: kv_get 関数が存在する"
         When call type kv_get
         The status should equal 0
         The output should include "kv_get"
       End
 
-      It "Then: [Normal] kv_set 関数が存在する"
+      It "Then: [Normal] T-LIB-KPLD-03: kv_set 関数が存在する"
         When call type kv_set
         The status should equal 0
         The output should include "kv_set"
       End
 
-      It "Then: [Normal] kv_load 関数が存在する"
+      It "Then: [Normal] T-LIB-KPLD-04: kv_load 関数が存在する"
         When call type kv_load
         The status should equal 0
         The output should include "kv_load"
       End
 
-      It "Then: [Normal] kv_save 関数が存在する"
+      It "Then: [Normal] T-LIB-KPLD-05: kv_save 関数が存在する"
         When call type kv_save
         The status should equal 0
         The output should include "kv_save"
       End
 
-      It "Then: [Normal] kv_all 関数が存在する"
+      It "Then: [Normal] T-LIB-KPLD-06: kv_all 関数が存在する"
         When call type kv_all
         The status should equal 0
         The output should include "kv_all"
@@ -60,19 +60,19 @@ Describe "kv-store.lib.sh"
   Describe "_kv_file_path"
     Describe "Given: Windows パス（バックスラッシュ区切り）"
       Describe "When: _kv_file_path を呼ぶ"
-        It "Then: [Normal] .\\session は ./session.kv になる"
+        It "Then: [Normal] T-LIB-KPFP-01: .\\session は ./session.kv になる"
           When call _kv_file_path '.\session'
           The status should equal 0
           The output should equal "./session.kv"
         End
 
-        It "Then: [Normal] foo\\bar\\session は foo/bar/session.kv になる"
+        It "Then: [Normal] T-LIB-KPFP-02: foo\\bar\\session は foo/bar/session.kv になる"
           When call _kv_file_path 'foo\bar\session'
           The status should equal 0
           The output should equal "foo/bar/session.kv"
         End
 
-        It "Then: [Edge] .\\session.json は ./session.kv になる"
+        It "Then: [Edge] T-LIB-KPFP-03: .\\session.json は ./session.kv になる"
           When call _kv_file_path '.\session.json'
           The status should equal 0
           The output should equal "./session.kv"
@@ -82,19 +82,19 @@ Describe "kv-store.lib.sh"
 
     Describe "Given: パス + ファイル名の形式"
       Describe "When: _kv_file_path を呼ぶ"
-        It "Then: [Normal] ディレクトリパスが保持され .kv が付加される"
+        It "Then: [Normal] T-LIB-KPFP-04: ディレクトリパスが保持され .kv が付加される"
           When call _kv_file_path "/foo/bar/session"
           The status should equal 0
           The output should equal "/foo/bar/session.kv"
         End
 
-        It "Then: [Normal] 深いディレクトリパスが保持される"
+        It "Then: [Normal] T-LIB-KPFP-05: 深いディレクトリパスが保持される"
           When call _kv_file_path "/path/to/dir/name"
           The status should equal 0
           The output should equal "/path/to/dir/name.kv"
         End
 
-        It "Then: [Edge] 隠しディレクトリを含むパスでもディレクトリ部が保持される"
+        It "Then: [Edge] T-LIB-KPFP-06: 隠しディレクトリを含むパスでもディレクトリ部が保持される"
           When call _kv_file_path "/home/user/.config/.project.json"
           The status should equal 0
           The output should equal "/home/user/.config/.project.kv"
@@ -104,13 +104,13 @@ Describe "kv-store.lib.sh"
 
     Describe "Given: ファイル名のみ（ディレクトリパスなし）"
       Describe "When: _kv_file_path を呼ぶ"
-        It "Then: [Normal] ディレクトリなしのファイル名はそのまま .kv が付加される"
+        It "Then: [Normal] T-LIB-KPFP-07: ディレクトリなしのファイル名はそのまま .kv が付加される"
           When call _kv_file_path "session"
           The status should equal 0
           The output should equal "session.kv"
         End
 
-        It "Then: [Edge] ドット始まりファイル名のみはそのまま .kv が付加される"
+        It "Then: [Edge] T-LIB-KPFP-08: ドット始まりファイル名のみはそのまま .kv が付加される"
           When call _kv_file_path ".project"
           The status should equal 0
           The output should equal ".project.kv"
@@ -120,13 +120,13 @@ Describe "kv-store.lib.sh"
 
     Describe "Given: ./ プレフィックス付きのパス"
       Describe "When: _kv_file_path を呼ぶ"
-        It "Then: [Normal] ./session は ./session.kv になる"
+        It "Then: [Normal] T-LIB-KPFP-09: ./session は ./session.kv になる"
           When call _kv_file_path "./session"
           The status should equal 0
           The output should equal "./session.kv"
         End
 
-        It "Then: [Edge] ./.project は ./.project.kv になる"
+        It "Then: [Edge] T-LIB-KPFP-10: ./.project は ./.project.kv になる"
           When call _kv_file_path "./.project"
           The status should equal 0
           The output should equal "./.project.kv"
@@ -136,13 +136,13 @@ Describe "kv-store.lib.sh"
 
     Describe "Given: / 終わりのパス（ファイル名なし）"
       Describe "When: _kv_file_path を呼ぶ"
-        It "Then: [Error] /foo/bar/ は return 1 かつ stderr に Error: を出力する"
+        It "Then: [Error] T-LIB-KPFP-11: /foo/bar/ は return 1 かつ stderr に Error: を出力する"
           When call _kv_file_path "/foo/bar/"
           The status should equal 1
           The stderr should include "Error:"
         End
 
-        It "Then: [Error] / のみは return 1 かつ stderr に Error: を出力する"
+        It "Then: [Error] T-LIB-KPFP-12: / のみは return 1 かつ stderr に Error: を出力する"
           When call _kv_file_path "/"
           The status should equal 1
           The stderr should include "Error:"
@@ -152,19 +152,19 @@ Describe "kv-store.lib.sh"
 
     Describe "Given: 不正な basename を含むパス（ディレクトリ付き）"
       Describe "When: _kv_file_path を呼ぶ"
-        It "Then: [Error] 数字始まりの basename は return 1 かつ Error: を出力する"
+        It "Then: [Error] T-LIB-KPFP-13: 数字始まりの basename は return 1 かつ Error: を出力する"
           When call _kv_file_path "/foo/bar/1invalid"
           The status should equal 1
           The stderr should include "Error:"
         End
 
-        It "Then: [Error] スペースを含む basename は return 1 かつ Error: を出力する"
+        It "Then: [Error] T-LIB-KPFP-14: スペースを含む basename は return 1 かつ Error: を出力する"
           When call _kv_file_path "/foo/bar/my file"
           The status should equal 1
           The stderr should include "Error:"
         End
 
-        It "Then: [Error] @ を含む basename は return 1 かつ Error: を出力する"
+        It "Then: [Error] T-LIB-KPFP-15: @ を含む basename は return 1 かつ Error: を出力する"
           When call _kv_file_path "/foo/bar/my@store"
           The status should equal 1
           The stderr should include "Error:"
@@ -174,13 +174,13 @@ Describe "kv-store.lib.sh"
 
     Describe "Given: 不正な basename のみ（ディレクトリなし）"
       Describe "When: _kv_file_path を呼ぶ"
-        It "Then: [Error] 数字始まりのファイル名のみは return 1 かつ Error: を出力する"
+        It "Then: [Error] T-LIB-KPFP-16: 数字始まりのファイル名のみは return 1 かつ Error: を出力する"
           When call _kv_file_path "1invalid"
           The status should equal 1
           The stderr should include "Error:"
         End
 
-        It "Then: [Error] スペースを含むファイル名のみは return 1 かつ Error: を出力する"
+        It "Then: [Error] T-LIB-KPFP-17: スペースを含むファイル名のみは return 1 かつ Error: を出力する"
           When call _kv_file_path "my file"
           The status should equal 1
           The stderr should include "Error:"
@@ -195,19 +195,19 @@ Describe "kv-store.lib.sh"
 
       Describe "Given: ファイル名のみ（ディレクトリなし）"
         Describe "When: kv_store_path を呼ぶ"
-          It "Then: [Normal] session → DECKRD_LOCAL_DATA/session.kv になる"
+          It "Then: [Normal] T-LIB-KPSP-01: session → DECKRD_LOCAL_DATA/session.kv になる"
             When call kv_store_path "session"
             The status should equal 0
             The output should equal "/tmp/deckrd-test/session.kv"
           End
 
-          It "Then: [Normal] .project → DECKRD_LOCAL_DATA/.project.kv になる"
+          It "Then: [Normal] T-LIB-KPSP-02: .project → DECKRD_LOCAL_DATA/.project.kv になる"
             When call kv_store_path ".project"
             The status should equal 0
             The output should equal "/tmp/deckrd-test/.project.kv"
           End
 
-          It "Then: [Normal] session.json → DECKRD_LOCAL_DATA/session.kv になる"
+          It "Then: [Normal] T-LIB-KPSP-03: session.json → DECKRD_LOCAL_DATA/session.kv になる"
             When call kv_store_path "session.json"
             The status should equal 0
             The output should equal "/tmp/deckrd-test/session.kv"
@@ -217,19 +217,19 @@ Describe "kv-store.lib.sh"
 
       Describe "Given: ディレクトリ付きパス"
         Describe "When: kv_store_path を呼ぶ"
-          It "Then: [Normal] /foo/bar/session → /foo/bar/session.kv になる（DECKRD_LOCAL_DATA を使わない）"
+          It "Then: [Normal] T-LIB-KPSP-04: /foo/bar/session → /foo/bar/session.kv になる（DECKRD_LOCAL_DATA を使わない）"
             When call kv_store_path "/foo/bar/session"
             The status should equal 0
             The output should equal "/foo/bar/session.kv"
           End
 
-          It "Then: [Normal] ./session → ./session.kv になる"
+          It "Then: [Normal] T-LIB-KPSP-05: ./session → ./session.kv になる"
             When call kv_store_path "./session"
             The status should equal 0
             The output should equal "./session.kv"
           End
 
-          It "Then: [Normal] /foo/bar/session.json → /foo/bar/session.kv になる"
+          It "Then: [Normal] T-LIB-KPSP-06: /foo/bar/session.json → /foo/bar/session.kv になる"
             When call kv_store_path "/foo/bar/session.json"
             The status should equal 0
             The output should equal "/foo/bar/session.kv"
@@ -239,7 +239,7 @@ Describe "kv-store.lib.sh"
 
       Describe "Given: Windows パス（バックスラッシュ区切り）"
         Describe "When: kv_store_path を呼ぶ"
-          It "Then: [Normal] foo\\bar\\session → foo/bar/session.kv になる"
+          It "Then: [Normal] T-LIB-KPSP-07: foo\\bar\\session → foo/bar/session.kv になる"
             When call kv_store_path 'foo\bar\session'
             The status should equal 0
             The output should equal "foo/bar/session.kv"
@@ -249,19 +249,19 @@ Describe "kv-store.lib.sh"
 
       Describe "Given: エラーケース"
         Describe "When: kv_store_path を呼ぶ"
-          It "Then: [Error] /foo/bar/ は return 1 かつ Error: を出力する"
+          It "Then: [Error] T-LIB-KPSP-08: /foo/bar/ は return 1 かつ Error: を出力する"
             When call kv_store_path "/foo/bar/"
             The status should equal 1
             The stderr should include "Error:"
           End
 
-          It "Then: [Error] 数字始まりのファイル名のみは return 1 かつ Error: を出力する"
+          It "Then: [Error] T-LIB-KPSP-09: 数字始まりのファイル名のみは return 1 かつ Error: を出力する"
             When call kv_store_path "1invalid"
             The status should equal 1
             The stderr should include "Error:"
           End
 
-          It "Then: [Error] 不正な basename を含むパスは return 1 かつ Error: を出力する"
+          It "Then: [Error] T-LIB-KPSP-10: 不正な basename を含むパスは return 1 かつ Error: を出力する"
             When call kv_store_path "/foo/bar/1invalid"
             The status should equal 1
             The stderr should include "Error:"
@@ -275,7 +275,7 @@ Describe "kv-store.lib.sh"
 
       Describe "Given: ファイル名のみ（ディレクトリなし）"
         Describe "When: kv_store_path を呼ぶ"
-          It "Then: [Error] return 1 かつ stderr に Error: を出力する"
+          It "Then: [Error] T-LIB-KPSP-11: return 1 かつ stderr に Error: を出力する"
             When call kv_store_path "session"
             The status should equal 1
             The stderr should include "Error:"
@@ -285,7 +285,7 @@ Describe "kv-store.lib.sh"
 
       Describe "Given: ディレクトリ付きパス"
         Describe "When: kv_store_path を呼ぶ"
-          It "Then: [Normal] DECKRD_LOCAL_DATA に依存しないため return 0 を返す"
+          It "Then: [Normal] T-LIB-KPSP-12: DECKRD_LOCAL_DATA に依存しないため return 0 を返す"
             When call kv_store_path "/foo/bar/session"
             The status should equal 0
             The output should equal "/foo/bar/session.kv"
@@ -298,19 +298,19 @@ Describe "kv-store.lib.sh"
   Describe "_kv_normalize_filename"
     Describe "Given: 通常ファイル名（ドットなし/拡張子あり）"
       Describe "When: _kv_normalize_filename を呼ぶ"
-        It "Then: [Normal] 拡張子なしのファイル名はそのまま返る"
+        It "Then: [Normal] T-LIB-KPNF-01: 拡張子なしのファイル名はそのまま返る"
           When call _kv_normalize_filename "session"
           The status should equal 0
           The output should equal "session"
         End
 
-        It "Then: [Normal] .json 拡張子が除去される"
+        It "Then: [Normal] T-LIB-KPNF-02: .json 拡張子が除去される"
           When call _kv_normalize_filename "kv.json"
           The status should equal 0
           The output should equal "kv"
         End
 
-        It "Then: [Normal] 拡張子なしのファイル名 (name) はそのまま返る"
+        It "Then: [Normal] T-LIB-KPNF-03: 拡張子なしのファイル名 (name) はそのまま返る"
           When call _kv_normalize_filename "name"
           The status should equal 0
           The output should equal "name"
@@ -320,31 +320,31 @@ Describe "kv-store.lib.sh"
 
     Describe "Given: エッジケース（複数ドット/ドット始まり）"
       Describe "When: _kv_normalize_filename を呼ぶ"
-        It "Then: [Edge] 複数ドットのファイル名は最後の拡張子のみ除去される"
+        It "Then: [Edge] T-LIB-KPNF-04: 複数ドットのファイル名は最後の拡張子のみ除去される"
           When call _kv_normalize_filename "my.store.json"
           The status should equal 0
           The output should equal "my.store"
         End
 
-        It "Then: [Edge] ドット始まりで拡張子なしはそのまま返る"
+        It "Then: [Edge] T-LIB-KPNF-05: ドット始まりで拡張子なしはそのまま返る"
           When call _kv_normalize_filename ".project"
           The status should equal 0
           The output should equal ".project"
         End
 
-        It "Then: [Edge] ドット始まり + 拡張子は拡張子のみ除去される"
+        It "Then: [Edge] T-LIB-KPNF-06: ドット始まり + 拡張子は拡張子のみ除去される"
           When call _kv_normalize_filename ".project.json"
           The status should equal 0
           The output should equal ".project"
         End
 
-        It "Then: [Edge] .env.json は .env になる"
+        It "Then: [Edge] T-LIB-KPNF-07: .env.json は .env になる"
           When call _kv_normalize_filename ".env.json"
           The status should equal 0
           The output should equal ".env"
         End
 
-        It "Then: [Edge] .env 拡張子なしはそのまま返る"
+        It "Then: [Edge] T-LIB-KPNF-08: .env 拡張子なしはそのまま返る"
           When call _kv_normalize_filename ".env"
           The status should equal 0
           The output should equal ".env"
@@ -354,25 +354,25 @@ Describe "kv-store.lib.sh"
 
     Describe "Given: 連続ドットを含むファイル名"
       Describe "When: _kv_normalize_filename を呼ぶ"
-        It "Then: [Edge] a..json は連続ドットが正規化されて a になる"
+        It "Then: [Edge] T-LIB-KPNF-09: a..json は連続ドットが正規化されて a になる"
           When call _kv_normalize_filename "a..json"
           The status should equal 0
           The output should equal "a"
         End
 
-        It "Then: [Edge] my..store..json は my.store になる"
+        It "Then: [Edge] T-LIB-KPNF-10: my..store..json は my.store になる"
           When call _kv_normalize_filename "my..store..json"
           The status should equal 0
           The output should equal "my.store"
         End
 
-        It "Then: [Edge] ..project は .project になる"
+        It "Then: [Edge] T-LIB-KPNF-11: ..project は .project になる"
           When call _kv_normalize_filename "..project"
           The status should equal 0
           The output should equal ".project"
         End
 
-        It "Then: [Edge] ...project.json は .project になる"
+        It "Then: [Edge] T-LIB-KPNF-12: ...project.json は .project になる"
           When call _kv_normalize_filename "...project.json"
           The status should equal 0
           The output should equal ".project"
@@ -382,19 +382,19 @@ Describe "kv-store.lib.sh"
 
     Describe "Given: 数字を含む有効なファイル名"
       Describe "When: _kv_normalize_filename を呼ぶ"
-        It "Then: [Normal] アルファベット + 数字の名前はそのまま返る"
+        It "Then: [Normal] T-LIB-KPNF-13: アルファベット + 数字の名前はそのまま返る"
           When call _kv_normalize_filename "session1"
           The status should equal 0
           The output should equal "session1"
         End
 
-        It "Then: [Normal] prefix + アルファベット + 数字の名前はそのまま返る"
+        It "Then: [Normal] T-LIB-KPNF-14: prefix + アルファベット + 数字の名前はそのまま返る"
           When call _kv_normalize_filename ".v1"
           The status should equal 0
           The output should equal ".v1"
         End
 
-        It "Then: [Normal] バージョン形式の名前はそのまま返る"
+        It "Then: [Normal] T-LIB-KPNF-15: バージョン形式の名前はそのまま返る"
           When call _kv_normalize_filename "v1.0"
           The status should equal 0
           The output should equal "v1"
@@ -404,49 +404,49 @@ Describe "kv-store.lib.sh"
 
     Describe "Given: 不正なファイル名（バリデーションエラー）"
       Describe "When: _kv_normalize_filename を呼ぶ"
-        It "Then: [Error] 空文字は return 1 かつ stderr に Error: を出力する"
+        It "Then: [Error] T-LIB-KPNF-16: 空文字は return 1 かつ stderr に Error: を出力する"
           When call _kv_normalize_filename ""
           The status should equal 1
           The stderr should include "Error:"
         End
 
-        It "Then: [Error] スペースを含む名前は return 1 かつ stderr に Error: を出力する"
+        It "Then: [Error] T-LIB-KPNF-17: スペースを含む名前は return 1 かつ stderr に Error: を出力する"
           When call _kv_normalize_filename "my file"
           The status should equal 1
           The stderr should include "Error:"
         End
 
-        It "Then: [Error] スラッシュを含む名前は return 1 かつ stderr に Error: を出力する"
+        It "Then: [Error] T-LIB-KPNF-18: スラッシュを含む名前は return 1 かつ stderr に Error: を出力する"
           When call _kv_normalize_filename "foo/bar"
           The status should equal 1
           The stderr should include "Error:"
         End
 
-        It "Then: [Error] @ を含む名前は return 1 かつ stderr に Error: を出力する"
+        It "Then: [Error] T-LIB-KPNF-19: @ を含む名前は return 1 かつ stderr に Error: を出力する"
           When call _kv_normalize_filename "my@store"
           The status should equal 1
           The stderr should include "Error:"
         End
 
-        It "Then: [Error] . のみの名前は return 1 かつ stderr に Error: を出力する"
+        It "Then: [Error] T-LIB-KPNF-20: . のみの名前は return 1 かつ stderr に Error: を出力する"
           When call _kv_normalize_filename "."
           The status should equal 1
           The stderr should include "Error:"
         End
 
-        It "Then: [Error] .. の名前は return 1 かつ stderr に Error: を出力する"
+        It "Then: [Error] T-LIB-KPNF-21: .. の名前は return 1 かつ stderr に Error: を出力する"
           When call _kv_normalize_filename ".."
           The status should equal 1
           The stderr should include "Error:"
         End
 
-        It "Then: [Error] __ の名前は return 1 かつ stderr に Error: を出力する"
+        It "Then: [Error] T-LIB-KPNF-22: __ の名前は return 1 かつ stderr に Error: を出力する"
           When call _kv_normalize_filename "__"
           The status should equal 1
           The stderr should include "Error:"
         End
 
-        It "Then: [Error] 数字始まりの名前は return 1 かつ stderr に Error: を出力する"
+        It "Then: [Error] T-LIB-KPNF-23: 数字始まりの名前は return 1 かつ stderr に Error: を出力する"
           When call _kv_normalize_filename "1start"
           The status should equal 1
           The stderr should include "Error:"

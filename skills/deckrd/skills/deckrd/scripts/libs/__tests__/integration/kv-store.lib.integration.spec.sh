@@ -25,18 +25,18 @@ Describe "kv-store.lib.sh - integration tests"
       Before "kv_init 'loadstore' $'key1|default1\nkey2|default2'"
 
       Describe "When: kv_load を呼ぶ"
-        It "Then: [Normal] return 0 を返しデフォルト値で初期化される"
+        It "Then: [Normal] T-LIB-KLOADI-01: return 0 を返しデフォルト値で初期化される"
           When call kv_load "loadstore" "/tmp/nonexistent_kvtest_$$_no_ext"
           The status should equal 0
         End
 
-        It "Then: [Normal] key1 はデフォルト値 default1 になる"
+        It "Then: [Normal] T-LIB-KLOADI-02: key1 はデフォルト値 default1 になる"
           kv_load "loadstore" "/tmp/nonexistent_kvtest_$$_no_ext"
           When call kv_get "loadstore" "key1"
           The output should equal "default1"
         End
 
-        It "Then: [Normal] key2 はデフォルト値 default2 になる"
+        It "Then: [Normal] T-LIB-KLOADI-03: key2 はデフォルト値 default2 になる"
           kv_load "loadstore" "/tmp/nonexistent_kvtest_$$_no_ext"
           When call kv_get "loadstore" "key2"
           The output should equal "default2"
@@ -46,7 +46,7 @@ Describe "kv-store.lib.sh - integration tests"
 
     Describe "Given: schema 未登録のストア"
       Describe "When: kv_load を呼ぶ"
-        It "Then: [Error] return 1 を返し Error: を stderr に出力する"
+        It "Then: [Error] T-LIB-KLOADI-04: return 1 を返し Error: を stderr に出力する"
           When call kv_load "noschema_store" "/tmp/any"
           The status should equal 1
           The stderr should include "Error:"
@@ -59,7 +59,7 @@ Describe "kv-store.lib.sh - integration tests"
       After "teardown_tmpdir"
 
       Describe "When: kv_load を呼ぶ"
-        It "Then: [Error] return 1 を返す (invalid JSON はエラー)"
+        It "Then: [Error] T-LIB-KLOADI-05: return 1 を返す (invalid JSON はエラー)"
           printf 'not-json' > "${NAMING_TMPDIR}/bad.kv"
           When call kv_load "badjson_store" "${NAMING_TMPDIR}/bad"
           The status should equal 1
@@ -72,7 +72,7 @@ Describe "kv-store.lib.sh - integration tests"
   Describe "kv_save"
     Describe "Given: schema 未登録のストア"
       Describe "When: kv_save を呼ぶ"
-        It "Then: [Error] return 1 を返し Error: を stderr に出力する"
+        It "Then: [Error] T-LIB-KSAVEI-01: return 1 を返し Error: を stderr に出力する"
           When call kv_save "noschema_save_store" "/tmp/any"
           The status should equal 1
           The stderr should include "Error:"

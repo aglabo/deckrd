@@ -25,13 +25,13 @@ Describe "generate-doc.sh ai-runner.sh integration"
 
   Describe "ai-runner.sh loading"
     Describe "When: generate-doc.sh を source する"
-      It "Then: [Normal] run_ai 関数が存在する"
+      It "Then: [Normal] T-SUB-LD-01: run_ai 関数が存在する"
         When call type run_ai
         The status should equal 0
         The output should include "run_ai"
       End
 
-      It "Then: [Normal] validate_ai_model は ai-runner.sh 版（空引数でエラー出力）"
+      It "Then: [Normal] T-SUB-LD-02: validate_ai_model は ai-runner.sh 版（空引数でエラー出力）"
         When call validate_ai_model ""
         The status should equal 1
         The stderr should include "Error:"
@@ -53,7 +53,7 @@ Describe "generate-doc.sh ai-runner.sh integration"
           "opencode/big-pickle" "opencode/big-pickle"
         End
 
-        It "Then: [Normal] $1 → exit 0、stdout に $2 を返す"
+        It "Then: [Normal] T-SUB-VAM-01: $1 → exit 0、stdout に $2 を返す"
           When call validate_ai_model "$1"
           The status should equal 0
           The output should equal "$2"
@@ -70,7 +70,7 @@ Describe "generate-doc.sh ai-runner.sh integration"
           "openai/"
         End
 
-        It "Then: [Error] $1 → exit 1、stderr に Error: を含む"
+        It "Then: [Error] T-SUB-VAM-02: $1 → exit 1、stderr に Error: を含む"
           When call validate_ai_model "$1"
           The status should equal 1
           The stderr should include "Error:"
@@ -100,7 +100,7 @@ Describe "generate-doc.sh ai-runner.sh integration"
         return 0
       }
 
-      It "Then: [Normal] run_ai が ai_model で呼ばれる"
+      It "Then: [Normal] T-SUB-EP-01: run_ai が ai_model で呼ばれる"
         config_init ""
         config_set "ai_model" "sonnet"
         When call execute_prompt \

@@ -22,7 +22,7 @@ Describe "status.sh"
     After "teardown_deckrd_tmpdir"
 
     Describe "When: run status"
-      It "[Error] Should: exit with status 1 and output 'No session file' message"
+      It "[Error] T-CLI-ST-01: Should: exit with status 1 and output 'No session file' message"
         When run bash "$SCRIPT"
         The status should equal 1
         The output should include "No session file"
@@ -49,7 +49,7 @@ JSON
     }
 
     Describe "When: run status"
-      It "[Error] Should: exit with status 1 and output 'No active module' message"
+      It "[Error] T-CLI-ST-02: Should: exit with status 1 and output 'No active module' message"
         When run bash "$SCRIPT"
         The status should equal 1
         The output should include "No active module"
@@ -80,7 +80,7 @@ JSON
     }
 
     Describe "When: run status"
-      It "[Normal] Should: exit with status 0, output 'DECKRD Status' header, and display active module name"
+      It "[Normal] T-CLI-ST-03: Should: exit with status 0, output 'DECKRD Status' header, and display active module name"
         When run bash "$SCRIPT"
         The status should equal 0
         The output should include "DECKRD Status"

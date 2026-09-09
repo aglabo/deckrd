@@ -40,7 +40,7 @@ Describe "module.sh"
     After "teardown_deckrd_tmpdir"
 
     Describe "When: run without arguments"
-      It "[Error] Should: exit with status 1 and output Usage and 'required' error"
+      It "[Error] T-CLI-MOD-01: Should: exit with status 1 and output Usage and 'required' error"
         When run bash "$SCRIPT"
         The status should equal 1
         The output should include "Usage:"
@@ -58,7 +58,7 @@ Describe "module.sh"
     After "teardown_deckrd_tmpdir"
 
     Describe "When: run with --help"
-      It "[Normal] Should: exit with status 0 and output Usage"
+      It "[Normal] T-CLI-MOD-02: Should: exit with status 0 and output Usage"
         When run bash "$SCRIPT" --help
         The status should equal 0
         The output should include "Usage:"
@@ -75,7 +75,7 @@ Describe "module.sh"
     After "teardown_deckrd_tmpdir"
 
     Describe "When: run with unknown option"
-      It "[Error] Should: exit with status 1 and output 'Unknown option' error"
+      It "[Error] T-CLI-MOD-03: Should: exit with status 1 and output 'Unknown option' error"
         When run bash "$SCRIPT" --unknown
         The status should equal 1
         The output should include "Usage:"
@@ -93,7 +93,7 @@ Describe "module.sh"
     After "teardown_deckrd_tmpdir"
 
     Describe "When: run with 'myns/mymod'"
-      It "[Normal] Should: exit with status 0, create all module directories, skip .project.json, and output 'Session updated'"
+      It "[Normal] T-CLI-MOD-04: Should: exit with status 0, create all module directories, skip .project.json, and output 'Session updated'"
         When run bash "$SCRIPT" myns/mymod
         The status should equal 0
         The output should include "myns/mymod"
@@ -111,7 +111,7 @@ Describe "module.sh"
     End
 
     Describe "When: run with uppercase 'MyNS/MyMod'"
-      It "[Edge] Should: exit with status 1 and output 'invalid characters' error"
+      It "[Edge] T-CLI-MOD-05: Should: exit with status 1 and output 'invalid characters' error"
         When run bash "$SCRIPT" MyNS/MyMod
         The status should eq 1
         The stderr should include "invalid characters"
@@ -128,7 +128,7 @@ Describe "module.sh"
     After "teardown_deckrd_tmpdir"
 
     Describe "When: run with '/mymod' (empty namespace)"
-      It "[Error] Should: exit with status 1 and output 'empty' error"
+      It "[Error] T-CLI-MOD-06: Should: exit with status 1 and output 'empty' error"
         When run bash "$SCRIPT" "/mymod"
         The status should equal 1
         The stderr should include "empty"
@@ -136,7 +136,7 @@ Describe "module.sh"
     End
 
     Describe "When: run with 'myns/' (empty module)"
-      It "[Error] Should: exit with status 1 and output 'empty' error"
+      It "[Error] T-CLI-MOD-07: Should: exit with status 1 and output 'empty' error"
         When run bash "$SCRIPT" "myns/"
         The status should equal 1
         The stderr should include "empty"
@@ -144,7 +144,7 @@ Describe "module.sh"
     End
 
     Describe "When: run with 'my ns/mymod' (space in namespace)"
-      It "[Error] Should: exit with status 1 and output 'invalid characters' error"
+      It "[Error] T-CLI-MOD-08: Should: exit with status 1 and output 'invalid characters' error"
         When run bash "$SCRIPT" "my ns/mymod"
         The status should equal 1
         The stderr should include "invalid characters"
@@ -152,7 +152,7 @@ Describe "module.sh"
     End
 
     Describe "When: run with 'myns/mymod' on existing directory without --force"
-      It "[Error] Should: exit with status 1 and output 'already exists' error"
+      It "[Error] T-CLI-MOD-09: Should: exit with status 1 and output 'already exists' error"
         mkdir -p "${DECKRD_DOCS_DIR}/myns/mymod"
         When run bash "$SCRIPT" myns/mymod
         The status should equal 1
@@ -161,7 +161,7 @@ Describe "module.sh"
     End
 
     Describe "When: run with 'myns/mymod' on existing directory with --force"
-      It "[Edge] Should: exit with status 0 and output 'myns/mymod'"
+      It "[Edge] T-CLI-MOD-10: Should: exit with status 0 and output 'myns/mymod'"
         mkdir -p "${DECKRD_DOCS_DIR}/myns/mymod"
         When run bash "$SCRIPT" myns/mymod --force
         The status should equal 0
@@ -179,7 +179,7 @@ Describe "module.sh"
     After "teardown_deckrd_tmpdir"
 
     Describe "When: run 'create myns/mymod'"
-      It "[Normal] Should: exit with status 0, create module dirs, and output 'Session updated'"
+      It "[Normal] T-CLI-MOD-11: Should: exit with status 0, create module dirs, and output 'Session updated'"
         When run bash "$SCRIPT" create myns/mymod
         The status should equal 0
         The output should include "myns/mymod"
@@ -191,7 +191,7 @@ Describe "module.sh"
     End
 
     Describe "When: run create with invalid namespace 'my ns/mymod'"
-      It "[Error] Should: exit with status 1 and output 'invalid characters' error"
+      It "[Error] T-CLI-MOD-12: Should: exit with status 1 and output 'invalid characters' error"
         When run bash "$SCRIPT" create "my ns/mymod"
         The status should equal 1
         The stderr should include "invalid characters"
@@ -208,7 +208,7 @@ Describe "module.sh"
     After "teardown_deckrd_tmpdir"
 
     Describe "When: run 'create myfeature'"
-      It "[Normal] Should: exit with status 0 and output 'myfeature'"
+      It "[Normal] T-CLI-MOD-13: Should: exit with status 0 and output 'myfeature'"
         When run bash "$SCRIPT" create myfeature
         The status should equal 0
         The output should include "myfeature"
@@ -243,7 +243,7 @@ Describe "module.sh"
       End
 
       Describe "When: call derive_test_scope"
-        It "[Normal] Should: exit with status 0 and output the uppercased word initials truncated to 4 characters"
+        It "[Normal] T-CLI-DTS-01: Should: exit with status 0 and output the uppercased word initials truncated to 4 characters"
           When call derive_test_scope "$1"
           The status should equal 0
           The output should equal "$2"
@@ -261,7 +261,7 @@ Describe "module.sh"
       End
 
       Describe "When: call derive_test_scope"
-        It "[Normal] Should: exit with status 0 and output the first 3 characters uppercased"
+        It "[Normal] T-CLI-DTS-02: Should: exit with status 0 and output the first 3 characters uppercased"
           When call derive_test_scope "$1"
           The status should equal 0
           The output should equal "$2"
@@ -271,7 +271,7 @@ Describe "module.sh"
 
     Describe "Given: module name whose derived scope is shorter than 2 characters"
       Describe "When: call derive_test_scope with 'a'"
-        It "[Error] Should: exit with status 1 and output an error to stderr"
+        It "[Error] T-CLI-DTS-03: Should: exit with status 1 and output an error to stderr"
           When call derive_test_scope "a"
           The status should equal 1
           The stderr should include "Error"
@@ -283,7 +283,7 @@ Describe "module.sh"
 
     Describe "Given: single word module name with only 2 characters"
       Describe "When: call derive_test_scope with 'ab'"
-        It "[Edge] Should: exit with status 0 and output the 2 available characters uppercased"
+        It "[Edge] T-CLI-DTS-04: Should: exit with status 0 and output the 2 available characters uppercased"
           When call derive_test_scope "ab"
           The status should equal 0
           The output should equal "AB"
@@ -330,7 +330,7 @@ Describe "module.sh"
       Before "setup_declared_modules"
 
       Describe "When: call collect_declared_scopes"
-        It "[Normal] Should: exit with status 0 and output '<test_scope><TAB><relative module.md path>' per module"
+        It "[Normal] T-CLI-CDS-01: Should: exit with status 0 and output '<test_scope><TAB><relative module.md path>' per module"
           When call collect_declared_scopes
           The status should equal 0
           The output should equal "$(printf 'NOR\talpha/normalize/module.md\nPAR\tbravo/parser/module.md')"
@@ -346,7 +346,7 @@ Describe "module.sh"
       Before "setup_padded_module"
 
       Describe "When: call collect_declared_scopes"
-        It "[Normal] Should: exit with status 0 and output the scope with surrounding whitespace stripped"
+        It "[Normal] T-CLI-CDS-02: Should: exit with status 0 and output the scope with surrounding whitespace stripped"
           When call collect_declared_scopes
           The status should equal 0
           The output should equal "$(printf 'PAD\tcharlie/padded/module.md')"
@@ -363,7 +363,7 @@ Describe "module.sh"
       Before "setup_mixed_modules"
 
       Describe "When: call collect_declared_scopes"
-        It "[Normal] Should: exit with status 0 and output only the module that declares test_scope"
+        It "[Normal] T-CLI-CDS-03: Should: exit with status 0 and output only the module that declares test_scope"
           When call collect_declared_scopes
           The status should equal 0
           The output should equal "$(printf 'ECH\techo/scoped/module.md')"
@@ -373,7 +373,7 @@ Describe "module.sh"
 
     Describe "Given: no module.md exists under the docs directory"
       Describe "When: call collect_declared_scopes"
-        It "[Edge] Should: exit with status 0 and output nothing"
+        It "[Edge] T-CLI-CDS-04: Should: exit with status 0 and output nothing"
           When call collect_declared_scopes
           The status should equal 0
           The output should equal ""
@@ -392,7 +392,7 @@ Describe "module.sh"
       Before "setup_body_text_modules"
 
       Describe "When: call collect_declared_scopes"
-        It "[Edge] Should: exit with status 0 and read test_scope only from the frontmatter"
+        It "[Edge] T-CLI-CDS-05: Should: exit with status 0 and read test_scope only from the frontmatter"
           When call collect_declared_scopes
           The status should equal 0
           The output should equal "$(printf 'GOL\tgolf/both/module.md')"
@@ -433,7 +433,7 @@ Describe "module.sh"
 
     Describe "Given: an explicit test scope that no module has declared"
       Describe "When: call resolve_test_scope with the explicit scope"
-        It "[Normal] Should: exit with status 0 and output the explicit scope"
+        It "[Normal] T-CLI-RTS-01: Should: exit with status 0 and output the explicit scope"
           When call resolve_test_scope "alpha/normalize" "XYZ"
           The status should equal 0
           The output should equal "XYZ"
@@ -443,7 +443,7 @@ Describe "module.sh"
 
     Describe "Given: no explicit test scope is provided"
       Describe "When: call resolve_test_scope with only the module path"
-        It "[Normal] Should: exit with status 0 and output the scope derived from the module name"
+        It "[Normal] T-CLI-RTS-02: Should: exit with status 0 and output the scope derived from the module name"
           When call resolve_test_scope "alpha/normalize"
           The status should equal 0
           The output should equal "NOR"
@@ -451,7 +451,7 @@ Describe "module.sh"
       End
 
       Describe "When: call resolve_test_scope with an empty explicit scope"
-        It "[Edge] Should: exit with status 0 and output the scope derived from the module name"
+        It "[Edge] T-CLI-RTS-03: Should: exit with status 0 and output the scope derived from the module name"
           When call resolve_test_scope "alpha/normalize" ""
           The status should equal 0
           The output should equal "NOR"
@@ -468,7 +468,7 @@ Describe "module.sh"
       End
 
       Describe "When: call resolve_test_scope with the malformed explicit scope"
-        It "[Error] Should: exit with status 1 and report the rejected scope on stderr"
+        It "[Error] T-CLI-RTS-04: Should: exit with status 1 and report the rejected scope on stderr"
           When call resolve_test_scope "alpha/normalize" "$1"
           The status should equal 1
           The stderr should include "Error"
@@ -480,7 +480,7 @@ Describe "module.sh"
 
     Describe "Given: no explicit scope and a module name too short to derive a scope from"
       Describe "When: call resolve_test_scope with only the module path"
-        It "[Error] Should: exit with status 1 and propagate the derivation error to stderr"
+        It "[Error] T-CLI-RTS-05: Should: exit with status 1 and propagate the derivation error to stderr"
           When call resolve_test_scope "alpha/a"
           The status should equal 1
           The stderr should include "cannot derive a test scope"
@@ -497,7 +497,7 @@ Describe "module.sh"
       Before "setup_conflicting_module"
 
       Describe "When: call resolve_test_scope without an explicit scope"
-        It "[Error] Should: exit with status 1 and report the conflict, the owner module.md and the --test-scope hint"
+        It "[Error] T-CLI-RTS-06: Should: exit with status 1 and report the conflict, the owner module.md and the --test-scope hint"
           When call resolve_test_scope "alpha/normalize"
           The status should equal 1
           The stderr should include "conflict"
@@ -508,7 +508,7 @@ Describe "module.sh"
       End
 
       Describe "When: call resolve_test_scope with the same scope given explicitly"
-        It "[Error] Should: exit with status 1 and report the conflict, the owner module.md and the --test-scope hint"
+        It "[Error] T-CLI-RTS-07: Should: exit with status 1 and report the conflict, the owner module.md and the --test-scope hint"
           When call resolve_test_scope "alpha/normalize" "NOR"
           The status should equal 1
           The stderr should include "conflict"
@@ -527,7 +527,7 @@ Describe "module.sh"
       Before "setup_self_declared_module"
 
       Describe "When: call resolve_test_scope for that same module"
-        It "[Edge] Should: exit with status 0 and output the scope, ignoring its own declaration"
+        It "[Edge] T-CLI-RTS-08: Should: exit with status 0 and output the scope, ignoring its own declaration"
           When call resolve_test_scope "alpha/normalize"
           The status should equal 0
           The output should equal "NOR"
@@ -546,7 +546,7 @@ Describe "module.sh"
     After "teardown_deckrd_tmpdir"
 
     Describe "When: run module.sh with the module path"
-      It "[Normal] Should: exit with status 0 and write module.md declaring the derived test_scope"
+      It "[Normal] T-CLI-MOD-14: Should: exit with status 0 and write module.md declaring the derived test_scope"
         When run bash "$SCRIPT" myns/mymod
         The status should equal 0
         The output should include "module.md"
@@ -562,7 +562,7 @@ Describe "module.sh"
     After "teardown_deckrd_tmpdir"
 
     Describe "When: run module.sh with --test-scope"
-      It "[Normal] Should: exit with status 0 and write module.md declaring the explicit test_scope"
+      It "[Normal] T-CLI-MOD-15: Should: exit with status 0 and write module.md declaring the explicit test_scope"
         When run bash "$SCRIPT" myns/mymod --test-scope XY
         The status should equal 0
         The output should include "module.md"
@@ -582,7 +582,7 @@ Describe "module.sh"
     After "teardown_deckrd_tmpdir"
 
     Describe "When: run module.sh with the taken scope via --test-scope"
-      It "[Error] Should: exit with status 1, report the conflicting module.md and write no module.md"
+      It "[Error] T-CLI-MOD-16: Should: exit with status 1, report the conflicting module.md and write no module.md"
         When run bash "$SCRIPT" myns/mymod --test-scope XY
         The status should equal 1
         The output should include "Initializing module"
@@ -604,7 +604,7 @@ Describe "module.sh"
     After "teardown_deckrd_tmpdir"
 
     Describe "When: re-initialize the module with --force"
-      It "[Edge] Should: exit with status 0 and keep the test_scope already declared in module.md"
+      It "[Edge] T-CLI-MOD-17: Should: exit with status 0 and keep the test_scope already declared in module.md"
         When run bash "$SCRIPT" myns/mymod --force
         The status should equal 0
         The output should include "module.md"
@@ -618,7 +618,7 @@ Describe "module.sh"
     After "teardown_deckrd_tmpdir"
 
     Describe "When: run module.sh with a trailing --test-scope"
-      It "[Error] Should: exit with status 1 and report that --test-scope requires a value"
+      It "[Error] T-CLI-MOD-18: Should: exit with status 1 and report that --test-scope requires a value"
         When run bash "$SCRIPT" myns/mymod --test-scope
         The status should equal 1
         The output should include "Usage:"
@@ -637,7 +637,7 @@ Describe "module.sh"
     After "teardown_deckrd_tmpdir"
 
     Describe "When: re-initialize the module with --force and no --test-scope"
-      It "[Normal] Should: keep the declared scope in both module.md and session.json"
+      It "[Normal] T-CLI-MOD-19: Should: keep the declared scope in both module.md and session.json"
         When run bash "$SCRIPT" myns/mymod --force
         The status should equal 0
         The output should include "module.md"
@@ -660,7 +660,7 @@ Describe "module.sh"
     After "teardown_deckrd_tmpdir"
 
     Describe "When: re-initialize the module with --force and no --test-scope"
-      It "[Edge] Should: exit with status 0 because the declared scope is used instead of the derived one"
+      It "[Edge] T-CLI-MOD-20: Should: exit with status 0 because the declared scope is used instead of the derived one"
         When run bash "$SCRIPT" myns/mymod --force
         The status should equal 0
         The output should include "module.md"

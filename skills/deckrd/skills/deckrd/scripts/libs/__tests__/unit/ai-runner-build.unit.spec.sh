@@ -29,7 +29,7 @@ Describe "ai-runner.sh"
           "claude" "opusplan" "--model" "opusplan"
         End
 
-        It "Then: [Normal] cmd に $3 $4 が含まれる"
+        It "Then: [Normal] T-LIB-ABC-01: cmd に $3 $4 が含まれる"
           _cmd=()
           When call _build_ai_command "$1" "$2" _cmd
           The status should equal 0
@@ -41,14 +41,14 @@ Describe "ai-runner.sh"
 
     Describe "Given: 特殊オプションを持つモデル名"
       Describe "When: _build_ai_command を呼ぶ"
-        It "Then: [Normal] opusplan は --thinking を含む"
+        It "Then: [Normal] T-LIB-ABC-02: opusplan は --thinking を含む"
           _cmd=()
           When call _build_ai_command "claude" "opusplan" _cmd
           The status should equal 0
           The variable '_cmd[*]' should include "--thinking"
         End
 
-        It "Then: [Normal] sonnet-1m は --context-window 1000000 を含む"
+        It "Then: [Normal] T-LIB-ABC-03: sonnet-1m は --context-window 1000000 を含む"
           _cmd=()
           When call _build_ai_command "claude" "sonnet-1m" _cmd
           The status should equal 0
@@ -56,7 +56,7 @@ Describe "ai-runner.sh"
           The variable '_cmd[*]' should include "1000000"
         End
 
-        It "Then: [Normal] default は --model を含まない"
+        It "Then: [Normal] T-LIB-ABC-04: default は --model を含まない"
           _cmd=()
           When call _build_ai_command "claude" "default" _cmd
           The status should equal 0
@@ -67,7 +67,7 @@ Describe "ai-runner.sh"
 
     Describe "Given: copilot CLI とプレフィックス付きモデル名"
       Describe "When: _build_ai_command を呼ぶ"
-        It "Then: [Normal] github-copilot/gpt-4o -> model は gpt-4o (prefix 除去)"
+        It "Then: [Normal] T-LIB-ABC-05: github-copilot/gpt-4o -> model は gpt-4o (prefix 除去)"
           _cmd=()
           When call _build_ai_command "copilot" "github-copilot/gpt-4o" _cmd
           The status should equal 0
@@ -79,7 +79,7 @@ Describe "ai-runner.sh"
 
     Describe "Given: copilot CLI と非対応モデル名"
       Describe "When: _build_ai_command を呼ぶ"
-        It "Then: [Error] exit 1 を返す"
+        It "Then: [Error] T-LIB-ABC-06: exit 1 を返す"
           _cmd=()
           When call _build_ai_command "copilot" "unknown-model" _cmd
           The status should equal 1

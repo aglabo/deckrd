@@ -24,32 +24,32 @@ Describe "bootstrap.lib.sh"
   # ------------------------------------------------------------------ #
   Describe "PROJECT_ROOT: git 自動検出"
 
-    It "[Normal] 未設定 → git rev-parse --show-toplevel と一致する"
+    It "[Normal] T-LIB-BPRGI-01: 未設定 → git rev-parse --show-toplevel と一致する"
       expected="$(git rev-parse --show-toplevel 2>/dev/null)"
       When run bash -c "unset PROJECT_ROOT; . \"$SCRIPT\" && echo \"\$PROJECT_ROOT\""
       The status should equal 0
       The output should equal "$expected"
     End
 
-    It "[Normal] 未設定 → PROJECT_ROOT が空でない"
+    It "[Normal] T-LIB-BPRGI-02: 未設定 → PROJECT_ROOT が空でない"
       When run bash -c "unset PROJECT_ROOT; . \"$SCRIPT\" && echo \"\$PROJECT_ROOT\""
       The status should equal 0
       The output should not equal ""
     End
 
-    It "[Normal] 未設定 → PROJECT_ROOT が実際のディレクトリである"
+    It "[Normal] T-LIB-BPRGI-03: 未設定 → PROJECT_ROOT が実際のディレクトリである"
       When run bash -c "unset PROJECT_ROOT; . \"$SCRIPT\" && [[ -d \"\$PROJECT_ROOT\" ]] && echo ok"
       The status should equal 0
       The output should equal "ok"
     End
 
-    It "[Edge] 空文字設定 → 自動検出で上書きされる"
+    It "[Edge] T-LIB-BPRGI-04: 空文字設定 → 自動検出で上書きされる"
       When run bash -c "export PROJECT_ROOT=''; . \"$SCRIPT\" && echo \"\$PROJECT_ROOT\""
       The status should equal 0
       The output should not equal ""
     End
 
-    It "[Edge] 空文字設定 → 上書き後は実際のディレクトリになる"
+    It "[Edge] T-LIB-BPRGI-05: 空文字設定 → 上書き後は実際のディレクトリになる"
       When run bash -c "export PROJECT_ROOT=''; . \"$SCRIPT\" && [[ -d \"\$PROJECT_ROOT\" ]] && echo ok"
       The status should equal 0
       The output should equal "ok"
@@ -61,7 +61,7 @@ Describe "bootstrap.lib.sh"
   # ------------------------------------------------------------------ #
   Describe "PROJECT_ROOT: BASH_SOURCE fallback"
 
-    It "[Normal] git が PATH にない → BASH_SOURCE fallback で PROJECT_ROOT が空でない"
+    It "[Normal] T-LIB-BPRFI-01: git が PATH にない → BASH_SOURCE fallback で PROJECT_ROOT が空でない"
       saved_path="$PATH"
       When run bash -c "
         export PATH=\"${saved_path}\"
@@ -77,7 +77,7 @@ Describe "bootstrap.lib.sh"
       The output should not equal ""
     End
 
-    It "[Normal] git が PATH にない → BASH_SOURCE fallback の PROJECT_ROOT は実際のディレクトリ"
+    It "[Normal] T-LIB-BPRFI-02: git が PATH にない → BASH_SOURCE fallback の PROJECT_ROOT は実際のディレクトリ"
       saved_path="$PATH"
       When run bash -c "
         export PATH=\"${saved_path}\"
@@ -99,55 +99,55 @@ Describe "bootstrap.lib.sh"
   # ------------------------------------------------------------------ #
   Describe "冪等性: 2回 source"
 
-    It "[Normal] 2回 source → PROJECT_ROOT が変化しない"
+    It "[Normal] T-LIB-BIDM2I-01: 2回 source → PROJECT_ROOT が変化しない"
       When run bash -c ". \"$SCRIPT\" && FIRST=\"\$PROJECT_ROOT\" && . \"$SCRIPT\" && [[ \"\$PROJECT_ROOT\" == \"\$FIRST\" ]] && echo ok"
       The status should equal 0
       The output should equal "ok"
     End
 
-    It "[Normal] 2回 source → DECKRD_ROOT が変化しない"
+    It "[Normal] T-LIB-BIDM2I-02: 2回 source → DECKRD_ROOT が変化しない"
       When run bash -c ". \"$SCRIPT\" && FIRST=\"\$DECKRD_ROOT\" && . \"$SCRIPT\" && [[ \"\$DECKRD_ROOT\" == \"\$FIRST\" ]] && echo ok"
       The status should equal 0
       The output should equal "ok"
     End
 
-    It "[Normal] 2回 source → DECKRD_SCRIPTS_DIR が変化しない"
+    It "[Normal] T-LIB-BIDM2I-03: 2回 source → DECKRD_SCRIPTS_DIR が変化しない"
       When run bash -c ". \"$SCRIPT\" && FIRST=\"\$DECKRD_SCRIPTS_DIR\" && . \"$SCRIPT\" && [[ \"\$DECKRD_SCRIPTS_DIR\" == \"\$FIRST\" ]] && echo ok"
       The status should equal 0
       The output should equal "ok"
     End
 
-    It "[Normal] 2回 source → DECKRD_LIB_DIR が変化しない"
+    It "[Normal] T-LIB-BIDM2I-04: 2回 source → DECKRD_LIB_DIR が変化しない"
       When run bash -c ". \"$SCRIPT\" && FIRST=\"\$DECKRD_LIB_DIR\" && . \"$SCRIPT\" && [[ \"\$DECKRD_LIB_DIR\" == \"\$FIRST\" ]] && echo ok"
       The status should equal 0
       The output should equal "ok"
     End
 
-    It "[Normal] 2回 source → DECKRD_DATA_DIR が変化しない"
+    It "[Normal] T-LIB-BIDM2I-05: 2回 source → DECKRD_DATA_DIR が変化しない"
       When run bash -c ". \"$SCRIPT\" && FIRST=\"\$DECKRD_DATA_DIR\" && . \"$SCRIPT\" && [[ \"\$DECKRD_DATA_DIR\" == \"\$FIRST\" ]] && echo ok"
       The status should equal 0
       The output should equal "ok"
     End
 
-    It "[Normal] 2回 source → DECKRD_LOCAL_DATA が変化しない"
+    It "[Normal] T-LIB-BIDM2I-06: 2回 source → DECKRD_LOCAL_DATA が変化しない"
       When run bash -c ". \"$SCRIPT\" && FIRST=\"\$DECKRD_LOCAL_DATA\" && . \"$SCRIPT\" && [[ \"\$DECKRD_LOCAL_DATA\" == \"\$FIRST\" ]] && echo ok"
       The status should equal 0
       The output should equal "ok"
     End
 
-    It "[Normal] 2回 source → DECKRD_DOCS_DIR が変化しない"
+    It "[Normal] T-LIB-BIDM2I-07: 2回 source → DECKRD_DOCS_DIR が変化しない"
       When run bash -c ". \"$SCRIPT\" && FIRST=\"\$DECKRD_DOCS_DIR\" && . \"$SCRIPT\" && [[ \"\$DECKRD_DOCS_DIR\" == \"\$FIRST\" ]] && echo ok"
       The status should equal 0
       The output should equal "ok"
     End
 
-    It "[Normal] 2回 source → SYMBOL が変化しない"
+    It "[Normal] T-LIB-BIDM2I-08: 2回 source → SYMBOL が変化しない"
       When run bash -c ". \"$SCRIPT\" && FIRST=\"\$SYMBOL\" && . \"$SCRIPT\" && [[ \"\$SYMBOL\" == \"\$FIRST\" ]] && echo ok"
       The status should equal 0
       The output should equal "ok"
     End
 
-    It "[Normal] 2回 source → _BOOTSTRAP_LOADED が変化しない"
+    It "[Normal] T-LIB-BIDM2I-09: 2回 source → _BOOTSTRAP_LOADED が変化しない"
       When run bash -c ". \"$SCRIPT\" && FIRST=\"\$_BOOTSTRAP_LOADED\" && . \"$SCRIPT\" && [[ \"\$_BOOTSTRAP_LOADED\" == \"\$FIRST\" ]] && echo ok"
       The status should equal 0
       The output should equal "ok"
@@ -159,19 +159,19 @@ Describe "bootstrap.lib.sh"
   # ------------------------------------------------------------------ #
   Describe "冪等性: 3回 source"
 
-    It "[Edge] 3回 source → DECKRD_ROOT が変化しない"
+    It "[Edge] T-LIB-BIDM3I-01: 3回 source → DECKRD_ROOT が変化しない"
       When run bash -c ". \"$SCRIPT\" && FIRST=\"\$DECKRD_ROOT\" && . \"$SCRIPT\" && . \"$SCRIPT\" && [[ \"\$DECKRD_ROOT\" == \"\$FIRST\" ]] && echo ok"
       The status should equal 0
       The output should equal "ok"
     End
 
-    It "[Edge] 3回 source → PROJECT_ROOT が変化しない"
+    It "[Edge] T-LIB-BIDM3I-02: 3回 source → PROJECT_ROOT が変化しない"
       When run bash -c ". \"$SCRIPT\" && FIRST=\"\$PROJECT_ROOT\" && . \"$SCRIPT\" && . \"$SCRIPT\" && [[ \"\$PROJECT_ROOT\" == \"\$FIRST\" ]] && echo ok"
       The status should equal 0
       The output should equal "ok"
     End
 
-    It "[Edge] 3回 source → ステータス 0 で終了する"
+    It "[Edge] T-LIB-BIDM3I-03: 3回 source → ステータス 0 で終了する"
       When run bash -c ". \"$SCRIPT\" && . \"$SCRIPT\" && . \"$SCRIPT\" && echo ok"
       The status should equal 0
       The output should equal "ok"
