@@ -103,9 +103,9 @@ explore-agent の起動前後を問わず、**コードを 1 行も書く前に*
 git status --porcelain=v1 --untracked-files=all
 ```
 
-各行は先頭 2 文字がステータスコード、3 文字目以降がパスである。パス部分だけを取り出して
+各行は先頭 2 文字がステータスコード、3 文字目以降がパスを表す。パス部分だけを取り出して
 集合にし、**SESSION BASELINE** として保持する。リネーム行 (`R  old -> new`) は
-`old` と `new` の両方を登録する。空集合が正常な状態である。
+`old` と `new` の両方を登録する。空集合なら正常な状態とみなす。
 
 用途は Phase 4 のフォールバックに限る。ユーザーがセッション開始時点で無関係な未コミット
 変更を抱えていた場合、それらをレビュー対象から外すために使う。
@@ -244,33 +244,30 @@ Changed files 列は bdd-coder の Status Report の `CHANGED_FILES` 行をそ�
 code-reviewer は **セッション全体で 1 回だけ** 起動する (タスクごとのループはしない)。起動パラメータ:
 
 - `task_id`: 単一タスク起動ならその ID。複数タスクにまたがる場合は `N/A`
-- `changed_files`: 後述の解決手順で得たパスのうち実装ファイル
-- `test_files`: 同じパス集合のうちテストファイル (ENV PROFILE のテストファイル規約で振り分け)
+- `changed_files`: セッションスコープ (下記) のうち実装ファイル
+- `test_files`: 同じセッションスコープのうちテストファイル (ENV PROFILE のテストファイル規約で振り分け)
 - `env_profile`: `temp/deckrd-work/env-profile.md`
 - `coverage_cmd`: ENV PROFILE のカバレッジコマンド
 
-#### レビュー対象パスの解決
+セッションスコープの解決順序は次のとおり。
 
-レビュー範囲はこのセッションが変更したファイルに限る。次の順で解決する。
+1. Phase 3 の表の `Changed files` 列 (各 bdd-coder の `CHANGED_FILES`) の和集合
+2. その列が得られない場合に限り、作業ツリー全体の変更から Step 0-3 の
+   **SESSION BASELINE** を差し引いた集合
 
-| 順 | 方法                                                                             |
-| -- | -------------------------------------------------------------------------------- |
-| 1  | Phase 3 のステータス表の Changed files 列の和集合                                |
-| 2  | 1 が取れない場合、作業ツリーの全変更から SESSION BASELINE のパスを差し引いたもの |
+作業ツリー全体の変更とは、次の 3 つを併合し重複を除いた集合を指す。
 
-作業ツリーの全変更は、次の 3 つを併合して重複を除いたものとする。
+- `git diff --name-only`
+- `git diff --name-only --cached`
+- `git ls-files --others --exclude-standard`
 
-```bash
-git diff --name-only                        # 未ステージ
-git diff --name-only --cached               # ステージ済み
-git ls-files --others --exclude-standard    # 未追跡 (gitignore 対象は除く)
-```
+3 つ目を必ず含める。bdd-coder が作成したばかりのファイルは untracked のため、
+前 2 つに現れない。削除されたパスも除外しない (code-reviewer が
+`git diff -- <path>` でパッチを読む)。
 
-3 つ目を落とすと、bdd-coder が新規作成した実装ファイル・テストファイルがレビューされない。
-BDD の直後はこれが最も起きやすい取りこぼしである。
-
-削除されたパスは除外しない。削除はレビュー対象の変更であり、code-reviewer は
-`git diff -- <path>` でパッチを読む。
+作業ツリーの差分をそのまま渡してはならない。セッション開始時点で無関係な
+未コミット変更を抱えていた場合、それらがレビュー対象に入り、無関係な指摘で
+セッションがブロックされる。
 
 同じレビューは `/bdd-coder:bdd-coder-review` で任意のタイミングでも実行できる。
 

@@ -4,13 +4,14 @@ description: "Detailed documentation of the deckrd plugin architecture and imple
 category: "developer-guides"
 tags: ["plugins", "skills", "architecture", "modular"]
 created: "2026-01-14"
-version: "0.4.0"
+version: "0.5.0"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
   - 0.0.4   2026-01-14  Initial version
   - 0.1.0   2026-03-21  Update Integration Points to cocoIndex-code/filesystem, update plugin.json/bootstrap.sh/session.sh/directory structure to match actual implementation
   - 0.4.0   2026-06-19  Rename deckrd-coder to bdd-coder, update paths from plugins/ to skills/
+  - 0.5.0   2026-09-06  Correct per-plugin MCP table, add codex-mcp and scoped tool naming
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.
@@ -256,13 +257,19 @@ MCP servers available during Claude Code command execution:
 
 - cocoindex-code: Semantic code search (used by bdd-coder)
 - filesystem: File system access (used by deckrd and bdd-coder)
+- codex-mcp: Independent AI code review (used by deckrd-review and bdd-coder's code-reviewer)
 
-MCP server configuration per skill:
+MCP server configuration per plugin:
 
-| Skill     | MCP config file            | Available servers          |
-| --------- | -------------------------- | -------------------------- |
-| deckrd    | skills/deckrd/.mcp.json    | filesystem                 |
-| bdd-coder | skills/bdd-coder/.mcp.json | filesystem, cocoindex-code |
+| Plugin    | MCP config file         | Declared servers                       |
+| --------- | ----------------------- | -------------------------------------- |
+| deckrd    | skills/deckrd/.mcp.json | filesystem, cocoindex-code, codex-mcp  |
+| bdd-coder | (none)                  | uses the servers other plugins provide |
+
+Servers declared by a plugin expose their tools under a scoped name.
+The form is `mcp__plugin_<plugin>_<server>__<tool>`, not the bare `mcp__<server>__<tool>`.
+See [MCP Servers Reference](../specs/mcp-servers.md) for the naming rules.
+That page also covers the deduplication caveat around codex-mcp.
 
 ### With IDD Framework
 

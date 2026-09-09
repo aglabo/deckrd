@@ -7,8 +7,7 @@ description: >
   Spawned automatically when the user gives a natural-language coding instruction
   without explicitly calling /bdd-coder.
   Do NOT invoke directly — triggered by bdd-coder skill.
-tools: Bash, Read, Write, Glob, Grep,
-  mcp__codegraph-mcp__codegraph_explore, mcp__cocoindex-code__search, mcp__serena-mcp__get_symbols_overview, mcp__serena-mcp__find_symbol, mcp__serena-mcp__find_referencing_symbols
+tools: Bash, Read, Write, Glob, Grep, mcp__plugin_deckrd_cocoindex-code__search
 model: inherit
 color: cyan
 ---
@@ -52,7 +51,7 @@ Determine input type, then extract task information:
    - Behaviors: normal cases, error cases, edge cases
    - Constraints: language, framework, existing code to extend
 3. If the instruction mentions extending or modifying existing code,
-   use `mcp__cocoindex-code__search` to locate relevant implementations:
+   use `mcp__plugin_deckrd_cocoindex-code__search` to locate relevant implementations:
    - query: `"<Target> implementation"`
    - query: `"<Target> related functions patterns"`
      Use results to refine Behaviors and Constraints (concrete function names, signatures, edge cases).

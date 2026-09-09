@@ -10,8 +10,10 @@ metadata:
   version: 0.4.1
   license: MIT
 allowed-tools:
-  - mcp__codex-mcp__codex
-  - mcp__codex-mcp__codex-reply
+  - mcp__plugin_deckrd_codex-mcp__codex
+  - mcp__plugin_deckrd_codex-mcp__codex-reply
+  - mcp__plugin_idd_codex-mcp__codex
+  - mcp__plugin_idd_codex-mcp__codex-reply
   - Read
   - Bash(jq:*)
 argument-hint: "<file_or_phase> [--focus completeness|risk|consistency|feasibility]"
@@ -170,7 +172,9 @@ Document type: <target>
 
 ### Step 4: Call codex and display result
 
-Call `mcp__codex-mcp__codex` with the constructed prompt.
+Call the available codex MCP tool
+(`mcp__plugin_deckrd_codex-mcp__codex` or `mcp__plugin_idd_codex-mcp__codex`)
+with the constructed prompt.
 Display codex's findings clearly, preceded by:
 
 ```text
@@ -206,7 +210,9 @@ Acknowledge the dismissal with the reason. Done.
 #### q — Ask follow-up
 
 Ask: `Your follow-up question for codex:`
-Call `mcp__codex-mcp__codex-reply` with the follow-up question and prior conversation context.
+Call the matching codex reply tool
+(`mcp__plugin_deckrd_codex-mcp__codex-reply` or `mcp__plugin_idd_codex-mcp__codex-reply`)
+with the follow-up question and prior conversation context.
 Display codex's answer.
 Return to the choice prompt.
 
