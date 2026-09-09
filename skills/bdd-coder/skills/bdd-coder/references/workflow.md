@@ -244,30 +244,10 @@ Changed files 列は bdd-coder の Status Report の `CHANGED_FILES` 行をそ�
 code-reviewer は **セッション全体で 1 回だけ** 起動する (タスクごとのループはしない)。起動パラメータ:
 
 - `task_id`: 単一タスク起動ならその ID。複数タスクにまたがる場合は `N/A`
-- `changed_files`: セッションスコープ (下記) のうち実装ファイル
-- `test_files`: 同じセッションスコープのうちテストファイル (ENV PROFILE のテストファイル規約で振り分け)
+- `changed_files`: 作業ツリーの差分 (`git diff --name-only`、`--cached` 分も併合) のうち実装ファイル
+- `test_files`: 同じ差分のうちテストファイル (ENV PROFILE のテストファイル規約で振り分け)
 - `env_profile`: `temp/deckrd-work/env-profile.md`
 - `coverage_cmd`: ENV PROFILE のカバレッジコマンド
-
-セッションスコープの解決順序は次のとおり。
-
-1. Phase 3 の表の `Changed files` 列 (各 bdd-coder の `CHANGED_FILES`) の和集合
-2. その列が得られない場合に限り、作業ツリー全体の変更から Step 0-3 の
-   **SESSION BASELINE** を差し引いた集合
-
-作業ツリー全体の変更とは、次の 3 つを併合し重複を除いた集合を指す。
-
-- `git diff --name-only`
-- `git diff --name-only --cached`
-- `git ls-files --others --exclude-standard`
-
-3 つ目を必ず含める。bdd-coder が作成したばかりのファイルは untracked のため、
-前 2 つに現れない。削除されたパスも除外しない (code-reviewer が
-`git diff -- <path>` でパッチを読む)。
-
-作業ツリーの差分をそのまま渡してはならない。セッション開始時点で無関係な
-未コミット変更を抱えていた場合、それらがレビュー対象に入り、無関係な指摘で
-セッションがブロックされる。
 
 同じレビューは `/bdd-coder:bdd-coder-review` で任意のタイミングでも実行できる。
 
