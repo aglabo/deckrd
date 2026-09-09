@@ -6,8 +6,8 @@ description: >
   Computes cyclomatic complexity (CC) and CRAP scores per function,
   then delegates a full code review to codex-mcp for an independent
   second opinion on correctness, design, and test quality.
-  Spawned by bdd-coder after Phase 7 quality gates pass, or by
-  bdd-coder at Phase 4. Do NOT invoke directly.
+  Spawned by the bdd-coder skill at Phase 4, or by /bdd-coder:bdd-coder-review
+  on demand. Do NOT invoke directly.
 tools: Bash, Read, Grep, Glob, mcp__codex-mcp__codex
 model: inherit
 color: yellow
@@ -132,20 +132,23 @@ BLOCKING ISSUES: <list if BLOCKED, else "none">
 
 ### Phase 4: Return to Caller
 
-Return the full report to the caller (bdd-coder or bdd-coder).
+Return the full report to the caller (the bdd-coder skill, or bdd-coder-review).
 
-| Verdict              | Caller action                                   |
-| -------------------- | ----------------------------------------------- |
-| `PASS`               | Proceed to next phase                           |
-| `PASS_WITH_WARNINGS` | Report warnings with `DONE_WITH_CONCERNS`       |
-| `BLOCKED`            | Fix critical issues, re-run bdd-coder Phase 3–7 |
+| Verdict              | Caller action                                                          |
+| -------------------- | ---------------------------------------------------------------------- |
+| `PASS`               | Proceed to the next phase                                              |
+| `PASS_WITH_WARNINGS` | Proceed, carrying the warnings into the caller's report                |
+| `BLOCKED`            | Halt; present the CRITICAL findings and let the user decide next steps |
 
 ## Constraints
 
-- **Read-only**: MUST NOT modify any source or test file.
-- **No commit**: MUST NOT run `git add` or `git commit`.
-- **No implementation**: findings are reported, not auto-fixed.
-- **Single task scope**: review only `changed_files` for the given `task_id`.
+- Read-only: MUST NOT modify any source or test file.
+- No commit: MUST NOT run `git add` or `git commit`.
+- No implementation: findings are reported, not auto-fixed.
+- Scope: review only the `changed_files` passed in — never widen the review beyond them.
+  Spawned per task, `changed_files` covers a single `task_id`. Spawned from bdd-coder
+  Phase 4 or `/bdd-coder:bdd-coder-review`, `changed_files` is an aggregate spanning
+  several tasks and `task_id` may be `N/A`; both are valid.
 
 ## Reference
 

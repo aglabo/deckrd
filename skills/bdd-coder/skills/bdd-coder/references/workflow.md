@@ -223,13 +223,15 @@ bdd-coder(T-01-03) ┘
 **CRAP 計算式:** `CC² × (1 - coverage/100)³ + CC`
 詳細は [../assets/test-quality.md](../assets/test-quality.md) — CRAP Score セクションを参照。
 
-code-reviewer の起動パラメータ:
+code-reviewer は **セッション全体で 1 回だけ** 起動する (タスクごとのループはしない)。起動パラメータ:
 
-- `task_id`: 各タスクの ID
-- `changed_files`: Phase 3 で変更した実装ファイル一覧
-- `test_files`: Phase 3–5 で追加・変更したテストファイル一覧
+- `task_id`: 単一タスク起動ならその ID。複数タスクにまたがる場合は `N/A`
+- `changed_files`: 作業ツリーの差分 (`git diff --name-only`、`--cached` 分も併合) のうち実装ファイル
+- `test_files`: 同じ差分のうちテストファイル (ENV PROFILE のテストファイル規約で振り分け)
 - `env_profile`: `temp/deckrd-work/env-profile.md`
 - `coverage_cmd`: ENV PROFILE のカバレッジコマンド
+
+同じレビューは `/bdd-coder:bdd-coder-review` で任意のタイミングでも実行できる。
 
 Agent definition: [../../../../agents/code-reviewer.md](../../../../agents/code-reviewer.md)
 
@@ -247,6 +249,12 @@ Agent definition: [../../../../agents/code-reviewer.md](../../../../agents/code-
 - 型エラーなし確認: Run[type check command], read FULL output
 - チェックリストがすべて `[x]` 済み確認: Read checklist directly, count checked items
 - Refactor が完了したか確認 (Step 7 グローバルリファクタ)
+- Task ID 起動時: tasks.md の該当ケースのチェックボックスを `[x]` に更新
+  (判定源は Phase 3 のステータスレポート)
+- 今回実装した Test Target のみ、Task Summary の Status を
+  チェックボックスの充足率から再計算
+
+書き戻しの詳細な手順は [SKILL.md](../SKILL.md) の Phase 5 を参照。
 
 出力: コーディング完了状態。
 

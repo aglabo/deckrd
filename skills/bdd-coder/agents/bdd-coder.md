@@ -24,6 +24,8 @@ color: blue
 
 2. `temp/bdd-coder/bdd-todo.md` is the single source of truth — created in Phase 2,
    updated at every step. Resume capability depends entirely on this file.
+   Every progress update writes BOTH the `state:` word and the checkbox marker;
+   a `state: done` item left as `- [ ]` is an incomplete update.
 
 3. Strict RED → GREEN → REFACTOR → next assertion — no skipping, no parallelization.
 
@@ -52,7 +54,7 @@ When processing task `T<xx>-<yy>-<zz>`:
 
 ### Phase 1: Setup & Detection
 
-1. Verify inputs: task ID + Given/When/Then content
+1. Verify inputs: task ID + Given/When/Then content + checklist path from the caller
 2. Auto-detect: test framework, language, build tools
 3. Locate tasks.md; extract Given/When/Then for target task
 4. Scan existing test file to map current Given/When structure
@@ -77,6 +79,8 @@ When processing task `T<xx>-<yy>-<zz>`:
    ```
 
 3. State vocabulary: `todo` → `red` → `green` → `done`
+4. Checkbox marker: `- [ ]` while the item is `todo` / `red` / `green`,
+   `- [x]` once it reaches `state: done`
 
 ### Phase 3: RED-GREEN-REFACTOR Loop (per assertion)
 
@@ -98,19 +102,41 @@ Repeat steps 3.1–3.7 for each `state: todo` item:
     Write the assertion only if it exercises a real behavior path that can break.
 
 3.3 RED — Run tests. Verify new assertion FAILS. Update `state: red`.
+    Check `[<TaskID>-R]` in the checklist file.
 
 3.4 GREEN — Write minimum implementation to pass. Run tests. Verify PASS. Update `state: green`.
+    Check `[<TaskID>-G]` in the checklist file.
 
 3.5 Light refactor test code (names, comments, duplication). Verify still passes.
 
 3.6 Light refactor implementation code. Verify tests still pass.
+    Check `[<TaskID>-F]` in the checklist file.
 
-3.7 Update `state: done`. If more `state: todo` remain → back to 3.1. Else → Phase 4.
+3.7 Update `state: done` AND mark the item `- [x]` in `bdd-todo.md`.
+    If more `state: todo` remain → back to 3.1. Else → Phase 4.
 ```
+
+#### Checklist Write-back Rules
+
+"Check `[<TaskID>-R]`" means: in the checklist file whose path the caller passed
+(`temp/tasks/<slug>-<adjective>-checklist.md`), find the item line
+`- [ ] **[<TaskID>-R] Red** : ...` and replace `- [ ]` with `- [x]`.
+
+| Rule         | Detail                                                                             |
+| ------------ | ---------------------------------------------------------------------------------- |
+| Canonical ID | Match in the checklist's `T-XX-YY-ZZ` form, whatever form the caller passed        |
+| Marker only  | Change the checkbox marker. Never edit the item text, ID, or table rows            |
+| Idempotent   | An item already `- [x]` stays as is                                                |
+| Verified     | Check an item only AFTER the step it represents actually passed                    |
+| Missing ID   | If the item is absent, skip it and note it in the status report NOTES              |
+| Scope        | Only `-R` / `-G` / `-F`. `-TF` and `-CF` belong to the caller, never to this agent |
+
+Do this immediately at the step, not batched at the end: an interrupted run must
+leave the checklist showing exactly how far it got.
 
 ### Phase 4: Verify All GREEN
 
-1. Confirm all `bdd-todo.md` items are `state: done`
+1. Confirm all `bdd-todo.md` items are `state: done` and marked `- [x]`
 2. Run full test suite — all must pass
 
 ### Phase 5: Refactor Test Code
@@ -135,6 +161,9 @@ Do NOT delete a test if it is the only test covering a particular boundary or br
    — split within the same Then block only; never add new Given/When blocks
 3. Verify all tests still pass
 
+Do NOT check the `-TF` item. This agent handles one Case per invocation and cannot see
+whether the other Cases of the Scenario are done; the caller checks it in its Phase 5.
+
 ### Phase 6: Refactor Implementation Code
 
 1. Library substitute — review each implementation file changed in Phase 3–4:
@@ -157,6 +186,8 @@ Do NOT delete a test if it is the only test covering a particular boundary or br
 4. Extract common logic, improve naming, align with project conventions
 5. Verify all tests still pass
 
+Do NOT check the `-CF` item — same reason as `-TF` in Phase 5. The caller owns it.
+
 ### Phase 7: Quality Gates
 
 1. IDENTIFY — which command proves each criterion?
@@ -175,22 +206,12 @@ Do NOT delete a test if it is the only test covering a particular boundary or br
 
 **CRAP score formula:** `CC² × (1 - coverage/100)³ + CC`
 Score > 30 → `BLOCKED`. Score 16–30 → `DONE_WITH_CONCERNS`.
-See: [skills/deckrd-coder/assets/test-quality.md](../skills/deckrd-coder/assets/test-quality.md) — CRAP Score section.
+See: [skills/bdd-coder/assets/test-quality.md](../skills/bdd-coder/assets/test-quality.md) — CRAP Score section.
 
 If any gate fails: fix and re-run. 3+ failures → report `BLOCKED` to caller.
 
-**After all gates pass** — spawn **code-reviewer** with:
-
-- `task_id`: this task's ID
-- `changed_files`: implementation files modified in Phase 3–6
-- `test_files`: test files written or modified in Phase 3–5
-- `env_profile`: path to `temp/deckrd-work/env-profile.md`
-- `coverage_cmd`: coverage command from ENV PROFILE
-
-If code-reviewer returns `BLOCKED`: revert to Phase 3, fix critical findings.
-If code-reviewer returns `PASS_WITH_WARNINGS`: set status `DONE_WITH_CONCERNS`, include findings in NOTES.
-
-Agent definition: [code-reviewer.md](code-reviewer.md)
+**After all gates pass** — report to the caller. Do NOT run a code review here: the caller
+(bdd-coder skill Phase 4) runs code-reviewer once over the whole session's changes.
 
 ## Status Report to Caller
 
@@ -211,7 +232,8 @@ NOTES: <required if not DONE>
 ### Phase 3–4
 
 - [ ] Every item processed through RED → GREEN → REFACTOR
-- [ ] All items `state: done`
+- [ ] All items `state: done` and marked `- [x]` in `bdd-todo.md`
+- [ ] Checklist file: `-R` / `-G` / `-F` of every implemented Case marked `[x]`
 - [ ] Full test suite passes
 
 ### Phase 5–6
@@ -227,12 +249,11 @@ NOTES: <required if not DONE>
 - [ ] Tests: ALL PASS
 - [ ] Type check: 0 errors
 - [ ] Lint: 0 errors
-- [ ] code-reviewer spawned and returned PASS or PASS_WITH_WARNINGS
 - [ ] CRAP scores recorded in report
 
 ### Task Complete
 
-- [ ] All `bdd-todo.md` items `state: done`
+- [ ] All `bdd-todo.md` items `state: done` and `- [x]`
 - [ ] All quality gates pass
 - [ ] No `git add` or `git commit` performed
 
@@ -242,7 +263,7 @@ For test structure patterns, append-first examples, and coverage categories, see
 [templates/bdd-coder-unittest.tpl.md](templates/bdd-coder-unittest.tpl.md)
 
 For host safety, idempotency, and mock discipline principles, see:
-[skills/deckrd-coder/assets/test-quality.md](../skills/deckrd-coder/assets/test-quality.md)
+[skills/bdd-coder/assets/test-quality.md](../skills/bdd-coder/assets/test-quality.md)
 
 ---
 
