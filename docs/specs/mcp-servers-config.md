@@ -4,12 +4,13 @@ description: "Configuration and usage guide for MCP servers in deckrd project"
 category: "specs"
 tags: ["mcp", "servers", "configuration", "cocoindex-code", "filesystem"]
 created: "2026-01-14"
-version: "0.1.0"
+version: "0.1.1"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
   - 0.0.4   2026-01-14  Initial version
   - 0.1.0   2026-03-21  Update configuration to cocoindex-code / filesystem
+  - 0.1.1   2026-09-06  Correct .mcp.json table to actual layout, add codex-mcp
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.
@@ -24,17 +25,16 @@ status: "published"
 
 ## Overview
 
-deckrd uses two Model Context Protocol (MCP) servers to provide specialized development tools for Claude Code.
+deckrd uses three Model Context Protocol (MCP) servers to provide specialized development tools for Claude Code.
 
 ## Configuration File
 
 MCP servers are configured per-plugin in separate `.mcp.json` files:
 
-| File                             | Plugin                | Active servers             |
-| -------------------------------- | --------------------- | -------------------------- |
-| `.mcp.json`                      | Root (entire project) | cocoindex-code             |
-| `plugins/deckrd/.mcp.json`       | deckrd plugin         | filesystem                 |
-| `plugins/deckrd-coder/.mcp.json` | deckrd-coder plugin   | filesystem, cocoindex-code |
+| File                      | Plugin                | Active servers                        |
+| ------------------------- | --------------------- | ------------------------------------- |
+| `.mcp.json`               | Root (entire project) | (none)                                |
+| `skills/deckrd/.mcp.json` | deckrd plugin         | filesystem, cocoindex-code, codex-mcp |
 
 ## MCP Servers
 
@@ -62,7 +62,7 @@ MCP servers are configured per-plugin in separate `.mcp.json` files:
 - Related code exploration based on semantic understanding
 - Finds relevant code even when the exact keyword is unknown
 
-**Used by**: root, deckrd-coder.
+**Used by**: deckrd.
 
 **Usage**:
 
@@ -98,7 +98,32 @@ lang: "bash"
 - Directory listing
 - File pattern search
 
-**Used by**: deckrd, deckrd-coder
+**Used by**: deckrd
+
+### codex-mcp
+
+**Purpose**: AI-powered code generation and template processing.
+
+**Configuration**:
+
+```json
+{
+  "mcpServers": {
+    "codex-mcp": {
+      "type": "stdio",
+      "command": "codex",
+      "args": ["mcp-server"]
+    }
+  }
+}
+```
+
+**Capabilities**:
+
+- Code generation from a prompt
+- Independent second-opinion review
+
+**Used by**: deckrd
 
 ## Tool Selection
 
