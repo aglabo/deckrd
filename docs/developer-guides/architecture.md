@@ -4,7 +4,7 @@ description: "High-level architecture and design principles of the deckrd projec
 category: "developer-guides"
 tags: ["architecture", "design", "overview"]
 created: "2026-01-14"
-version: "0.5.0"
+version: "0.5.1"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
@@ -12,6 +12,7 @@ changes:
   - 0.1.0   2026-03-21  Update schema, update Layer 3 MCP servers to cocoindex-code/filesystem, add lang/ai_model fields to session schema
   - 0.4.0   2026-06-19  Rename deckrd-coder to bdd-coder, update paths from plugins/ to skills/
   - 0.5.0   2026-09-06  Add codex-mcp to Layer 3 MCP servers
+  - 0.5.1   2026-09-09  Convert bold-label lists to tables for textlint
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.
@@ -268,19 +269,11 @@ See [MCP Servers Reference](../specs/mcp-servers.md) for detailed information ab
 
 ### Automated Checks
 
-1. **Pre-commit Hooks** (lefthook)
-   - Secret detection
-   - Commit message format
-   - File staging validation
-
-2. **Code Formatters**
-   - dprint for all supported formats
-   - Auto-fix on commit
-
-3. **Linters**
-   - markdownlint for documentation
-   - textlint for Japanese text
-   - shellcheck for bash scripts
+| Check            | Tool                                 | Covers                                                |
+| ---------------- | ------------------------------------ | ----------------------------------------------------- |
+| Pre-commit hooks | lefthook                             | Secret detection, commit message format, file staging |
+| Formatting       | dprint                               | All supported formats, auto-fix on commit             |
+| Linting          | markdownlint / textlint / shellcheck | Markdown, Japanese text, bash scripts                 |
 
 ### Manual Verification
 
@@ -297,25 +290,31 @@ pnpm run test:sh           # ShellSpec tests
 
 ### Primary Language
 
-- **Bash** - Skill scripts and commands
-- **Markdown** - Documentation
-- **JSON/JSONC/YAML** - Configuration
+| Format              | Role                       |
+| ------------------- | -------------------------- |
+| Bash                | Skill scripts and commands |
+| Markdown            | Documentation              |
+| JSON / JSONC / YAML | Configuration              |
 
 ### Tools & Libraries
 
-- **dprint** - Code formatter
-- **lefthook** - Git hooks manager
-- **gitleaks** - Secret scanner
-- **markdownlint-cli2** - Markdown linter
-- **textlint** - Text quality checker
-- **cspell** - Spell checker
-- **ShellSpec** - Bash testing framework
+| Tool                | Role                   |
+| ------------------- | ---------------------- |
+| `dprint`            | Code formatter         |
+| `lefthook`          | Git hooks manager      |
+| `gitleaks`          | Secret scanner         |
+| `markdownlint-cli2` | Markdown linter        |
+| `textlint`          | Text quality checker   |
+| `cspell`            | Spell checker          |
+| `ShellSpec`         | Bash testing framework |
 
 ### External Dependencies
 
-- **Claude Code CLI** - Skill runtime
-- **MCP Servers** - Analysis tools
-- **GitHub CLI (gh)** - GitHub integration
+| Dependency        | Role               |
+| ----------------- | ------------------ |
+| Claude Code CLI   | Skill runtime      |
+| MCP servers       | Analysis tools     |
+| GitHub CLI (`gh`) | GitHub integration |
 
 ## Performance Considerations
 

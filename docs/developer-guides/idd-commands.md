@@ -4,7 +4,7 @@ description: "Complete reference for Issue-Driven Development framework commands
 category: "developer-guides"
 tags: ["idd-framework", "commands", "reference", "github"]
 created: "2026-01-14"
-version: "0.5.0"
+version: "0.5.1"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
@@ -12,6 +12,7 @@ changes:
   - 0.1.0   2026-03-22  Version update
   - 0.4.0   2026-06-19  Rename deckrd-coder to bdd-coder
   - 0.5.0   2026-09-06  Remove /sdd and /serena (absent from IDD 0.6.0), drop serena-mcp reference
+  - 0.5.1   2026-09-09  Convert bold-label lists to tables for textlint
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.
@@ -19,8 +20,8 @@ copyright:
 status: "published"
 ---
 
-<!-- textlint-disable ja-technical-writing/sentence-length --
-<!-- markdownlint-disable line-length -->>
+<!-- textlint-disable ja-technical-writing/sentence-length -->
+<!-- markdownlint-disable line-length -->
 
 ## IDD Framework Commands Reference
 
@@ -342,11 +343,13 @@ gh auth status
 
 ## Best Practices
 
-1. **Use issue workflow**: Create issues before branches
-2. **Generate commit messages**: Use `/idd-commit-message` for consistency
-3. **Review PR drafts**: Always review before pushing
-4. **Validate before commit**: Use `/validate-debug` for quality assurance
-5. **Follow Conventional Commits**: Maintain consistent message format
+| Practice                    | Detail                                      |
+| --------------------------- | ------------------------------------------- |
+| Use the issue workflow      | Create issues before branches               |
+| Generate commit messages    | Use `/idd-commit-message` for consistency   |
+| Review PR drafts            | Always review before pushing                |
+| Validate before commit      | Use `/validate-debug` for quality assurance |
+| Follow Conventional Commits | Maintain a consistent message format        |
 
 ## Integration with Deckrd
 

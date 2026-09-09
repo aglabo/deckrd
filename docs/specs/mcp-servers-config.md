@@ -4,13 +4,14 @@ description: "Configuration and usage guide for MCP servers in deckrd project"
 category: "specs"
 tags: ["mcp", "servers", "configuration", "cocoindex-code", "filesystem"]
 created: "2026-01-14"
-version: "0.1.1"
+version: "0.1.2"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
   - 0.0.4   2026-01-14  Initial version
   - 0.1.0   2026-03-21  Update configuration to cocoindex-code / filesystem
   - 0.1.1   2026-09-06  Correct .mcp.json table to actual layout, add codex-mcp
+  - 0.1.2   2026-09-09  Convert bold-label lists to tables for textlint
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.
@@ -149,11 +150,13 @@ lang: "bash"
 
 ## Best Practices
 
-1. **Use Read for known paths**: Read is fastest when the file path is known.
-2. **Use Grep for pattern search**: Grep is efficient for keyword-based searches.
-3. **Use cocoindex-code for semantic search**: Use when the keyword is unknown.
-4. **Narrow the search scope**: Avoid searching unnecessary areas.
-5. **Choose the right tool for the task**: Select the tool that best fits the operation.
+| Practice                               | Reason                                       |
+| -------------------------------------- | -------------------------------------------- |
+| Use Read for known paths               | Read is fastest when the file path is known  |
+| Use Grep for pattern search            | Grep is efficient for keyword-based searches |
+| Use cocoindex-code for semantic search | Use it when the keyword is unknown           |
+| Narrow the search scope                | Avoid searching unnecessary areas            |
+| Choose the right tool for the task     | Select the tool that best fits the operation |
 
 ## Troubleshooting
 
