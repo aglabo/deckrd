@@ -8,7 +8,7 @@ description: >
   /bdd-coder:bdd-coder finished. Read-only — never edits code, never commits.
 metadata:
   author: aglabo
-  version: 0.2.0
+  version: 0.5.0
   license: MIT
 argument-hint: "[task_id] [--branch [<base>] | <paths...>] [--coverage-cmd <cmd>]"
 ---
