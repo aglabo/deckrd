@@ -89,6 +89,28 @@ _append_line() {
   printf '%s\n' "$2" >>"${TEST_ID_CHECK_ROOT}/$1"
 }
 
+#
+# @description 擬似リポジトリの module.md に略語表 (§5.2) を追記する
+# @arg $1 string モジュール参照 (<ns>/<mod>)
+# @arg $@ string 表に載せるベース略語 (0 個以上)
+# @exitcode 0 always
+#
+_add_targets_table() {
+  local ref="$1"
+  shift
+  local target
+  {
+    printf '\n## テスト対象の略語\n\n'
+    printf '| 略語 | 対象 |\n'
+    printf '| ---- | ---- |\n'
+    for target in "$@"; do
+      # markdown のバッククォート記法であり、コマンド置換ではない
+      # shellcheck disable=SC2016
+      printf '| `%s` | `sample_%s` |\n' "$target" "$target"
+    done
+  } >>"${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/${ref}/module.md"
+}
+
 # --- テスト本体 ---
 
 #
@@ -169,6 +191,52 @@ Describe 'module.md frontmatter reader'
       _add_module 'ns/alpha' 'ALP' 'src/alpha/**'
       When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md" 'nonexistent'
       The output should equal ''
+    End
+  End
+End
+
+#
+# module.md の略語表からベース略語を読み出す (§5.2)
+# 検査 D が実体と突き合わせる台帳側の入力を作る
+#
+Describe 'read_module_targets()'
+  BeforeEach '_setup_fixture_repo'
+  AfterEach '_teardown_fixture_repo'
+
+  Describe 'When: 正常系'
+    It 'Then: [Normal] T-RUN-RMT-01: 略語表の各行から略語を宣言順に取り出す'
+      _add_module 'ns/alpha' 'ALP' 'alpha/**'
+      _add_targets_table 'ns/alpha' 'AA' 'BB'
+      When call read_module_targets "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md"
+      The line 1 of output should equal 'AA'
+      The line 2 of output should equal 'BB'
+    End
+
+    It 'Then: [Normal] T-RUN-RMT-02: 見出し行と区切り行は略語として扱わない'
+      _add_module 'ns/alpha' 'ALP' 'alpha/**'
+      _add_targets_table 'ns/alpha' 'AA'
+      When call read_module_targets "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md"
+      The lines of output should equal 1
+    End
+  End
+
+  Describe 'When: エッジケース'
+    It 'Then: [Edge] T-RUN-RMT-03: 略語表の見出しが無ければ何も読み出さない'
+      _add_module 'ns/alpha' 'ALP' 'alpha/**'
+      When call read_module_targets "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md"
+      The status should be success
+      The output should equal ''
+    End
+
+    It 'Then: [Edge] T-RUN-RMT-04: 別の見出しの下に置かれた表は読み出さない'
+      _add_module 'ns/alpha' 'ALP' 'alpha/**'
+      _add_targets_table 'ns/alpha' 'AA'
+      _append_line "${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md" '## 別の見出し'
+      _append_line "${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md" '| 略語 | 対象 |'
+      # shellcheck disable=SC2016
+      _append_line "${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md" '| `ZZ` | `other` |'
+      When call read_module_targets "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md"
+      The output should equal 'AA'
     End
   End
 End
@@ -403,6 +471,149 @@ Describe 'check_duplicates()'
 End
 
 #
+# spec ファイルの配置ディレクトリからレイヤサフィックスを決める (§6.5)
+# トークンの綴りからは推測せず、__tests__/<レイヤ>/ の階層だけを見る
+#
+Describe 'layer_suffix()'
+  Describe 'When: 正常系'
+    Parameters
+      'alpha/__tests__/unit/a.spec.sh' ''
+      'alpha/__tests__/integration/a.spec.sh' 'I'
+      'alpha/__tests__/functional/a.spec.sh' 'F'
+      'alpha/__tests__/system/a.spec.sh' 'S'
+      'alpha/__tests__/e2e/a.spec.sh' 'E'
+    End
+
+    It "Then: [Normal] T-RUN-LS-01: $1 のサフィックスは '$2' になる"
+      When call layer_suffix "$1"
+      The status should be success
+      The output should equal "$2"
+    End
+  End
+
+  Describe 'When: エッジケース'
+    Parameters
+      'alpha/integration/a.spec.sh' ''
+      'a.spec.sh' ''
+    End
+
+    It "Then: [Edge] T-RUN-LS-02: レイヤ階層に無い $1 のサフィックスは '$2' になる"
+      When call layer_suffix "$1"
+      The status should be success
+      The output should equal "$2"
+    End
+  End
+End
+
+#
+# 割り当て済み ID からベース略語の集合を導く (§6.5)
+# レイヤサフィックスは配置ディレクトリから決まり、綴りからは決まらない
+#
+Describe 'base_targets()'
+  BeforeEach '_setup_fixture_repo'
+  AfterEach '_teardown_fixture_repo'
+
+  Describe 'When: 正常系'
+    It 'Then: [Normal] T-RUN-BT-01: unit の spec では ID の第 2 セグメントをそのまま使う'
+      _add_spec_file 'alpha/__tests__/unit/a.spec.sh' 'T-ALP-AA-01' 'T-ALP-BB-01'
+      When call base_targets "${TEST_ID_CHECK_ROOT}/alpha/__tests__/unit/a.spec.sh"
+      The status should be success
+      The line 1 of output should equal 'AA'
+      The line 2 of output should equal 'BB'
+    End
+
+    It 'Then: [Normal] T-RUN-BT-02: 非 unit の spec ではレイヤサフィックスを 1 文字だけ落とす'
+      _add_spec_file 'alpha/__tests__/integration/a.spec.sh' 'T-ALP-AAI-01'
+      When call base_targets "${TEST_ID_CHECK_ROOT}/alpha/__tests__/integration/a.spec.sh"
+      The output should equal 'AA'
+    End
+
+    It 'Then: [Normal] T-RUN-BT-03: レイヤをまたいで検証された対象は 1 個のベース略語にまとまる'
+      _add_spec_file 'alpha/__tests__/unit/a.spec.sh' 'T-ALP-AA-01'
+      _add_spec_file 'alpha/__tests__/integration/a.spec.sh' 'T-ALP-AAI-01'
+      When call base_targets \
+        "${TEST_ID_CHECK_ROOT}/alpha/__tests__/unit/a.spec.sh" \
+        "${TEST_ID_CHECK_ROOT}/alpha/__tests__/integration/a.spec.sh"
+      The output should equal 'AA'
+    End
+  End
+
+  Describe 'When: エッジケース'
+    It 'Then: [Edge] T-RUN-BT-04: unit の spec ではレイヤ文字で終わる略語も削らない'
+      _add_spec_file 'alpha/__tests__/unit/a.spec.sh' 'T-ALP-CINI-01'
+      When call base_targets "${TEST_ID_CHECK_ROOT}/alpha/__tests__/unit/a.spec.sh"
+      The output should equal 'CINI'
+    End
+  End
+End
+
+#
+# 検査 D: 略語表と実体の一致 (§6.5)
+#
+Describe 'check_targets()'
+  BeforeEach '_setup_fixture_repo'
+  AfterEach '_teardown_fixture_repo'
+
+  Describe 'When: 正常系'
+    It 'Then: [Normal] T-RUN-CT-01: 表と実体が一致するモジュールは通り、件数を出力する'
+      _add_module 'ns/alpha' 'ALP' 'alpha/**'
+      _add_targets_table 'ns/alpha' 'AA' 'BB'
+      _add_spec_file 'alpha/__tests__/unit/a.spec.sh' 'T-ALP-AA-01'
+      _add_spec_file 'alpha/__tests__/integration/b.spec.sh' 'T-ALP-BBI-01'
+      When call check_targets 'ns/alpha'
+      The status should be success
+      The output should include '2'
+      The stderr should equal ''
+    End
+  End
+
+  Describe 'When: 異常系'
+    It 'Then: [Error] T-RUN-CT-02: テストが使っているのに表に無い略語を報告する'
+      _add_module 'ns/alpha' 'ALP' 'alpha/**'
+      _add_targets_table 'ns/alpha' 'AA'
+      _add_spec_file 'alpha/__tests__/unit/a.spec.sh' 'T-ALP-AA-01' 'T-ALP-BB-01'
+      When call check_targets 'ns/alpha'
+      The status should be failure
+      The stderr should include 'BB'
+      The stderr should include 'ns/alpha'
+      The output should equal ''
+    End
+
+    It 'Then: [Error] T-RUN-CT-03: 表にあるがどのテストも使っていない略語を報告する'
+      _add_module 'ns/alpha' 'ALP' 'alpha/**'
+      _add_targets_table 'ns/alpha' 'AA' 'ZZ'
+      _add_spec_file 'alpha/__tests__/unit/a.spec.sh' 'T-ALP-AA-01'
+      When call check_targets 'ns/alpha'
+      The status should be failure
+      The stderr should include 'ZZ'
+      The stderr should include 'ns/alpha'
+      The output should equal ''
+    End
+
+    It 'Then: [Error] T-RUN-CT-05: 宣言の無いモジュール参照は失敗する'
+      _add_module 'ns/alpha' 'ALP' 'alpha/**'
+      When call check_targets 'ns/missing'
+      The status should be failure
+      The stderr should include 'ns/missing'
+      The output should equal ''
+    End
+  End
+
+  Describe 'When: エッジケース'
+    It 'Then: [Edge] T-RUN-CT-04: 空の略語表はテストが使う略語をすべて未記載として報告する'
+      _add_module 'ns/alpha' 'ALP' 'alpha/**'
+      _add_targets_table 'ns/alpha'
+      _add_spec_file 'alpha/__tests__/unit/a.spec.sh' 'T-ALP-AA-01'
+      When call check_targets 'ns/alpha'
+      The status should be failure
+      The stderr should include 'AA'
+      # 空の表が空文字の略語として報告されないことも確かめる
+      The lines of stderr should equal 1
+    End
+  End
+End
+
+#
 # コマンドラインのモード振り分け
 #
 Describe 'main()'
@@ -410,9 +621,11 @@ Describe 'main()'
   AfterEach '_teardown_fixture_repo'
 
   Describe 'When: 正常系'
-    It 'Then: [Normal] T-RUN-MN-01: --all は健全な擬似リポジトリで A・B・C をすべて通す'
+    It 'Then: [Normal] T-RUN-MN-01: --all は健全な擬似リポジトリで A・B・C・D をすべて通す'
       _add_module 'ns/alpha' 'ALP' 'alpha/**'
       _add_module 'ns/beta' 'BET' 'beta/**'
+      _add_targets_table 'ns/alpha' 'AA'
+      _add_targets_table 'ns/beta' 'BB'
       _add_spec_file 'alpha/a.spec.sh' 'T-ALP-AA-01'
       _add_spec_file 'beta/b.spec.sh' 'T-BET-BB-01'
       When call main --all
@@ -420,6 +633,17 @@ Describe 'main()'
       The output should include 'check A'
       The output should include 'check B'
       The output should include 'check C'
+      The output should include 'check D'
+      The stderr should equal ''
+    End
+
+    It 'Then: [Normal] T-RUN-MN-07: --targets は指定したモジュールの検査 D を実行する'
+      _add_module 'ns/alpha' 'ALP' 'alpha/**'
+      _add_targets_table 'ns/alpha' 'AA'
+      _add_spec_file 'alpha/a.spec.sh' 'T-ALP-AA-01'
+      When call main --targets 'ns/alpha'
+      The status should be success
+      The output should include 'check D'
       The stderr should equal ''
     End
   End
@@ -428,6 +652,7 @@ Describe 'main()'
     It 'Then: [Error] T-RUN-MN-02: --all は検査 A の失敗 (scope 重複) を報告する'
       _add_module 'ns/alpha' 'DUP' 'alpha/**'
       _add_module 'ns/beta' 'DUP' 'beta/**'
+      _add_targets_table 'ns/alpha' 'AA'
       _add_spec_file 'alpha/a.spec.sh' 'T-DUP-AA-01'
       When call main --all
       The status should be failure
@@ -438,11 +663,23 @@ Describe 'main()'
     It 'Then: [Error] T-RUN-MN-03: --all は検査 B の失敗 (他モジュールの scope を騙る ID) を報告する'
       _add_module 'ns/alpha' 'ALP' 'alpha/**'
       _add_module 'ns/beta' 'BET' 'beta/**'
+      _add_targets_table 'ns/alpha' 'AA'
+      _add_targets_table 'ns/beta' 'BB'
       _add_spec_file 'alpha/a.spec.sh' 'T-BET-AA-01'
       _add_spec_file 'beta/b.spec.sh' 'T-BET-BB-01'
       When call main --all
       The status should be failure
       The stderr should include 'T-BET-AA-01'
+      The stdout should be defined
+    End
+
+    It 'Then: [Error] T-RUN-MN-09: --all は検査 D の失敗 (表に無い略語) を報告する'
+      _add_module 'ns/alpha' 'ALP' 'alpha/**'
+      _add_targets_table 'ns/alpha'
+      _add_spec_file 'alpha/a.spec.sh' 'T-ALP-AA-01'
+      When call main --all
+      The status should be failure
+      The stderr should include 'AA'
       The stdout should be defined
     End
 
@@ -452,10 +689,17 @@ Describe 'main()'
       The stderr should include '--module'
     End
 
+    It 'Then: [Error] T-RUN-MN-08: --targets は引数が無ければ失敗する'
+      When call main --targets
+      The status should be failure
+      The stderr should include '--targets'
+    End
+
     It 'Then: [Error] T-RUN-MN-05: 未知のモードは使い方を表示して失敗する'
       When call main --bogus
       The status should be failure
       The stderr should include 'Usage'
+      The stderr should include '--targets'
     End
 
     It 'Then: [Error] T-RUN-MN-06: モードが無ければ使い方を表示して失敗する'

@@ -28,6 +28,9 @@ readonly TEST_ID_PATTERN='T-[A-Z0-9]+(-[A-Z0-9]+)*-[0-9]{2}(-[0-9]{2})?'
 # ShellSpec case declaration lines; extraction is restricted to these (§6.1)
 readonly CASE_DECL_PATTERN='^[[:space:]]*(It|Example)[[:space:]]'
 
+# Heading that introduces the target abbreviation table in module.md (§5.2)
+readonly TARGET_TABLE_HEADING='テスト対象の略語'
+
 #
 # @description Extract every test case ID assigned in a case declaration (§6.1).
 #   Occurrences are never de-duplicated per file, so same-file duplicates survive.
@@ -93,6 +96,29 @@ read_module_owns() {
 }
 
 #
+# @description Read the base target abbreviations declared in a module.md (§5.2).
+#   Only the table under the abbreviation heading is read; it ends at the next heading.
+# @arg $1 string Path to module.md
+# @stdout One abbreviation per line, in declaration order; empty when the table is absent
+# @exitcode 0 always
+#
+read_module_targets() {
+  local file="$1"
+  [[ -f "$file" ]] || return 0
+  awk -v heading="$TARGET_TABLE_HEADING" '
+    $0 ~ "^##[[:space:]]+" heading "[[:space:]]*$" { in_table = 1; next }
+    in_table && /^#/ { exit }
+    in_table && /^\|/ {
+      split($0, cells, "|")
+      value = cells[2]
+      gsub(/[[:space:]`]/, "", value)
+      if (value == "" || value == "略語" || value ~ /^[-:]+$/) { next }
+      print value
+    }
+  ' "$file"
+}
+
+#
 # @description Convert an `owns` glob into a fully anchored ERE.
 #   `**` spans directory separators, a single `*` does not.
 # @arg $1 string Glob pattern
@@ -140,6 +166,18 @@ list_module_files() {
 module_ref_of() {
   local ref="${1#"${TEST_ID_CHECK_ROOT}/${MODULE_DOCS_SUBDIR}/"}"
   printf '%s\n' "${ref%/module.md}"
+}
+
+#
+# @description Resolve a module reference to its declaration file path.
+#   The inverse of module_ref_of; the file is not required to exist.
+# @arg $1 string Module reference (<ns>/<mod>)
+# @stdout Path to module.md
+# @exitcode 0 always
+#
+module_file_of() {
+  printf '%s
+' "${TEST_ID_CHECK_ROOT}/${MODULE_DOCS_SUBDIR}/${1}/module.md"
 }
 
 #
@@ -281,7 +319,8 @@ locate_case_id() {
 #
 check_module() {
   local module_ref="$1"
-  local module_file="${TEST_ID_CHECK_ROOT}/${MODULE_DOCS_SUBDIR}/${module_ref}/module.md"
+  local module_file
+  module_file="$(module_file_of "$module_ref")"
   if [[ ! -f "$module_file" ]]; then
     echo "Error: module '${module_ref}': declaration not found at ${module_file}" >&2
     return 1
@@ -365,7 +404,103 @@ check_duplicates() {
 }
 
 #
-# @description Run checks A, B (for every module) and C in that order.
+# @description Derive the layer suffix (§5.1) of a spec file from the directory it
+#   sits in. The suffix is never guessed from the spelling of a target token (§6.5).
+# @arg $1 string Spec file path
+# @stdout The layer suffix; empty for unit and for unrecognized layouts
+# @exitcode 0 always
+#
+layer_suffix() {
+  case "$1" in
+  *"/__tests__/integration/"*) printf 'I\n' ;;
+  *"/__tests__/functional/"*) printf 'F\n' ;;
+  *"/__tests__/system/"*) printf 'S\n' ;;
+  *"/__tests__/e2e/"*) printf 'E\n' ;;
+  esac
+}
+
+#
+# @description Derive the base target abbreviations (§5.1) assigned in spec files.
+#   Each file contributes the second ID segment of its cases, less the layer suffix
+#   its own directory implies; the same target seen in several layers collapses to one.
+# @arg $@ string Spec file paths
+# @stdout One base abbreviation per line, sorted and de-duplicated
+# @exitcode 0 always
+#
+base_targets() {
+  local file suffix id target
+  for file in "$@"; do
+    suffix="$(layer_suffix "$file")"
+    while IFS= read -r id; do
+      [[ -n "$id" ]] || continue
+      target="${id#T-}"
+      target="${target#*-}"
+      target="${target%%-*}"
+      [[ -z "$suffix" ]] || target="${target%?}"
+      printf '%s\n' "$target"
+    done < <(extract_case_ids "$file")
+  done | sort -u
+}
+
+#
+# @description Print each argument on its own line, and nothing at all when given none.
+#   `printf '%s\n'` without an argument would emit one empty line instead.
+# @arg $@ string Lines to print
+# @stdout One line per argument
+# @exitcode 0 always
+#
+print_lines() {
+  [[ $# -gt 0 ]] || return 0
+  printf '%s\n' "$@"
+}
+
+#
+# @description Check D (§6.5): the abbreviation table of one module matches the base
+#   targets its tests actually use, with neither a missing nor an unused row.
+# @arg $1 string Module reference (<ns>/<mod>)
+# @stdout Summary counts when the check passes
+# @stderr Missing and unused abbreviations
+# @exitcode 0 Check passed
+# @exitcode 1 Missing declaration, or the table and the tests disagree
+#
+check_targets() {
+  local module_ref="$1"
+  local module_file
+  module_file="$(module_file_of "$module_ref")"
+  if [[ ! -f "$module_file" ]]; then
+    echo "Error: module '${module_ref}': declaration not found at ${module_file}" >&2
+    return 1
+  fi
+
+  local -a owned=() used=() declared=() missing=() unused=()
+  mapfile -t owned < <(list_module_spec_files "$module_file")
+  mapfile -t used < <(base_targets ${owned[@]+"${owned[@]}"})
+  mapfile -t declared < <(read_module_targets "$module_file" | sort -u)
+  mapfile -t missing < <(
+    comm -23 <(print_lines ${used[@]+"${used[@]}"}) <(print_lines ${declared[@]+"${declared[@]}"})
+  )
+  mapfile -t unused < <(
+    comm -13 <(print_lines ${used[@]+"${used[@]}"}) <(print_lines ${declared[@]+"${declared[@]}"})
+  )
+
+  local result=0 target
+  for target in ${missing[@]+"${missing[@]}"}; do
+    echo "Error: module '${module_ref}': target '${target}' is used by a test but is missing from the abbreviation table in ${module_file}" >&2
+    result=1
+  done
+  for target in ${unused[@]+"${unused[@]}"}; do
+    echo "Error: module '${module_ref}': target '${target}' is listed in the abbreviation table in ${module_file} but no test uses it" >&2
+    result=1
+  done
+
+  if [[ $result -eq 0 ]]; then
+    echo "check D: module '${module_ref}': ${#used[@]} target abbreviations, table matches"
+  fi
+  return "$result"
+}
+
+#
+# @description Run checks A, B and D (for every module) and C in that order.
 #   Every check runs even when an earlier one fails, so one pass reports everything.
 # @stdout Summary counts of each passing check
 # @stderr Findings of each failing check
@@ -379,8 +514,11 @@ check_repository() {
   local -a modules=()
   mapfile -t modules < <(list_module_files)
   local module
+  local module_ref
   for module in ${modules[@]+"${modules[@]}"}; do
-    check_module "$(module_ref_of "$module")" || result=1
+    module_ref="$(module_ref_of "$module")"
+    check_module "$module_ref" || result=1
+    check_targets "$module_ref" || result=1
   done
 
   check_duplicates || result=1
@@ -397,16 +535,17 @@ usage() {
 Usage: run-check-test-ids.sh <mode>
 
 Modes:
-  --scopes            Check A: test_scope uniqueness and ownership coverage
-  --module <ns>/<mod> Check B: intra-module ID duplication and scope consistency
-  --all               Checks A, B (all modules) and C: repository-wide duplication
+  --scopes             Check A: test_scope uniqueness and ownership coverage
+  --module <ns>/<mod>  Check B: intra-module ID duplication and scope consistency
+  --targets <ns>/<mod> Check D: abbreviation table matches the targets the tests use
+  --all                Checks A, B, D (all modules) and C: repository-wide duplication
 USAGE
 }
 
 #
 # @description Main entry point
-# @arg $1 string Mode (--scopes | --module | --all)
-# @arg $2 string Module reference (<ns>/<mod>), required by --module
+# @arg $1 string Mode (--scopes | --module | --targets | --all)
+# @arg $2 string Module reference (<ns>/<mod>), required by --module and --targets
 # @exitcode 0 All requested checks passed
 # @exitcode 1 A check failed or the mode is unknown
 #
@@ -421,6 +560,13 @@ main() {
       return 1
     fi
     check_module "$2"
+    ;;
+  --targets)
+    if [[ $# -lt 2 || -z "$2" ]]; then
+      echo "Error: --targets requires a module reference (<ns>/<mod>)" >&2
+      return 1
+    fi
+    check_targets "$2"
     ;;
   --all)
     check_repository
