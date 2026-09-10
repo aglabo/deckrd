@@ -62,8 +62,14 @@ read_module_scalar() {
     in_fm && $0 == "---" { exit }
     in_fm && index($0, key ":") == 1 {
       value = substr($0, length(key) + 2)
-      gsub(/^[ \t]+|[ \t]+$/, "", value)
-      gsub(/^[\047"]|[\047"]$/, "", value)
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", value)
+      # Unwrap only a matching pair of quotes; an unbalanced quote stays in the value
+      if (length(value) >= 2 && substr(value, 1, 1) == substr(value, length(value), 1) && (substr(value, 1, 1) == "\"" || substr(value, 1, 1) == "\047")) {
+        unwrapped = substr(value, 2, length(value) - 2)
+        # Empty quotes are a declared-but-invalid value, not an undeclared field:
+        # keep the quotes so the caller format check rejects it loudly
+        if (unwrapped != "") { value = unwrapped }
+      }
       print value
       exit
     }

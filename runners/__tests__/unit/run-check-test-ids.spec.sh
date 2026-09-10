@@ -184,6 +184,18 @@ Describe 'module.md frontmatter reader'
       The line 1 of output should equal 'src/alpha/**'
       The line 2 of output should equal 'src/shared/*.sh'
     End
+
+    It 'Then: [Normal] T-RUN-FMR-04: 対になったダブルクォートを剥がす'
+      _add_module 'ns/alpha' '"DQT"' 'src/alpha/**'
+      When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md" 'test_scope'
+      The output should equal 'DQT'
+    End
+
+    It 'Then: [Normal] T-RUN-FMR-05: 対になったシングルクォートを剥がす'
+      _add_module 'ns/alpha' "'SQT'" 'src/alpha/**'
+      When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md" 'test_scope'
+      The output should equal 'SQT'
+    End
   End
 
   Describe 'When: 異常系'
@@ -191,6 +203,52 @@ Describe 'module.md frontmatter reader'
       _add_module 'ns/alpha' 'ALP' 'src/alpha/**'
       When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md" 'nonexistent'
       The output should equal ''
+    End
+
+    It 'Then: [Error] T-RUN-FMR-06: 末尾だけの引用符は剥がさない'
+      _add_module 'ns/alpha' 'TRL"' 'src/alpha/**'
+      When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md" 'test_scope'
+      The output should equal 'TRL"'
+    End
+
+    It 'Then: [Error] T-RUN-FMR-07: 先頭だけの引用符は剥がさない'
+      _add_module 'ns/alpha' '"LED' 'src/alpha/**'
+      When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md" 'test_scope'
+      The output should equal '"LED'
+    End
+
+    It 'Then: [Error] T-RUN-FMR-08: 種類の違う引用符の組は剥がさない'
+      _add_module 'ns/alpha' "'MIX\"" 'src/alpha/**'
+      When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md" 'test_scope'
+      The output should equal "'MIX\""
+    End
+  End
+
+  Describe 'When: エッジケース'
+    It 'Then: [Edge] T-RUN-FMR-09: 空のダブルクォートペアは剥がさずそのまま返す'
+      _add_module 'ns/alpha' '""' 'src/alpha/**'
+      When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md" 'test_scope'
+      The output should equal '""'
+    End
+
+    It 'Then: [Edge] T-RUN-FMR-11: 空のシングルクォートペアは剥がさずそのまま返す'
+      _add_module 'ns/alpha' "''" 'src/alpha/**'
+      When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md" 'test_scope'
+      The output should equal "''"
+    End
+
+    It 'Then: [Edge] T-RUN-FMR-12: 末尾の CR を空白として除去し module.sh のリーダーと同じ値を返す'
+      # T-CLI-CDS-15 と対になるケース。CR を行末に置くと Windows の gawk が落とすため、
+      # CR の後ろに半角スペースを 1 つ置いて行末を避ける。
+      _add_module 'ns/alpha' "$(printf '"ALP"\r ')" 'src/alpha/**'
+      When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md" 'test_scope'
+      The output should equal 'ALP'
+    End
+
+    It 'Then: [Edge] T-RUN-FMR-10: 引用符 1 文字はペアではないので剥がさない'
+      _add_module 'ns/alpha' '"' 'src/alpha/**'
+      When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md" 'test_scope'
+      The output should equal '"'
     End
   End
 End
