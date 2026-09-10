@@ -7,7 +7,7 @@ description: >
   Use after /deckrd review, before phase transitions, or when a design decision is unclear.
 metadata:
   author: aglabo
-  version: 0.4.1
+  version: 0.5.0
   license: MIT
 allowed-tools:
   - mcp__plugin_deckrd_codex-mcp__codex

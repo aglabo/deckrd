@@ -10,7 +10,7 @@ description: >
   Do NOT use when the user only wants to run or fix existing code without planning.
 metadata:
   author: aglabo
-  version: 0.4.1
+  version: 0.5.0
   license: MIT
 ---
 
