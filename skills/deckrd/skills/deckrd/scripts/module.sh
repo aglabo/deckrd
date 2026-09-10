@@ -321,9 +321,18 @@ _read_frontmatter_scope() {
   awk '
     NR == 1 && $0 != "---" { exit }
     NR > 1 && $0 == "---" { exit }
-    NR > 1 && sub(/^test_scope:[[:space:]]*/, "") {
-      gsub(/[[:space:]]+$/, "")
-      print
+    NR > 1 && /^test_scope:/ {
+      value = $0
+      sub(/^test_scope:[[:space:]]*/, "", value)
+      gsub(/[[:space:]]+$/, "", value)
+      # Unwrap only a matching pair of quotes; an unbalanced quote stays in the value
+      if (length(value) >= 2 && substr(value, 1, 1) == substr(value, length(value), 1) && (substr(value, 1, 1) == "\"" || substr(value, 1, 1) == "\047")) {
+        unwrapped = substr(value, 2, length(value) - 2)
+        # Empty quotes are a declared-but-invalid value, not an undeclared field:
+        # keep the quotes so the caller format check rejects it loudly
+        if (unwrapped != "") { value = unwrapped }
+      }
+      print value
       exit
     }
   ' "$1"
