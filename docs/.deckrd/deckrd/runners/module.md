@@ -22,6 +22,7 @@ owns:
 | `ECI` | `extract_case_ids`                        |
 | `ESG` | `expand_spec_glob`                        |
 | `FMR` | `read_module_scalar` / `read_module_owns` |
+| `FUC` | `find_unidentified_cases`                 |
 | `GFL` | `get_filelist`                            |
 | `GSF` | `get_spec_files`                          |
 | `IGP` | `is_glob_pattern`                         |
