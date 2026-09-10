@@ -382,12 +382,20 @@ read_declared_scope() {
 resolve_test_scope() {
   local path="$1"
   local explicit="${2:-}"
-  local candidate declared scope owner
+  local candidate declared scope owner own_scope
 
   if [[ -n "$explicit" ]]; then
     if [[ ! "$explicit" =~ ^[A-Z0-9]{2,4}$ ]]; then
       echo "Error: invalid test scope '${explicit}'" >&2
       echo "  A test scope must be 2-4 uppercase letters or digits (e.g. NOR)." >&2
+      return 1
+    fi
+    # Rewriting a declared scope would invalidate every test ID already using it
+    own_scope=$(read_declared_scope "$path")
+    if [[ -n "$own_scope" && "$own_scope" != "$explicit" ]]; then
+      echo "Error: module '${path}' already declares test scope '${own_scope}'" >&2
+      echo "  given explicit scope: '${explicit}'" >&2
+      echo "  Edit module.md directly to change it; every existing test ID becomes invalid." >&2
       return 1
     fi
     candidate="$explicit"

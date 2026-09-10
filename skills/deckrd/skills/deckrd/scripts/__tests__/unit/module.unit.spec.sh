@@ -790,6 +790,25 @@ Describe "module.sh"
           The stderr should equal ""
         End
       End
+
+      Describe "When: call resolve_test_scope with the same scope given explicitly"
+        It "[Normal] T-CLI-RTS-14: Should: exit with status 0 and output the scope, accepting the redundant explicit scope"
+          When call resolve_test_scope "alpha/normalize" "NOR"
+          The status should equal 0
+          The output should equal "NOR"
+          The stderr should equal ""
+        End
+      End
+
+      Describe "When: call resolve_test_scope with a different scope given explicitly"
+        It "[Error] T-CLI-RTS-13: Should: exit with status 1 and report both the declared scope and the explicit one on stderr"
+          When call resolve_test_scope "alpha/normalize" "XYZ"
+          The status should equal 1
+          The stderr should include "NOR"
+          The stderr should include "XYZ"
+          The output should equal ""
+        End
+      End
     End
 
     Describe "Given: another module declares the candidate scope wrapped in double quotes"
