@@ -12,6 +12,16 @@ deckrd プラグインのコマンドエントリポイント。init / module / 
 
 ## テスト対象の略語
 
-| 略語 | 対象 |
-| ---- | ---- |
-|      |      |
+| 略語   | 対象                                         |
+| ------ | -------------------------------------------- |
+| `CDS`  | `collect_declared_scopes` (module.sh)        |
+| `DTS`  | `derive_test_scope` (module.sh)              |
+| `GDN`  | `_get_default_ns` (module.sh)                |
+| `MAIN` | `main` (init.sh)                             |
+| `MOD`  | module.sh の引数処理とディレクトリ生成       |
+| `PA`   | `parse_args` (init.sh)                       |
+| `PRJ`  | project.sh の引数処理と `.project.json` 更新 |
+| `RTS`  | `resolve_test_scope` (module.sh)             |
+| `ST`   | status.sh のセッション表示                   |
+| `VA`   | `validate_args` (init.sh)                    |
+| `VL`   | `validate_language` (init.sh)                |
