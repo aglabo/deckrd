@@ -23,7 +23,10 @@ TEST_ID_CHECK_ROOT="${TEST_ID_CHECK_ROOT:-${PROJECT_ROOT}}"
 MODULE_DOCS_SUBDIR="${MODULE_DOCS_SUBDIR:-docs/.deckrd}"
 
 # Test case ID grammar (testing guidelines §5.1)
-readonly TEST_ID_PATTERN='T-[A-Z0-9]+(-[A-Z0-9]+)*-[0-9]{2}(-[0-9]{2})?'
+readonly TEST_ID_PATTERN='T-[A-Z0-9]{2,4}(-[A-Z0-9]+)+-[0-9]{2}(-[0-9]{2})?'
+
+# Grammar of the `test_scope` a module declares (testing guidelines §5.1)
+readonly TEST_SCOPE_PATTERN='^[A-Z0-9]{2,4}$'
 
 # ShellSpec case declaration lines; extraction is restricted to these (§6.1)
 readonly CASE_DECL_PATTERN='^[[:space:]]*(It|Example)[[:space:]]'
@@ -44,6 +47,32 @@ extract_case_ids() {
     tr -c 'A-Za-z0-9-' '\n' |
     grep -xE "$TEST_ID_PATTERN" |
     sort || true
+}
+
+#
+# @description List the case declarations that assign no well-formed test ID (§6.1).
+#   A declaration counts as identified only when one of its tokens matches the ID
+#   grammar in full, so a malformed ID reads the same as no ID at all.
+# @arg $@ string Spec file paths (absolute or relative to the current directory)
+# @stdout One tab separated `<file><TAB><line><TAB><content>` record per offending
+#   declaration. Tabs keep the fields readable even though both a Windows path
+#   (`C:/...`) and the declaration text carry colons of their own.
+# @exitcode 0 always
+#
+find_unidentified_cases() {
+  [[ $# -gt 0 ]] || return 0
+  local file record
+  for file in "$@"; do
+    while IFS= read -r record; do
+      # `grep -q` would close the pipe early and let `pipefail` see tr's SIGPIPE
+      if ! printf '%s' "$record" | tr -c 'A-Za-z0-9-' '\n' | grep -xE "$TEST_ID_PATTERN" >/dev/null; then
+        # `grep -n` prefixes `<line>:`; the line number is all digits, so splitting
+        # the record on its first colon is unambiguous
+        printf '%s\t%s\t%s\n' "$file" "${record%%:*}" "${record#*:}"
+      fi
+      # The file name comes from the loop variable, never from a `grep -H` prefix
+    done < <(grep -nE "$CASE_DECL_PATTERN" "$file" || true)
+  done
 }
 
 #
@@ -242,6 +271,13 @@ check_scopes() {
       result=1
       continue
     fi
+    if [[ ! "$scope" =~ $TEST_SCOPE_PATTERN ]]; then
+      echo "Error: ${module}: test_scope '${scope}' must be 2-4 uppercase letters or digits" >&2
+      result=1
+      # A malformed value must not reach the duplicate check: two modules sharing it
+      # would be reported as a scope collision instead of as two broken declarations
+      continue
+    fi
     declarations+=("${scope}"$'\t'"${module}")
   done
 
@@ -339,16 +375,27 @@ check_module() {
     return 1
   fi
 
+  local result=0
   local -a owned=() ids=()
   mapfile -t owned < <(list_module_spec_files "$module_file")
+
+  # Process substitution, not a pipe: a pipe would set result=1 in a lost subshell.
+  # Records are tab separated, so a path holding a colon (`C:/...` on Windows) and a
+  # declaration text holding one cannot be mistaken for the line number
+  local spec_file line
+  while IFS=$'\t' read -r spec_file line _; do
+    echo "Error: module '${module_ref}': case declaration has no well-formed test ID: ${spec_file}:${line}" >&2
+    result=1
+  done < <(find_unidentified_cases ${owned[@]+"${owned[@]}"})
+
   mapfile -t ids < <(extract_case_ids ${owned[@]+"${owned[@]}"})
 
   if [[ ${#ids[@]} -eq 0 ]]; then
     echo "Warning: module '${module_ref}': scanned ${#owned[@]} spec files, found 0 test IDs (none assigned yet)" >&2
-    return 0
+    return "$result"
   fi
 
-  local result=0 id
+  local id
   local -a duplicates=() unique_ids=()
   mapfile -t duplicates < <(printf '%s\n' "${ids[@]}" | uniq -d)
   for id in ${duplicates[@]+"${duplicates[@]}"}; do

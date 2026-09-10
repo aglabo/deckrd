@@ -16,6 +16,9 @@ Include "${SHELLSPEC_PROJECT_ROOT}/runners/run-check-test-ids.sh"
 # 擬似リポジトリのモジュール宣言を置くディレクトリ (走査ルートからの相対パス)
 _FIXTURE_DOCS_SUBDIR="docs/.deckrd"
 
+# find_unidentified_cases が使うフィールド区切り。期待値の中で TAB を明示するために使う
+_TAB=$'\t'
+
 #
 # @description 空の擬似リポジトリを作り、走査ルートをそこへ向ける
 # @sideeffect TEST_ID_CHECK_ROOT を一時ディレクトリに設定する
@@ -136,6 +139,22 @@ Describe 'extract_case_ids()'
     End
   End
 
+  Describe 'When: 異常系'
+    It 'Then: [Error] T-RUN-ECI-07: scope が 5 文字の ID は抽出しない'
+      _add_spec_file 'a.spec.sh' 'T-TOOLONG-FOO-01'
+      When call extract_case_ids "${TEST_ID_CHECK_ROOT}/a.spec.sh"
+      The status should be success
+      The output should equal ''
+    End
+
+    It 'Then: [Error] T-RUN-ECI-08: target セグメントの無い ID は抽出しない'
+      _add_spec_file 'a.spec.sh' 'T-AB-01'
+      When call extract_case_ids "${TEST_ID_CHECK_ROOT}/a.spec.sh"
+      The status should be success
+      The output should equal ''
+    End
+  End
+
   Describe 'When: エッジケース'
     It 'Then: [Edge] T-RUN-ECI-03: コメント行の ID は割り当てとして扱わない'
       _add_spec_file 'a.spec.sh' 'T-AAA-BB-01'
@@ -158,6 +177,59 @@ Describe 'extract_case_ids()'
 
     It 'Then: [Edge] T-RUN-ECI-06: ファイルを 1 つも渡されなければ何も出力しない'
       When call extract_case_ids
+      The status should be success
+      The output should equal ''
+    End
+  End
+End
+
+#
+# ID を割り当てられていないケース宣言行を洗い出す (§6.1)
+# 抽出できる ID を 1 つも含まないケース宣言を、検査 B が見落とさないようにする
+#
+Describe 'find_unidentified_cases()'
+  BeforeEach '_setup_fixture_repo'
+  AfterEach '_teardown_fixture_repo'
+
+  Describe 'When: 正常系'
+    It 'Then: [Normal] T-RUN-FUC-01: 全ケース宣言に ID があれば何も出力しない'
+      _add_spec_file 'a.spec.sh' 'T-AAA-BB-01' 'T-AAA-BB-02'
+      _add_spec_file 'b.spec.sh' 'T-AAA-CC-01'
+      When call find_unidentified_cases "${TEST_ID_CHECK_ROOT}/a.spec.sh" "${TEST_ID_CHECK_ROOT}/b.spec.sh"
+      The status should be success
+      The output should equal ''
+    End
+  End
+
+  Describe 'When: 異常系'
+    It 'Then: [Error] T-RUN-FUC-02: ID の無いケース宣言行を file/line/content の TAB 区切りで出力する'
+      _add_spec_file 'a.spec.sh' 'T-AAA-BB-01'
+      _add_spec_file 'b.spec.sh' 'T-AAA-CC-01'
+      _append_line 'b.spec.sh' '  It "Then: [Normal] sample without id"'
+      When call find_unidentified_cases "${TEST_ID_CHECK_ROOT}/a.spec.sh" "${TEST_ID_CHECK_ROOT}/b.spec.sh"
+      The status should be success
+      The output should equal "${TEST_ID_CHECK_ROOT}/b.spec.sh${_TAB}2${_TAB}  It \"Then: [Normal] sample without id\""
+    End
+
+    It 'Then: [Error] T-RUN-FUC-03: 書式違反の ID を持つケース宣言行を出力する'
+      _add_spec_file 'a.spec.sh' 'T-TOOLONG-FOO-01'
+      When call find_unidentified_cases "${TEST_ID_CHECK_ROOT}/a.spec.sh"
+      The status should be success
+      The output should include 'T-TOOLONG-FOO-01'
+    End
+  End
+
+  Describe 'When: エッジケース'
+    It 'Then: [Edge] T-RUN-FUC-04: ファイルを 1 つも渡されなければ何も出力しない'
+      When call find_unidentified_cases
+      The status should be success
+      The output should equal ''
+    End
+
+    It 'Then: [Edge] T-RUN-FUC-05: ケース宣言でない行は ID が無くても出力しない'
+      _add_spec_file 'a.spec.sh' 'T-AAA-BB-01'
+      _append_line 'a.spec.sh' '  # a comment carrying no test ID'
+      When call find_unidentified_cases "${TEST_ID_CHECK_ROOT}/a.spec.sh"
       The status should be success
       The output should equal ''
     End
@@ -358,6 +430,17 @@ Describe 'check_scopes()'
       The output should include '2'
       The stderr should equal ''
     End
+
+    It 'Then: [Normal] T-RUN-CS-09: 長さの下限 2 文字と上限 4 文字の test_scope を通す'
+      _add_module 'ns/alpha' 'AB' 'alpha/**'
+      _add_module 'ns/beta' 'ABCD' 'beta/**'
+      _add_spec_file 'alpha/a.spec.sh' 'T-AB-AA-01'
+      _add_spec_file 'beta/b.spec.sh' 'T-ABCD-BB-01'
+      When call check_scopes
+      The status should be success
+      The output should include '2'
+      The stderr should equal ''
+    End
   End
 
   Describe 'When: 異常系'
@@ -392,6 +475,51 @@ Describe 'check_scopes()'
       The stderr should include 'shared/a.spec.sh'
       The stderr should include 'ns/alpha/module.md'
       The stderr should include 'ns/beta/module.md'
+      The output should equal ''
+    End
+
+    It 'Then: [Error] T-RUN-CS-05: 5 文字の test_scope を宣言したモジュールを報告する'
+      _add_module 'ns/alpha' 'TOOLONG' 'alpha/**'
+      _add_spec_file 'alpha/a.spec.sh' 'T-ALP-AA-01'
+      When call check_scopes
+      The status should be failure
+      The stderr should include 'ns/alpha/module.md'
+      The stderr should include 'TOOLONG'
+      The output should equal ''
+    End
+
+    It 'Then: [Error] T-RUN-CS-06: 1 文字の test_scope を宣言したモジュールを報告する'
+      # 引用符付きで宣言しても read_module_scalar が外すので、値は 1 文字の A になる
+      _add_module 'ns/alpha' '"A"' 'alpha/**'
+      _add_spec_file 'alpha/a.spec.sh' 'T-ALP-AA-01'
+      When call check_scopes
+      The status should be failure
+      The stderr should include 'ns/alpha/module.md'
+      The stderr should include "test_scope 'A'"
+      The output should equal ''
+    End
+
+    It 'Then: [Error] T-RUN-CS-07: 空の引用符ペアを宣言したモジュールを報告する'
+      # read_module_scalar は空の引用符ペアを未宣言と区別するため引用符を残す
+      _add_module 'ns/alpha' '""' 'alpha/**'
+      _add_spec_file 'alpha/a.spec.sh' 'T-ALP-AA-01'
+      When call check_scopes
+      The status should be failure
+      The stderr should include 'ns/alpha/module.md'
+      The stderr should include 'test_scope'
+      The output should equal ''
+    End
+
+    It 'Then: [Error] T-RUN-CS-08: 書式違反の test_scope は重複としては報告しない'
+      _add_module 'ns/alpha' 'TOOLONG' 'alpha/**'
+      _add_module 'ns/beta' 'TOOLONG' 'beta/**'
+      _add_spec_file 'alpha/a.spec.sh' 'T-ALP-AA-01'
+      _add_spec_file 'beta/b.spec.sh' 'T-BET-BB-01'
+      When call check_scopes
+      The status should be failure
+      The stderr should include 'ns/alpha/module.md'
+      The stderr should include 'ns/beta/module.md'
+      The stderr should not include 'more than one module'
       The output should equal ''
     End
   End
@@ -463,6 +591,24 @@ Describe 'check_module()'
       When call check_module 'ns/missing'
       The status should be failure
       The stderr should include 'ns/missing'
+    End
+
+    It 'Then: [Error] T-RUN-CM-08: ID の無いケース宣言を報告する'
+      _add_module 'ns/alpha' 'ALP' 'alpha/**'
+      _add_spec_file 'alpha/a.spec.sh' 'T-ALP-AA-01'
+      _append_line 'alpha/a.spec.sh' '  It "Then: [Normal] sample without id"'
+      When call check_module 'ns/alpha'
+      The status should be failure
+      # ID 無しのケース宣言は _append_line が書いた 2 行目にある
+      The stderr should include 'alpha/a.spec.sh:2'
+    End
+
+    It 'Then: [Error] T-RUN-CM-09: 書式違反の ID しか無い spec を報告する'
+      _add_module 'ns/alpha' 'ALP' 'alpha/**'
+      _add_spec_file 'alpha/a.spec.sh' 'T-TOOLONG-FOO-01'
+      When call check_module 'ns/alpha'
+      The status should be failure
+      The stderr should include 'alpha/a.spec.sh'
     End
   End
 
