@@ -63,21 +63,21 @@ Describe "ai-runner.sh"
       After 'cleanup_mock'
 
       Describe "When: run_ai を呼ぶ"
-        It "Then: [Error] copilot 非対応モデルは exit 1 と 'unsupported model' を返す"
+        It "Then: [Error] T-LIB-RAI-01: copilot 非対応モデルは exit 1 と 'unsupported model' を返す"
           When call run_ai "copilot/unknown-model"
           The status should equal 1
           The output should equal "1"
           The error should include "unsupported model"
         End
 
-        It "Then: [Error] github/unknown-model は exit 1 と 'unsupported model' を返す"
+        It "Then: [Error] T-LIB-RAI-02: github/unknown-model は exit 1 と 'unsupported model' を返す"
           When call run_ai "github/unknown-model"
           The status should equal 1
           The output should equal "1"
           The error should include "unsupported model"
         End
 
-        It "Then: [Error] github-copilot/unknown-model は exit 1 と 'unsupported model' を返す"
+        It "Then: [Error] T-LIB-RAI-03: github-copilot/unknown-model は exit 1 と 'unsupported model' を返す"
           When call run_ai "github-copilot/unknown-model"
           The status should equal 1
           The output should equal "1"
@@ -91,7 +91,7 @@ Describe "ai-runner.sh"
       After 'cleanup_mock'
 
       Describe "When: run_ai を呼ぶ"
-        It "Then: [Normal] claude-3-opus は claude コマンドで --model claude-3-opus を渡す"
+        It "Then: [Normal] T-LIB-RAI-04: claude-3-opus は claude コマンドで --model claude-3-opus を渡す"
           When call run_ai "claude-3-opus"
           The status should equal 0
           The output should include "MOCK_CLAUDE:"
@@ -99,7 +99,7 @@ Describe "ai-runner.sh"
           The output should include "claude-3-opus"
         End
 
-        It "Then: [Normal] sonnet エイリアスは --model sonnet を渡す"
+        It "Then: [Normal] T-LIB-RAI-05: sonnet エイリアスは --model sonnet を渡す"
           When call run_ai "sonnet"
           The status should equal 0
           The output should include "MOCK_CLAUDE:"
@@ -107,7 +107,7 @@ Describe "ai-runner.sh"
           The output should include "sonnet"
         End
 
-        It "Then: [Normal] opus エイリアスは --model opus を渡す"
+        It "Then: [Normal] T-LIB-RAI-06: opus エイリアスは --model opus を渡す"
           When call run_ai "opus"
           The status should equal 0
           The output should include "MOCK_CLAUDE:"
@@ -115,7 +115,7 @@ Describe "ai-runner.sh"
           The output should include "opus"
         End
 
-        It "Then: [Normal] haiku エイリアスは --model haiku を渡す"
+        It "Then: [Normal] T-LIB-RAI-07: haiku エイリアスは --model haiku を渡す"
           When call run_ai "haiku"
           The status should equal 0
           The output should include "MOCK_CLAUDE:"
@@ -123,7 +123,7 @@ Describe "ai-runner.sh"
           The output should include "haiku"
         End
 
-        It "Then: [Normal] opusplan エイリアスは --thinking を渡す"
+        It "Then: [Normal] T-LIB-RAI-08: opusplan エイリアスは --thinking を渡す"
           When call run_ai "opusplan"
           The status should equal 0
           The output should include "MOCK_CLAUDE:"
@@ -132,7 +132,7 @@ Describe "ai-runner.sh"
           The output should include "--thinking"
         End
 
-        It "Then: [Normal] sonnet-1m は --model sonnet と --context-window 1000000 を渡す"
+        It "Then: [Normal] T-LIB-RAI-09: sonnet-1m は --model sonnet と --context-window 1000000 を渡す"
           When call run_ai "sonnet-1m"
           The status should equal 0
           The output should include "MOCK_CLAUDE:"
@@ -142,7 +142,7 @@ Describe "ai-runner.sh"
           The output should include "1000000"
         End
 
-        It "Then: [Normal] 完全モデル名 claude-sonnet-4-6 はそのまま渡す"
+        It "Then: [Normal] T-LIB-RAI-10: 完全モデル名 claude-sonnet-4-6 はそのまま渡す"
           When call run_ai "claude-sonnet-4-6"
           The status should equal 0
           The output should include "MOCK_CLAUDE:"
@@ -150,7 +150,7 @@ Describe "ai-runner.sh"
           The output should include "claude-sonnet-4-6"
         End
 
-        It "Then: [Normal] default モデルは --model なし、-p のみ渡す"
+        It "Then: [Normal] T-LIB-RAI-11: default モデルは --model なし、-p のみ渡す"
           When call run_ai "default"
           The status should equal 0
           The output should include "MOCK_CLAUDE:"
@@ -165,7 +165,7 @@ Describe "ai-runner.sh"
       After 'cleanup_mock'
 
       Describe "When: run_ai を呼ぶ"
-        It "Then: [Normal] openai/gpt-4o は codex exec --model を渡す"
+        It "Then: [Normal] T-LIB-RAI-12: openai/gpt-4o は codex exec --model を渡す"
           When call run_ai "openai/gpt-4o"
           The status should equal 0
           The output should include "MOCK_CODEX:"
@@ -181,7 +181,7 @@ Describe "ai-runner.sh"
       After 'cleanup_mock'
 
       Describe "When: run_ai を呼ぶ"
-        It "Then: [Normal] google/gemini-2.0 は gemini --model を渡す"
+        It "Then: [Normal] T-LIB-RAI-13: google/gemini-2.0 は gemini --model を渡す"
           When call run_ai "google/gemini-2.0"
           The status should equal 0
           The output should include "MOCK_GEMINI:"
@@ -189,7 +189,7 @@ Describe "ai-runner.sh"
           The output should include "google/gemini-2.0"
         End
 
-        It "Then: [Normal] googleai/gemini-3 は gemini --model を渡す"
+        It "Then: [Normal] T-LIB-RAI-14: googleai/gemini-3 は gemini --model を渡す"
           When call run_ai "googleai/gemini-3"
           The status should equal 0
           The output should include "MOCK_GEMINI:"
@@ -197,7 +197,7 @@ Describe "ai-runner.sh"
           The output should include "googleai/gemini-3"
         End
 
-        It "Then: [Normal] gemini-2.5-pro は gemini --model を渡す"
+        It "Then: [Normal] T-LIB-RAI-15: gemini-2.5-pro は gemini --model を渡す"
           When call run_ai "gemini-2.5-pro"
           The status should equal 0
           The output should include "MOCK_GEMINI:"
@@ -212,7 +212,7 @@ Describe "ai-runner.sh"
       After 'cleanup_mock'
 
       Describe "When: run_ai を呼ぶ"
-        It "Then: [Normal] github/gpt-4.1 は copilot --model gpt-4.1 を渡す"
+        It "Then: [Normal] T-LIB-RAI-16: github/gpt-4.1 は copilot --model gpt-4.1 を渡す"
           When call run_ai "github/gpt-4.1"
           The status should equal 0
           The output should include "MOCK_COPILOT:"
@@ -220,7 +220,7 @@ Describe "ai-runner.sh"
           The output should include "gpt-4.1"
         End
 
-        It "Then: [Normal] github-copilot/gpt-4o は prefix を除去し --model gpt-4o を渡す"
+        It "Then: [Normal] T-LIB-RAI-17: github-copilot/gpt-4o は prefix を除去し --model gpt-4o を渡す"
           When call run_ai "github-copilot/gpt-4o"
           The status should equal 0
           The output should include "MOCK_COPILOT:"
@@ -229,7 +229,7 @@ Describe "ai-runner.sh"
           The output should not include "github-copilot"
         End
 
-        It "Then: [Normal] github-copilot/gemini-2.0 は prefix を除去し --model gemini-2.0 を渡す"
+        It "Then: [Normal] T-LIB-RAI-18: github-copilot/gemini-2.0 は prefix を除去し --model gemini-2.0 を渡す"
           When call run_ai "github-copilot/gemini-2.0"
           The status should equal 0
           The output should include "MOCK_COPILOT:"
@@ -245,7 +245,7 @@ Describe "ai-runner.sh"
       After 'cleanup_mock'
 
       Describe "When: run_ai を呼ぶ"
-        It "Then: [Normal] opencode/gpt-5 は opencode run --model を渡す"
+        It "Then: [Normal] T-LIB-RAI-19: opencode/gpt-5 は opencode run --model を渡す"
           When call run_ai "opencode/gpt-5"
           The status should equal 0
           The output should include "MOCK_OPENCODE:"
@@ -262,7 +262,7 @@ Describe "ai-runner.sh"
         After 'cleanup_no_cli'
 
         Describe "When: run_ai を呼ぶ"
-          It "Then: [Error] CLI が存在しない場合は exit 2 と 'CLI not found' を返す"
+          It "Then: [Error] T-LIB-RAI-20: CLI が存在しない場合は exit 2 と 'CLI not found' を返す"
             When call run_ai 'claude-3-opus'
             The status should equal 2
             The output should equal "2"
@@ -276,7 +276,7 @@ Describe "ai-runner.sh"
         After 'cleanup_mock'
 
         Describe "When: run_ai を呼ぶ"
-          It "Then: [Error] タイムアウト時は exit 124 と 'timeout' を返す"
+          It "Then: [Error] T-LIB-RAI-21: タイムアウト時は exit 124 と 'timeout' を返す"
             When call run_ai 'sonnet' 1
             The status should equal 124
             The output should equal "124"
@@ -290,13 +290,13 @@ Describe "ai-runner.sh"
         After 'cleanup_mock'
 
         Describe "When: run_ai を呼ぶ"
-          It "Then: [Edge] 空 stdin でも exit 0 を返す"
+          It "Then: [Edge] T-LIB-RAI-22: 空 stdin でも exit 0 を返す"
             When call run_ai 'sonnet'
             The status should equal 0
             The output should include "MOCK_CLAUDE:"
           End
 
-          It "Then: [Edge] タイムアウトに文字列を渡すと 'invalid time interval' を返す"
+          It "Then: [Edge] T-LIB-RAI-23: タイムアウトに文字列を渡すと 'invalid time interval' を返す"
             When call run_ai 'sonnet' 'notanumber'
             The status should equal 125
             The output should include "invalid time interval"

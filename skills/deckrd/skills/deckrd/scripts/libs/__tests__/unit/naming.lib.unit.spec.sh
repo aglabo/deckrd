@@ -19,7 +19,7 @@ Describe "naming.lib.sh"
 
   Describe "naming.lib.sh loading"
     Describe "When: スクリプトを読み込む"
-      It "Then: [Normal] hacker_random 関数が存在する"
+      It "Then: [Normal] T-LIB-NLD-01: hacker_random 関数が存在する"
         When call type hacker_random
         The status should equal 0
         The output should include "hacker_random"
@@ -32,13 +32,13 @@ Describe "naming.lib.sh"
       Before "PROJECT_ROOT=${SHELLSPEC_PROJECT_ROOT}"
 
       Describe "When: hacker_random を引数なしで呼ぶ"
-        It "Then: [Normal] 空文字でない名前が返る"
+        It "Then: [Normal] T-LIB-NHR-01: 空文字でない名前が返る"
           When call hacker_random
           The status should equal 0
           The output should not equal ""
         End
 
-        It "Then: [Normal] 返値が hackers.dic 内のエントリである"
+        It "Then: [Normal] T-LIB-NHR-02: 返値が hackers.dic 内のエントリである"
           result=$(hacker_random)
           When call grep -qx "$result" "${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/_generated/hackers.dic"
           The status should equal 0
@@ -48,7 +48,7 @@ Describe "naming.lib.sh"
 
     Describe "Given: 存在しないファイルパスを指定する"
       Describe "When: hacker_random に存在しないパスを渡す"
-        It "Then: [Error] status=1 を返し stderr にエラーメッセージが出力される"
+        It "Then: [Error] T-LIB-NHR-03: status=1 を返し stderr にエラーメッセージが出力される"
           When call hacker_random "/no/such/file.dic"
           The status should equal 1
           The error should include "file not found"
@@ -61,7 +61,7 @@ Describe "naming.lib.sh"
       After "teardown_tmpdir"
 
       Describe "When: hacker_random にカスタムファイルを渡す"
-        It "Then: [Normal] ファイル内のエントリが返る"
+        It "Then: [Normal] T-LIB-NHR-04: ファイル内のエントリが返る"
           custom_dic="${NAMING_TMPDIR}/custom.dic"
           printf '# comment\nalice\nbob\n' >"$custom_dic"
           result=$(hacker_random "$custom_dic")
@@ -75,7 +75,7 @@ Describe "naming.lib.sh"
   Describe "adjective_random"
     Describe "naming.lib.sh loading"
       Describe "When: スクリプトを読み込む"
-        It "Then: [Normal] adjective_random 関数が存在する"
+        It "Then: [Normal] T-LIB-NAR-01: adjective_random 関数が存在する"
           When call type adjective_random
           The status should equal 0
           The output should include "adjective_random"
@@ -85,13 +85,13 @@ Describe "naming.lib.sh"
 
     Describe "Given: _ADJECTIVES 配列が定義されている"
       Describe "When: adjective_random を引数なしで呼ぶ"
-        It "Then: [Normal] 空文字でない adjective が返る"
+        It "Then: [Normal] T-LIB-NAR-02: 空文字でない adjective が返る"
           When call adjective_random
           The status should equal 0
           The output should not equal ""
         End
 
-        It "Then: [Normal] 返値が _ADJECTIVES 配列内の語である"
+        It "Then: [Normal] T-LIB-NAR-03: 返値が _ADJECTIVES 配列内の語である"
           _check_in_adjectives() {
             local word
             for word in "${_ADJECTIVES[@]}"; do
@@ -104,7 +104,7 @@ Describe "naming.lib.sh"
           The status should equal 0
         End
 
-        It "Then: [Normal] 30回呼び出すと 2種類以上の異なる値が返る (ランダム性)"
+        It "Then: [Normal] T-LIB-NAR-04: 30回呼び出すと 2種類以上の異なる値が返る (ランダム性)"
           result=$(for _ in $(seq 1 30); do adjective_random; done | sort -u | wc -l | tr -d ' ')
           When call test "$result" -gt 1
           The status should equal 0
@@ -116,7 +116,7 @@ Describe "naming.lib.sh"
   Describe "generate_filename"
     Describe "naming.lib.sh loading"
       Describe "When: スクリプトを読み込む"
-        It "Then: [Normal] generate_filename 関数が存在する"
+        It "Then: [Normal] T-LIB-NGF-01: generate_filename 関数が存在する"
           When call type generate_filename
           The status should equal 0
           The output should include "generate_filename"
@@ -128,18 +128,18 @@ Describe "naming.lib.sh"
       Before "PROJECT_ROOT=${SHELLSPEC_PROJECT_ROOT}"
 
       Describe "When: generate_filename に slug と postfix を渡す"
-        It "Then: [Normal] status=0 を返し出力が空でない"
+        It "Then: [Normal] T-LIB-NGF-02: status=0 を返し出力が空でない"
           When call generate_filename "myfile" "doc"
           The status should equal 0
           The output should not equal ""
         End
 
-        It "Then: [Normal] 出力が <slug>-<token>-<timestamp>-<hash>-<postfix> 形式に一致する"
+        It "Then: [Normal] T-LIB-NGF-03: 出力が <slug>-<token>-<timestamp>-<hash>-<postfix> 形式に一致する"
           When call generate_filename "myfile" "doc"
           The output should match pattern "myfile-[a-z0-9-][a-z0-9-]*-[0-9][0-9][0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-doc"
         End
 
-        It "Then: [Normal] hash 部分が 16進数4桁 (仕様固定) に一致する"
+        It "Then: [Normal] T-LIB-NGF-04: hash 部分が 16進数4桁 (仕様固定) に一致する"
           When call generate_filename "myfile" "doc"
           The output should match pattern "*-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-doc"
         End
@@ -150,7 +150,7 @@ Describe "naming.lib.sh"
       Before "unset PROJECT_ROOT"
 
       Describe "When: generate_filename を呼ぶ"
-        It "Then: [Error] status=1 を返す"
+        It "Then: [Error] T-LIB-NGF-05: status=1 を返す"
           When call generate_filename "myfile" "doc"
           The status should equal 1
           The stderr should include "Error:"
@@ -164,14 +164,14 @@ Describe "naming.lib.sh"
       After "teardown_naming_cache"
 
       Describe "When: generate_filename を呼ぶ"
-        It "Then: [Normal] キャッシュディレクトリが作成される"
+        It "Then: [Normal] T-LIB-NGF-06: キャッシュディレクトリが作成される"
           When call generate_filename "myfile" "doc"
           The status should equal 0
           The output should not equal ""
           The path "${_FILENAME_CACHE_DIR}" should be directory
         End
 
-        It "Then: [Normal] 生成されたファイル名がキャッシュに存在する"
+        It "Then: [Normal] T-LIB-NGF-07: 生成されたファイル名がキャッシュに存在する"
           result=$(generate_filename "myfile" "doc")
           The path "${_FILENAME_CACHE_DIR}/${result}" should be exist
         End
@@ -213,18 +213,18 @@ Describe "naming.lib.sh"
         Before "setup_collision_mock"
         Before "register_first_filename"
 
-        It "Then: [Normal] status=0 を返しファイル名が出力される"
+        It "Then: [Normal] T-LIB-NGF-08: status=0 を返しファイル名が出力される"
           When call generate_filename "myfile" "doc"
           The status should equal 0
           The output should not equal ""
         End
 
-        It "Then: [Normal] 登録済みの候補と異なるファイル名が返る"
+        It "Then: [Normal] T-LIB-NGF-09: 登録済みの候補と異なるファイル名が返る"
           When call generate_filename "myfile" "doc"
           The output should not equal "myfile-fixed-260101-000000-abcd-doc"
         End
 
-        It "Then: [Normal] 返されたファイル名がキャッシュに登録される"
+        It "Then: [Normal] T-LIB-NGF-10: 返されたファイル名がキャッシュに登録される"
           result=$(generate_filename "myfile" "doc")
           The path "${_FILENAME_CACHE_DIR}/${result}" should be exist
         End
@@ -260,19 +260,19 @@ Describe "naming.lib.sh"
         Before "register_fixed_filename"
         After "teardown_always_same_mock"
 
-        It "Then: [Error] status=1 を返しエラーが stderr に出力される"
+        It "Then: [Error] T-LIB-NGF-11: status=1 を返しエラーが stderr に出力される"
           When call generate_filename "myfile" "doc"
           The status should equal 1
           The error should include "max retries"
         End
 
-        It "Then: [Error] stderr に max retries exceeded メッセージが出力される"
+        It "Then: [Error] T-LIB-NGF-12: stderr に max retries exceeded メッセージが出力される"
           When call generate_filename "myfile" "doc"
           The status should equal 1
           The error should include "max retries"
         End
 
-        It "Then: [Error] stderr に slug 名 myfile が含まれる"
+        It "Then: [Error] T-LIB-NGF-13: stderr に slug 名 myfile が含まれる"
           When call generate_filename "myfile" "doc"
           The status should equal 1
           The error should include "myfile"
@@ -287,7 +287,7 @@ Describe "naming.lib.sh"
     After "teardown_naming_cache"
 
     Describe "When: 10並列 × 20回 generate_filename を同時実行する"
-      It "Then: [Normal] 生成されたファイル名に重複がない"
+      It "Then: [Normal] T-LIB-NGF-14: 生成されたファイル名に重複がない"
         mkdir -p "${_FILENAME_CACHE_DIR}"
         seq 1 20 | xargs -P 10 -I{} bash -c "
           export _FILENAME_CACHE_DIR='${_FILENAME_CACHE_DIR}'
@@ -300,7 +300,7 @@ Describe "naming.lib.sh"
         The status should equal 0
       End
 
-      It "Then: [Normal] 生成されたファイル名が全てキャッシュに存在する"
+      It "Then: [Normal] T-LIB-NGF-15: 生成されたファイル名が全てキャッシュに存在する"
         mkdir -p "${_FILENAME_CACHE_DIR}"
         seq 1 20 | xargs -P 10 -I{} bash -c "
           export _FILENAME_CACHE_DIR='${_FILENAME_CACHE_DIR}'
@@ -325,12 +325,12 @@ Describe "naming.lib.sh"
     Describe "Given: キャッシュディレクトリが設定されている"
 
       Describe "When: 存在しないファイル名で呼ぶ (新規作成)"
-        It "Then: [Normal] status=0 を返す"
+        It "Then: [Normal] T-LIB-NTCC-01: status=0 を返す"
           When call _try_create_cache_file "newfile-test-260101-000000-abcd-doc"
           The status should equal 0
         End
 
-        It "Then: [Normal] キャッシュファイルが作成される"
+        It "Then: [Normal] T-LIB-NTCC-02: キャッシュファイルが作成される"
           _try_create_cache_file "newfile-test-260101-000000-abcd-doc"
           The path "${_FILENAME_CACHE_DIR}/newfile-test-260101-000000-abcd-doc" should be exist
         End
@@ -339,7 +339,7 @@ Describe "naming.lib.sh"
       Describe "When: 同じファイル名で2回目を呼ぶ (既存ファイル)"
         Before "_try_create_cache_file 'existing-test-260101-000000-abcd-doc'"
 
-        It "Then: [Error] status=1 を返す"
+        It "Then: [Error] T-LIB-NTCC-03: status=1 を返す"
           When call _try_create_cache_file "existing-test-260101-000000-abcd-doc"
           The status should equal 1
         End

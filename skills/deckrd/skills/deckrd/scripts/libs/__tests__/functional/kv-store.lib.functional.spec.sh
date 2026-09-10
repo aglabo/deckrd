@@ -26,7 +26,7 @@ Describe "kv-store.lib.sh - functional tests"
       After "teardown_tmpdir"
 
       Describe "When: kv_load を呼ぶ"
-        It "Then: [Normal] key1 が JSON から読み込まれる"
+        It "Then: [Normal] T-LIB-KLOADF-01: key1 が JSON から読み込まれる"
           printf '{"key1":"loaded1","key2":"loaded2"}' \
             > "${NAMING_TMPDIR}/kv.kv"
           kv_load "jsonstore" "${NAMING_TMPDIR}/kv"
@@ -35,7 +35,7 @@ Describe "kv-store.lib.sh - functional tests"
           The output should equal "loaded1"
         End
 
-        It "Then: [Normal] key2 が JSON から読み込まれる"
+        It "Then: [Normal] T-LIB-KLOADF-02: key2 が JSON から読み込まれる"
           printf '{"key1":"loaded1","key2":"loaded2"}' \
             > "${NAMING_TMPDIR}/kv.kv"
           kv_load "jsonstore" "${NAMING_TMPDIR}/kv"
@@ -44,7 +44,7 @@ Describe "kv-store.lib.sh - functional tests"
           The output should equal "loaded2"
         End
 
-        It "Then: [Normal] JSON に存在しないキーはデフォルト値になる"
+        It "Then: [Normal] T-LIB-KLOADF-03: JSON に存在しないキーはデフォルト値になる"
           printf '{"key1":"only-key1"}' \
             > "${NAMING_TMPDIR}/kv.kv"
           kv_load "jsonstore" "${NAMING_TMPDIR}/kv"
@@ -60,20 +60,20 @@ Describe "kv-store.lib.sh - functional tests"
       After "teardown_tmpdir"
 
       Describe "When: kv_load を呼ぶ"
-        It "Then: [Edge] return 0 を返す"
+        It "Then: [Edge] T-LIB-KLOADF-04: return 0 を返す"
           printf '{}' > "${NAMING_TMPDIR}/empty.kv"
           When call kv_load "emptyjson_store" "${NAMING_TMPDIR}/empty"
           The status should equal 0
         End
 
-        It "Then: [Edge] key1 はデフォルト値になる"
+        It "Then: [Edge] T-LIB-KLOADF-05: key1 はデフォルト値になる"
           printf '{}' > "${NAMING_TMPDIR}/empty.kv"
           kv_load "emptyjson_store" "${NAMING_TMPDIR}/empty"
           When call kv_get "emptyjson_store" "key1"
           The output should equal "def1"
         End
 
-        It "Then: [Edge] key2 はデフォルト値になる"
+        It "Then: [Edge] T-LIB-KLOADF-06: key2 はデフォルト値になる"
           printf '{}' > "${NAMING_TMPDIR}/empty.kv"
           kv_load "emptyjson_store" "${NAMING_TMPDIR}/empty"
           When call kv_get "emptyjson_store" "key2"
@@ -87,7 +87,7 @@ Describe "kv-store.lib.sh - functional tests"
       After "teardown_tmpdir"
 
       Describe "When: kv_load を呼ぶ"
-        It "Then: [Edge] 空文字値はデフォルト値にフォールバックする"
+        It "Then: [Edge] T-LIB-KLOADF-07: 空文字値はデフォルト値にフォールバックする"
           # 仕様: ${value:-${default}} で空文字 → デフォルト値が使われる
           printf '{"key1":""}' > "${NAMING_TMPDIR}/emptyval.kv"
           kv_load "emptyval_store" "${NAMING_TMPDIR}/emptyval"
@@ -102,7 +102,7 @@ Describe "kv-store.lib.sh - functional tests"
       After "teardown_tmpdir"
 
       Describe "When: kv_load を呼ぶ"
-        It "Then: [Error] return 1 かつ stderr に 'Error:' を出力する"
+        It "Then: [Error] T-LIB-KLOADF-08: return 1 かつ stderr に 'Error:' を出力する"
           printf '{"key1":"loaded1","unknown":"ignored"}' > "${NAMING_TMPDIR}/extra.kv"
           When call kv_load "extrakey_store" "${NAMING_TMPDIR}/extra"
           The status should equal 1
@@ -118,14 +118,14 @@ Describe "kv-store.lib.sh - functional tests"
       After "teardown_tmpdir"
 
       Describe "When: kv_save を呼ぶ"
-        It "Then: [Normal] ファイルが作成される"
+        It "Then: [Normal] T-LIB-KSAVEF-01: ファイルが作成される"
           kv_set "savestore" "key1" "testval"
           kv_save "savestore" "${NAMING_TMPDIR}/kv"
           When call test -f "${NAMING_TMPDIR}/kv.kv"
           The status should equal 0
         End
 
-        It "Then: [Normal] ディレクトリが自動作成される"
+        It "Then: [Normal] T-LIB-KSAVEF-02: ディレクトリが自動作成される"
           kv_set "savestore" "key1" "testval"
           kv_save "savestore" "${NAMING_TMPDIR}/nested/dir/kv"
           When call test -f "${NAMING_TMPDIR}/nested/dir/kv.kv"
@@ -139,7 +139,7 @@ Describe "kv-store.lib.sh - functional tests"
       After "teardown_tmpdir"
 
       Describe "When: kv_save 後に JSON 内容を検証する"
-        It "Then: [Normal] 保存されたファイルが有効な JSON である"
+        It "Then: [Normal] T-LIB-KSAVEF-03: 保存されたファイルが有効な JSON である"
           kv_set "jsoncheck_store" "key1" "myvalue"
           kv_save "jsoncheck_store" "${NAMING_TMPDIR}/jsoncheck"
           When call cat "${NAMING_TMPDIR}/jsoncheck.kv"
@@ -147,7 +147,7 @@ Describe "kv-store.lib.sh - functional tests"
           The output should equal '{"key1":"myvalue"}'
         End
 
-        It "Then: [Normal] kv_load でキー値が正しく復元できる"
+        It "Then: [Normal] T-LIB-KSAVEF-04: kv_load でキー値が正しく復元できる"
           kv_set "jsoncheck_store" "key1" "myvalue"
           kv_save "jsoncheck_store" "${NAMING_TMPDIR}/jsoncheck"
           kv_load "jsoncheck_store" "${NAMING_TMPDIR}/jsoncheck"
@@ -162,14 +162,14 @@ Describe "kv-store.lib.sh - functional tests"
       After "teardown_tmpdir"
 
       Describe "When: .env.json 相当のパスに kv_save する"
-        It "Then: [Edge] .env.kv ファイルが作成される"
+        It "Then: [Edge] T-LIB-KSAVEF-05: .env.kv ファイルが作成される"
           kv_set "dotpathstore" "key1" "envval"
           kv_save "dotpathstore" "${NAMING_TMPDIR}/.env.json"
           When call test -f "${NAMING_TMPDIR}/.env.kv"
           The status should equal 0
         End
 
-        It "Then: [Edge] kv_load で正しく復元できる"
+        It "Then: [Edge] T-LIB-KSAVEF-06: kv_load で正しく復元できる"
           kv_set "dotpathstore" "key1" "envval"
           kv_save "dotpathstore" "${NAMING_TMPDIR}/.env.json"
           kv_init "dotpathstore" $'key1|default1'
@@ -180,14 +180,14 @@ Describe "kv-store.lib.sh - functional tests"
       End
 
       Describe "When: 隠しディレクトリを含むパス (.config/.project.json) に kv_save する"
-        It "Then: [Edge] .config/.project.kv ファイルが作成される"
+        It "Then: [Edge] T-LIB-KSAVEF-07: .config/.project.kv ファイルが作成される"
           kv_set "dotpathstore" "key1" "projval"
           kv_save "dotpathstore" "${NAMING_TMPDIR}/.config/.project.json"
           When call test -f "${NAMING_TMPDIR}/.config/.project.kv"
           The status should equal 0
         End
 
-        It "Then: [Edge] kv_load で正しく復元できる"
+        It "Then: [Edge] T-LIB-KSAVEF-08: kv_load で正しく復元できる"
           kv_set "dotpathstore" "key1" "projval"
           kv_save "dotpathstore" "${NAMING_TMPDIR}/.config/.project.json"
           kv_init "dotpathstore" $'key1|default1'
@@ -198,14 +198,14 @@ Describe "kv-store.lib.sh - functional tests"
       End
 
       Describe "When: 空拡張子（.project）パスに kv_save する"
-        It "Then: [Edge] .project.kv ファイルが作成される"
+        It "Then: [Edge] T-LIB-KSAVEF-09: .project.kv ファイルが作成される"
           kv_set "dotpathstore" "key1" "dotonly"
           kv_save "dotpathstore" "${NAMING_TMPDIR}/.project"
           When call test -f "${NAMING_TMPDIR}/.project.kv"
           The status should equal 0
         End
 
-        It "Then: [Edge] kv_load で正しく復元できる"
+        It "Then: [Edge] T-LIB-KSAVEF-10: kv_load で正しく復元できる"
           kv_set "dotpathstore" "key1" "dotonly"
           kv_save "dotpathstore" "${NAMING_TMPDIR}/.project"
           kv_init "dotpathstore" $'key1|default1'
@@ -221,13 +221,13 @@ Describe "kv-store.lib.sh - functional tests"
       After "teardown_tmpdir"
 
       Describe "When: スペースを含む値を kv_save する"
-        It "Then: [Edge] ファイルが作成される"
+        It "Then: [Edge] T-LIB-KSAVEF-11: ファイルが作成される"
           kv_set "specialsave_store" "key1" "hello world"
           When call kv_save "specialsave_store" "${NAMING_TMPDIR}/special"
           The status should equal 0
         End
 
-        It "Then: [Edge] kv_load で正しく復元できる"
+        It "Then: [Edge] T-LIB-KSAVEF-12: kv_load で正しく復元できる"
           kv_set "specialsave_store" "key1" "hello world"
           kv_save "specialsave_store" "${NAMING_TMPDIR}/special"
           kv_init "specialsave_store" $'key1|default'
@@ -238,13 +238,13 @@ Describe "kv-store.lib.sh - functional tests"
       End
 
       Describe "When: ダブルクォートを含む値を kv_save する"
-        It "Then: [Edge] ファイルが作成される"
+        It "Then: [Edge] T-LIB-KSAVEF-13: ファイルが作成される"
           kv_set "specialsave_store" "key1" 'say "hello"'
           When call kv_save "specialsave_store" "${NAMING_TMPDIR}/dq"
           The status should equal 0
         End
 
-        It "Then: [Edge] kv_load で正しく復元できる"
+        It "Then: [Edge] T-LIB-KSAVEF-14: kv_load で正しく復元できる"
           kv_set "specialsave_store" "key1" 'say "hello"'
           kv_save "specialsave_store" "${NAMING_TMPDIR}/dq"
           kv_init "specialsave_store" $'key1|default'
@@ -261,7 +261,7 @@ Describe "kv-store.lib.sh - functional tests"
     After "teardown_tmpdir"
 
     Describe "When: kv_save 後に kv_load する"
-      It "Then: [Normal] key1 の値が復元される"
+      It "Then: [Normal] T-LIB-KRTF-01: key1 の値が復元される"
         kv_set "rtstore" "key1" "roundtrip1"
         kv_set "rtstore" "key2" "roundtrip2"
         kv_save "rtstore" "${NAMING_TMPDIR}/rt"
@@ -272,7 +272,7 @@ Describe "kv-store.lib.sh - functional tests"
         The output should equal "roundtrip1"
       End
 
-      It "Then: [Normal] key2 の値が復元される"
+      It "Then: [Normal] T-LIB-KRTF-02: key2 の値が復元される"
         kv_set "rtstore" "key1" "roundtrip1"
         kv_set "rtstore" "key2" "roundtrip2"
         kv_save "rtstore" "${NAMING_TMPDIR}/rt"
@@ -283,7 +283,7 @@ Describe "kv-store.lib.sh - functional tests"
         The output should equal "roundtrip2"
       End
 
-      It "Then: [Normal] スペースを含む値が正しく復元される"
+      It "Then: [Normal] T-LIB-KRTF-03: スペースを含む値が正しく復元される"
         kv_set "rtstore" "key1" "hello world"
         kv_save "rtstore" "${NAMING_TMPDIR}/rt_space"
         kv_init "rtstore" $'key1|d1\nkey2|d2'
@@ -293,7 +293,7 @@ Describe "kv-store.lib.sh - functional tests"
         The output should equal "hello world"
       End
 
-      It "Then: [Normal] ダブルクォートを含む値が正しく復元される"
+      It "Then: [Normal] T-LIB-KRTF-04: ダブルクォートを含む値が正しく復元される"
         kv_set "rtstore" "key1" 'say "hi"'
         kv_save "rtstore" "${NAMING_TMPDIR}/rt_dq"
         kv_init "rtstore" $'key1|d1\nkey2|d2'
@@ -309,14 +309,14 @@ Describe "kv-store.lib.sh - functional tests"
     Before "kv_init 'store_a' $'key|valueA'; kv_init 'store_b' $'key|valueB'"
 
     Describe "When: store_a の値を変更する"
-      It "Then: [Normal] store_b の値は変わらない"
+      It "Then: [Normal] T-LIB-KMSF-01: store_b の値は変わらない"
         kv_set "store_a" "key" "modified"
         When call kv_get "store_b" "key"
         The status should equal 0
         The output should equal "valueB"
       End
 
-      It "Then: [Normal] store_a の値は変更されている"
+      It "Then: [Normal] T-LIB-KMSF-02: store_a の値は変更されている"
         kv_set "store_a" "key" "modified"
         When call kv_get "store_a" "key"
         The status should equal 0
@@ -328,21 +328,21 @@ Describe "kv-store.lib.sh - functional tests"
       Before "kv_init 'sc_a' 'key|A'; kv_init 'sc_b' 'key|B'; kv_init 'sc_c' 'key|C'"
 
       Describe "When: sc_b の値を変更する"
-        It "Then: [Normal] sc_a の値は変わらない"
+        It "Then: [Normal] T-LIB-KMSF-03: sc_a の値は変わらない"
           kv_set "sc_b" "key" "modified_b"
           When call kv_get "sc_a" "key"
           The status should equal 0
           The output should equal "A"
         End
 
-        It "Then: [Normal] sc_c の値は変わらない"
+        It "Then: [Normal] T-LIB-KMSF-04: sc_c の値は変わらない"
           kv_set "sc_b" "key" "modified_b"
           When call kv_get "sc_c" "key"
           The status should equal 0
           The output should equal "C"
         End
 
-        It "Then: [Normal] sc_b の値は変更されている"
+        It "Then: [Normal] T-LIB-KMSF-05: sc_b の値は変更されている"
           kv_set "sc_b" "key" "modified_b"
           When call kv_get "sc_b" "key"
           The status should equal 0

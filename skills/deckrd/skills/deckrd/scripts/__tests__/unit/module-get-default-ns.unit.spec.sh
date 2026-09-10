@@ -52,7 +52,7 @@ Describe "module.sh: _get_default_ns"
     Before "setup_project_json"
 
     Describe "When: call _get_default_ns"
-      It "[Normal] Should: return 0 and output the project name"
+      It "[Normal] T-CLI-GDN-01: Should: return 0 and output the project name"
         When call _get_default_ns
         The status should equal 0
         The output should equal "myproject"
@@ -83,7 +83,7 @@ Describe "module.sh: _get_default_ns"
     Before "setup_git_repo"
 
     Describe "When: call _get_default_ns"
-      It "[Normal] Should: return 0 and output the repository directory name"
+      It "[Normal] T-CLI-GDN-02: Should: return 0 and output the repository directory name"
         When call _get_default_ns
         The status should equal 0
         The output should equal "myrepo"
@@ -113,7 +113,7 @@ Describe "module.sh: _get_default_ns"
     Before "setup_no_git_repo"
 
     Describe "When: call _get_default_ns"
-      It "[Error] Should: return 1 and output error message to stderr"
+      It "[Error] T-CLI-GDN-03: Should: return 1 and output error message to stderr"
         When call _get_default_ns
         The status should equal 1
         The stderr should include "Error"

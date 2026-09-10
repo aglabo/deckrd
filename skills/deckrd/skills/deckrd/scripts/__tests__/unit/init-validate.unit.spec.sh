@@ -42,7 +42,7 @@ Describe "init.sh: validate_args"
   Before "init_vars"
 
   Describe "Given: valid PROJECT_NAME and PROJECT_TYPE"
-    It "[Normal] Should: return 0"
+    It "[Normal] T-CLI-VA-01: Should: return 0"
       PROJECT_NAME="myapp"
       PROJECT_TYPE="webapp"
       When call validate_args
@@ -51,7 +51,7 @@ Describe "init.sh: validate_args"
   End
 
   Describe "Given: PROJECT_NAME is empty"
-    It "[Error] Should: return 1 and set VALIDATE_ARGS_ERROR"
+    It "[Error] T-CLI-VA-02: Should: return 1 and set VALIDATE_ARGS_ERROR"
       PROJECT_NAME=""
       PROJECT_TYPE="webapp"
       When call validate_args
@@ -61,7 +61,7 @@ Describe "init.sh: validate_args"
   End
 
   Describe "Given: PROJECT_TYPE is empty"
-    It "[Error] Should: return 1 and set VALIDATE_ARGS_ERROR"
+    It "[Error] T-CLI-VA-03: Should: return 1 and set VALIDATE_ARGS_ERROR"
       PROJECT_NAME="myapp"
       PROJECT_TYPE=""
       When call validate_args
@@ -71,7 +71,7 @@ Describe "init.sh: validate_args"
   End
 
   Describe "Given: PROJECT_NAME has uppercase"
-    It "[Error] Should: return 1 and set VALIDATE_ARGS_ERROR with 'invalid characters'"
+    It "[Error] T-CLI-VA-04: Should: return 1 and set VALIDATE_ARGS_ERROR with 'invalid characters'"
       PROJECT_NAME="MyApp"
       PROJECT_TYPE="webapp"
       When call validate_args
@@ -81,7 +81,7 @@ Describe "init.sh: validate_args"
   End
 
   Describe "Given: PROJECT_TYPE has uppercase"
-    It "[Error] Should: return 1 and set VALIDATE_ARGS_ERROR with 'invalid characters'"
+    It "[Error] T-CLI-VA-05: Should: return 1 and set VALIDATE_ARGS_ERROR with 'invalid characters'"
       PROJECT_NAME="myapp"
       PROJECT_TYPE="WebApp"
       When call validate_args
@@ -91,7 +91,7 @@ Describe "init.sh: validate_args"
   End
 
   Describe "Given: PROJECT_NAME has space"
-    It "[Edge] Should: return 1 and set VALIDATE_ARGS_ERROR with 'invalid characters'"
+    It "[Edge] T-CLI-VA-06: Should: return 1 and set VALIDATE_ARGS_ERROR with 'invalid characters'"
       # shellcheck disable=SC2034
       PROJECT_NAME="my app"
       # shellcheck disable=SC2034
@@ -121,30 +121,30 @@ Describe "init.sh: validate_language"
   Before "init_vars"
 
   Describe "Given: supported languages"
-    It "[Normal] typescript is valid"
+    It "[Normal] T-CLI-VL-01: typescript is valid"
       When call validate_language typescript
       The status should equal 0
     End
-    It "[Normal] go is valid"
+    It "[Normal] T-CLI-VL-02: go is valid"
       When call validate_language go
       The status should equal 0
     End
-    It "[Normal] python is valid"
+    It "[Normal] T-CLI-VL-03: python is valid"
       When call validate_language python
       The status should equal 0
     End
-    It "[Normal] rust is valid"
+    It "[Normal] T-CLI-VL-04: rust is valid"
       When call validate_language rust
       The status should equal 0
     End
   End
 
   Describe "Given: unsupported language"
-    It "[Error] cobol returns 1"
+    It "[Error] T-CLI-VL-05: cobol returns 1"
       When call validate_language cobol
       The status should equal 1
     End
-    It "[Error] empty string returns 1"
+    It "[Error] T-CLI-VL-06: empty string returns 1"
       When call validate_language ""
       The status should equal 1
     End

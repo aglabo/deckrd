@@ -22,7 +22,7 @@ Describe "ai-runner.sh"
     Skip if "integration tests are disabled" [ "${SKIP_INTEGRATION_TESTS:-1}" = "1" ]
     Skip if "claude is not installed" ! command -v claude >/dev/null 2>&1
 
-    It "sonnet エイリアスで実際に応答を返す"
+    It "T-LIB-RAS-01: sonnet エイリアスで実際に応答を返す"
       When run bash -c "
           unset CLAUDECODE
           . \"$SCRIPT\"
@@ -43,7 +43,7 @@ Describe "ai-runner.sh"
       "opencode" "opencode" "opencode/gpt-5" 60
     End
 
-    It "$1 で $3 モデルが実際に応答を返す"
+    It "T-LIB-RAS-02: $1 で $3 モデルが実際に応答を返す"
       Skip if "$2 is not installed" ! command -v "$2" >/dev/null 2>&1
       When run bash -c "
           . \"$SCRIPT\"

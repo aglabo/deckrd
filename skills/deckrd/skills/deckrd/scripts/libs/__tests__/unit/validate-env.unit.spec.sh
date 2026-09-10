@@ -20,7 +20,7 @@ SCRIPT="${DECKRD_LIB_DIR}/validate-env.lib.sh"
 Describe "validate-env.sh"
   Describe "validate-env.sh loading"
     Describe "When: スクリプトを読み込む"
-      It "Then: [Normal] validate_env 関数が存在する"
+      It "Then: [Normal] T-LIB-VLD-01: validate_env 関数が存在する"
         When call type validate_env
         The status should equal 0
         The output should include "validate_env"
@@ -31,7 +31,7 @@ Describe "validate-env.sh"
   Describe "validate_env"
     Describe "Given: jq がインストールされている環境"
       Describe "When: validate_env を呼ぶ"
-        It "Then: [Normal] exit 0 を返し、jqexe が設定される"
+        It "Then: [Normal] T-LIB-VENV-01: exit 0 を返し、jqexe が設定される"
           When call validate_env
           The status should equal 0
           The variable jqexe should not be blank
@@ -41,7 +41,7 @@ Describe "validate-env.sh"
 
     Describe "Given: jaq も jq もインストールされていない環境 (両方を隠す)"
       Describe "When: validate_env を呼ぶ"
-        It "Then: [Error] return 1 を返し、stderr に 'jq or jaq is required' を含む"
+        It "Then: [Error] T-LIB-VENV-02: return 1 を返し、stderr に 'jq or jaq is required' を含む"
           # 新規サブシェルで validate-env.sh を source し、jq/jaq を隠して validate_env を呼ぶ
           When run /usr/bin/bash -c "command() { [[ \"\$*\" == *jq* || \"\$*\" == *jaq* ]] && return 1; builtin command \"\$@\"; }; export -f command; . '${DECKRD_LIB_DIR}/validate-env.lib.sh'; validate_env"
           The status should equal 1

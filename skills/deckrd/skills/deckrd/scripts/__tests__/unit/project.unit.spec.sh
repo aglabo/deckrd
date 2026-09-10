@@ -21,7 +21,7 @@ Describe "project.sh"
   After "teardown_deckrd_tmpdir"
 
   Describe "引数なしの場合"
-    It "エラーメッセージを出力してexit 1する"
+    It "T-CLI-PRJ-01: エラーメッセージを出力してexit 1する"
       When run bash "$SCRIPT"
       The status should equal 1
       The stderr should include "required"
@@ -29,7 +29,7 @@ Describe "project.sh"
   End
 
   Describe "--help オプション"
-    It "使い方を表示してexit 0する"
+    It "T-CLI-PRJ-02: 使い方を表示してexit 0する"
       When run bash "$SCRIPT" --help
       The status should equal 0
       The output should include "Usage:"
@@ -37,7 +37,7 @@ Describe "project.sh"
   End
 
   Describe "不明なオプション"
-    It "エラーメッセージを出力してexit 1する"
+    It "T-CLI-PRJ-03: エラーメッセージを出力してexit 1する"
       When run bash "$SCRIPT" --project myapp --unknown
       The status should equal 1
       The output should include "Usage:"
@@ -46,7 +46,7 @@ Describe "project.sh"
   End
 
   Describe "予期しない位置引数"
-    It "エラーメッセージを出力してexit 1する"
+    It "T-CLI-PRJ-04: エラーメッセージを出力してexit 1する"
       When run bash "$SCRIPT" --project myapp unexpected
       The status should equal 1
       The output should include "Usage:"
@@ -55,23 +55,23 @@ Describe "project.sh"
   End
 
   Describe "正常系"
-    It "exit 0する"
+    It "T-CLI-PRJ-05: exit 0する"
       When run bash "$SCRIPT" --project myapp --language go
       The status should equal 0
       The output should include "myapp"
     End
 
-    It "project が出力に含まれる"
+    It "T-CLI-PRJ-06: project が出力に含まれる"
       When run bash "$SCRIPT" --project myapp --language go
       The output should include "myapp"
     End
 
-    It "language が出力に含まれる"
+    It "T-CLI-PRJ-07: language が出力に含まれる"
       When run bash "$SCRIPT" --project myapp --language go
       The output should include "go"
     End
 
-    It "結果サマリーを出力する"
+    It "T-CLI-PRJ-08: 結果サマリーを出力する"
       When run bash "$SCRIPT" --project myapp --language typescript
       The output should include "myapp"
       The output should include "typescript"
@@ -79,43 +79,43 @@ Describe "project.sh"
   End
 
   Describe "--language オプション"
-    It "typescript を指定できる"
+    It "T-CLI-PRJ-09: typescript を指定できる"
       When run bash "$SCRIPT" --project myapp --language typescript
       The status should equal 0
       The output should include "typescript"
     End
 
-    It "python を指定できる"
+    It "T-CLI-PRJ-10: python を指定できる"
       When run bash "$SCRIPT" --project myapp --language python
       The status should equal 0
       The output should include "python"
     End
 
-    It "rust を指定できる"
+    It "T-CLI-PRJ-11: rust を指定できる"
       When run bash "$SCRIPT" --project myapp --language rust
       The status should equal 0
       The output should include "rust"
     End
 
-    It "shell を指定できる"
+    It "T-CLI-PRJ-12: shell を指定できる"
       When run bash "$SCRIPT" --project myapp --language shell
       The status should equal 0
       The output should include "shell"
     End
 
-    It "bash を指定すると shell として扱われる"
+    It "T-CLI-PRJ-13: bash を指定すると shell として扱われる"
       When run bash "$SCRIPT" --project myapp --language bash
       The status should equal 0
       The output should include "shell"
     End
 
-    It "bash エイリアス (= 構文) を指定すると shell として扱われる"
+    It "T-CLI-PRJ-14: bash エイリアス (= 構文) を指定すると shell として扱われる"
       When run bash "$SCRIPT" --project myapp --language=bash
       The status should equal 0
       The output should include "shell"
     End
 
-    It "サポート外の言語はexit 1する"
+    It "T-CLI-PRJ-15: サポート外の言語はexit 1する"
       When run bash "$SCRIPT" --project myapp --language cobol
       The status should equal 1
       The stderr should include "Unsupported language"
@@ -123,7 +123,7 @@ Describe "project.sh"
   End
 
   Describe "--lang エイリアス"
-    It "--lang でも言語を指定できる"
+    It "T-CLI-PRJ-16: --lang でも言語を指定できる"
       When run bash "$SCRIPT" --project myapp --lang go
       The status should equal 0
       The output should include "go"
@@ -131,14 +131,14 @@ Describe "project.sh"
   End
 
   Describe "--project-type オプション"
-    It "project_type が出力に含まれる"
+    It "T-CLI-PRJ-17: project_type が出力に含まれる"
       When run bash "$SCRIPT" --project myapp --project-type webapp
       The output should include "webapp"
     End
   End
 
   Describe "--ai-model オプション"
-    It "指定したモデルが出力に含まれる"
+    It "T-CLI-PRJ-18: 指定したモデルが出力に含まれる"
       When run bash "$SCRIPT" --project myapp --ai-model claude-sonnet-4-5
       The output should include "claude-sonnet-4-5"
     End
@@ -158,7 +158,7 @@ Describe "project.sh"
 JSON
     }
 
-    It "exit 0する"
+    It "T-CLI-PRJ-19: exit 0する"
       When run bash "$SCRIPT" --project newapp --language typescript
       The status should equal 0
       The output should include "newapp"

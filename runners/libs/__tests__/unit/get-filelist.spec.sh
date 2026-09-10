@@ -17,13 +17,13 @@ Describe 'get_filelist()'
   After 'teardown_temp_specs'
 
   Describe 'フィルタなし'
-    It 'returns all spec files'
+    It 'T-RUN-GFL-01: returns all spec files'
       When call get_filelist "$TEMP_DIR" "*.spec.sh"
       The output should include '.spec.sh'
       The status should be success
     End
 
-    It 'output has no backslashes'
+    It 'T-RUN-GFL-02: output has no backslashes'
       When call get_filelist "$TEMP_DIR" "*.spec.sh"
       # shellcheck disable=SC1003
       The output should not include '\'
@@ -32,14 +32,14 @@ Describe 'get_filelist()'
   End
 
   Describe 'str_filter（スラッシュなし引数）'
-    It 'filters by plain string kv-store'
+    It 'T-RUN-GFL-03: filters by plain string kv-store'
       When call get_filelist "$TEMP_DIR" "*.spec.sh" "kv-store"
       The output should include 'kv-store'
       The output should not include 'args-normalize'
       The status should be success
     End
 
-    It 'filters by glob init*'
+    It 'T-RUN-GFL-04: filters by glob init*'
       When call get_filelist "$TEMP_DIR" "*.spec.sh" "init*"
       The output should include 'init'
       The status should be success
@@ -47,21 +47,21 @@ Describe 'get_filelist()'
   End
 
   Describe 'dir_filter（スラッシュあり引数）'
-    It 'restricts to runners/ directory'
+    It 'T-RUN-GFL-05: restricts to runners/ directory'
       When call get_filelist "$TEMP_DIR" "*.spec.sh" "runners/"
       The output should include 'runners/'
       The output should not include 'plugins/'
       The status should be success
     End
 
-    It 'restricts to runners/libs/tests/unit path'
+    It 'T-RUN-GFL-06: restricts to runners/libs/tests/unit path'
       When call get_filelist "$TEMP_DIR" "*.spec.sh" "runners/libs/tests/unit"
       The output should include 'tests/unit'
       The output should not include 'integration'
       The status should be success
     End
 
-    It 'restricts to tests/unit path filter'
+    It 'T-RUN-GFL-07: restricts to tests/unit path filter'
       When call get_filelist "$TEMP_DIR" "*.spec.sh" "tests/unit"
       The output should include 'tests/unit'
       The output should not include 'integration'
@@ -70,7 +70,7 @@ Describe 'get_filelist()'
   End
 
   Describe 'dir_filter + str_filter 組み合わせ'
-    It 'combines runners/ + kv-store'
+    It 'T-RUN-GFL-08: combines runners/ + kv-store'
       When call get_filelist "$TEMP_DIR" "*.spec.sh" "runners/" "kv-store"
       The output should include 'kv-store'
       The output should not include 'plugins/'
@@ -79,7 +79,7 @@ Describe 'get_filelist()'
   End
 
   Describe 'バックスラッシュパス対応'
-    It 'handles backslash dir_filter'
+    It 'T-RUN-GFL-09: handles backslash dir_filter'
       When call get_filelist "$TEMP_DIR" "*.spec.sh" 'runners\libs\tests\unit'
       The output should include 'tests/unit'
       The output should not include 'integration'
@@ -88,7 +88,7 @@ Describe 'get_filelist()'
   End
 
   Describe 'ファイルなし'
-    It 'returns empty for nonexistent filter'
+    It 'T-RUN-GFL-10: returns empty for nonexistent filter'
       When call get_filelist "$TEMP_DIR" "*.spec.sh" "nonexistent-filter-xyz"
       The output should equal ''
       The status should be success

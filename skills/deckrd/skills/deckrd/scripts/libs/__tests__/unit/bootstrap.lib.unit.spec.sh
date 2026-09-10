@@ -44,19 +44,19 @@ Describe "bootstrap.lib.sh"
   # ------------------------------------------------------------------ #
   Describe "loading"
 
-    It "[Normal] source して status=0 で終了する"
+    It "[Normal] T-LIB-BLOAD-01: source して status=0 で終了する"
       When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\"; echo ok"
       The status should equal 0
       The output should equal "ok"
     End
 
-    It "[Normal] bootstrap_init を呼んで status=0 で終了する"
+    It "[Normal] T-LIB-BLOAD-02: bootstrap_init を呼んで status=0 で終了する"
       When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" --no-finalize; bootstrap_init && echo ok"
       The status should equal 0
       The output should equal "ok"
     End
 
-    It "[Normal] bootstrap_finalize を呼んで status=0 で終了する"
+    It "[Normal] T-LIB-BLOAD-03: bootstrap_finalize を呼んで status=0 で終了する"
       When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\"; bootstrap_finalize && echo ok"
       The status should equal 0
       The output should equal "ok"
@@ -71,47 +71,47 @@ Describe "bootstrap.lib.sh"
     Describe "Given: PROJECT_ROOT=/tmp/proj で bootstrap_init を呼ぶ"
       Before "export PROJECT_ROOT=/tmp/proj; unset DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_LIB_DIR DECKRD_DATA_DIR DECKRD_LOCAL_DATA DECKRD_DOCS_DIR SYMBOL; bootstrap_init"
 
-      It "[Normal] PROJECT_ROOT が export されている"
+      It "[Normal] T-LIB-BEXP-01: PROJECT_ROOT が export されている"
         When call bash -c 'export -p | grep -q "^declare -x PROJECT_ROOT=" && echo ok'
         The output should equal "ok"
       End
 
-      It "[Normal] RUNTIME_LIB_DIR が export されていない"
+      It "[Normal] T-LIB-BEXP-02: RUNTIME_LIB_DIR が export されていない"
         When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && export -p | grep -q 'RUNTIME_LIB_DIR' && echo found || echo not-found"
         The output should equal "not-found"
       End
 
-      It "[Normal] DECKRD_ROOT が export されている"
+      It "[Normal] T-LIB-BEXP-03: DECKRD_ROOT が export されている"
         When call bash -c 'export -p | grep -q "^declare -x DECKRD_ROOT=" && echo ok'
         The output should equal "ok"
       End
 
-      It "[Normal] DECKRD_SCRIPTS_DIR が export されている"
+      It "[Normal] T-LIB-BEXP-04: DECKRD_SCRIPTS_DIR が export されている"
         When call bash -c 'export -p | grep -q "^declare -x DECKRD_SCRIPTS_DIR=" && echo ok'
         The output should equal "ok"
       End
 
-      It "[Normal] DECKRD_LIB_DIR が export されている"
+      It "[Normal] T-LIB-BEXP-05: DECKRD_LIB_DIR が export されている"
         When call bash -c 'export -p | grep -q "^declare -x DECKRD_LIB_DIR=" && echo ok'
         The output should equal "ok"
       End
 
-      It "[Normal] DECKRD_DATA_DIR が export されている"
+      It "[Normal] T-LIB-BEXP-06: DECKRD_DATA_DIR が export されている"
         When call bash -c 'export -p | grep -q "^declare -x DECKRD_DATA_DIR=" && echo ok'
         The output should equal "ok"
       End
 
-      It "[Normal] DECKRD_LOCAL_DATA が export されている"
+      It "[Normal] T-LIB-BEXP-07: DECKRD_LOCAL_DATA が export されている"
         When call bash -c 'export -p | grep -q "^declare -x DECKRD_LOCAL_DATA=" && echo ok'
         The output should equal "ok"
       End
 
-      It "[Normal] DECKRD_DOCS_DIR が export されている"
+      It "[Normal] T-LIB-BEXP-08: DECKRD_DOCS_DIR が export されている"
         When call bash -c 'export -p | grep -q "^declare -x DECKRD_DOCS_DIR=" && echo ok'
         The output should equal "ok"
       End
 
-      It "[Normal] SYMBOL が export されている"
+      It "[Normal] T-LIB-BEXP-09: SYMBOL が export されている"
         When call bash -c 'export -p | grep -q "^declare -x SYMBOL=" && echo ok'
         The output should equal "ok"
       End
@@ -123,25 +123,25 @@ Describe "bootstrap.lib.sh"
   # ------------------------------------------------------------------ #
   Describe "副作用: 他変数"
 
-    It "[Normal] 事前設定した任意変数 FOO が bootstrap_init 後も維持される"
+    It "[Normal] T-LIB-BSIDE-01: 事前設定した任意変数 FOO が bootstrap_init 後も維持される"
       When run bash -c "export FOO=bar; export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\"; [[ \"\$FOO\" == \"bar\" ]] && echo ok"
       The status should equal 0
       The output should equal "ok"
     End
 
-    It "[Normal] 事前設定した任意変数 MY_VAR が bootstrap_finalize 後も維持される"
+    It "[Normal] T-LIB-BSIDE-02: 事前設定した任意変数 MY_VAR が bootstrap_finalize 後も維持される"
       When run bash -c "export MY_VAR=hello; export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && bootstrap_finalize; [[ \"\$MY_VAR\" == \"hello\" ]] && echo ok"
       The status should equal 0
       The output should equal "ok"
     End
 
-    It "[Normal] PATH が変化しない"
+    It "[Normal] T-LIB-BSIDE-03: PATH が変化しない"
       When run bash -c "before=\"\$PATH\"; export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\"; [[ \"\$PATH\" == \"\$before\" ]] && echo ok"
       The status should equal 0
       The output should equal "ok"
     End
 
-    It "[Normal] IFS が変化しない"
+    It "[Normal] T-LIB-BSIDE-04: IFS が変化しない"
       When run bash -c "before=\"\${IFS}\"; export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\"; [[ \"\${IFS}\" == \"\$before\" ]] && echo ok"
       The status should equal 0
       The output should equal "ok"
@@ -153,61 +153,61 @@ Describe "bootstrap.lib.sh"
   # ------------------------------------------------------------------ #
   Describe "bootstrap_finalize"
 
-    It "[Normal] finalize 後は PROJECT_ROOT が readonly になっている"
+    It "[Normal] T-LIB-BFIN-01: finalize 後は PROJECT_ROOT が readonly になっている"
       When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && ( PROJECT_ROOT=x ) 2>/dev/null && echo writable || echo readonly"
       The status should equal 0
       The output should equal "readonly"
     End
 
-    It "[Normal] finalize 後は RUNTIME_LIB_DIR が readonly になっていない"
+    It "[Normal] T-LIB-BFIN-02: finalize 後は RUNTIME_LIB_DIR が readonly になっていない"
       When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && ( RUNTIME_LIB_DIR=x ) 2>/dev/null && echo writable || echo readonly"
       The status should equal 0
       The output should equal "writable"
     End
 
-    It "[Normal] finalize 後は DECKRD_ROOT が readonly になっている"
+    It "[Normal] T-LIB-BFIN-03: finalize 後は DECKRD_ROOT が readonly になっている"
       When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && ( DECKRD_ROOT=x ) 2>/dev/null && echo writable || echo readonly"
       The status should equal 0
       The output should equal "readonly"
     End
 
-    It "[Normal] finalize 後は DECKRD_SCRIPTS_DIR が readonly になっている"
+    It "[Normal] T-LIB-BFIN-04: finalize 後は DECKRD_SCRIPTS_DIR が readonly になっている"
       When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && ( DECKRD_SCRIPTS_DIR=x ) 2>/dev/null && echo writable || echo readonly"
       The status should equal 0
       The output should equal "readonly"
     End
 
-    It "[Normal] finalize 後は DECKRD_LIB_DIR が readonly になっている"
+    It "[Normal] T-LIB-BFIN-05: finalize 後は DECKRD_LIB_DIR が readonly になっている"
       When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && ( DECKRD_LIB_DIR=x ) 2>/dev/null && echo writable || echo readonly"
       The status should equal 0
       The output should equal "readonly"
     End
 
-    It "[Normal] finalize 後は DECKRD_DATA_DIR が readonly になっている"
+    It "[Normal] T-LIB-BFIN-06: finalize 後は DECKRD_DATA_DIR が readonly になっている"
       When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && ( DECKRD_DATA_DIR=x ) 2>/dev/null && echo writable || echo readonly"
       The status should equal 0
       The output should equal "readonly"
     End
 
-    It "[Normal] finalize 後は DECKRD_LOCAL_DATA が readonly になっている"
+    It "[Normal] T-LIB-BFIN-07: finalize 後は DECKRD_LOCAL_DATA が readonly になっている"
       When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && ( DECKRD_LOCAL_DATA=x ) 2>/dev/null && echo writable || echo readonly"
       The status should equal 0
       The output should equal "readonly"
     End
 
-    It "[Normal] finalize 後は DECKRD_DOCS_DIR が readonly になっている"
+    It "[Normal] T-LIB-BFIN-08: finalize 後は DECKRD_DOCS_DIR が readonly になっている"
       When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && ( DECKRD_DOCS_DIR=x ) 2>/dev/null && echo writable || echo readonly"
       The status should equal 0
       The output should equal "readonly"
     End
 
-    It "[Normal] finalize 後は SYMBOL が readonly になっている"
+    It "[Normal] T-LIB-BFIN-09: finalize 後は SYMBOL が readonly になっている"
       When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && ( SYMBOL=x ) 2>/dev/null && echo writable || echo readonly"
       The status should equal 0
       The output should equal "readonly"
     End
 
-    It "[Edge] bootstrap_finalize を 2 回呼んでもエラーにならない"
+    It "[Edge] T-LIB-BFIN-10: bootstrap_finalize を 2 回呼んでもエラーにならない"
       When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && bootstrap_finalize && echo ok"
       The status should equal 0
       The output should equal "ok"
@@ -219,25 +219,25 @@ Describe "bootstrap.lib.sh"
   # ------------------------------------------------------------------ #
   Describe "冪等性: bootstrap_init 2回"
 
-    It "[Normal] PROJECT_ROOT が変化しない"
+    It "[Normal] T-LIB-BIDEM-01: PROJECT_ROOT が変化しない"
       When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" --no-finalize; FIRST=\"\$PROJECT_ROOT\"; bootstrap_init; [[ \"\$PROJECT_ROOT\" == \"\$FIRST\" ]] && echo ok"
       The status should equal 0
       The output should equal "ok"
     End
 
-    It "[Normal] DECKRD_ROOT が変化しない"
+    It "[Normal] T-LIB-BIDEM-02: DECKRD_ROOT が変化しない"
       When run bash -c "export PROJECT_ROOT=/tmp/proj; export DECKRD_ROOT=/tmp/deckrd; . \"$SCRIPT\" --no-finalize; FIRST=\"\$DECKRD_ROOT\"; bootstrap_init; [[ \"\$DECKRD_ROOT\" == \"\$FIRST\" ]] && echo ok"
       The status should equal 0
       The output should equal "ok"
     End
 
-    It "[Normal] DECKRD_SCRIPTS_DIR が変化しない"
+    It "[Normal] T-LIB-BIDEM-03: DECKRD_SCRIPTS_DIR が変化しない"
       When run bash -c "export PROJECT_ROOT=/tmp/proj; export DECKRD_ROOT=/tmp/deckrd; . \"$SCRIPT\" --no-finalize; FIRST=\"\$DECKRD_SCRIPTS_DIR\"; bootstrap_init; [[ \"\$DECKRD_SCRIPTS_DIR\" == \"\$FIRST\" ]] && echo ok"
       The status should equal 0
       The output should equal "ok"
     End
 
-    It "[Normal] DECKRD_LIB_DIR が変化しない"
+    It "[Normal] T-LIB-BIDEM-04: DECKRD_LIB_DIR が変化しない"
       When run bash -c "export PROJECT_ROOT=/tmp/proj; export DECKRD_ROOT=/tmp/deckrd; . \"$SCRIPT\" --no-finalize; FIRST=\"\$DECKRD_LIB_DIR\"; bootstrap_init; [[ \"\$DECKRD_LIB_DIR\" == \"\$FIRST\" ]] && echo ok"
       The status should equal 0
       The output should equal "ok"
@@ -253,25 +253,25 @@ Describe "bootstrap.lib.sh"
     Before setup_coder_tmpscript
     After teardown_coder_tmpscript
 
-    It "[Normal] bdd-coder パスから source → DECKRD_ROOT は deckrd になる"
+    It "[Normal] T-LIB-BSRC-01: bdd-coder パスから source → DECKRD_ROOT は deckrd になる"
       When call run_coder_tmpscript DECKRD_ROOT
       The status should equal 0
       The output should end with "/skills/deckrd/skills/deckrd"
     End
 
-    It "[Normal] bdd-coder パスから source → DECKRD_SCRIPTS_DIR は deckrd/scripts になる"
+    It "[Normal] T-LIB-BSRC-02: bdd-coder パスから source → DECKRD_SCRIPTS_DIR は deckrd/scripts になる"
       When call run_coder_tmpscript DECKRD_SCRIPTS_DIR
       The status should equal 0
       The output should end with "/skills/deckrd/skills/deckrd/scripts"
     End
 
-    It "[Normal] bdd-coder パスから source → DECKRD_LIB_DIR は deckrd/scripts/libs になる"
+    It "[Normal] T-LIB-BSRC-03: bdd-coder パスから source → DECKRD_LIB_DIR は deckrd/scripts/libs になる"
       When call run_coder_tmpscript DECKRD_LIB_DIR
       The status should equal 0
       The output should end with "/skills/deckrd/skills/deckrd/scripts/libs"
     End
 
-    It "[Normal] bdd-coder パスでも DECKRD_ROOT 事前設定値が優先される"
+    It "[Normal] T-LIB-BSRC-04: bdd-coder パスでも DECKRD_ROOT 事前設定値が優先される"
       When run bash -c "
         mkdir -p /tmp/plugins/bdd-coder
         tmpscript=\"\$(mktemp /tmp/plugins/bdd-coder/XXXXXX.sh)\"
@@ -294,13 +294,13 @@ Describe "bootstrap.lib.sh"
     Describe "Given: PROJECT_ROOT=/tmp/proj、DECKRD_ROOT 未設定"
       Before "export PROJECT_ROOT=/tmp/proj; unset DECKRD_ROOT; bootstrap_init"
 
-      It "[Normal] DECKRD_ROOT が /skills/deckrd/skills/deckrd で終わる"
+      It "[Normal] T-LIB-BROOT-01: DECKRD_ROOT が /skills/deckrd/skills/deckrd で終わる"
         # shellcheck disable=SC2016
         When call bash -c '[[ "$DECKRD_ROOT" == */skills/deckrd/skills/deckrd ]] && echo ok'
         The output should equal "ok"
       End
 
-      It "[Normal] export -p で export されている"
+      It "[Normal] T-LIB-BROOT-02: export -p で export されている"
         When call bash -c 'export -p | grep -q "^declare -x DECKRD_ROOT=" && echo ok'
         The output should equal "ok"
       End
@@ -309,7 +309,7 @@ Describe "bootstrap.lib.sh"
     Describe "Given: DECKRD_ROOT=/tmp/custom を事前設定"
       Before "export PROJECT_ROOT=/tmp/proj; export DECKRD_ROOT=/tmp/custom; bootstrap_init"
 
-      It "[Normal] 事前設定値が維持される"
+      It "[Normal] T-LIB-BROOT-03: 事前設定値が維持される"
         When call echo "$DECKRD_ROOT"
         The output should equal "/tmp/custom"
       End
@@ -318,7 +318,7 @@ Describe "bootstrap.lib.sh"
     Describe "Given: DECKRD_ROOT=/tmp/custom を事前設定し PROJECT_ROOT を変更"
       Before "export PROJECT_ROOT=/tmp/other; export DECKRD_ROOT=/tmp/custom; bootstrap_init"
 
-      It "[Normal] 事前設定時は PROJECT_ROOT が変わっても維持される"
+      It "[Normal] T-LIB-BROOT-04: 事前設定時は PROJECT_ROOT が変わっても維持される"
         When call echo "$DECKRD_ROOT"
         The output should equal "/tmp/custom"
       End
@@ -327,13 +327,13 @@ Describe "bootstrap.lib.sh"
     Describe "Given: PROJECT_ROOT=/tmp/bogus、DECKRD_ROOT 未設定 (BASH_SOURCE 依存の確認)"
       Before "export PROJECT_ROOT=/tmp/bogus; unset DECKRD_ROOT; bootstrap_init"
 
-      It "[Normal] DECKRD_ROOT が /tmp/bogus を含まない"
+      It "[Normal] T-LIB-BROOT-05: DECKRD_ROOT が /tmp/bogus を含まない"
         # shellcheck disable=SC2016
         When call bash -c '[[ "$DECKRD_ROOT" != */tmp/bogus* ]] && echo ok'
         The output should equal "ok"
       End
 
-      It "[Normal] DECKRD_ROOT が /skills/deckrd/skills/deckrd で終わる"
+      It "[Normal] T-LIB-BROOT-06: DECKRD_ROOT が /skills/deckrd/skills/deckrd で終わる"
         # shellcheck disable=SC2016
         When call bash -c '[[ "$DECKRD_ROOT" == */skills/deckrd/skills/deckrd ]] && echo ok'
         The output should equal "ok"
@@ -350,17 +350,17 @@ Describe "bootstrap.lib.sh"
     Describe "Given: PROJECT_ROOT=/tmp/proj、DECKRD_ROOT=/tmp/deckrd、DECKRD_SCRIPTS_DIR 未設定"
       Before "export PROJECT_ROOT=/tmp/proj; export DECKRD_ROOT=/tmp/deckrd; unset DECKRD_SCRIPTS_DIR; bootstrap_init"
 
-      It "[Normal] DECKRD_ROOT/scripts になる"
+      It "[Normal] T-LIB-BSCR-01: DECKRD_ROOT/scripts になる"
         When call echo "$DECKRD_SCRIPTS_DIR"
         The output should equal "/tmp/deckrd/scripts"
       End
 
-      It "[Normal] DECKRD_ROOT との関係式が成立する"
+      It "[Normal] T-LIB-BSCR-02: DECKRD_ROOT との関係式が成立する"
         When call test "$DECKRD_SCRIPTS_DIR" = "${DECKRD_ROOT}/scripts"
         The status should equal 0
       End
 
-      It "[Normal] export -p で export されている"
+      It "[Normal] T-LIB-BSCR-03: export -p で export されている"
         When call bash -c 'export -p | grep -q "^declare -x DECKRD_SCRIPTS_DIR=" && echo ok'
         The output should equal "ok"
       End
@@ -369,7 +369,7 @@ Describe "bootstrap.lib.sh"
     Describe "Given: DECKRD_SCRIPTS_DIR=/tmp/scripts を事前設定"
       Before "export PROJECT_ROOT=/tmp/proj; export DECKRD_ROOT=/tmp/deckrd; export DECKRD_SCRIPTS_DIR=/tmp/scripts; bootstrap_init"
 
-      It "[Normal] 事前設定値が維持される"
+      It "[Normal] T-LIB-BSCR-04: 事前設定値が維持される"
         When call echo "$DECKRD_SCRIPTS_DIR"
         The output should equal "/tmp/scripts"
       End
@@ -378,7 +378,7 @@ Describe "bootstrap.lib.sh"
     Describe "Given: DECKRD_ROOT にスペースを含むパス"
       Before "export PROJECT_ROOT=/tmp/proj; export DECKRD_ROOT='/tmp/my deckrd'; unset DECKRD_SCRIPTS_DIR; bootstrap_init"
 
-      It "[Edge] パスが正しく連結される"
+      It "[Edge] T-LIB-BSCR-05: パスが正しく連結される"
         When call echo "$DECKRD_SCRIPTS_DIR"
         The output should equal "/tmp/my deckrd/scripts"
       End
@@ -387,7 +387,7 @@ Describe "bootstrap.lib.sh"
     Describe "Given: PROJECT_ROOT=/tmp/other を設定 (DECKRD_ROOT から独立)"
       Before "export PROJECT_ROOT=/tmp/other; export DECKRD_ROOT=/tmp/deckrd; unset DECKRD_SCRIPTS_DIR; bootstrap_init"
 
-      It "[Edge] PROJECT_ROOT に依存せず DECKRD_ROOT が基点になる"
+      It "[Edge] T-LIB-BSCR-06: PROJECT_ROOT に依存せず DECKRD_ROOT が基点になる"
         When call echo "$DECKRD_SCRIPTS_DIR"
         The output should equal "/tmp/deckrd/scripts"
       End
@@ -403,17 +403,17 @@ Describe "bootstrap.lib.sh"
     Describe "Given: PROJECT_ROOT=/tmp/proj、DECKRD_ROOT=/tmp/deckrd、DECKRD_LIB_DIR 未設定"
       Before "export PROJECT_ROOT=/tmp/proj; export DECKRD_ROOT=/tmp/deckrd; unset DECKRD_LIB_DIR; bootstrap_init"
 
-      It "[Normal] DECKRD_ROOT/scripts/libs になる"
+      It "[Normal] T-LIB-BLIBD-01: DECKRD_ROOT/scripts/libs になる"
         When call echo "$DECKRD_LIB_DIR"
         The output should equal "/tmp/deckrd/scripts/libs"
       End
 
-      It "[Normal] DECKRD_ROOT との関係式が成立する"
+      It "[Normal] T-LIB-BLIBD-02: DECKRD_ROOT との関係式が成立する"
         When call test "$DECKRD_LIB_DIR" = "${DECKRD_ROOT}/scripts/libs"
         The status should equal 0
       End
 
-      It "[Normal] export -p で export されている"
+      It "[Normal] T-LIB-BLIBD-03: export -p で export されている"
         When call bash -c 'export -p | grep -q "^declare -x DECKRD_LIB_DIR=" && echo ok'
         The output should equal "ok"
       End
@@ -422,7 +422,7 @@ Describe "bootstrap.lib.sh"
     Describe "Given: DECKRD_LIB_DIR=/tmp/libs を事前設定"
       Before "export PROJECT_ROOT=/tmp/proj; export DECKRD_ROOT=/tmp/deckrd; export DECKRD_LIB_DIR=/tmp/libs; bootstrap_init"
 
-      It "[Normal] 事前設定値が維持される"
+      It "[Normal] T-LIB-BLIBD-04: 事前設定値が維持される"
         When call echo "$DECKRD_LIB_DIR"
         The output should equal "/tmp/libs"
       End
@@ -431,7 +431,7 @@ Describe "bootstrap.lib.sh"
     Describe "Given: DECKRD_ROOT にスペースを含むパス"
       Before "export PROJECT_ROOT=/tmp/proj; export DECKRD_ROOT='/tmp/my deckrd'; unset DECKRD_LIB_DIR; bootstrap_init"
 
-      It "[Edge] パスが正しく連結される"
+      It "[Edge] T-LIB-BLIBD-05: パスが正しく連結される"
         When call echo "$DECKRD_LIB_DIR"
         The output should equal "/tmp/my deckrd/scripts/libs"
       End
@@ -440,7 +440,7 @@ Describe "bootstrap.lib.sh"
     Describe "Given: PROJECT_ROOT=/tmp/other を設定 (DECKRD_ROOT から独立)"
       Before "export PROJECT_ROOT=/tmp/other; export DECKRD_ROOT=/tmp/deckrd; unset DECKRD_LIB_DIR; bootstrap_init"
 
-      It "[Edge] PROJECT_ROOT に依存せず DECKRD_ROOT が基点になる"
+      It "[Edge] T-LIB-BLIBD-06: PROJECT_ROOT に依存せず DECKRD_ROOT が基点になる"
         When call echo "$DECKRD_LIB_DIR"
         The output should equal "/tmp/deckrd/scripts/libs"
       End
@@ -456,17 +456,17 @@ Describe "bootstrap.lib.sh"
     Describe "Given: XDG_DATA_HOME=/tmp/xdg"
       Before "export PROJECT_ROOT=/tmp/proj; export XDG_DATA_HOME=/tmp/xdg; unset DECKRD_DATA_DIR; bootstrap_init"
 
-      It "[Normal] XDG_DATA_HOME/deckrd になる"
+      It "[Normal] T-LIB-BDATA-01: XDG_DATA_HOME/deckrd になる"
         When call echo "$DECKRD_DATA_DIR"
         The output should equal "/tmp/xdg/deckrd"
       End
 
-      It "[Normal] XDG_DATA_HOME との関係式が成立する"
+      It "[Normal] T-LIB-BDATA-02: XDG_DATA_HOME との関係式が成立する"
         When call test "$DECKRD_DATA_DIR" = "${XDG_DATA_HOME}/deckrd"
         The status should equal 0
       End
 
-      It "[Normal] export -p で export されている"
+      It "[Normal] T-LIB-BDATA-03: export -p で export されている"
         When call bash -c 'export -p | grep -q "^declare -x DECKRD_DATA_DIR=" && echo ok'
         The output should equal "ok"
       End
@@ -475,17 +475,17 @@ Describe "bootstrap.lib.sh"
     Describe "Given: XDG_DATA_HOME 未設定、HOME=/tmp/home"
       Before "export PROJECT_ROOT=/tmp/proj; unset XDG_DATA_HOME; export HOME=/tmp/home; unset DECKRD_DATA_DIR; bootstrap_init"
 
-      It "[Normal] HOME/.local/share/deckrd になる"
+      It "[Normal] T-LIB-BDATA-04: HOME/.local/share/deckrd になる"
         When call echo "$DECKRD_DATA_DIR"
         The output should equal "/tmp/home/.local/share/deckrd"
       End
 
-      It "[Normal] HOME との関係式が成立する"
+      It "[Normal] T-LIB-BDATA-05: HOME との関係式が成立する"
         When call test "$DECKRD_DATA_DIR" = "${HOME}/.local/share/deckrd"
         The status should equal 0
       End
 
-      It "[Normal] XDG_DATA_HOME が未設定のまま (副作用なし)"
+      It "[Normal] T-LIB-BDATA-06: XDG_DATA_HOME が未設定のまま (副作用なし)"
         # shellcheck disable=SC2016
         When call bash -c '[[ -z "${XDG_DATA_HOME+x}" ]] && echo ok'
         The output should equal "ok"
@@ -495,7 +495,7 @@ Describe "bootstrap.lib.sh"
     Describe "Given: DECKRD_DATA_DIR=/tmp/mydata を事前設定"
       Before "export PROJECT_ROOT=/tmp/proj; export DECKRD_DATA_DIR=/tmp/mydata; bootstrap_init"
 
-      It "[Normal] 事前設定値が維持される"
+      It "[Normal] T-LIB-BDATA-07: 事前設定値が維持される"
         When call echo "$DECKRD_DATA_DIR"
         The output should equal "/tmp/mydata"
       End
@@ -504,7 +504,7 @@ Describe "bootstrap.lib.sh"
     Describe "Given: XDG_DATA_HOME='' (空文字)、HOME=/tmp/home"
       Before "export PROJECT_ROOT=/tmp/proj; export XDG_DATA_HOME=''; export HOME=/tmp/home; unset DECKRD_DATA_DIR; bootstrap_init"
 
-      It "[Edge] HOME/.local/share/deckrd にフォールバックする"
+      It "[Edge] T-LIB-BDATA-08: HOME/.local/share/deckrd にフォールバックする"
         When call echo "$DECKRD_DATA_DIR"
         The output should equal "/tmp/home/.local/share/deckrd"
       End
@@ -513,7 +513,7 @@ Describe "bootstrap.lib.sh"
     Describe "Given: XDG_DATA_HOME にスペースを含むパス"
       Before "export PROJECT_ROOT=/tmp/proj; export XDG_DATA_HOME='/tmp/my xdg'; unset DECKRD_DATA_DIR; bootstrap_init"
 
-      It "[Edge] パスが正しく連結される"
+      It "[Edge] T-LIB-BDATA-09: パスが正しく連結される"
         When call echo "$DECKRD_DATA_DIR"
         The output should equal "/tmp/my xdg/deckrd"
       End
@@ -522,7 +522,7 @@ Describe "bootstrap.lib.sh"
     Describe "Given: HOME にスペースを含むパス (XDG未設定)"
       Before "export PROJECT_ROOT=/tmp/proj; unset XDG_DATA_HOME; export HOME='/tmp/my home'; unset DECKRD_DATA_DIR; bootstrap_init"
 
-      It "[Edge] パスが正しく連結される"
+      It "[Edge] T-LIB-BDATA-10: パスが正しく連結される"
         When call echo "$DECKRD_DATA_DIR"
         The output should equal "/tmp/my home/.local/share/deckrd"
       End
@@ -531,7 +531,7 @@ Describe "bootstrap.lib.sh"
     Describe "Given: PROJECT_ROOT=/tmp/other、DECKRD_ROOT=/tmp/deckrd (非依存確認)"
       Before "export PROJECT_ROOT=/tmp/other; export DECKRD_ROOT=/tmp/deckrd; export XDG_DATA_HOME=/tmp/xdg; unset DECKRD_DATA_DIR; bootstrap_init"
 
-      It "[Edge] PROJECT_ROOT/DECKRD_ROOT に依存せず XDG_DATA_HOME が基点になる"
+      It "[Edge] T-LIB-BDATA-11: PROJECT_ROOT/DECKRD_ROOT に依存せず XDG_DATA_HOME が基点になる"
         When call echo "$DECKRD_DATA_DIR"
         The output should equal "/tmp/xdg/deckrd"
       End
@@ -547,17 +547,17 @@ Describe "bootstrap.lib.sh"
     Describe "Given: PROJECT_ROOT=/tmp/proj、DECKRD_LOCAL_DATA 未設定"
       Before "export PROJECT_ROOT=/tmp/proj; unset DECKRD_LOCAL_DATA; bootstrap_init"
 
-      It "[Normal] PROJECT_ROOT/.local/deckrd になる"
+      It "[Normal] T-LIB-BLOCD-01: PROJECT_ROOT/.local/deckrd になる"
         When call echo "$DECKRD_LOCAL_DATA"
         The output should equal "/tmp/proj/.local/deckrd"
       End
 
-      It "[Normal] PROJECT_ROOT との関係式が成立する"
+      It "[Normal] T-LIB-BLOCD-02: PROJECT_ROOT との関係式が成立する"
         When call test "$DECKRD_LOCAL_DATA" = "${PROJECT_ROOT}/.local/deckrd"
         The status should equal 0
       End
 
-      It "[Normal] export -p で export されている"
+      It "[Normal] T-LIB-BLOCD-03: export -p で export されている"
         When call bash -c 'export -p | grep -q "^declare -x DECKRD_LOCAL_DATA=" && echo ok'
         The output should equal "ok"
       End
@@ -566,7 +566,7 @@ Describe "bootstrap.lib.sh"
     Describe "Given: DECKRD_LOCAL_DATA=/tmp/localdata を事前設定"
       Before "export PROJECT_ROOT=/tmp/proj; export DECKRD_LOCAL_DATA=/tmp/localdata; bootstrap_init"
 
-      It "[Normal] 事前設定値が維持される"
+      It "[Normal] T-LIB-BLOCD-04: 事前設定値が維持される"
         When call echo "$DECKRD_LOCAL_DATA"
         The output should equal "/tmp/localdata"
       End
@@ -575,7 +575,7 @@ Describe "bootstrap.lib.sh"
     Describe "Given: PROJECT_ROOT にスペースを含むパス"
       Before "export PROJECT_ROOT='/tmp/my project'; unset DECKRD_LOCAL_DATA; bootstrap_init"
 
-      It "[Edge] パスが正しく連結される"
+      It "[Edge] T-LIB-BLOCD-05: パスが正しく連結される"
         When call echo "$DECKRD_LOCAL_DATA"
         The output should equal "/tmp/my project/.local/deckrd"
       End
@@ -584,7 +584,7 @@ Describe "bootstrap.lib.sh"
     Describe "Given: DECKRD_ROOT=/tmp/other を設定 (PROJECT_ROOT から独立)"
       Before "export PROJECT_ROOT=/tmp/proj; export DECKRD_ROOT=/tmp/other; unset DECKRD_LOCAL_DATA; bootstrap_init"
 
-      It "[Edge] DECKRD_ROOT に依存せず PROJECT_ROOT が基点になる"
+      It "[Edge] T-LIB-BLOCD-06: DECKRD_ROOT に依存せず PROJECT_ROOT が基点になる"
         When call echo "$DECKRD_LOCAL_DATA"
         The output should equal "/tmp/proj/.local/deckrd"
       End
@@ -600,17 +600,17 @@ Describe "bootstrap.lib.sh"
     Describe "Given: PROJECT_ROOT=/tmp/proj、DECKRD_DOCS_DIR 未設定"
       Before "export PROJECT_ROOT=/tmp/proj; unset DECKRD_DOCS_DIR; bootstrap_init"
 
-      It "[Normal] PROJECT_ROOT/docs/.deckrd になる"
+      It "[Normal] T-LIB-BDOCS-01: PROJECT_ROOT/docs/.deckrd になる"
         When call echo "$DECKRD_DOCS_DIR"
         The output should equal "/tmp/proj/docs/.deckrd"
       End
 
-      It "[Normal] PROJECT_ROOT との関係式が成立する"
+      It "[Normal] T-LIB-BDOCS-02: PROJECT_ROOT との関係式が成立する"
         When call test "$DECKRD_DOCS_DIR" = "${PROJECT_ROOT}/docs/.deckrd"
         The status should equal 0
       End
 
-      It "[Normal] export -p で export されている"
+      It "[Normal] T-LIB-BDOCS-03: export -p で export されている"
         When call bash -c 'export -p | grep -q "^declare -x DECKRD_DOCS_DIR=" && echo ok'
         The output should equal "ok"
       End
@@ -619,7 +619,7 @@ Describe "bootstrap.lib.sh"
     Describe "Given: DECKRD_DOCS_DIR=/tmp/docs を事前設定"
       Before "export PROJECT_ROOT=/tmp/proj; export DECKRD_DOCS_DIR=/tmp/docs; bootstrap_init"
 
-      It "[Normal] 事前設定値が維持される"
+      It "[Normal] T-LIB-BDOCS-04: 事前設定値が維持される"
         When call echo "$DECKRD_DOCS_DIR"
         The output should equal "/tmp/docs"
       End
@@ -628,7 +628,7 @@ Describe "bootstrap.lib.sh"
     Describe "Given: PROJECT_ROOT にスペースを含むパス"
       Before "export PROJECT_ROOT='/tmp/my project'; unset DECKRD_DOCS_DIR; bootstrap_init"
 
-      It "[Edge] パスが正しく連結される"
+      It "[Edge] T-LIB-BDOCS-05: パスが正しく連結される"
         When call echo "$DECKRD_DOCS_DIR"
         The output should equal "/tmp/my project/docs/.deckrd"
       End
@@ -637,7 +637,7 @@ Describe "bootstrap.lib.sh"
     Describe "Given: DECKRD_ROOT=/tmp/other を設定 (PROJECT_ROOT から独立)"
       Before "export PROJECT_ROOT=/tmp/proj; export DECKRD_ROOT=/tmp/other; unset DECKRD_DOCS_DIR; bootstrap_init"
 
-      It "[Edge] DECKRD_ROOT に依存せず PROJECT_ROOT が基点になる"
+      It "[Edge] T-LIB-BDOCS-06: DECKRD_ROOT に依存せず PROJECT_ROOT が基点になる"
         When call echo "$DECKRD_DOCS_DIR"
         The output should equal "/tmp/proj/docs/.deckrd"
       End
@@ -652,71 +652,71 @@ Describe "bootstrap.lib.sh"
     Describe "Given: SYMBOL 未設定"
       Before "export PROJECT_ROOT=/tmp/proj; unset SYMBOL; bootstrap_init"
 
-      It "[Normal] デフォルト値 [a-z][a-z_-]* が設定される"
+      It "[Normal] T-LIB-BSYM-01: デフォルト値 [a-z][a-z_-]* が設定される"
         When call echo "$SYMBOL"
         The output should equal '[a-z][a-z_-]*'
       End
 
-      It "[Normal] 正規表現パターン文字 [ を含む"
+      It "[Normal] T-LIB-BSYM-02: 正規表現パターン文字 [ を含む"
         # shellcheck disable=SC2016
         When call bash -c '[[ "$SYMBOL" == *"["* ]] && echo ok'
         The output should equal "ok"
       End
 
-      It "[Normal] export -p で export されている"
+      It "[Normal] T-LIB-BSYM-03: export -p で export されている"
         When call bash -c 'export -p | grep -q "^declare -x SYMBOL=" && echo ok'
         The output should equal "ok"
       End
 
-      It "[Normal] 小文字のみ 'abc' にマッチする"
+      It "[Normal] T-LIB-BSYM-04: 小文字のみ 'abc' にマッチする"
         When call bash -c '[[ "abc" =~ ^'"$SYMBOL"'$ ]] && echo ok'
         The status should equal 0
         The output should equal "ok"
       End
 
-      It "[Normal] 'abc-def_ghi' にマッチする"
+      It "[Normal] T-LIB-BSYM-05: 'abc-def_ghi' にマッチする"
         When call bash -c '[[ "abc-def_ghi" =~ ^'"$SYMBOL"'$ ]] && echo ok'
         The status should equal 0
         The output should equal "ok"
       End
 
-      It "[Normal] 大文字 'ABC' にマッチしない"
+      It "[Normal] T-LIB-BSYM-06: 大文字 'ABC' にマッチしない"
         When call bash -c '[[ ! "ABC" =~ ^'"$SYMBOL"'$ ]] && echo ok'
         The status should equal 0
         The output should equal "ok"
       End
 
-      It "[Normal] 数字含む 'abc123' にマッチしない"
+      It "[Normal] T-LIB-BSYM-07: 数字含む 'abc123' にマッチしない"
         When call bash -c '[[ ! "abc123" =~ ^'"$SYMBOL"'$ ]] && echo ok'
         The status should equal 0
         The output should equal "ok"
       End
 
-      It "[Normal] 大文字+数字混在 'Abc-1' にマッチしない"
+      It "[Normal] T-LIB-BSYM-08: 大文字+数字混在 'Abc-1' にマッチしない"
         When call bash -c '[[ ! "Abc-1" =~ ^'"$SYMBOL"'$ ]] && echo ok'
         The status should equal 0
         The output should equal "ok"
       End
 
-      It "[Edge] 空文字 '' にマッチしない"
+      It "[Edge] T-LIB-BSYM-09: 空文字 '' にマッチしない"
         When call bash -c '[[ ! "" =~ ^'"$SYMBOL"'$ ]] && echo ok'
         The status should equal 0
         The output should equal "ok"
       End
 
-      It "[Edge] 先頭ハイフン '-abc' にマッチしない (先頭は小文字のみ)"
+      It "[Edge] T-LIB-BSYM-10: 先頭ハイフン '-abc' にマッチしない (先頭は小文字のみ)"
         When call bash -c '[[ ! "-abc" =~ ^'"$SYMBOL"'$ ]] && echo ok'
         The status should equal 0
         The output should equal "ok"
       End
 
-      It "[Edge] 先頭アンダースコア '_abc' にマッチしない (先頭は小文字のみ)"
+      It "[Edge] T-LIB-BSYM-11: 先頭アンダースコア '_abc' にマッチしない (先頭は小文字のみ)"
         When call bash -c '[[ ! "_abc" =~ ^'"$SYMBOL"'$ ]] && echo ok'
         The status should equal 0
         The output should equal "ok"
       End
 
-      It "[Edge] 1文字小文字 'a' にマッチする"
+      It "[Edge] T-LIB-BSYM-12: 1文字小文字 'a' にマッチする"
         When call bash -c '[[ "a" =~ ^'"$SYMBOL"'$ ]] && echo ok'
         The status should equal 0
         The output should equal "ok"
@@ -726,7 +726,7 @@ Describe "bootstrap.lib.sh"
     Describe "Given: SYMBOL=custom_pattern を事前設定"
       Before "export PROJECT_ROOT=/tmp/proj; export SYMBOL=custom_pattern; bootstrap_init"
 
-      It "[Normal] 事前設定値が維持される"
+      It "[Normal] T-LIB-BSYM-13: 事前設定値が維持される"
         When call echo "$SYMBOL"
         The output should equal "custom_pattern"
       End

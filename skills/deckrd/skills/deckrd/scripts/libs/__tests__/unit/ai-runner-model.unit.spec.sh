@@ -21,7 +21,7 @@ SCRIPT="${DECKRD_LIB_DIR}/ai-runner.lib.sh"
 Describe "ai-runner.sh"
   Describe "ai-runner.sh loading"
     Describe "When: スクリプトを読み込む"
-      It "Then: [Normal] resolve_ai_model 関数が存在する"
+      It "Then: [Normal] T-LIB-AMLD-01: resolve_ai_model 関数が存在する"
         When call type resolve_ai_model
         The status should equal 0
         The output should include "resolve_ai_model"
@@ -36,7 +36,7 @@ Describe "ai-runner.sh"
           "anthropic/claude-3-5" "claude-3-5"
         End
 
-        It "Then: [Normal] $1 -> $2 を返す"
+        It "Then: [Normal] T-LIB-AMRM-01: $1 -> $2 を返す"
           When call resolve_ai_model "$1"
           The status should equal 0
           The output should equal "$2"
@@ -50,7 +50,7 @@ Describe "ai-runner.sh"
           "claude-3-opus" "claude-3-opus"
         End
 
-        It "Then: [Normal] $1 -> $2 を返す"
+        It "Then: [Normal] T-LIB-AMRM-02: $1 -> $2 を返す"
           When call resolve_ai_model "$1"
           The status should equal 0
           The output should equal "$2"
@@ -69,7 +69,7 @@ Describe "ai-runner.sh"
           "opusplan" "opusplan"
         End
 
-        It "Then: [Normal] $1 -> $2 を返す"
+        It "Then: [Normal] T-LIB-AMRM-03: $1 -> $2 を返す"
           When call resolve_ai_model "$1"
           The status should equal 0
           The output should equal "$2"
@@ -85,7 +85,7 @@ Describe "ai-runner.sh"
           "openai/o3-mini" "o3-mini"
         End
 
-        It "Then: [Normal] $1 -> $2 を返す"
+        It "Then: [Normal] T-LIB-AMRM-04: $1 -> $2 を返す"
           When call resolve_ai_model "$1"
           The status should equal 0
           The output should equal "$2"
@@ -101,7 +101,7 @@ Describe "ai-runner.sh"
           "o3-mini" "o3-mini"
         End
 
-        It "Then: [Normal] $1 -> $2 を返す"
+        It "Then: [Normal] T-LIB-AMRM-05: $1 -> $2 を返す"
           When call resolve_ai_model "$1"
           The status should equal 0
           The output should equal "$2"
@@ -116,7 +116,7 @@ Describe "ai-runner.sh"
           "google/gemini-2.0" "gemini-2.0"
         End
 
-        It "Then: [Normal] $1 -> $2 を返す"
+        It "Then: [Normal] T-LIB-AMRM-06: $1 -> $2 を返す"
           When call resolve_ai_model "$1"
           The status should equal 0
           The output should equal "$2"
@@ -130,7 +130,7 @@ Describe "ai-runner.sh"
           "gemini-1.5-pro" "gemini-1.5-pro"
         End
 
-        It "Then: [Normal] $1 -> $2 を返す"
+        It "Then: [Normal] T-LIB-AMRM-07: $1 -> $2 を返す"
           When call resolve_ai_model "$1"
           The status should equal 0
           The output should equal "$2"
@@ -147,7 +147,7 @@ Describe "ai-runner.sh"
           "github-copilot/grok-code-fast-1" "grok-code-fast-1"
         End
 
-        It "Then: [Normal] $1 -> $2 を返す"
+        It "Then: [Normal] T-LIB-AMRM-08: $1 -> $2 を返す"
           When call resolve_ai_model "$1"
           The status should equal 0
           The output should equal "$2"
@@ -162,7 +162,7 @@ Describe "ai-runner.sh"
           "opencode/gpt-5" "gpt-5"
         End
 
-        It "Then: [Normal] $1 -> $2 を返す"
+        It "Then: [Normal] T-LIB-AMRM-09: $1 -> $2 を返す"
           When call resolve_ai_model "$1"
           The status should equal 0
           The output should equal "$2"
@@ -179,7 +179,7 @@ Describe "ai-runner.sh"
           "opencode/"
         End
 
-        It "Then: [Error] $1 は exit 1 を返す"
+        It "Then: [Error] T-LIB-AMRM-10: $1 は exit 1 を返す"
           When call resolve_ai_model "$1"
           The status should equal 1
           The stderr should include "Error:"
@@ -196,7 +196,7 @@ Describe "ai-runner.sh"
           "github/unknown-model"
         End
 
-        It "Then: [Error] $1 は exit 1 を返す"
+        It "Then: [Error] T-LIB-AMRM-11: $1 は exit 1 を返す"
           When call resolve_ai_model "$1"
           The status should equal 1
           The stderr should include "Error:"
@@ -211,7 +211,7 @@ Describe "ai-runner.sh"
           "12345"
         End
 
-        It "Then: [Error] $1 は exit 1 を返す"
+        It "Then: [Error] T-LIB-AMRM-12: $1 は exit 1 を返す"
           When call resolve_ai_model "$1"
           The status should equal 1
           The stderr should include "Error:"
@@ -221,13 +221,13 @@ Describe "ai-runner.sh"
 
     Describe "Given: 空引数"
       Describe "When: resolve_ai_model を呼ぶ"
-        It "Then: [Error] 引数なしは exit 1 を返す"
+        It "Then: [Error] T-LIB-AMRM-13: 引数なしは exit 1 を返す"
           When call resolve_ai_model
           The status should equal 1
           The stderr should include "Error:"
         End
 
-        It "Then: [Error] 空文字列は exit 1 を返す"
+        It "Then: [Error] T-LIB-AMRM-14: 空文字列は exit 1 を返す"
           When call resolve_ai_model ""
           The status should equal 1
           The stderr should include "Error:"
