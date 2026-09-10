@@ -21,6 +21,7 @@ deckrd プラグインのコマンドエントリポイント。init / module / 
 | `MOD`  | module.sh の引数処理とディレクトリ生成       |
 | `PA`   | `parse_args` (init.sh)                       |
 | `PRJ`  | project.sh の引数処理と `.project.json` 更新 |
+| `RDS`  | `read_declared_scope` (module.sh)            |
 | `RTS`  | `resolve_test_scope` (module.sh)             |
 | `ST`   | status.sh のセッション表示                   |
 | `VA`   | `validate_args` (init.sh)                    |
