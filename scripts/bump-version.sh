@@ -14,7 +14,7 @@
 
 set -euo pipefail
 
-PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || (cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd))"
+PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || { cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd; })"
 
 # ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -26,7 +26,7 @@ EOF
   exit 1
 }
 
-_info()    { printf '  %-12s %s\n' "$1" "$2"; }
+_info() { printf '  %-12s %s\n' "$1" "$2"; }
 _updated() { printf '  \033[32m✓\033[0m %-10s %s\n' "$1" "$2"; }
 _skipped() { printf '  \033[33m–\033[0m %-10s %s\n' "$1" "$2"; }
 
