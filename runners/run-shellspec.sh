@@ -129,12 +129,13 @@ parse_options() {
 #
 # @description Resolve spec files from arguments (handles test types, globs, single files)
 # @arg $@ Command line arguments (test type, spec file, or glob pattern)
-# @stdout List of spec file paths; error message on failure
+# @stdout List of spec file paths
+# @stderr Error and warning messages
 # @exitcode 0 on success, 1 on error
 #
 resolve_spec_files() {
   [[ $# -eq 0 ]] && {
-    printf 'Error: No arguments given.\n'
+    printf 'Error: No arguments given.\n' >&2
     return 1
   }
 
@@ -209,12 +210,8 @@ main() {
   local -a filtered_args
   mapfile -t filtered_args < <(parse_options "$@")
 
-  local resolved exit_code
-  resolved=$(resolve_spec_files "${filtered_args[@]}") || exit_code=$?
-  if [[ ${exit_code:-0} -ne 0 ]]; then
-    echo "$resolved" >&2
-    exit 1
-  fi
+  local resolved
+  resolved=$(resolve_spec_files "${filtered_args[@]}") || exit 1
 
   [[ -z "$resolved" ]] && exit 0
 
