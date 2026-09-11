@@ -35,6 +35,7 @@ _SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 unset _SCRIPT_DIR
 
 . "${DECKRD_LIB_DIR}/validate-env.lib.sh"
+. "${DECKRD_LIB_DIR}/utils.lib.sh"
 validate_env || exit 1
 
 # ============================================================================
@@ -84,7 +85,7 @@ main() {
   # Extract fields from session
   local active lang ai_model created updated current_step completed
 
-  active=$(${jqexe:-jq} -r '.active // empty' "$SESSION_FILE")
+  active=$(jq_read -r '.active // empty' "$SESSION_FILE")
   if [[ -z "$active" ]]; then
     echo "Error: No active module set in session." >&2
     echo "" >&2
@@ -92,12 +93,12 @@ main() {
     exit 1
   fi
 
-  lang=$(${jqexe:-jq} -r '.lang // "system"' "$SESSION_FILE")
-  ai_model=$(${jqexe:-jq} -r '.ai_model // "unknown"' "$SESSION_FILE")
-  created=$(${jqexe:-jq} -r '.created_at // "unknown"' "$SESSION_FILE")
-  updated=$(${jqexe:-jq} -r '.updated_at // "unknown"' "$SESSION_FILE")
-  current_step=$(${jqexe:-jq} -r ".modules[\"$active\"].current_step // empty" "$SESSION_FILE")
-  completed=$(${jqexe:-jq} -r ".modules[\"$active\"].completed | join(\", \") // \"none\"" "$SESSION_FILE")
+  lang=$(jq_read -r '.lang // "system"' "$SESSION_FILE")
+  ai_model=$(jq_read -r '.ai_model // "unknown"' "$SESSION_FILE")
+  created=$(jq_read -r '.created_at // "unknown"' "$SESSION_FILE")
+  updated=$(jq_read -r '.updated_at // "unknown"' "$SESSION_FILE")
+  current_step=$(jq_read -r ".modules[\"$active\"].current_step // empty" "$SESSION_FILE")
+  completed=$(jq_read -r ".modules[\"$active\"].completed | join(\", \") // \"none\"" "$SESSION_FILE")
 
   # Display status
   echo "DECKRD Status"

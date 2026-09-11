@@ -355,7 +355,7 @@ kv_load() {
   fi
 
   # Validate JSON before loading
-  if ! "${jqexe:-jq}" empty "$file" 2>/dev/null; then
+  if ! jq_read empty "$file" 2>/dev/null; then
     echo "Error: kv_load: invalid JSON file '${file}'" >&2
     return 1
   fi

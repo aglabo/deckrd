@@ -48,6 +48,7 @@ unset _SCRIPT_DIR
 
 # Validate environment (requires jq)
 . "${DECKRD_LIB_DIR}/validate-env.lib.sh"
+. "${DECKRD_LIB_DIR}/utils.lib.sh"
 validate_env || exit 1
 
 # ============================================================================
@@ -223,7 +224,7 @@ _get_default_ns() {
   # 1st priority: .project.json の project フィールド
   if [[ -f "$project_file" ]]; then
     local project_name
-    project_name=$(${jqexe:-jq} -r '.project // empty' "$project_file" 2>/dev/null)
+    project_name=$(jq_read -r '.project // empty' "$project_file" 2>/dev/null)
     if [[ -n "$project_name" ]]; then
       echo "$project_name"
       return 0
@@ -496,7 +497,7 @@ update_session() {
   if [[ -f "$SESSION_FILE" ]]; then
     # Update: set active module, add/reset module entry in modules hierarchy
     # shellcheck disable=SC2016
-    ${jqexe:-jq} --arg path "$path" \
+    jq_read --arg path "$path" \
       --arg scope "$scope" \
       --arg timestamp "$timestamp" \
       '.active = $path |
@@ -512,7 +513,7 @@ update_session() {
   else
     # Create new session file with modules hierarchy
     # shellcheck disable=SC2016
-    ${jqexe:-jq} -n \
+    jq_read -n \
       --arg path "$path" \
       --arg scope "$scope" \
       --arg timestamp "$timestamp" \
