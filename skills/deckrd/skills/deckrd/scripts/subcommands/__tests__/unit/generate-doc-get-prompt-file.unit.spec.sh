@@ -49,4 +49,15 @@ Describe "generate-doc.sh get_prompt_file"
     End
   End
 
+  Describe "Given: @ で始まるが未対応の doc-type"
+    Describe "When: get_prompt_file を呼ぶ"
+      It "Then: [Error] T-SUB-GPF-03: @bogus → exit 1、stderr にエラーを出し stdout は空"
+        When call get_prompt_file '@bogus'
+        The output should be blank
+        The stderr should include 'Error: unknown doc-type: bogus'
+        The status should equal 1
+      End
+    End
+  End
+
 End
