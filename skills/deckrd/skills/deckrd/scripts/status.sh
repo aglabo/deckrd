@@ -34,6 +34,9 @@ _SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "${_SCRIPT_DIR}/libs/bootstrap.lib.sh"
 unset _SCRIPT_DIR
 
+. "${DECKRD_LIB_DIR}/validate-env.lib.sh"
+validate_env || exit 1
+
 # ============================================================================
 # Functions
 # ============================================================================

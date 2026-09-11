@@ -365,6 +365,26 @@ Describe "init.sh: main() integration"
       The output should be blank
       The stderr should include "Error:"
     End
+
+    Describe "When: validate_env fails"
+      mock_validate_env_failure() {
+        # shellcheck disable=SC2329
+        validate_env() { echo "Error: jq or jaq is required but not installed." >&2; return 1; }
+        export -f validate_env
+      }
+      unmock_validate_env_failure() {
+        unset -f validate_env
+      }
+      Before "mock_validate_env_failure"
+      After "unmock_validate_env_failure"
+
+      It "[Error] T-CLI-MAINI-33: validate_env failure: stderr is the library message only"
+        When run bash "$SCRIPT" myapp webapp
+        The status should equal 1
+        The lines of entire stderr should eq 1
+        The stderr should include "jq or jaq is required"
+      End
+    End
   End
 
 End

@@ -46,11 +46,7 @@ _SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 unset _SCRIPT_DIR
 
 . "${DECKRD_LIB_DIR}/validate-env.lib.sh"
-_validate_env_errmsg=$(validate_env) || {
-  echo "$_validate_env_errmsg" >&2
-  exit 1
-}
-unset _validate_env_errmsg
+validate_env || exit 1
 
 . "${DECKRD_LIB_DIR}/ai-runner.lib.sh"
 

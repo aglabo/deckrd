@@ -49,5 +49,36 @@ Describe "validate-env.sh"
         End
       End
     End
+
+    Describe "Given: jaq が利用できる環境 (jaq を常に見つかる扱いにする)"
+      Describe "When: validate_env を呼ぶ"
+        It "Then: [Normal] T-LIB-VENV-03-01: jqexe が 'jaq' に解決される"
+          # 新規サブシェルで command を上書きし、jaq を常に利用可能として validate_env を呼ぶ
+          When run /usr/bin/bash -c "command() { [[ \"\$*\" == *jaq* ]] && return 0; builtin command \"\$@\"; }; export -f command; . '${DECKRD_LIB_DIR}/validate-env.lib.sh'; validate_env; echo \"\$jqexe\""
+          The status should equal 0
+          The output should equal "jaq"
+        End
+      End
+    End
+
+    Describe "Given: jaq が使えず jq だけがある環境 (jaq を隠す)"
+      Describe "When: validate_env を呼ぶ"
+        It "Then: [Normal] T-LIB-VENV-03-02: jqexe が 'jq' にフォールバックする"
+          When run /usr/bin/bash -c "command() { [[ \"\$*\" == *jaq* ]] && return 1; builtin command \"\$@\"; }; export -f command; . '${DECKRD_LIB_DIR}/validate-env.lib.sh'; validate_env; echo \"\$jqexe\""
+          The status should equal 0
+          The output should equal "jq"
+        End
+      End
+    End
+
+    Describe "Given: jqexe が事前に設定されている環境"
+      Describe "When: validate_env を呼ぶ"
+        It "Then: [Normal] T-LIB-VENV-04: 事前設定値を無条件に上書きする"
+          When run /usr/bin/bash -c "command() { [[ \"\$*\" == *jaq* ]] && return 0; builtin command \"\$@\"; }; export -f command; export jqexe=PRESET; . '${DECKRD_LIB_DIR}/validate-env.lib.sh'; validate_env; echo \"\$jqexe\""
+          The status should equal 0
+          The output should equal "jaq"
+        End
+      End
+    End
   End
 End
