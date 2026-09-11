@@ -25,7 +25,8 @@ Describe "status.sh"
       It "[Error] T-CLI-ST-01: Should: exit with status 1 and output 'No session file' message"
         When run bash "$SCRIPT"
         The status should equal 1
-        The output should include "No session file"
+        The stderr should include "No session file"
+        The output should not include "Error:"
       End
     End
   End
@@ -52,7 +53,8 @@ JSON
       It "[Error] T-CLI-ST-02: Should: exit with status 1 and output 'No active module' message"
         When run bash "$SCRIPT"
         The status should equal 1
-        The output should include "No active module"
+        The stderr should include "No active module"
+        The output should not include "Error:"
       End
     End
   End

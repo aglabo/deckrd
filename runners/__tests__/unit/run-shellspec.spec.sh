@@ -12,6 +12,8 @@
 Include "${SHELLSPEC_PROJECT_ROOT}/runners/__tests__/spec_helper.sh"
 Include "${SHELLSPEC_PROJECT_ROOT}/runners/run-shellspec.sh"
 
+SCRIPT="${SHELLSPEC_PROJECT_ROOT}/runners/run-shellspec.sh"
+
 Describe 'is_test_type()'
   Describe 'valid test types'
     It 'T-RUN-ITT-01: returns success for all'
@@ -256,8 +258,36 @@ Describe 'resolve_spec_files()'
   Describe 'error handling'
     It 'T-RUN-RSF-05: exits with failure for unknown test type'
       When call resolve_spec_files 'unknowntype'
-      The stderr should include 'Error'
+      The stderr should include "Error: Unknown argument 'unknowntype'"
+      The output should be blank
       The status should be failure
+    End
+
+    It 'T-RUN-RSF-06: reports missing arguments on stderr'
+      When call resolve_spec_files
+      The stderr should include 'Error: No arguments given.'
+      The output should be blank
+      The status should be failure
+    End
+  End
+End
+
+Describe 'main()'
+  Describe 'invalid argument handling'
+    # ShellSpec strips trailing newlines from captured stderr, so a stray blank
+    # line is invisible to 'The lines of stderr'. Count the lines in-pipeline and
+    # propagate the script exit code via PIPESTATUS.
+    It 'T-RUN-MRS-01: writes exactly one stderr line for an unknown argument'
+      When run bash -c "bash \"$SCRIPT\" unknowntype 2>&1 1>/dev/null | grep -c ^; exit \${PIPESTATUS[0]}"
+      The output should equal '1'
+      The status should equal 1
+    End
+
+    It 'T-RUN-MRS-02: reports the unknown argument on stderr'
+      When run bash "$SCRIPT" unknowntype
+      The stderr should include "Unknown argument 'unknowntype'"
+      The output should be blank
+      The status should equal 1
     End
   End
 End

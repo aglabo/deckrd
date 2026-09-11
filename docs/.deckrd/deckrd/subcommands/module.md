@@ -14,5 +14,6 @@ owns:
 | 略語  | 対象                                           |
 | ----- | ---------------------------------------------- |
 | `EP`  | `execute_prompt` (generate-doc.sh)             |
+| `GPF` | `get_prompt_file` (generate-doc.sh)            |
 | `LD`  | generate-doc.sh の読み込みと ai-runner.sh 連携 |
 | `VAM` | `validate_ai_model` (ai-runner.sh 版)          |

@@ -48,10 +48,10 @@ init_vars() {
 # Check if session file exists
 check_session() {
   if [[ ! -f "$SESSION_FILE" ]]; then
-    echo "Error: No session file found."
-    echo "  Expected: ${SESSION_FILE}"
-    echo ""
-    echo "Run 'deckrd init <project> <project-type>' and 'deckrd module <namespace>/<module>' to initialize."
+    echo "Error: No session file found." >&2
+    echo "  Expected: ${SESSION_FILE}" >&2
+    echo "" >&2
+    echo "Run 'deckrd init <project> <project-type>' and 'deckrd module <namespace>/<module>' to initialize." >&2
     return 1
   fi
 }
@@ -83,9 +83,9 @@ main() {
 
   active=$(${jqexe:-jq} -r '.active // empty' "$SESSION_FILE")
   if [[ -z "$active" ]]; then
-    echo "Error: No active module set in session."
-    echo ""
-    echo "Run 'deckrd module <namespace>/<module>' to set active module."
+    echo "Error: No active module set in session." >&2
+    echo "" >&2
+    echo "Run 'deckrd module <namespace>/<module>' to set active module." >&2
     exit 1
   fi
 

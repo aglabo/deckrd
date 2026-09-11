@@ -267,13 +267,14 @@ get_prompt() {
 # @description Resolve doc type from @<keyword> argument
 # @arg $1 string Argument starting with @ (e.g. @requirements)
 # @stdout Normalized doc type string (e.g. requirements)
+# @stderr Error message on invalid argument
 # @return 0  success
 # @return 1  invalid argument (missing @, or unsupported doctype)
 get_prompt_file() {
   local arg="$1"
 
   if [[ "$arg" != @* ]]; then
-    echo "Error: argument must start with @"
+    echo "Error: argument must start with @" >&2
     return 1
   fi
 
