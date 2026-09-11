@@ -1039,4 +1039,28 @@ Describe "module.sh"
       End
     End
   End
+
+  Describe "Given: the environment has neither jq nor jaq"
+    mock_validate_env_failure() {
+      setup_deckrd_tmpdir
+      # shellcheck disable=SC2329
+      validate_env() { echo "Error: jq or jaq is required but not installed." >&2; return 1; }
+      export -f validate_env
+    }
+    unmock_validate_env_failure() {
+      unset -f validate_env
+      teardown_deckrd_tmpdir
+    }
+    Before "mock_validate_env_failure"
+    After "unmock_validate_env_failure"
+
+    Describe "When: run module.sh with a module path"
+      It "[Error] T-CLI-MOD-22: Should: exit with status 1 and print only the library message to stderr"
+        When run bash "$SCRIPT" myns/mymod
+        The status should equal 1
+        The lines of entire stderr should eq 1
+        The stderr should include "jq or jaq is required"
+      End
+    End
+  End
 End
