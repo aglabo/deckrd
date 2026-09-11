@@ -70,5 +70,6 @@ deckrd プラグインの共有ライブラリ。bootstrap・kv-store・session�
 | `SLD`   | session.sh の読み込み                           |
 | `SLOAD` | `session_load`                                  |
 | `SSAVE` | `session_save`                                  |
+| `UJR`   | `jq_read` (utils.lib.sh)                        |
 | `VENV`  | `validate_env` (validate-env.sh)                |
 | `VLD`   | validate-env.sh の読み込み                      |

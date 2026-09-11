@@ -21,10 +21,21 @@ readonly _UTILS_LOADED=1
 # Wrapper around jq that strips CR characters from output, ensuring
 # consistent LF-only line endings on all platforms (including Windows).
 #
+# @note The pipeline runs in a subshell with pipefail enabled, so a jq failure
+#       is reported regardless of the caller's shell options, and the caller's
+#       own pipefail setting is left untouched.
+# @note tr -d '\r' removes every CR byte, including a legitimate CR inside a
+#       JSON string value. This project only reads paths, names and timestamps,
+#       so no such value is expected, but the stripping is unconditional.
 # @arg ... All arguments are passed through to jq
 # @stdin  Passed through to jq if no file argument is given
 # @stdout jq output with CRLF normalized to LF
+# @stderr Passed through from jq. Callers that want it silenced write
+#         `jq_read ... 2>/dev/null`
 # @return jq exit code
 jq_read() {
-  "${jqexe:-jq}" "$@" | tr -d '\r'
+  (
+    set -o pipefail
+    "${jqexe:-jq}" "$@" | tr -d '\r'
+  )
 }

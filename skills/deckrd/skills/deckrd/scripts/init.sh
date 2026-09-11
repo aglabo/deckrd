@@ -46,6 +46,7 @@ _SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 unset _SCRIPT_DIR
 
 . "${DECKRD_LIB_DIR}/validate-env.lib.sh"
+. "${DECKRD_LIB_DIR}/utils.lib.sh"
 validate_env || exit 1
 
 . "${DECKRD_LIB_DIR}/ai-runner.lib.sh"
@@ -271,13 +272,13 @@ write_project() {
 
   local created_at
   if [[ -f "$PROJECT_FILE" ]]; then
-    created_at=$(${jqexe:-jq} -r '.created_at // empty' "$PROJECT_FILE" 2>/dev/null || echo "$timestamp")
+    created_at=$(jq_read -r '.created_at // empty' "$PROJECT_FILE" 2>/dev/null || echo "$timestamp")
   else
     created_at="$timestamp"
   fi
 
   # shellcheck disable=SC2016
-  ${jqexe:-jq} -n \
+  jq_read -n \
     --arg project "$PROJECT_NAME" \
     --arg project_type "$PROJECT_TYPE" \
     --arg language "$LANGUAGE" \
@@ -316,7 +317,7 @@ init_session() {
   fi
 
   # shellcheck disable=SC2016
-  ${jqexe:-jq} -n \
+  jq_read -n \
     --arg lang "$LANGUAGE" \
     --arg ai_model "$AI_MODEL" \
     --arg timestamp "$timestamp" \

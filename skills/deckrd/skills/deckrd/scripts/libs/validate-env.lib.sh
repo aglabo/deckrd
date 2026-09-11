@@ -18,7 +18,9 @@ readonly _VALIDATE_ENV_LOADED=1
 
 # validate_env - Validate that required environment tools are available
 #
-# @note Exports jqexe into the caller's shell: "jaq" if available, otherwise "jq".
+# @note Exports jqexe into the caller's shell: "jq" if available, otherwise "jaq".
+#       jq is preferred so that the engine does not depend on what happens to be
+#       installed on the machine. jaq stays as a fallback.
 #       jqexe is overwritten unconditionally, even if it was set before the call.
 #       Call it as `validate_env || exit 1`; a command substitution such as
 #       `$(validate_env)` runs it in a subshell and discards the export.
@@ -28,10 +30,10 @@ readonly _VALIDATE_ENV_LOADED=1
 # Mock support: define validate_env before sourcing this file to override.
 if ! declare -f validate_env >/dev/null 2>&1; then
   validate_env() {
-    if command -v jaq >/dev/null 2>&1; then
-      export jqexe="jaq"
-    elif command -v jq >/dev/null 2>&1; then
+    if command -v jq >/dev/null 2>&1; then
       export jqexe="jq"
+    elif command -v jaq >/dev/null 2>&1; then
+      export jqexe="jaq"
     else
       echo "Error: jq or jaq is required but not installed." >&2
       return 1
