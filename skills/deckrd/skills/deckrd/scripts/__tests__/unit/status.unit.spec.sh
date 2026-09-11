@@ -90,4 +90,29 @@ JSON
       End
     End
   End
+
+  Describe "Given: validate_env fails"
+    Before "setup_deckrd_tmpdir"
+    After "teardown_deckrd_tmpdir"
+
+    mock_validate_env_failure() {
+      # shellcheck disable=SC2329
+      validate_env() { echo "Error: jq or jaq is required but not installed." >&2; return 1; }
+      export -f validate_env
+    }
+    unmock_validate_env_failure() {
+      unset -f validate_env
+    }
+    Before "mock_validate_env_failure"
+    After "unmock_validate_env_failure"
+
+    Describe "When: run status"
+      It "[Error] T-CLI-ST-04: Should: exit with status 1, output the library message to stderr, and keep stdout blank"
+        When run bash "$SCRIPT"
+        The status should equal 1
+        The stderr should include "jq or jaq is required"
+        The output should be blank
+      End
+    End
+  End
 End
