@@ -31,6 +31,7 @@ owns:
 | `ITT` | `is_test_type`                            |
 | `LS`  | `layer_suffix`                            |
 | `MN`  | `main` (run-check-test-ids.sh)            |
+| `MRS` | `main` (run-shellspec.sh)                 |
 | `NP`  | `normalize_path`                          |
 | `PMG` | `path_matches_glob`                       |
 | `PO`  | `parse_options`                           |
