@@ -6,6 +6,60 @@
   -->
 <!-- markdownlint-disable line-length -->
 
+## [0.5.0] - 2026-09-12
+
+### 🚀 Features
+
+- *(deckrd/rules)* Consolidate 5 rules (traceability / id-system / document-naming / file-structure / commit-linkage) into `deckrd-rule-document-model.md` and `deckrd-rule-workflow.md`
+- *(deckrd/rules)* Add `bdd-cycle`, `coding-guidelines`, `testing-guidelines`, `document-versioning`, `runners`, and `second-opinion` rules — the rule set is now 8 files
+- *(deckrd/rules)* Separate rule bodies from the index — bodies install under `docs/.deckrd/rules/`, the index under `.claude/rules/deckrd-rules/`
+- *(deckrd/init)* Install Claude command rules into `.claude/rules/claude-rules/` during initialization
+- *(deckrd/init)* Strip the `.org` suffix when copying init assets — allows shipping `.gitignore.org` templates
+- *(deckrd/module)* Derive and record the module test scope in `module.md`, rejecting conflicting explicit scopes
+- *(bdd-coder)* Add `bdd-coder-review` skill — runs `code-reviewer` on demand via `/bdd-coder:bdd-coder-review`; supports `--branch [base]` and `--coverage-cmd`
+- *(bdd-coder)* Scope code review to session-changed files instead of the whole working tree
+- *(bdd-coder)* Add Phase 5 Done Check — writes results back to `tasks.md` checkboxes and status
+- *(runners)* Add a test case ID checker (`check:test-ids`) — verifies ID scope declarations, coverage, abbreviation tables, and unidentified cases
+- *(scripts/bump-version)* Add `package.json` and `deckrd.json` to the version bump targets
+
+### 🐛 Bug Fixes
+
+- *(mcp)* Use plugin-scoped MCP tool names (`mcp__plugin_<plugin>_<server>__<tool>`) across agents and skills
+- *(scripts)* Unify error output to stderr
+- *(scripts)* Remove the dead `validate_env` capture and guard `status.sh`
+- *(runners/run-shellspec)* Fix the shellcheck source directive and restrict test type filtering to `tests/${test_type}`
+- *(tests)* Fix garbled Japanese text in test descriptions
+
+### ♻️ Refactor
+
+- *(runtime)* Relocate runtime libraries from `skills/_runtime/` into the deckrd plugin
+- *(libs)* Rename library scripts from `*.sh` to `*.lib.sh` and update all source paths
+- *(scripts)* Prefer `jq` over `jaq` and route all JSON reads through `jq_read`
+- *(runners)* Centralize variable initialization in `runners/libs/init-vars.lib.sh`
+
+### 📚 Documentation
+
+- *(deckrd/tasks)* Add WBS / MECE task decomposition guidance
+- *(deckrd,bdd-coder)* Apply SemVer versioning to documents, templates, and commands
+- *(deckrd/rules)* Add frontmatter (title / description / version) to all rule assets
+- *(specs/mcp-servers)* Rewrite the MCP reference for the actual 3-server layout (cocoindex-code / filesystem / codex-mcp) and drop the obsolete serena-mcp and lsmcp sections
+- *(user-guides)* Document the new rule layout and add migration steps for existing projects
+
+### ⚙️ Miscellaneous Tasks
+
+- *(config)* Move the package to ESM and switch the markdownlint / textlint CLIs
+- *(config)* Update dprint — bump the json plugin to 0.23.0 and add the toml plugin (0.8.0)
+- *(release)* Unify all plugin and skill versions to 0.5.0
+
+### 💥 Breaking Changes
+
+- *(deckrd/rules)* Rule files are consolidated and relocated — projects initialized before this release must re-run `/deckrd init` first, then delete the 5 legacy rule files, the old index, and the legacy `.claude/rules/.gitignore` (see the migration steps in `docs/user-guides/02-commands.ja.md`)
+- *(runtime)* Runtime libraries move out of `skills/_runtime/` into the deckrd plugin
+- *(libs)* Library scripts are renamed from `*.sh` to `*.lib.sh`
+- *(config)* `package.json` is now `"type": "module"` — config files must be ESM
+
+---
+
 ## [0.4.0] - 2026-06-19
 
 ### ♻️ Refactor

@@ -1,68 +1,141 @@
-# v0.4.0
+<!-- textlint-disable
+  ja-technical-writing/sentence-length,
+  ja-technical-writing/max-comma,
+  -->
 
-## Overview
+# deckrd v0.5.0
 
-BDD 実装コマンドを `deckrd-coder` から `bdd-coder` にリネームしたリリースです。
-機能・動作はそのままに、コマンド名がより目的を明確に表す `bdd-coder` に変わりました。
-また、codex を使ったドキュメントのクリティカルレビュー機能 `deckrd-review` を新たに追加しました。
+v0.5.0 reorganizes the deckrd rule system, strengthens the BDD workflow, and simplifies the internal runtime and test infrastructure.
 
----
+This release includes **breaking changes for existing projects**.
+If you are upgrading from an earlier version, see the migration section below.
 
-## What's New
+## Highlights
 
-### `deckrd-coder` が `bdd-coder` にリネームされました
+### Reorganized deckrd rules
 
-BDD で実装するコマンドが `/deckrd-coder` から `/bdd-coder:bdd-coder` に変わりました。
-機能・動作の変更はありません。コマンド名がより直感的になりました。
+The deckrd rule set has been consolidated and reorganized into **8 focused rule files**.
 
-```bash
-# 旧コマンド（v0.3.0 まで）
-/deckrd-coder
+Related rules for traceability, IDs, document naming, file structure, and commit linkage have been merged
+into the new document model and workflow rules. New rules cover:
 
-# 新コマンド（v0.4.0 以降）
-/bdd-coder:bdd-coder
-```
+- BDD cycles
+- coding guidelines
+- testing guidelines
+- document versioning
+- runners
+- second-opinion reviews
 
-### `deckrd-review` スキルを追加
+Rule bodies and Claude-facing indexes are now installed separately:
 
-`/deckrd:deckrd-review` コマンドで、codex を独立したクリティカルレビュアーとして呼び出せるようになりました。
-`/deckrd review` が Claude による一次レビューなのに対し、`deckrd-review` は codex が異なる視点から仮定に挑戦し、見落とした盲点を洗い出します。
+- `docs/.deckrd/rules/` — deckrd rule definitions
+- `.claude/rules/deckrd-rules/` — Claude rule index
+- `.claude/rules/claude-rules/` — Claude command rules
 
-```bash
-# 要件ドキュメントを codex でレビュー
-/deckrd:deckrd-review req
+This keeps project documentation separate from the rules Claude needs to load directly.
 
-# リスクにフォーカスして仕様をレビュー
-/deckrd:deckrd-review spec --focus risk
-```
+### Improved BDD workflow
 
-`--focus` オプションで `completeness` / `risk` / `consistency` / `feasibility` の観点を指定できます。
+The BDD workflow now provides stronger review and completion checks.
 
-### マーケットプレイス設定を本番値に更新
+A new `/bdd-coder:bdd-coder-review` command runs `code-reviewer` on demand
+and supports branch-based review and custom coverage commands.
 
-インストール用の GitHub URL が正式に設定されました。`gh skills` / `npx skills` / `claude plugin` のいずれでもインストールできます。
+Code review is now scoped to files changed during the current session instead of the entire working tree.
 
-```bash
-# gh skills
-gh skills install aglabo/deckrd
+Phase 5 also gains a **Done Check** that verifies completion and writes the results back to `tasks.md`,
+including task status and checkboxes.
 
-# npx skills
-npx skills add aglabo/deckrd
+### Test scope and test ID validation
 
-# claude plugin
-claude plugin marketplace add aglabo/deckrd
-```
+deckrd can now derive a module's test scope automatically and record it in `module.md`.
+Conflicting explicit scopes are rejected.
 
----
+A new `check:test-ids` runner validates test case IDs, including:
 
-## Breaking Changes
+- declared ID scopes
+- test coverage
+- abbreviation tables
+- unidentified test cases
 
-### コマンド名の変更
+This makes the relationship between specifications, tasks, and tests easier to verify mechanically.
 
-`deckrd-coder` コマンドが `bdd-coder` にリネームされました。
+### Cleaner runtime and tooling
 
-| 旧（v0.3.0 まで） | 新（v0.4.0 以降）      |
-| ----------------- | ---------------------- |
-| `/deckrd-coder`   | `/bdd-coder:bdd-coder` |
+Internal runtime libraries have moved from `skills/_runtime/` into the deckrd plugin.
 
-機能の変更はありません。スクリプトや設定ファイルでコマンド名を参照している場合は更新してください。
+Shell libraries now use the `*.lib.sh` naming convention, JSON handling is standardized on `jq`,
+and runner initialization has been centralized.
+
+The package has also moved to ESM, and the linting and formatting configuration has been updated.
+
+### MCP configuration cleanup
+
+Agents and skills now use plugin-scoped MCP tool names.
+
+The MCP documentation has also been updated to match the current three-server setup:
+
+- `cocoindex-code`
+- `filesystem`
+- `codex-mcp`
+
+Obsolete `serena-mcp` and `lsmcp` references have been removed.
+
+## Documentation improvements
+
+This release expands the documentation around the development workflow:
+
+- WBS / MECE guidance for task decomposition
+- SemVer versioning for deckrd and bdd-coder documents
+- versioned frontmatter for rule assets
+- updated MCP server documentation
+- migration guidance for the new rule layout
+
+## Upgrading from an earlier release
+
+The rule layout has changed and requires migration for existing projects.
+
+**The order matters.** `/deckrd init` never overwrites or deletes existing files, so
+deleting the old rules first leaves the project without rules if initialization fails.
+Install and verify the new layout before removing anything.
+
+1. Run `/deckrd init` again in the target project.
+2. Confirm that the rule bodies are in `docs/.deckrd/rules/` and that the index is at
+   `.claude/rules/deckrd-rules/deckrd-rules-index.md`.
+3. Only after confirming, delete the legacy rule bodies `.claude/rules/deckrd-rule-*.md`.
+4. Delete the legacy index `.claude/rules/deckrd-rules.md`. The wildcard in step 3 is
+   `deckrd-rule-*.md` and does not match it, so leaving it behind injects two indexes at once.
+5. Delete the legacy `.claude/rules/.gitignore`. It contains a `deckrd-*` line that excludes
+   the whole new `.claude/rules/deckrd-rules/` directory from git. A negation pattern inside
+   the directory cannot recover it, because git does not re-include the contents of an
+   excluded parent directory. Removing the parent file is the only fix.
+6. Confirm that the index is tracked:
+
+   ```bash
+   git add -An .claude/rules/deckrd-rules/
+   ```
+
+   If `deckrd-rules-index.md` is listed, it is tracked. If nothing is listed, it is still
+   ignored. Do not use `git check-ignore -v` for this check: it also exits 0 when a negation
+   pattern matches.
+
+Without this migration the context reduction does not take effect, and an untracked index
+means your teammates never get the lazy-loading entry point.
+
+Full procedure with the Japanese explanation: [docs/user-guides/02-commands.ja.md](docs/user-guides/02-commands.ja.md).
+
+There are also internal compatibility changes to be aware of:
+
+- runtime libraries moved out of `skills/_runtime/`
+- shell libraries were renamed from `*.sh` to `*.lib.sh`
+- `package.json` now uses `"type": "module"`
+
+Projects or extensions that directly reference these internal paths or CommonJS configuration files must be updated.
+
+## Other changes
+
+This release also includes several smaller fixes and maintenance improvements, including corrected
+ShellSpec filtering, standardized stderr handling, fixed Japanese test descriptions, updated dprint
+plugins, and improved version-bump handling for `package.json` and `deckrd.json`.
+
+All deckrd plugin and skill versions are now aligned at **0.5.0**.
