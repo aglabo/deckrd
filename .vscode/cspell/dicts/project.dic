@@ -11,7 +11,9 @@ GWT
 idd
 implementational
 jqexe
+kcov
 markdownlintrc
+MECE
 myfeature
 mymod
 myns
@@ -26,6 +28,7 @@ rumdl
 Tera
 TOCTOU
 topo
+unbumped
 unmatch
-kcov
-MECE
+unreviewed
+unsuffixed
