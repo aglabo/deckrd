@@ -85,90 +85,20 @@ Read the resolved file content in full.
 
 ### Step 3: Build codex prompt
 
-Select prompt template based on `--focus`:
+1. `--focus` からテンプレートファイルを選ぶ。
 
-**no focus (balanced):**
+   | `--focus`      | File                                    |
+   | -------------- | --------------------------------------- |
+   | (none)         | `assets/prompts/balanced.prompt.md`     |
+   | `completeness` | `assets/prompts/completeness.prompt.md` |
+   | `risk`         | `assets/prompts/risk.prompt.md`         |
+   | `consistency`  | `assets/prompts/consistency.prompt.md`  |
+   | `feasibility`  | `assets/prompts/feasibility.prompt.md`  |
 
-```text
-You are an independent critical reviewer. Analyze this document and provide a concise
-second opinion that challenges assumptions and surfaces blind spots.
-
-Be direct. Identify:
-1. Top 3 risks or concerns not addressed
-2. Missing scenarios or edge cases
-3. Assumptions that should be made explicit
-4. One alternative approach worth considering
-
-Respond in the same language as the document.
-Document type: <target>
----
-<document content>
-```
-
-**completeness:**
-
-```text
-You are a Coverage Auditor. Review this document for missing scenarios.
-
-Identify:
-1. User scenarios not covered
-2. Error and edge cases absent from the document
-3. Boundary conditions not specified
-4. Unhappy paths not addressed
-
-Respond in the same language as the document.
-Document type: <target>
----
-<document content>
-```
-
-**risk:**
-
-```text
-You are a Devil's Advocate. Challenge every major assumption and identify failure modes.
-
-Identify:
-1. The 3 most dangerous assumptions in this document
-2. What could cause this design to fail
-3. External dependencies that are underspecified
-
-Respond in the same language as the document.
-Document type: <target>
----
-<document content>
-```
-
-**consistency:**
-
-```text
-You are a Consistency Checker. Review for internal contradictions and terminology drift.
-
-Identify:
-1. Terms used with inconsistent meaning across sections
-2. Requirements or statements that contradict each other
-3. Sections that make incompatible assumptions
-
-Respond in the same language as the document.
-Document type: <target>
----
-<document content>
-```
-
-**feasibility:**
-
-```text
-You are an Implementation Realist. Review for feasibility issues.
-
-Identify:
-1. Requirements that are ambiguous or unimplementable as written
-2. Constraints that conflict with each other
-3. Missing technical prerequisites
-
-Respond in the same language as the document.
-Document type: <target>
----
-<document content>
-```
+2. そのファイルを Read し、`text` コードブロックの中身をそのまま使う。
+   記憶や推測でプロンプトを組み立ててはならない。
+3. `<target>` を Step 1 で解決したターゲット名に、
+   `<document content>` を Step 2 で読んだ本文に置換する。
 
 ### Step 4: Call codex and display result
 
@@ -222,29 +152,7 @@ Exit silently.
 
 ---
 
-## Examples
+## Reference
 
-```bash
-# Second opinion on current requirements (deckrd active module)
-/deckrd:deckrd-review req
-
-# Risk-focused review of specifications
-/deckrd:deckrd-review spec --focus risk
-
-# Completeness check on any file
-/deckrd:deckrd-review @docs/design/architecture.md --focus completeness
-
-# Consistency check on tasks
-/deckrd:deckrd-review tasks --focus consistency
-```
-
-## When to Use
-
-| Trigger                                       | Recommended focus |
-| --------------------------------------------- | ----------------- |
-| After `/deckrd review req` or `spec`          | `risk`            |
-| Before transitioning to the next deckrd phase | (none — balanced) |
-| Unclear design decision                       | `consistency`     |
-| Implementation feels underspecified           | `feasibility`     |
-| Edge cases feel missing                       | `completeness`    |
-| An approach has failed twice                  | `feasibility`     |
+呼び出し例と focus の使い分けは [usage.md](references/usage.md) にあります。
+どの focus を選ぶか迷ったときに読んでください。

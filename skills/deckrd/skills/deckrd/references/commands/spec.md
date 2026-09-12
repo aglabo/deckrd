@@ -13,11 +13,17 @@ description: Derive technically verifiable behavioral specifications from requir
 
 Derive technically verifiable behavioral goals and constraints from requirements.
 
+このファイルは目次であり、フェーズの手順は含まない。手順は `spec-phases/` 配下にある。
+
 ## Usage
 
 ```bash
-/deckrd spec
+/deckrd spec                          # 全フェーズを Phase 1 から順に実行
+/deckrd spec --phase design-draft     # 単一フェーズだけ再実行
 ```
+
+`--phase` には下表の slug を渡す。単一フェーズの再実行は `spec` 完了後にも行うため、
+順序ゲートの対象外とする。
 
 ## Preconditions
 
@@ -27,583 +33,51 @@ Derive technically verifiable behavioral goals and constraints from requirements
 
 ## Execution Flow
 
-```bash
-Phase A: Requirements Reading & Codebase Investigation
-Phase B: PoC / Reference PR Check
-Phase C: Design Direction Drafting
-Phase D: User Review & Feedback Loop        ← interactive with user
-Phase E: External Design Dialogue           ← AI internal reasoning dialogue
-Phase 0: External API Decision Loop         ← interactive with user
-Phase 0-F: Public Function Interface Loop   ← interactive with user
-Phase 1: Split Assessment                   ← interactive with user (if needed)
-Phase 2: Document Generation
-Phase 3: External Spec Review & Cleanup     ← interactive with user
-```
+**下表の「読むタイミング」欄を見て、該当フェーズの開始前に `spec-phases/<ファイル名>` を Read すること。**
+記憶や推測でフェーズを実行してはならない。
 
----
+| Phase | slug                 | ファイル                                                         | 内容                          | 読むタイミング                               |
+| ----- | -------------------- | ---------------------------------------------------------------- | ----------------------------- | -------------------------------------------- |
+| 1     | `read-requirements`  | [01-read-requirements.md](spec-phases/01-read-requirements.md)   | 要件読解・コードベース調査    | spec 開始時。常に最初                        |
+| 2     | `prior-art`          | [02-prior-art.md](spec-phases/02-prior-art.md)                   | PoC / 参考 PR の調査          | Phase 1 の Step 1-2 と並行して開始           |
+| 3     | `design-draft`       | [03-design-draft.md](spec-phases/03-design-draft.md)             | 設計方針の起草                | Phase 1 と Phase 2 の agent が両方完了した後 |
+| 4     | `user-review`        | [04-user-review.md](spec-phases/04-user-review.md)               | ユーザーレビュー (対話)       | DESIGN DRAFT ができた直後                    |
+| 5     | `design-dialogue`    | [05-design-dialogue.md](spec-phases/05-design-dialogue.md)       | 外部設計対話 (AI 内部推論)    | CONFIRMED DESIGN が確定した後                |
+| 6     | `api-decisions`      | [06-api-decisions.md](spec-phases/06-api-decisions.md)           | 外部 API の決定 (対話)        | Phase 5 完了後。ドキュメント生成の前         |
+| 7     | `function-decisions` | [07-function-decisions.md](spec-phases/07-function-decisions.md) | 公開関数の決定 (対話)         | Phase 6 完了後。ドキュメント生成の前         |
+| 8     | `split-assessment`   | [08-split-assessment.md](spec-phases/08-split-assessment.md)     | 分割判定・版の baseline 取得  | Phase 7 完了後。FR 数によらず必ず通る        |
+| 9     | `generate`           | [09-generate.md](spec-phases/09-generate.md)                     | ドキュメント生成              | SPLIT PLAN が確定した後                      |
+| 10    | `spec-review`        | [10-spec-review.md](spec-phases/10-spec-review.md)               | 外部仕様レビューと除去 (対話) | 生成直後。版上げの前                         |
+| 11    | `version-bump`       | [11-version-bump.md](spec-phases/11-version-bump.md)             | 版上げ                        | Phase 10 をユーザーが承認した後              |
+| 12    | `second-opinion`     | [12-second-opinion.md](spec-phases/12-second-opinion.md)         | codex による second opinion   | Phase 11 完了後。`impl` へ移る前             |
 
-### Phase A: Requirements Reading & Codebase Investigation
+## Context Ledger
 
-#### Step A-1: Read Requirements
-
-Read `requirements/requirements.md` in full and extract:
-
-- Feature overview and goals
-- All Functional Requirements (FR-xx) and their intent
-- Non-Functional Requirements and constraints
-- Stakeholders and usage scenarios
-- Open Questions inherited from the req phase
-- Frontmatter `version` (three-part; required)
-
-Store extracted summary as **REQ SUMMARY** and the version as **REQ VERSION**.
-
-#### Step A-2: Investigate Codebase (explore-agent 委譲)
-
-Spawn **explore-agent** (non-blocking) with:
-
-- `scope`: `codebase-survey`
-- `directory`: project root
-- `focus`: feature keywords from REQ SUMMARY
-- Agent definition: [`plugins/deckrd/agents/explore-agent.md`](../../../../agents/explore-agent.md)
-
-The agent writes findings to `temp/deckrd-work/codebase-context.md`.
-Proceed to Phase B immediately in parallel — do NOT wait for this agent.
-
-Store the agent Summary as **CODEBASE CONTEXT** when it completes:
-
-```text
-CODEBASE CONTEXT:
-- Relevant modules: ...
-- Existing patterns: ...
-- Integration points: ...
-- Partially implemented: ...
-```
-
----
-
-### Phase B: PoC / Reference PR Check (explore-agent 委譲)
-
-Spawn **explore-agent** (non-blocking, parallel with A-2) with:
-
-- `scope`: `prior-art`
-- `directory`: project root
-- `focus`: feature keywords from REQ SUMMARY
-- Agent definition: [`plugins/deckrd/agents/explore-agent.md`](../../../../agents/explore-agent.md)
-
-The agent writes findings to `temp/deckrd-work/prior-art.md`.
-
-Store the agent Summary as **PRIOR ART** when it completes:
-
-```text
-PRIOR ART:
-- PoC found: <path or "none">
-- Related branches: <list or "none">
-- Key decisions from prior work: ...
-```
-
-If nothing is found, record `PRIOR ART: none` and continue.
-
-> **Note**: Proceed to Phase C only after **both** A-2 and B agents have completed.
-
----
-
-### Phase C: Design Direction Drafting
-
-Using REQ SUMMARY + CODEBASE CONTEXT + PRIOR ART, draft a design direction:
-
-1. Feature decomposition — break the requirements into distinct behavioral units
-2. Architecture fit — how the feature maps onto the existing structure
-3. Interface design — what inputs, outputs, and side effects each unit has
-4. Constraint mapping — which NFRs / DRs constrain the design
-5. Risk / ambiguity list — unclear points that need user input
-6. ASCII diagram — draw an initial component diagram showing unit relationships:
-
-   ```text
-   +----------+     +----------+
-   |  Unit A  | --> |  Unit B  |
-   +----------+     +----------+
-         |
-         v
-   +----------+
-   |  Unit C  |
-   +----------+
-   ```
-
-   ASCII diagrams ONLY — Mermaid, PlantUML, and SVG are PROHIBITED.
-
-Store as **DESIGN DRAFT**:
-
-```text
-DESIGN DRAFT:
-- Behavioral units: [unit-1, unit-2, ...]
-- Architecture fit: ...
-- Interface sketch: ...
-- Constraints: ...
-- Risks / ambiguities: [list]
-```
-
----
-
-### Phase D: User Review & Feedback Loop (max 3 rounds)
-
-Present the DESIGN DRAFT to the user and collect feedback.
-
-#### Step D-1: Present Summary
-
-Show a structured summary:
+フェーズ間で受け渡す名前付きブロックは、次のファイルに記録する。
 
 ```bash
-[Design Review]
-
-Feature decomposition:
-  1. <unit-1>: <one-line description>
-  2. <unit-2>: <one-line description>
-
-Architecture fit:
-  <brief description>
-
-Risks / open questions:
-  - <risk-1>
-  - <risk-2>
-
-Does this direction look correct? (Y / feedback)
+temp/deckrd-work/<namespace>/<module>/spec-context.md
 ```
 
-#### Step D-2: Collect Feedback
-
-If the user provides feedback:
-
-- Identify which part of DESIGN DRAFT needs revision
-- Ask EXACTLY 1 clarifying question per round. No exceptions.
-- Update DESIGN DRAFT with confirmed changes
-- Return to Step D-1
-
-**Termination conditions** (stop as soon as either is met):
-
-1. User approves with "Y", "OK", "承認", "done", or equivalent
-2. 3 rounds completed — record remaining disagreements in Open Questions
-
-Store final user-confirmed state as **CONFIRMED DESIGN**.
-
----
-
-### Phase E: External Design Dialogue
-
-Conduct an internal design reasoning session to formalize the external specification.
-This phase is a structured self-dialogue: reason through each question explicitly.
-
-#### E-1: Component Boundary Analysis
-
-For each behavioral unit in CONFIRMED DESIGN, reason through:
-
-- What is the single responsibility of this unit?
-- What must it receive as input (type, format, constraints)?
-- What must it produce as output (type, format, success/failure semantics)?
-- What observable side effects does it have?
-
-#### E-2: Interface Contract Definition
-
-For each unit, define the external contract:
-
-```bash
-Unit: <name>
-  Pre-conditions:  <what must be true before invocation>
-  Post-conditions: <what is guaranteed after successful invocation>
-  Invariants:      <what never changes>
-  Error cases:     <what triggers failure and what is returned/thrown>
-```
-
-#### E-3: Cross-Unit Interaction Analysis
-
-Identify how the units interact:
-
-- Data flow between units (output of A → input of B)
-- Ordering constraints (B must run after A)
-- Shared state or resources
-- Failure propagation (if A fails, what happens to B?)
-
-Express cross-unit interactions as an ASCII component diagram:
-
-```text
-+----------+     +----------+     +----------+
-|  Unit A  | --> |  Unit B  | --> |  Unit C  |
-+----------+     +----------+     +----------+
-                      |
-                      v
-                 +----------+
-                 |  Unit D  |
-                 +----------+
-```
-
-- Use `+--+` for box corners, `|` for vertical sides, `-` for horizontal sides
-- Use `-->` for directed data flow
-- Branch vertically with `|` pipe and `v` arrow
-- ASCII diagrams ONLY — Mermaid, PlantUML, and SVG are PROHIBITED
-
-#### E-4: Edge Case Enumeration
-
-For each unit, enumerate edge cases:
-
-- Boundary values (empty input, maximum size, null)
-- Concurrent access (if applicable)
-- Partial failure scenarios
-- State inconsistency scenarios
-
-#### E-5: External Design Summary
-
-Compile the dialogue results into **EXTERNAL DESIGN NOTES**:
-
-```text
-EXTERNAL DESIGN NOTES:
-- Unit contracts: [structured list from E-2]
-- Interaction map: [data flow and ordering from E-3]
-- Edge cases: [enumerated list from E-4]
-- Unresolved: [items that could not be determined without user input]
-```
-
----
-
-### Phase 0: External API Decision Loop (max 3 rounds)
-
-Before generating specifications, identify and confirm all external interfaces.
-
-#### Step 0-1: Extract API Candidates
-
-Read `requirements/requirements.md` and identify candidates:
-
-- External services called (REST API, GraphQL, gRPC, message queue, etc.)
-- External services that call this module (webhooks, callbacks)
-- Shared data stores accessed by multiple modules (DB, cache, file storage)
-- CLI / SDK interfaces exposed to end users or other tools
-
-#### Step 0-2: Ask API Clarification Questions
-
-For each candidate, ask the user to confirm or decide:
-
-**Rules**:
-
-- Ask **at most 3 questions per round**
-- Prefer concrete choices (A/B/C) or Yes/No over open-ended questions
-- Accumulate confirmed decisions as **API DECISIONS**
-
-Example question patterns:
-
-```bash
-[External API] The requirements mention sending email notifications.
-Q1. Which service will you use?
-    A) SendGrid  B) AWS SES  C) SMTP (self-hosted)  D) Not decided yet
-
-Q2. Is the API key management in scope for this spec?
-    Yes / No
-
-Q3. Should failure to send email be fatal (block the operation) or non-fatal?
-    A) Fatal  B) Non-fatal (log and continue)
-```
-
-**Termination conditions** (stop as soon as either is met):
-
-1. User responds with "十分", "以上です", "OK", "done", or equivalent
-2. All extracted API candidates have a confirmed decision (service, protocol, error handling policy)
-
-#### Step 0-3: Summarize API Decisions
-
-Compile confirmed decisions as **API DECISIONS** block:
-
-```text
-API DECISIONS:
-- Email notification: SendGrid REST API; non-fatal on failure
-- User data store: PostgreSQL via existing DB module; read-only from this spec
-- CLI interface: exposed as subcommand `deckrd spec`; no SDK
-```
-
----
-
-### Phase 0-F: Public Function Interface Decision Loop (max 3 rounds)
-
-Before generating specifications, identify and confirm the public functions.
-this module exposes as its external API.
-
-#### Step 0-F-1: Extract Public Function Candidates
-
-Based on CONFIRMED DESIGN and Phase E (Component Boundary Analysis), identify:
-
-- Entry points called by other modules or users
-- Command/subcommand handlers exposed as CLI
-- Callback or event handler signatures required by callers
-- Functions that form the module's contract boundary
-
-#### Step 0-F-2: Ask Function Interface Questions
-
-For each candidate, ask the user to confirm or decide:
-
-**Rules**:
-
-- Ask **at most 3 questions per round**
-- Prefer concrete naming proposals or Yes/No
-- Accumulate confirmed decisions as **FUNCTION DECISIONS**
-
-Example question patterns:
-
-```bash
-[Function Interface] The spec identifies one main entry point for processing.
-Q1. What should the public function be named?
-    A) process_input  B) run  C) execute  D) Let me name it myself
-
-Q2. Should the function accept options as a separate parameter?
-    Yes (options object) / No (embed in main parameter)
-
-Q3. What should the function return on success?
-    A) Result object  B) Exit code (integer)  C) Boolean
-```
-
-**Termination conditions** (stop as soon as either is met):
-
-1. User responds with "十分", "以上です", "OK", "done", or equivalent
-2. All identified entry points have confirmed names and signatures
-
-#### Step 0-F-3: Summarize Function Decisions
-
-Compile confirmed decisions as **FUNCTION DECISIONS** block:
-
-```text
-FUNCTION DECISIONS:
-- process_requirements(input_path, options): entry point for processing; returns Result
-- validate_input(content): validates raw input; returns ValidationResult or error
-- format_output(result, lang): formats result for display; non-fatal on unsupported lang
-```
-
----
-
-### Phase 1: Split Assessment
-
-Estimate the volume of specifications before generating.
-
-#### Step 1-1: Count Specification Units
-
-From `requirements.md` count:
-
-| Item                                  | Count |
-| ------------------------------------- | ----- |
-| Functional Requirements (FR-xx)       | N     |
-| External API endpoints / integrations | N     |
-| Distinct user-facing behaviors        | N     |
-| Edge case groups                      | N     |
-
-#### Step 1-2: Apply Split Threshold
-
-| Total FR count | Action                                  |
-| -------------- | --------------------------------------- |
-| ≤ 7            | Single file: `specifications.md`        |
-| 8–14           | Consider split; ask user for preference |
-| ≥ 15           | Split required                          |
-
-**When asking the user (8–14 range)**:
-
-```bash
-[Split Assessment] This spec covers 10 FRs across 3 feature areas.
-Recommended split:
-  A) Single file  specifications.md  (all 10 FRs)
-  B) Split by area:
-       specifications-auth.md      (FR-01–04)
-       specifications-notify.md    (FR-05–08)
-       specifications-admin.md     (FR-09–10)
-Which do you prefer? (A/B/custom)
-```
-
-#### Step 1-3: Determine Output Files
-
-Record the final file plan as **SPLIT PLAN**:
-
-```text
-SPLIT PLAN:
-- specifications-auth.md      covers FR-01, FR-02, FR-03, FR-04
-- specifications-notify.md    covers FR-05, FR-06, FR-07, FR-08
-- specifications-admin.md     covers FR-09, FR-10
-```
-
-#### Step 1-4: Capture Version Baselines
-
-`generate-doc.sh` overwrites each output file. The generated document therefore
-always carries the template value `version: 1.0.0` and an empty Change History.
-
-For **each file** in SPLIT PLAN that already exists on disk — including
-`specifications-index.md`, which is generated from the same versioned template:
-
-- Copy its frontmatter `version` and its entire `## Change History` table
-- Store them per file as **BASELINE VERSION** and **BASELINE HISTORY**
-
-Files absent from disk are first generations and have no baseline.
-
----
-
-### Phase 2: Document Generation
-
-Build the combined prompt context from all prior phases:
-
-```text
-REQ SUMMARY:          <Phase A>
-REQ VERSION:          <Phase A>
-CODEBASE CONTEXT:     <Phase A>
-PRIOR ART:            <Phase B>
-CONFIRMED DESIGN:     <Phase D>
-EXTERNAL DESIGN NOTES:<Phase E>
-API DECISIONS:        <Phase 0>
-FUNCTION DECISIONS:   <Phase 0-F>
-SPLIT PLAN:           <Phase 1>
-REQUIREMENTS:         @requirements/requirements.md
-```
-
-In the generated file, `based-on` MUST read `requirements.md v<REQ VERSION>` —
-replace the `{{REQ_VERSION}}` placeholder. Never leave it literal.
-
-For **each file** in SPLIT PLAN, execute:
-
-```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh @specifications \
-  @requirements/requirements.md \
-  [--lang <lang>] \
-  --output "specifications/<filename>"
-```
-
-Pass all accumulated context so the AI can produce a well-grounded specification.
-This ensures the output reflects the actual codebase and confirmed design decisions.
-
----
-
-### Phase 3: External Spec Review & Cleanup (max 2 rounds)
-
-After all specification files are written, review each file.
-Ensure each file contains **only external specification content**.
-
-#### Step 3-1: Self-Scan
-
-Read each generated file and flag every passage that matches a removal criterion:
-
-| Criterion                | Examples                                                                   | Action                            |
-| ------------------------ | -------------------------------------------------------------------------- | --------------------------------- |
-| Implementation detail    | Function names, type signatures, file paths, class names                   | Remove or rewrite                 |
-| Requirements restatement | Sentences copied verbatim from `requirements.md`; FR/NFR bullet re-listing | Remove                            |
-| Notes / impl hints       | `<!-- impl: ... -->`, `> Note for impl:` comments                          | **Keep** (pass-through to `impl`) |
-
-**Do NOT remove:**
-
-- Behavioral rules expressed in declarative form
-- Edge cases and invariants
-- Interface contracts (pre/post-conditions without code)
-- Cross-unit interaction ordering
-- Notes explicitly marked as implementation hints
-
-#### Step 3-2: Present Findings to User
-
-For each flagged passage, present a concise diff-style summary:
-
-```bash
-[Spec Review] specifications-auth.md
-
-REMOVE (implementation detail):
-  Line 42: "calls authenticate() function and checks return value"
-  → Suggest: "performs authentication and evaluates the result"
-  Accept? (Y / keep / custom)
-
-REMOVE (requirements restatement):
-  Line 67: "FR-03: The system SHALL validate email format"
-  → This duplicates requirements.md FR-03. Remove?
-  Accept? (Y / keep)
-```
-
-If no issues found:
-
-```bash
-[Spec Review] No external-spec violations found in <filename>.
-```
-
-#### Step 3-3: Apply Changes
-
-For each accepted removal or rewrite:
-
-1. Edit the file in-place
-2. If a passage was rewritten, append the original as an impl note:
-
-   ```yaml
-   <!-- impl-note: original said "calls authenticate() function" -->
-   ```
-
-3. After all files are cleaned, show a final summary:
-
-   ```bash
-   [Cleanup Complete]
-   - specifications-auth.md: 2 removed, 1 rewritten
-   - specifications-notify.md: no changes
-   ```
-
-**Termination conditions:**
-
-1. User approves all changes with "Y", "OK", "承認", or equivalent
-2. 2 rounds completed — record any remaining disputed items in Section 7 (Open Questions)
-
----
-
-### Phase 3-5: Version Bump
-
-Regeneration during the Phase 3 review loop does not bump.
-Restore and bump after the user approves.
-
-On approval, run the steps below for **every file** written in Phase 2 — each
-split file and `specifications-index.md`, not only an unsuffixed
-`specifications.md`. Each file is versioned independently.
-
-**No baseline** (first generation) — keep `1.0.0` and the initial row.
-
-**Baseline captured in Step 1-4**:
-
-1. Write that file's **BASELINE HISTORY** back over its generated Change History table
-2. Classify this run's change to that file with the table below
-3. Bump from that file's **BASELINE VERSION** — never from the reset `1.0.0`
-4. Write the result to frontmatter `version` and add exactly one Change History row
-
-| Change                           | Bump  |
-| -------------------------------- | ----- |
-| Behavior removed or redefined    | MAJOR |
-| Spec rule / DD / edge case added | MINOR |
-| Clarification, rationale, typo   | PATCH |
-
-Does `based-on` cite an older version than **REQ VERSION**?
-Then update it and treat the refresh as at least PATCH.
-
-A split file left unbumped gives downstream documents no way to identify its
-revision. Skipping any file is a defect.
-
-See docs/.deckrd/rules/deckrd-rule-document-versioning.md.
-
-### Phase 4: Second Opinion via Codex
-
-After Phase 3 cleanup is approved, invoke `/deckrd:deckrd-review spec` before transitioning to `impl`.
-
-This step is **REQUIRED** when the specifications:
-
-- Reference external systems or third-party APIs heavily
-- Define data persistence or schema contracts
-- Introduce new module boundaries or public interfaces
-
-In all other cases, this step is **RECOMMENDED** before every `spec → impl` transition.
-
-**Execution:**
-
-```bash
-/deckrd:deckrd-review spec
-```
-
-Focus: balanced review — correctness, completeness, consistency across behavioral contracts.
-
-**Handling findings:**
-
-- Accept: Note which findings to act on before running `impl`
-- Reject: Always provide a rationale — silent rejection is not allowed
-- If findings require revisions, return to Phase 2 and regenerate; then re-run Phases 3–4
-
-See `docs/.deckrd/rules/deckrd-rule-second-opinion.md` for the full rule.
-
----
+各フェーズは自分の Output ブロックを、同名の `##` 見出しの下に追記または上書きする。
+
+| ブロック                | 書くフェーズ |
+| ----------------------- | ------------ |
+| `REQ SUMMARY`           | Phase 1      |
+| `REQ VERSION`           | Phase 1      |
+| `CODEBASE CONTEXT`      | Phase 1      |
+| `PRIOR ART`             | Phase 2      |
+| `DESIGN DRAFT`          | Phase 3      |
+| `CONFIRMED DESIGN`      | Phase 4      |
+| `EXTERNAL DESIGN NOTES` | Phase 5      |
+| `API DECISIONS`         | Phase 6      |
+| `FUNCTION DECISIONS`    | Phase 7      |
+| `SPLIT PLAN`            | Phase 8      |
+| `BASELINE VERSION`      | Phase 8      |
+| `BASELINE HISTORY`      | Phase 8      |
+
+`--phase` で単一フェーズを実行するときは、そのフェーズの Preconditions 表に従い、
+このファイルから前提ブロックを読む。ledger に無いものは、生成元フェーズを先に実行する。
 
 ## Input
 
@@ -655,7 +129,7 @@ deckrd/assets/
 
 ## Script
 
-Execute: [generate-doc.sh](../../scripts/generate-doc.sh)
+Execute: [generate-doc.sh](../../scripts/subcommands/generate-doc.sh)
 
 ```bash
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh @specifications @requirements/requirements.md [--lang <lang>] --output "specifications/specifications.md"
@@ -667,7 +141,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh @specifications @requirements
 
 ## Session Update
 
-After Phase 4 (or Phase 3 if Phase 4 is skipped), update `.session.json`:
+After Phase 12 (or Phase 11 if Phase 12 is skipped), update `.session.json`:
 
 ```json
 {
@@ -699,3 +173,12 @@ List each split file under `specifications_files`:
 ## Next Step
 
 Run `impl` to derive implementation plan from specifications.
+
+## Common Rationalizations
+
+| 言い訳                                   | 反論                                                                         |
+| ---------------------------------------- | ---------------------------------------------------------------------------- |
+| 表の「内容」欄を見れば手順は分かる       | 表は目次であり手順ではない。終了条件・質問数の上限・除去基準は本体にしかない |
+| 毎回フェーズファイルを開くのは無駄       | 701 行を常時読むのをやめた分を、必要な 1 本を正確に読むことに使う            |
+| 前に同じフェーズを実行したから覚えている | 手順は更新される。参照した内容が現行版である保証はない                       |
+| 短いフェーズは読まなくても書ける         | Phase 11 は 30 行だが、baseline の復元順序を間違えると版が壊れる             |

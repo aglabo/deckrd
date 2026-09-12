@@ -49,6 +49,35 @@ Phase 6: ワークフロー終了
 | Phase 5 | 完了状態を確認       | bdd-coder         | セッション終了前の最終確認                   |
 | Phase 6 | セッション終了       | bdd-coder         | 開発ツール・状態をリセット                   |
 
+## Usage
+
+```bash
+# Natural-language instruction
+"グリーティング関数を実装して"
+"implement config file parser"
+
+# Explicit Task ID (from tasks.md)
+/bdd-coder:bdd-coder T01-02
+/bdd-coder:bdd-coder T01-02 --checklist <path>   # skip checklist-builder, use existing checklist
+```
+
+### 呼び出し例
+
+**Natural-language instruction:**
+
+> "グリーティング関数を実装して"
+> → checklist-builder が `temp/tasks/add-greeting-function-calm-checklist.md` を生成 → bdd-coder で実装
+
+**Task ID from tasks.md:**
+
+> "T01-02 を実装して"
+> → checklist-builder が tasks.md の T01-02 からチェックリストを生成 → bdd-coder で実装
+
+**Existing checklist (skip checklist-builder):**
+
+> `/bdd-coder:bdd-coder T01-02 --checklist temp/tasks/my-happy-checklist.md`
+> → 既存チェックリストをそのまま使用 → bdd-coder で実装
+
 ## Before You Begin (MANDATORY — Phase 0 の前に実行)
 
 対象タスクの tasks.md を読む。
@@ -259,6 +288,27 @@ Agent definition: [../../../../agents/code-reviewer.md](../../../../agents/code-
 - 失敗回数 3+: ユーザーに相談 (先へ進まない)
 - CRAP > 30 または code-reviewer `BLOCKED`: リファクタリング (CC 削減) またはテスト追加後に再実行
 
+### セッションスコープの解決
+
+<!-- textlint-disable ja-technical-writing/sentence-length -->
+
+Never send the raw working-tree diff. A user who started the session with unrelated
+staged or unstaged edits would otherwise get those files reviewed, and unrelated findings
+could block the session.
+
+"Every working-tree change" means `git diff --name-only`, `git diff --name-only --cached`,
+and `git ls-files --others --exclude-standard`, merged and deduplicated. The third is
+required: a file bdd-coder just created is untracked and the first two do not list it.
+Keep deleted paths — code-reviewer reads their patch with `git diff -- <path>`.
+
+### CRAP ゲートが 2 か所にある理由
+
+The per-task CRAP gate in [agents/bdd-coder.md](../../../agents/bdd-coder.md) is the implementer's
+own gate over one task. Phase 4 recomputes CRAP across the aggregate diff. The two are
+intentionally separate — do not remove either as a duplicate.
+
+<!-- textlint-enable ja-technical-writing/sentence-length -->
+
 ## Phase 5: 完了確認
 
 実行内容:
@@ -275,6 +325,20 @@ Agent definition: [../../../../agents/code-reviewer.md](../../../../agents/code-
 書き戻しの詳細な手順は [SKILL.md](../SKILL.md) の Phase 5 を参照。
 
 出力: コーディング完了状態。
+
+### 完了判定の情報源
+
+<!-- textlint-disable ja-technical-writing/sentence-length -->
+
+The source of truth is the **Phase 3 status report table** — not the checkbox state of
+any file. Nothing updates `tasks.md` before this phase, so deciding completion from its
+checkboxes would always yield `in progress`. The checklist file IS updated per step by
+each bdd-coder instance, but a run that ended early can leave it behind the reports.
+
+The `none` row matters when every case came back `BLOCKED`: a target already marked
+`in progress` MUST NOT be regressed to `pending`.
+
+<!-- textlint-enable ja-technical-writing/sentence-length -->
 
 ## Phase 6: ワークフロー終了
 
