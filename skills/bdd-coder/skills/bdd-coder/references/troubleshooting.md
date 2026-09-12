@@ -273,6 +273,21 @@ title: TROUBLESHOOTING - フロー逸脱時の対応ガイド
 
 4. **Phase 6 へ進む**
 
+### SKILL 起動時のよくある失敗
+
+**tasks.md not found when Task ID specified**
+Cause: `/deckrd tasks` has not been run yet.
+Solution: Complete the full deckrd flow first: `req` → `spec` → `impl` → `tasks`.
+Or give a natural-language instruction instead — checklist-builder works without tasks.md.
+
+**Tests failing at Phase 4**
+Cause: bdd-coder implementation is incomplete or incorrect.
+Solution: Return to Phase 3, re-dispatch bdd-coder for the failing task. Do not skip Phase 4.
+
+**Phase skipped accidentally**
+Cause: Announcement not made before a phase.
+Solution: Restart from the beginning with proper announcements.
+
 ## IMPLEMENTATION ステップ逸脱時の対応
 
 ### 逸脱 1: Step 1 (品質ゲートコマンド取得) のスキップ
