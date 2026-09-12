@@ -29,7 +29,7 @@ title: TROUBLESHOOTING - フロー逸脱時の対応ガイド
 
 #### 対応
 
-1. **即座に Phase 0 へ戻る**
+1. 即座に Phase 0 へ戻る
    - リポジトリルートを確認: `pwd` / `ls -la`
    - 開発言語を確認: `cat package.json` | `cat Cargo.toml` など
    - 利用ツール一覧を記録: 開発環境のドキュメント確認
@@ -48,7 +48,7 @@ title: TROUBLESHOOTING - フロー逸脱時の対応ガイド
    pytest                # テスト
    ```
 
-3. **コマンド実行テスト**
+3. コマンド実行テスト
    - 各コマンドが正常に実行されることを確認
    - ヘルプオプション確認: `npm run lint --help` など
 
@@ -90,11 +90,11 @@ title: TROUBLESHOOTING - フロー逸脱時の対応ガイド
    deckrd session set --active <TASK_ID>
    ```
 
-3. **Session JSON が存在するが形式が不正な場合**
+3. Session JSON が存在するが形式が不正な場合
    - ファイルを削除して再初期化
    - JSON バリデーター使用: `jq . docs/.deckrd/.session.json`
 
-4. **アクティブタスク情報が古い場合**
+4. アクティブタスク情報が古い場合
    - セッション情報を最新化: `deckrd session refresh`
    - または新規セッション作成: `deckrd session create <TASK_ID>`
 
@@ -130,7 +130,7 @@ title: TROUBLESHOOTING - フロー逸脱時の対応ガイド
    - [ ] Task 3: ユーザーが存在しない場合、デフォルト処理 (エッジケース)
    ```
 
-2. **各タスクの独立性を確認**
+2. 各タスクの独立性を確認
    - 各タスクが単一テストケース対応であることを確認
    - タスク A の成否がタスク B に影響しないことを確認
 
@@ -162,18 +162,18 @@ title: TROUBLESHOOTING - フロー逸脱時の対応ガイド
 
 #### 対応
 
-1. **各タスク終了時に品質ゲート実行を必須化**
+1. 各タスク終了時に品質ゲート実行を必須化
    - deckrd-bdd-coder は品質ゲート合格を処理完了条件とする
    - Lint チェック: `npm run lint` など
    - 型チェック: `npm run check:types` など
 
-2. **品質ゲート失敗時の対応**
+2. 品質ゲート失敗時の対応
    - エラー内容を分析
    - 修正コード作成
    - 再度品質ゲート実行
    - **3 回以上失敗時: ロールバックしてユーザーに相談**
 
-3. **Phase 4 へ進む前に全体品質ゲート確認**
+3. Phase 4 へ進む前に全体品質ゲート確認
    - すべてのタスクが品質ゲート合格していることを確認
 
 ### 逸脱 5: Phase 4 (品質ゲート実行) での失敗対応の混乱
@@ -227,7 +227,7 @@ title: TROUBLESHOOTING - フロー逸脱時の対応ガイド
    | 型チェック失敗 | 型注釈不正、any の多用         | `tsconfig.json` 確認後、型定義を厳格化 |
    | テスト失敗     | ロジックバグ、テスト条件不正   | デバッグログ追加後、ロジック修正       |
 
-3. **Phase 5 へ進む条件**
+3. Phase 5 へ進む条件
    - Lint チェック: **合格**
    - 型チェック: **合格**
    - テスト: **すべてグリーン**
@@ -267,7 +267,7 @@ title: TROUBLESHOOTING - フロー逸脱時の対応ガイド
    # 合格テスト数 = 予期する総テスト数？
    ```
 
-3. **Refactor 完了確認**
+3. Refactor 完了確認
    - Step 7 で全体コード整理が完了しているか確認
    - ユーザーが Refactor 内容に承認しているか確認
 
@@ -361,7 +361,7 @@ Solution: Restart from the beginning with proper announcements.
 
 #### 対応
 
-1. **要件を詳細に分析**
+1. 要件を詳細に分析
    - 正常系、異常系、エッジケースを列挙
    - 各ケースに対応するテストケースを定義
 
@@ -432,7 +432,7 @@ Solution: Restart from the beginning with proper announcements.
    /coding T01-04          # 次のメッセージ
    ```
 
-2. **deckrd-bdd-coder のエラー対応**
+2. deckrd-bdd-coder のエラー対応
    - 実装中にエラーが発生した場合、即座にロールバック
    - エラー内容をユーザーに報告
    - **エラー 3 回以上時: ユーザー相談 (巻き戻し判定)**
@@ -480,11 +480,11 @@ Solution: Restart from the beginning with proper announcements.
    }
    ```
 
-2. **テストケースを明確に定義**
+2. テストケースを明確に定義
    - 各タスクのテストケースが 1 つであることを確認
    - テスト内容が曖昧でないことを確認
 
-3. **Refactor フェーズで統合的に改善**
+3. Refactor フェーズで統合的に改善
    - Green で実装した複数ステップを統合
    - 重複ロジックを関数抽出
 
@@ -515,7 +515,7 @@ Solution: Restart from the beginning with proper announcements.
    - [ ] Task 3: ... (未実装) ← まだある！
    ```
 
-2. **タスク完了の判定基準**
+2. タスク完了の判定基準
    - [ ] テスト実装済み
    - [ ] テスト PASS
    - [ ] 実装コード完成
@@ -575,7 +575,7 @@ Solution: Restart from the beginning with proper announcements.
    | テスト失敗 (実装バグ)         | 実装ロジック修正 → テスト再実行 | Step 3 (該当タスク) |
    | 複合エラー (3 個以上)         | 全体構造の見直し                | Step 7 (Refactor)   |
 
-3. **エラー情報の記録**
+3. エラー情報の記録
    - エラーメッセージ全文を記録
    - ファイル・行番号を特定
    - エラーの根本原因を分析
@@ -614,7 +614,7 @@ Solution: Restart from the beginning with proper announcements.
    # メモリや TodoWrite に完了を記録
    ```
 
-3. **進捗状況の可視化**
+3. 進捗状況の可視化
    - 完了済みタスク数 / 総タスク数を計算
    - 進捗率を記録
    - ユーザーに報告
@@ -637,7 +637,7 @@ Solution: Restart from the beginning with proper announcements.
 
 #### 対応
 
-1. **Refactor フェーズは必須**
+1. Refactor フェーズは必須
    - テストが通った ≠ 実装完了
    - テストが通った後に、コード品質改善が必須
 
@@ -687,7 +687,7 @@ Solution: Restart from the beginning with proper announcements.
    }
    ```
 
-3. **ユーザーと Refactor 案を協議**
+3. ユーザーと Refactor 案を協議
    - 提案内容をユーザーに説明
    - ユーザーの意見を反映
    - Refactor の実行・検証
@@ -758,7 +758,7 @@ Solution: Restart from the beginning with proper announcements.
    npm run check:types
    ```
 
-3. **チェック結果の記録**
+3. チェック結果の記録
    - 完了日時を記録
    - チェック項目の実行コマンド・出力を記録
    - ユーザーの承認を記録
@@ -779,12 +779,12 @@ Solution: Restart from the beginning with proper announcements.
 
 **A**: 以下の対応を実施してください。
 
-1. **ロールバック**: 実装を前のコミット時点まで戻す
-2. **原因分析**: エラーが何度も出る根本原因を分析
+1. ロールバック: 実装を前のコミット時点まで戻す
+2. 原因分析: エラーが何度も出る根本原因を分析
    - テストケースが曖昧？
    - 実装環境に問題？
    - deckrd-bdd-coder の動作異常？
-3. **ユーザーに相談**
+3. ユーザーに相談
    - 問題状況を報告
    - 対応案を提示
    - ユーザーの指示を仰ぐ
@@ -802,18 +802,18 @@ Solution: Restart from the beginning with proper announcements.
 
 **A:** Phase 5 (完了確認) は以下を実施します。
 
-1. **実装タスクリストの確認**
+1. 実装タスクリストの確認
    - すべてのタスクが `[x]` (完了) であることを確認
    - 未実装タスク (`[ ]`) が残っていないことを確認
 
-2. **全体テスト実行**
+2. 全体テスト実行
    - すべてのテストが PASS していることを確認
 
-3. **Refactor 完了確認**
+3. Refactor 完了確認
    - Step 7 で全体コード整理が実施されたことを確認
    - ユーザーが内容に承認していることを確認
 
-4. **進捗記録確認**
+4. 進捗記録確認
    - Step 6 で実装タスクリスト・Todo が更新されたことを確認
 
 この 4 つがすべて確認できたら Phase 6 へ進みます。
