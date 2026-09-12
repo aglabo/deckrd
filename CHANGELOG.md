@@ -53,7 +53,7 @@
 
 ### 💥 Breaking Changes
 
-- *(deckrd/rules)* Rule files are consolidated and relocated — projects initialized before this release must delete the 5 legacy rule files and the old index, then re-run `/deckrd init`
+- *(deckrd/rules)* Rule files are consolidated and relocated — projects initialized before this release must re-run `/deckrd init` first, then delete the 5 legacy rule files, the old index, and the legacy `.claude/rules/.gitignore` (see the migration steps in `docs/user-guides/02-commands.ja.md`)
 - *(runtime)* Runtime libraries move out of `skills/_runtime/` into the deckrd plugin
 - *(libs)* Library scripts are renamed from `*.sh` to `*.lib.sh`
 - *(config)* `package.json` is now `"type": "module"` — config files must be ESM

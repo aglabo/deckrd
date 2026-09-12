@@ -95,13 +95,34 @@ This release expands the documentation around the development workflow:
 
 The rule layout has changed and requires migration for existing projects.
 
-Before running the new initialization:
+**The order matters.** `/deckrd init` never overwrites or deletes existing files, so
+deleting the old rules first leaves the project without rules if initialization fails.
+Install and verify the new layout before removing anything.
 
-1. Delete the five legacy deckrd rule files.
-2. Delete the old deckrd rule index.
-3. Run `/deckrd init` again.
+1. Run `/deckrd init` again in the target project.
+2. Confirm that the rule bodies are in `docs/.deckrd/rules/` and that the index is at
+   `.claude/rules/deckrd-rules/deckrd-rules-index.md`.
+3. Only after confirming, delete the legacy rule bodies `.claude/rules/deckrd-rule-*.md`.
+4. Delete the legacy index `.claude/rules/deckrd-rules.md`. The wildcard in step 3 is
+   `deckrd-rule-*.md` and does not match it, so leaving it behind injects two indexes at once.
+5. Delete the legacy `.claude/rules/.gitignore`. It contains a `deckrd-*` line that excludes
+   the whole new `.claude/rules/deckrd-rules/` directory from git. A negation pattern inside
+   the directory cannot recover it, because git does not re-include the contents of an
+   excluded parent directory. Removing the parent file is the only fix.
+6. Confirm that the index is tracked:
 
-The initialization process will install the new rule layout under `docs/.deckrd/rules/` and `.claude/rules/`.
+   ```bash
+   git add -An .claude/rules/deckrd-rules/
+   ```
+
+   If `deckrd-rules-index.md` is listed, it is tracked. If nothing is listed, it is still
+   ignored. Do not use `git check-ignore -v` for this check: it also exits 0 when a negation
+   pattern matches.
+
+Without this migration the context reduction does not take effect, and an untracked index
+means your teammates never get the lazy-loading entry point.
+
+Full procedure with the Japanese explanation: [docs/user-guides/02-commands.ja.md](docs/user-guides/02-commands.ja.md).
 
 There are also internal compatibility changes to be aware of:
 
