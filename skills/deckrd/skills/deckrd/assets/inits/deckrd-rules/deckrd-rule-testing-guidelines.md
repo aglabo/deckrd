@@ -4,6 +4,7 @@ description: "テストの階層・テーブル駆動・テストデータ・テ
 version: 1.4.0
 ---
 
+<!-- cspell:words CINI BPRF BPRFI -->
 <!-- textlint-disable
   ja-technical-writing/sentence-length,
   ja-technical-writing/max-comma,
