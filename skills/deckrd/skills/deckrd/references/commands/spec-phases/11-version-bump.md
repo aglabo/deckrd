@@ -64,3 +64,5 @@ Every specification file carries a bumped `version` and one new Change History r
 ## Next Phase
 
 [Phase 12: Second Opinion via Codex](12-second-opinion.md)
+
+Phase 12 を省略するときは、ここで `spec.md` の Session Update に戻る。

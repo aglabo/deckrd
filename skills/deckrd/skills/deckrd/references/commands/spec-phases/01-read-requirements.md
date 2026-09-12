@@ -62,6 +62,13 @@ CODEBASE CONTEXT:
 
 ## Output
 
+Create the ledger directory before the first write — Phase 1 is the first writer, and
+this two-level module path does not exist on a fresh module:
+
+```bash
+mkdir -p temp/deckrd-work/<namespace>/<module>
+```
+
 Append **REQ SUMMARY**, **REQ VERSION**, and **CODEBASE CONTEXT** to the Context Ledger.
 
 ## Next Phase

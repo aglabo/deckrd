@@ -25,7 +25,7 @@ description: Get an independent review of the specifications before transitionin
 
 ## Steps
 
-After Phase 10 cleanup is approved, invoke `/deckrd:deckrd-review spec` before transitioning to `impl`.
+After Phase 11 completes, invoke `/deckrd:deckrd-review spec` before transitioning to `impl`.
 
 This step is **REQUIRED** when the specifications:
 

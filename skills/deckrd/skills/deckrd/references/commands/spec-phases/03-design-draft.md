@@ -22,8 +22,11 @@ description: Draft a design direction from requirements, codebase context, and p
 | 必要な入力       | 生成元  | 欠けているとき                                       |
 | ---------------- | ------- | ---------------------------------------------------- |
 | REQ SUMMARY      | Phase 1 | Context Ledger から読む。無ければ Phase 1 を実行する |
-| CODEBASE CONTEXT | Phase 1 | `temp/deckrd-work/codebase-context.md` を読む        |
-| PRIOR ART        | Phase 2 | `temp/deckrd-work/prior-art.md` を読む               |
+| CODEBASE CONTEXT | Phase 1 | Context Ledger から読む。無ければ Phase 1 を実行する |
+| PRIOR ART        | Phase 2 | Context Ledger から読む。無ければ Phase 2 を実行する |
+
+`temp/deckrd-work/codebase-context.md` と `prior-art.md` は全モジュール共有のため読まない。
+アクティブモジュールを切り替えた後は、前モジュールの調査結果が残っている。
 
 ## Steps
 
