@@ -19,7 +19,7 @@ description: Reference table of all deckrd commands
 | `req`                           | Derive requirements from goals                                                  |
 | `dr`                            | Manage Decision Records (any step)                                              |
 | `dr --add`                      | Append a new Decision Record                                                    |
-| `spec`                          | Derive specifications from requirements                                         |
+| `spec [--phase <phase>]`        | Derive specifications from requirements; フェーズ一覧は `commands/spec.md`      |
 | `impl`                          | Derive implementation plan from specifications                                  |
 | `tasks`                         | Derive executable tasks from implementation; with `implementation-checklist.md` |
 | `tasks update`                  | Regenerate `implementation-checklist.md` from existing `tasks.md`               |
