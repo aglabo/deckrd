@@ -40,18 +40,6 @@ Raise ALL questions before writing any code. Ask NOW if any of the following are
 
 Once Phase 1 (Checklist Build) starts, stop asking scope questions.
 
-## Usage
-
-```bash
-# Natural-language instruction
-"グリーティング関数を実装して"
-"implement config file parser"
-
-# Explicit Task ID (from tasks.md)
-/bdd-coder:bdd-coder T01-02
-/bdd-coder:bdd-coder T01-02 --checklist <path>   # skip checklist-builder, use existing checklist
-```
-
 ## Execution Flow
 
 bdd-coder is an orchestration layer with the following fixed phase order:
@@ -135,23 +123,16 @@ aggregate review over every file changed in Phase 3, not one invocation per task
 2. If those lists are unavailable, every working-tree change minus the SESSION BASELINE
    captured in Phase 0.
 
-Never send the raw working-tree diff. A user who started the session with unrelated
-staged or unstaged edits would otherwise get those files reviewed, and unrelated findings
-could block the session.
+Never send the raw working-tree diff.
+理由と "every working-tree change" の定義: [workflow.md](references/workflow.md) — Phase 4。
 
-"Every working-tree change" means `git diff --name-only`, `git diff --name-only --cached`,
-and `git ls-files --others --exclude-standard`, merged and deduplicated. The third is
-required: a file bdd-coder just created is untracked and the first two do not list it.
-Keep deleted paths — code-reviewer reads their patch with `git diff -- <path>`.
+The per-task CRAP gate and the Phase 4 CRAP gate are intentionally separate.
+Do not remove either as a duplicate. 理由: [workflow.md](references/workflow.md) — Phase 4。
 
 Checklist items, CRAP thresholds, and failure handling: [workflow.md](references/workflow.md) — Phase 4.
 Agent definition: [agents/code-reviewer.md](../../agents/code-reviewer.md).
 
 The same review is available on demand as `/bdd-coder:bdd-coder-review`; inside this flow it runs here.
-
-The per-task CRAP gate in [agents/bdd-coder.md](../../agents/bdd-coder.md) is the implementer's
-own gate over one task. Phase 4 recomputes CRAP across the aggregate diff. The two are
-intentionally separate — do not remove either as a duplicate.
 
 #### Where review findings go
 
@@ -169,9 +150,7 @@ and Phase 4 quality gate passes, write the implementation status back to the tas
 #### Step 1: Determine per-case completion status
 
 The source of truth is the **Phase 3 status report table** — not the checkbox state of
-any file. Nothing updates `tasks.md` before this phase, so deciding completion from its
-checkboxes would always yield `in progress`. The checklist file IS updated per step by
-each bdd-coder instance, but a run that ended early can leave it behind the reports.
+any file. 理由: [workflow.md](references/workflow.md) — Phase 5。
 
 | Phase 3 status                 | Case result                 |
 | ------------------------------ | --------------------------- |
@@ -197,12 +176,7 @@ resolved in Phase 1 (`docs/.deckrd/<namespace>/<module>/tasks/tasks.md`):
 3. A line already marked `- [x]` stays as is — the write-back is idempotent.
 4. If a completed case ID has no matching line in `tasks.md`, skip it and report it in Step 5.
 
-```markdown
-- [x] **T-01-01-01**: <description>
-  - Target: `<function>`
-  - Scenario: Given <precondition>, When <action>
-  - Expected: Then <assertion>
-```
+書式: [write-back-format.md](references/write-back-format.md) — Step 2。
 
 #### Step 3: Recalculate Task Summary from the checkboxes
 
@@ -218,17 +192,8 @@ For each such Test Target `T-XX`, count its case lines `**T-XX-YY-ZZ**` in `task
 | some          | `in progress`                                             |
 | none          | leave the current Status unchanged (do not write it back) |
 
-The `none` row matters when every case came back `BLOCKED`: a target already marked
-`in progress` MUST NOT be regressed to `pending`.
-
-```markdown
-## Task Summary
-
-| Test Target  | Scenarios | Cases | Status      |
-| ------------ | --------- | ----- | ----------- |
-| T-01: <name> | N         | M     | done        |
-| T-02: <name> | N         | M     | in progress |
-```
+書式と `none` 行の意味: [write-back-format.md](references/write-back-format.md) — Step 3、
+[workflow.md](references/workflow.md) — Phase 5。
 
 Do NOT modify any part of `tasks.md` other than the case checkbox markers (Step 2)
 and the Status column of the affected Test Targets (Step 3).
@@ -253,23 +218,15 @@ Regardless of input type, also update the checklist file:
 
 #### Step 5: Report to user
 
-After all write-backs complete, output:
+After all write-backs complete, output the STATUS WRITE-BACK and CHECKLIST BACKFILL blocks.
 
-```text
-STATUS WRITE-BACK (tasks.md):
-  T-01-01-01  [x]
-  T-01-01-02  [x]
-  T-01: done        (2/2 cases checked)
-  T-02: in progress (1/3 cases checked — 2 cases remain)
-  T-03-01-01  not found in tasks.md — skipped
-
-CHECKLIST BACKFILL:
-  T-01-01-02-F  [x]  (left unchecked by the bdd-coder instance)
-```
+書式: [write-back-format.md](references/write-back-format.md) — Step 5。
 
 ## References
 
+- Usage and invocation examples: [workflow.md](references/workflow.md) — Usage
 - Full phase details: [workflow.md](references/workflow.md)
+- Write-back formats: [write-back-format.md](references/write-back-format.md)
 - Error recovery: [troubleshooting.md](references/troubleshooting.md)
 - Q&A: [faq.md](references/faq.md)
 - BDD sub-agent: [agents/bdd-coder.md](../../agents/bdd-coder.md)
@@ -277,35 +234,3 @@ CHECKLIST BACKFILL:
 - On-demand review command: [bdd-coder-review/SKILL.md](../bdd-coder-review/SKILL.md)
 - Checklist builder: [agents/checklist-builder.md](../../agents/checklist-builder.md)
 - Checklist template: [assets/templates/implementation-checklist.tpl.md](assets/templates/implementation-checklist.tpl.md)
-
-## Examples
-
-**Natural-language instruction:**
-
-> "グリーティング関数を実装して"
-> → checklist-builder が `temp/tasks/add-greeting-function-calm-checklist.md` を生成 → bdd-coder で実装
-
-**Task ID from tasks.md:**
-
-> "T01-02 を実装して"
-> → checklist-builder が tasks.md の T01-02 からチェックリストを生成 → bdd-coder で実装
-
-**Existing checklist (skip checklist-builder):**
-
-> `/bdd-coder:bdd-coder T01-02 --checklist temp/tasks/my-happy-checklist.md`
-> → 既存チェックリストをそのまま使用 → bdd-coder で実装
-
-## Troubleshooting
-
-**tasks.md not found when Task ID specified**
-Cause: `/deckrd tasks` has not been run yet.
-Solution: Complete the full deckrd flow first: `req` → `spec` → `impl` → `tasks`.
-Or give a natural-language instruction instead — checklist-builder works without tasks.md.
-
-**Tests failing at Phase 4**
-Cause: bdd-coder implementation is incomplete or incorrect.
-Solution: Return to Phase 3, re-dispatch bdd-coder for the failing task. Do not skip Phase 4.
-
-**Phase skipped accidentally**
-Cause: Announcement not made before a phase.
-Solution: Restart from the beginning with proper announcements.
