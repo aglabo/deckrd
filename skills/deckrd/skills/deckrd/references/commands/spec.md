@@ -141,7 +141,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh @specifications @requirements
 
 ## Session Update
 
-After Phase 12 (or Phase 10 if Phase 12 is skipped), update `.session.json`:
+After Phase 12 (or Phase 11 if Phase 12 is skipped), update `.session.json`:
 
 ```json
 {
