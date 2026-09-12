@@ -18,8 +18,16 @@ Derive a normative requirements document from the user's goals, ideas, and const
 ## Usage
 
 ```bash
-/deckrd req <your requirements or goals by free-form text>
+/deckrd req [--grill] <your requirements or goals by free-form text>
 ```
+
+## Options
+
+| Option    | Effect                                                                             |
+| --------- | ---------------------------------------------------------------------------------- |
+| `--grill` | Enable Step 4-1b, a grilling review of the generated document's silent assumptions |
+
+`--grill` is interpreted by this command and is NOT passed to `generate-doc.sh`.
 
 ## Preconditions
 
@@ -32,6 +40,10 @@ Before Phase 0, YOU MUST output:
 
 > "I am executing /deckrd req for module [MODULE_NAME].
 > I will complete phases in order: 0 -> 1 -> 2 -> 3 -> 4. I will NOT skip phases."
+
+When `--grill` was passed, append:
+
+> "Grill mode is ON. I will run Step 4-1b before Step 4-2."
 
 ---
 
@@ -57,7 +69,9 @@ Before collecting user input, delegate codebase investigation to explore-agent:
    - `focus`: module name and feature keywords from user input (if available)
    - Agent definition: [`plugins/deckrd/agents/explore-agent.md`](../../../../agents/explore-agent.md)
 4. The agent writes findings to `temp/deckrd-work/codebase-context.md`
-5. Read the **Summary** returned by the agent and store as **CODEBASE CONTEXT** for Phase 3
+5. Read the **Summary** returned by the agent and store as **CODEBASE CONTEXT**.
+   It feeds Phase 3 generation AND suppresses Phase 2 questions: anything the
+   codebase already answers MUST NOT be asked of the user
 6. Proceed to Phase 1 immediately — do NOT wait for the agent to complete Phase 0 before starting Phase 1
 
 <!-- textlint-enable ja-technical-writing/sentence-length -->
@@ -70,7 +84,8 @@ Prompt the user:
 - What are your goals?
 - Any constraints or preferences?
 
-Accept free-form text. Store as **USER INPUT**.
+Accept free-form text. Strip `--grill` from it first, then store the rest as
+**USER INPUT**. Remember whether the flag was present; Step 4-1b depends on it.
 
 ### Phase 1-D: Generate System Context Diagram
 
@@ -97,10 +112,11 @@ Store as **CONTEXT DIAGRAM** for inclusion in requirements.md Section 2.
 
 ---
 
-### Phase 2: Hearing Loop (max 5 rounds)
+### Phase 2: Hearing Loop
 
 Conduct an interactive Q&A loop to fill information gaps.
-**Priority: fill missing EARS elements first**, then fill remaining scope gaps.
+Walk the design tree from the top: settle upstream decisions before the ones
+that hang off them, so a later answer never invalidates an earlier one.
 
 **Rules**:
 
@@ -108,28 +124,57 @@ Conduct an interactive Q&A loop to fill information gaps.
 - YOU MUST wait for the user's answer before asking the next question.
 - Asking multiple questions simultaneously = violation. Ask 1 question.
 - Prefer Yes/No or multiple-choice (A/B/C) questions over open-ended ones
+- **Every question MUST carry a recommended answer and a one-line rationale.**
+  Never ask a bare question. In multiple-choice form, put the recommendation
+  first and mark it `(Recommended)`.
+- When the user accepts a recommendation, write the **full text of the
+  recommended answer** into HEARING NOTES as the user's answer. Recording only
+  "accepted" is a violation: Step 1 of the generation prompt requires every
+  requirement to trace back to a concrete statement in USER INPUT or HEARING NOTES.
+- **Finding facts is your job, never the user's.** Before asking, check
+  **CODEBASE CONTEXT**. If the answer is discoverable from the code, do NOT ask
+  it. If a fact is missing mid-loop, spawn explore-agent with `scope`:
+  `codebase-extraction` and keep asking the remaining questions while it runs.
+  Reserve questions for what only a human can decide: intent, priority,
+  trade-offs, and acceptance thresholds.
 - Accumulate answers as **HEARING NOTES**
 
-**Question priority order** (ask in this order, skip if already known):
+**Question format**:
 
-1. EARS/GIVEN — For each FR candidate, ask: "Under what condition does this apply?"
+```text
+Q3. Is search available to all users, or only to authenticated ones?
+    A) Authenticated only (Recommended) — CODEBASE CONTEXT shows auth
+       middleware applied to every route
+    B) Available to unauthenticated users
+```
+
+**Question priority order** (ask in this order, skip if already known).
+Items 1–3 are upstream: if any of them moves, every answer below it is
+invalidated and must be asked again.
+
+1. Scope — In-scope vs out-of-scope boundary
+2. Stakeholders — Who will use the system
+3. Constraints — Technical or business constraints
+4. EARS/GIVEN — For each FR candidate, ask: "Under what condition does this apply?"
    Example: "This behavior — is it available to all users, or only authenticated ones?"
-2. EARS/type — For each FR candidate without a type, ask which fits:
+5. EARS/type — For each FR candidate without a type, ask which fits:
    Example: "Does this trigger on a specific user action (WHEN), or hold continuously
    during a system state (WHILE), or is it something the system must never do (NOT DO)?"
-3. Scope — In-scope vs out-of-scope boundary
-4. Constraints — Technical or business constraints
-5. Stakeholders — Who will use the system
 
 **Termination conditions** (stop as soon as either is met):
 
 1. User responds with "十分", "以上です", "OK", "done", or equivalent
-2. All items below are confirmed:
+2. No branch of the design tree is left undecided:
    1. Purpose (what problem to solve)
    2. Scope (in-scope and out-of-scope)
-   3. Key functional requirements (at least 3) — each with GIVEN and type confirmed
+   3. Stakeholders (who will use it)
    4. Constraints (technical or business)
-   5. Stakeholders (who will use it)
+   5. Key functional requirements (at least 3) — each with GIVEN and type confirmed
+   6. Nothing has been silently assumed
+
+**Runaway guard**: if 10 questions have been asked and items remain undecided,
+demote the remainder to Open Questions, confirm that with the user, and proceed
+to Phase 3. Silently filling an undecided item is PROHIBITED.
 
 ### Phase 3: Document Generation
 
@@ -172,6 +217,67 @@ Read the generated `requirements.md` and evaluate against the following checklis
 | Acceptance Criteria are testable           | 5 Gherkin scenarios; Given/When/Then are concrete                |
 | Open Questions are catalogued              | All unresolved items listed with owner and impact                |
 | No contradictions between sections         | FR ↔ NFR ↔ User Stories are consistent                           |
+
+#### Step 4-1b: Grilling Review (only with `--grill`)
+
+Skip this step entirely unless `--grill` was passed. Without the flag, go
+straight from Step 4-1 to Step 4-2.
+
+Step 4-1 checks the document's *form*. This step challenges its *substance*:
+the statements the generator filled in on its own.
+
+**Extract the silent assumptions.** Compare every statement in the generated
+`requirements.md` against USER INPUT and HEARING NOTES. Question ONLY the
+statements that neither source supports. A statement with a traceable source
+is settled and MUST NOT be re-opened.
+
+Typical sources of silent assumptions:
+
+| Location                    | What to challenge                                |
+| --------------------------- | ------------------------------------------------ |
+| Non-Functional Requirements | Any number — who chose that threshold?           |
+| Acceptance Criteria         | Concrete values, boundaries, error-path behavior |
+| User Stories                | Roles that never appeared in the input           |
+| Out of Scope                | Exclusions the user never asked for              |
+| EARS GIVEN                  | Preconditions the generator supplied             |
+
+**Rules** — identical to Phase 2:
+
+- Ask EXACTLY 1 question per round. No exceptions.
+- Every question MUST carry a recommended answer and a one-line rationale.
+- On acceptance, record the full text of the recommendation, not "accepted".
+- Ask upstream first: a Scope assumption before an NFR assumption that rests on it.
+- Check CODEBASE CONTEXT before asking. Do not ask what the code can answer.
+
+**Question format**:
+
+```text
+G2. Section 5 states "response time under 2 seconds", but neither USER INPUT
+    nor HEARING NOTES specifies a target. Where did this come from?
+    A) Keep 2 s as the target (Recommended) — matches the existing API SLO
+       recorded in CODEBASE CONTEXT
+    B) Use a different value (please specify)
+    C) Demote to an Open Question — the target is not decided yet
+```
+
+**Termination conditions** (stop as soon as either is met):
+
+1. Every unsupported statement has been confirmed, corrected, or demoted to an
+   Open Question
+2. User responds with "十分", "以上です", "OK", "done", or equivalent
+
+**Runaway guard**: if 10 questions have been asked and unsupported statements
+remain, demote the remainder to Open Questions and proceed to Step 4-2.
+
+**Feeding results back**: append every answer to **REVIEW NOTES** and let the
+existing Step 4-3 path apply them. Do NOT edit `requirements.md` directly.
+
+- Confirmed or corrected item: add to REVIEW NOTES for Phase 3 regeneration
+- Demoted item: add to REVIEW NOTES with an explicit instruction to list it
+  under Open Questions
+
+Step 4-1b runs ONCE per `req` invocation. When Step 4-3 loops back, return to
+Step 4-1 only.
 
 #### Step 4-2: Present Review Findings
 
