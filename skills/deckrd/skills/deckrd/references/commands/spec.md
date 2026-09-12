@@ -13,7 +13,7 @@ description: Derive technically verifiable behavioral specifications from requir
 
 Derive technically verifiable behavioral goals and constraints from requirements.
 
-このファイルは目次であり、フェーズの手順は含まない。手順は `spec-phased/` 配下にある。
+このファイルは目次であり、フェーズの手順は含まない。手順は `spec-phases/` 配下にある。
 
 ## Usage
 
@@ -33,23 +33,23 @@ Derive technically verifiable behavioral goals and constraints from requirements
 
 ## Execution Flow
 
-**下表の「読むタイミング」欄を見て、該当フェーズの開始前に `spec-phased/<ファイル名>` を Read すること。**
+**下表の「読むタイミング」欄を見て、該当フェーズの開始前に `spec-phases/<ファイル名>` を Read すること。**
 記憶や推測でフェーズを実行してはならない。
 
 | Phase | slug                 | ファイル                                                         | 内容                          | 読むタイミング                               |
 | ----- | -------------------- | ---------------------------------------------------------------- | ----------------------------- | -------------------------------------------- |
-| 1     | `read-requirements`  | [01-read-requirements.md](spec-phased/01-read-requirements.md)   | 要件読解・コードベース調査    | spec 開始時。常に最初                        |
-| 2     | `prior-art`          | [02-prior-art.md](spec-phased/02-prior-art.md)                   | PoC / 参考 PR の調査          | Phase 1 の Step 1-2 と並行して開始           |
-| 3     | `design-draft`       | [03-design-draft.md](spec-phased/03-design-draft.md)             | 設計方針の起草                | Phase 1 と Phase 2 の agent が両方完了した後 |
-| 4     | `user-review`        | [04-user-review.md](spec-phased/04-user-review.md)               | ユーザーレビュー (対話)       | DESIGN DRAFT ができた直後                    |
-| 5     | `design-dialogue`    | [05-design-dialogue.md](spec-phased/05-design-dialogue.md)       | 外部設計対話 (AI 内部推論)    | CONFIRMED DESIGN が確定した後                |
-| 6     | `api-decisions`      | [06-api-decisions.md](spec-phased/06-api-decisions.md)           | 外部 API の決定 (対話)        | Phase 5 完了後。ドキュメント生成の前         |
-| 7     | `function-decisions` | [07-function-decisions.md](spec-phased/07-function-decisions.md) | 公開関数の決定 (対話)         | Phase 6 完了後。ドキュメント生成の前         |
-| 8     | `split-assessment`   | [08-split-assessment.md](spec-phased/08-split-assessment.md)     | 分割判定・版の baseline 取得  | Phase 7 完了後。FR 数によらず必ず通る        |
-| 9     | `generate`           | [09-generate.md](spec-phased/09-generate.md)                     | ドキュメント生成              | SPLIT PLAN が確定した後                      |
-| 10    | `spec-review`        | [10-spec-review.md](spec-phased/10-spec-review.md)               | 外部仕様レビューと除去 (対話) | 生成直後。版上げの前                         |
-| 11    | `version-bump`       | [11-version-bump.md](spec-phased/11-version-bump.md)             | 版上げ                        | Phase 10 をユーザーが承認した後              |
-| 12    | `second-opinion`     | [12-second-opinion.md](spec-phased/12-second-opinion.md)         | codex による second opinion   | Phase 11 完了後。`impl` へ移る前             |
+| 1     | `read-requirements`  | [01-read-requirements.md](spec-phases/01-read-requirements.md)   | 要件読解・コードベース調査    | spec 開始時。常に最初                        |
+| 2     | `prior-art`          | [02-prior-art.md](spec-phases/02-prior-art.md)                   | PoC / 参考 PR の調査          | Phase 1 の Step 1-2 と並行して開始           |
+| 3     | `design-draft`       | [03-design-draft.md](spec-phases/03-design-draft.md)             | 設計方針の起草                | Phase 1 と Phase 2 の agent が両方完了した後 |
+| 4     | `user-review`        | [04-user-review.md](spec-phases/04-user-review.md)               | ユーザーレビュー (対話)       | DESIGN DRAFT ができた直後                    |
+| 5     | `design-dialogue`    | [05-design-dialogue.md](spec-phases/05-design-dialogue.md)       | 外部設計対話 (AI 内部推論)    | CONFIRMED DESIGN が確定した後                |
+| 6     | `api-decisions`      | [06-api-decisions.md](spec-phases/06-api-decisions.md)           | 外部 API の決定 (対話)        | Phase 5 完了後。ドキュメント生成の前         |
+| 7     | `function-decisions` | [07-function-decisions.md](spec-phases/07-function-decisions.md) | 公開関数の決定 (対話)         | Phase 6 完了後。ドキュメント生成の前         |
+| 8     | `split-assessment`   | [08-split-assessment.md](spec-phases/08-split-assessment.md)     | 分割判定・版の baseline 取得  | Phase 7 完了後。FR 数によらず必ず通る        |
+| 9     | `generate`           | [09-generate.md](spec-phases/09-generate.md)                     | ドキュメント生成              | SPLIT PLAN が確定した後                      |
+| 10    | `spec-review`        | [10-spec-review.md](spec-phases/10-spec-review.md)               | 外部仕様レビューと除去 (対話) | 生成直後。版上げの前                         |
+| 11    | `version-bump`       | [11-version-bump.md](spec-phases/11-version-bump.md)             | 版上げ                        | Phase 10 をユーザーが承認した後              |
+| 12    | `second-opinion`     | [12-second-opinion.md](spec-phases/12-second-opinion.md)         | codex による second opinion   | Phase 11 完了後。`impl` へ移る前             |
 
 ## Context Ledger
 
