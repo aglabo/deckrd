@@ -49,35 +49,9 @@ No announcement = violation. Restart with announcement.
 
 Gate Rule: each command requires the previous command's document. No skipping.
 
+> `spec --phase <slug>` re-runs a single spec phase and is exempt from the order gate. See [commands/spec.md](references/commands/spec.md).
 > `project` is project-scoped and can run any time. See [commands/project.md](references/commands/project.md).
 > Full command list: [commands/index.md](references/commands/index.md)
-> Workflow overview: [workflow.md](references/workflow.md)
+> Workflow overview: [workflow.md](references/workflow.md) — 経路を選ぶとき、呼び出し例を見たいとき
 > Session management: [session.md](references/session.md)
-
-## Examples
-
-**New feature from goals:**
-
-> "I want to add a retry mechanism to the HTTP client."
-> → `/deckrd init my-project/http-retry` → `req` → `spec` → `impl` → `tasks`
-
-**Existing code, no docs:**
-
-> "This module has no documentation. Reverse-engineer it."
-> → `/deckrd rev --to req` → `spec` → `impl` → `tasks`
-
-**Small bug fix:**
-
-## Troubleshooting
-
-**Session not found**
-Cause: `init` has not been run, or wrong directory.
-Solution: Run `/deckrd init <project> <project-type>` first.
-
-**Command out of order**
-Cause: Trying to run `spec` before `req`, etc.
-Solution: Check `/deckrd status` to see the current step, then run the correct next command.
-
-**Gate Rule violation**
-Cause: Required document from previous step is missing.
-Solution: Complete the missing step before proceeding. Use `/deckrd status` to confirm.
+> Troubleshooting: [troubleshooting.md](references/troubleshooting.md) — コマンドが失敗した / 順序ゲートに弾かれたとき
