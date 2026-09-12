@@ -142,6 +142,23 @@ docs/.deckrd/
 # → Reads implementation.md, creates tasks.md + implementation-checklist.md
 ```
 
+### Scenario Examples
+
+**New feature from goals:**
+
+> "I want to add a retry mechanism to the HTTP client."
+> → `/deckrd init my-project/http-retry` → `req` → `spec` → `impl` → `tasks`
+
+**Existing code, no docs:**
+
+> "This module has no documentation. Reverse-engineer it."
+> → `/deckrd rev --to req` → `spec` → `impl` → `tasks`
+
+**Small bug fix:**
+
+> "The config parser drops trailing whitespace. Fix it."
+> → `/deckrd module my-project/config-parser` → `req` → `spec` → `impl` → `tasks`
+
 ---
 
 ## Alternative Workflow Paths
