@@ -7,6 +7,8 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 
+# cspell:words MAINI
+
 # shellcheck disable=SC1090
 
 _RUNTIME_BOOTSTRAP="${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/skills/deckrd/scripts/libs/bootstrap.lib.sh"
@@ -176,6 +178,13 @@ Describe "init.sh: main() integration"
         The path "${CLAUDE_RULES_INDEX_DIR}/deckrd-rules-index.md" should be exist
         The path "${CLAUDE_RULES_INDEX_DIR}/deckrd-rule-bdd-cycle.md" should not be exist
       End
+
+      It "[Edge] T-CLI-MAINI-39: Should: first run does not notify rules updates"
+        When run bash "$SCRIPT" myapp webapp
+        The status should equal 0
+        The stderr should include "Session created"
+        The stderr should not include "Rules update available"
+      End
     End
 
     Describe "When: DECKRD_RULES_DIR/.gitignore already exists"
@@ -191,6 +200,13 @@ Describe "init.sh: main() integration"
         The status should equal 0
         The stderr should include "[init/deckrd-rules] skip (exists): .gitignore"
         The stderr should not include "skip (exists): .gitignore.org"
+      End
+
+      It "[Edge] T-CLI-MAINI-40: Should: not notify a differing file when session.json does not exist"
+        When run bash "$SCRIPT" myapp webapp
+        The status should equal 0
+        The stderr should include "[init/deckrd-rules] skip (exists): .gitignore"
+        The stderr should not include "Rules update available"
       End
     End
   End
@@ -208,6 +224,13 @@ Describe "init.sh: main() integration"
       When run bash "$SCRIPT" myapp webapp
       The status should equal 0
       The stderr should include "Session preserved"
+    End
+
+    It "[Normal] T-CLI-MAINI-37: Should: not notify rules updates when no installed asset differs"
+      When run bash "$SCRIPT" myapp webapp
+      The status should equal 0
+      The stderr should include "Session preserved"
+      The stderr should not include "Rules update available"
     End
   End
 
@@ -383,6 +406,100 @@ Describe "init.sh: main() integration"
         The status should equal 1
         The lines of entire stderr should eq 1
         The stderr should include "jq or jaq is required"
+      End
+    End
+  End
+
+  Describe "Given: project is already initialized"
+    After "teardown_deckrd_tmpdir"
+
+    setup_initialized() {
+      setup_deckrd_tmpdir
+      bash "$SCRIPT" myapp webapp >/dev/null 2>&1
+    }
+    Before "setup_initialized"
+
+    # Make installed files differ from their sources
+    append_local_change() {
+      local file
+      for file in "$@"; do
+        printf '\n# local change\n' >>"$file"
+      done
+    }
+
+    Describe "When: an installed asset differs from its source"
+      It "[Normal] T-CLI-MAINI-34: Should: exit 0, stdout blank, stderr notifies '[deckrd-rules] deckrd-rule-workflow.md'"
+        append_local_change "${DECKRD_RULES_DIR}/deckrd-rule-workflow.md"
+        When run bash "$SCRIPT" myapp webapp
+        The status should equal 0
+        # @note: --json モード追加時はこのアサーションを見直すこと
+        The output should be blank
+        The stderr should include "Rules update available:"
+        The stderr should include "  [deckrd-rules] deckrd-rule-workflow.md"
+      End
+
+      It "[Normal] T-CLI-MAINI-35: Should: notify '[local-deckrd] .gitignore' with '.org' stripped"
+        append_local_change "${DECKRD_LOCAL_DATA}/.gitignore"
+        When run bash "$SCRIPT" myapp webapp
+        The status should equal 0
+        The stderr should include "  [local-deckrd] .gitignore"
+        The stderr should not include "[local-deckrd] .gitignore.org"
+      End
+
+      It "[Normal] T-CLI-MAINI-36: Should: notify claude-rules, deckrd-rules-index and docs differences"
+        append_local_change \
+          "${CLAUDE_RULES_DIR}/claude-rule-command-execute.md" \
+          "${CLAUDE_RULES_INDEX_DIR}/deckrd-rules-index.md" \
+          "${DECKRD_DOCS_DIR}/README.md"
+        When run bash "$SCRIPT" myapp webapp
+        The status should equal 0
+        The stderr should include "  [claude-rules] claude-rule-command-execute.md"
+        The stderr should include "  [deckrd-rules-index] deckrd-rules-index.md"
+        The stderr should include "  [docs] README.md"
+      End
+
+      It "[Edge] T-CLI-MAINI-41: Should: notify but keep the differing installed file unchanged"
+        append_local_change "${DECKRD_RULES_DIR}/deckrd-rule-workflow.md"
+        EXPECTED_WORKFLOW="$(cat "${DECKRD_RULES_DIR}/deckrd-rule-workflow.md")"
+        When run bash "$SCRIPT" myapp webapp
+        The status should equal 0
+        The stderr should include "Rules update available:"
+        The contents of file "${DECKRD_RULES_DIR}/deckrd-rule-workflow.md" should equal "$EXPECTED_WORKFLOW"
+        The contents of file "${DECKRD_RULES_DIR}/deckrd-rule-workflow.md" \
+          should not equal "$(load_asset "inits/deckrd-rules/deckrd-rule-workflow.md")"
+      End
+
+      It "[Normal] T-CLI-MAINI-43: Should: print the notice block at the end of stderr, after 'Session preserved'"
+        append_local_change "${DECKRD_RULES_DIR}/deckrd-rule-workflow.md"
+        When run bash "$SCRIPT" myapp webapp
+        The status should equal 0
+        The stderr should match pattern "*Session preserved: *Rules update available:*"
+        The stderr should end with "session.json
+
+Rules update available:
+  [deckrd-rules] deckrd-rule-workflow.md"
+      End
+    End
+
+    Describe "When: an installed asset was deleted"
+      It "[Edge] T-CLI-MAINI-42: Should: copy the missing file again without notifying rules updates"
+        rm "${DECKRD_RULES_DIR}/deckrd-rule-workflow.md"
+        When run bash "$SCRIPT" myapp webapp
+        The status should equal 0
+        The stderr should include "[init/deckrd-rules] copied: deckrd-rule-workflow.md"
+        The stderr should not include "Rules update available"
+      End
+    End
+
+    Describe "When: arguments are invalid"
+      It "[Error] T-CLI-MAINI-38: Should: exit 1 without notifying rules updates for --language cobol"
+        append_local_change "${DECKRD_RULES_DIR}/deckrd-rule-workflow.md"
+        When run bash "$SCRIPT" myapp webapp --language cobol
+        The status should equal 1
+        # @note: --json モード追加時はこのアサーションを見直すこと
+        The output should be blank
+        The stderr should include "Unsupported language"
+        The stderr should not include "Rules update available"
       End
     End
   End
