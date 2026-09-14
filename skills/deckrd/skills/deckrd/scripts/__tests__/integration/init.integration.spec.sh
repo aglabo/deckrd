@@ -419,17 +419,19 @@ Describe "init.sh: main() integration"
     }
     Before "setup_initialized"
 
-    # Make installed files differ from their sources
-    append_local_change() {
+    # Simulate an outdated install: upstream source updated after installation
+    # (installed content differs and is older than the source)
+    make_outdated_install() {
       local file
       for file in "$@"; do
         printf '\n# local change\n' >>"$file"
+        touch -d '2000-01-01 00:00:00' "$file"
       done
     }
 
     Describe "When: an installed asset differs from its source"
       It "[Normal] T-CLI-MAINI-34: Should: exit 0, stdout blank, stderr notifies '[deckrd-rules] deckrd-rule-workflow.md'"
-        append_local_change "${DECKRD_RULES_DIR}/deckrd-rule-workflow.md"
+        make_outdated_install "${DECKRD_RULES_DIR}/deckrd-rule-workflow.md"
         When run bash "$SCRIPT" myapp webapp
         The status should equal 0
         # @note: --json モード追加時はこのアサーションを見直すこと
@@ -439,7 +441,7 @@ Describe "init.sh: main() integration"
       End
 
       It "[Normal] T-CLI-MAINI-35: Should: notify '[local-deckrd] .gitignore' with '.org' stripped"
-        append_local_change "${DECKRD_LOCAL_DATA}/.gitignore"
+        make_outdated_install "${DECKRD_LOCAL_DATA}/.gitignore"
         When run bash "$SCRIPT" myapp webapp
         The status should equal 0
         The stderr should include "  [local-deckrd] .gitignore"
@@ -447,7 +449,7 @@ Describe "init.sh: main() integration"
       End
 
       It "[Normal] T-CLI-MAINI-36: Should: notify claude-rules, deckrd-rules-index and docs differences"
-        append_local_change \
+        make_outdated_install \
           "${CLAUDE_RULES_DIR}/claude-rule-command-execute.md" \
           "${CLAUDE_RULES_INDEX_DIR}/deckrd-rules-index.md" \
           "${DECKRD_DOCS_DIR}/README.md"
@@ -459,7 +461,7 @@ Describe "init.sh: main() integration"
       End
 
       It "[Edge] T-CLI-MAINI-41: Should: notify but keep the differing installed file unchanged"
-        append_local_change "${DECKRD_RULES_DIR}/deckrd-rule-workflow.md"
+        make_outdated_install "${DECKRD_RULES_DIR}/deckrd-rule-workflow.md"
         EXPECTED_WORKFLOW="$(cat "${DECKRD_RULES_DIR}/deckrd-rule-workflow.md")"
         When run bash "$SCRIPT" myapp webapp
         The status should equal 0
@@ -470,7 +472,7 @@ Describe "init.sh: main() integration"
       End
 
       It "[Normal] T-CLI-MAINI-43: Should: print the notice block at the end of stderr, after 'Session preserved'"
-        append_local_change "${DECKRD_RULES_DIR}/deckrd-rule-workflow.md"
+        make_outdated_install "${DECKRD_RULES_DIR}/deckrd-rule-workflow.md"
         When run bash "$SCRIPT" myapp webapp
         The status should equal 0
         The stderr should match pattern "*Session preserved: *Rules update available:*"
@@ -478,6 +480,17 @@ Describe "init.sh: main() integration"
 
 Rules update available:
   [deckrd-rules] deckrd-rule-workflow.md"
+      End
+    End
+
+    Describe "When: an installed asset was edited by the user"
+      It "[Edge] T-CLI-MAINI-44: Should: exit 0 without notifying rules updates and keep the edited file"
+        printf '\n# user edit\n' >>"${DECKRD_RULES_DIR}/deckrd-rule-workflow.md"
+        EXPECTED_WORKFLOW="$(cat "${DECKRD_RULES_DIR}/deckrd-rule-workflow.md")"
+        When run bash "$SCRIPT" myapp webapp
+        The status should equal 0
+        The stderr should not include "Rules update available"
+        The contents of file "${DECKRD_RULES_DIR}/deckrd-rule-workflow.md" should equal "$EXPECTED_WORKFLOW"
       End
     End
 
@@ -493,7 +506,7 @@ Rules update available:
 
     Describe "When: arguments are invalid"
       It "[Error] T-CLI-MAINI-38: Should: exit 1 without notifying rules updates for --language cobol"
-        append_local_change "${DECKRD_RULES_DIR}/deckrd-rule-workflow.md"
+        make_outdated_install "${DECKRD_RULES_DIR}/deckrd-rule-workflow.md"
         When run bash "$SCRIPT" myapp webapp --language cobol
         The status should equal 1
         # @note: --json モード追加時はこのアサーションを見直すこと

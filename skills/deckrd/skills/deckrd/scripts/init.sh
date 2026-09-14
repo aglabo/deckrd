@@ -50,6 +50,7 @@ unset _SCRIPT_DIR
 
 . "${DECKRD_LIB_DIR}/validate-env.lib.sh"
 . "${DECKRD_LIB_DIR}/utils.lib.sh"
+. "${DECKRD_LIB_DIR}/asset-diff.lib.sh"
 validate_env || exit 1
 
 . "${DECKRD_LIB_DIR}/ai-runner.lib.sh"
@@ -214,7 +215,7 @@ validate_args() {
 # @arg $2 string Source directory (optional; if omitted, only creates dest dir)
 # @arg $3 string Label for display (optional; defaults to basename of dest dir)
 # @stderr Progress messages
-# @var RULES_UPDATES appended with "[label] dest_filename" when IS_INITIALIZED=1 and an existing dest differs
+# @var RULES_UPDATES appended with "[label] dest_filename" per entry of list_updated_assets when IS_INITIALIZED=1
 init_directory() {
   local dest_dir="$1"
   local src_dir="${2:-}"
@@ -235,22 +236,25 @@ init_directory() {
   for src_file in "$src_dir"/* "$src_dir"/.*; do
     [[ -e "$src_file" ]] || continue
     [[ "$(basename "$src_file")" == "." || "$(basename "$src_file")" == ".." ]] && continue
-    local filename dest_filename dest_file
-    filename="$(basename "$src_file")"
-    dest_filename="${filename%.org}"
+    local dest_filename dest_file
+    dest_filename="$(asset_dest_name "$src_file")"
     dest_file="${dest_dir}/${dest_filename}"
     if [[ -e "$dest_file" ]]; then
       echo "  [init/${label}] skip (exists): ${dest_filename}" >&2
       skipped=$((skipped + 1))
-      if [[ "$IS_INITIALIZED" == "1" ]] && ! cmp -s "$src_file" "$dest_file"; then
-        RULES_UPDATES+=("[${label}] ${dest_filename}")
-      fi
     else
       cp "$src_file" "$dest_file"
       echo "  [init/${label}] copied: ${dest_filename}" >&2
       copied=$((copied + 1))
     fi
   done
+
+  if [[ "$IS_INITIALIZED" == "1" ]]; then
+    local updated
+    while IFS= read -r updated; do
+      RULES_UPDATES+=("[${label}] ${updated}")
+    done < <(list_updated_assets "$src_dir" "$dest_dir")
+  fi
 
   echo "  [init/${label}] done: ${copied} copied, ${skipped} skipped" >&2
 }
