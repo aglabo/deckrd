@@ -90,18 +90,19 @@ docs/.deckrd/<ns>/<mod>/  (ディレクトリ作成)
 
 ## コマンド一覧
 
-| コマンド | 役割                     | 入力                 | 出力                                      |
-| -------- | ------------------------ | -------------------- | ----------------------------------------- |
-| `init`   | プロジェクト初期化       | project名・type      | `project.json`, `session.json`            |
-| `module` | モジュール作成           | namespace/module 名  | `docs/.deckrd/<ns>/<mod>/` ディレクトリ   |
-| `req`    | 要件導出                 | ユーザーの目標・制約 | `requirements.md`                         |
-| `spec`   | 仕様導出                 | `requirements.md`    | `specifications.md`                       |
-| `impl`   | 実装計画導出             | `specifications.md`  | `implementation.md`                       |
-| `tasks`  | タスク生成               | `implementation.md`  | `tasks.md`, `implementation-checklist.md` |
-| `review` | ドキュメントレビュー     | 任意のドキュメント   | レビュー結果（任意: DR追記）              |
-| `dr`     | 決定記録追加             | 設計判断の文脈       | `decision-records.md` (追記)              |
-| `status` | 進捗確認                 | —                    | 現在ステップ・完了状況の表示              |
-| `rev`    | リバースエンジニアリング | 既存コード           | 指定フェーズのドキュメント                |
+| コマンド | 役割                     | 入力                 | 出力                                            |
+| -------- | ------------------------ | -------------------- | ----------------------------------------------- |
+| `init`   | プロジェクト初期化       | project名・type      | `project.json`, `session.json`                  |
+| `module` | モジュール作成           | namespace/module 名  | `docs/.deckrd/<ns>/<mod>/` ディレクトリ         |
+| `req`    | 要件導出                 | ユーザーの目標・制約 | `requirements.md`                               |
+| `spec`   | 仕様導出                 | `requirements.md`    | `specifications.md`                             |
+| `impl`   | 実装計画導出             | `specifications.md`  | `implementation.md`                             |
+| `tasks`  | タスク生成               | `implementation.md`  | `tasks.md`, `implementation-checklist.md`       |
+| `review` | ドキュメントレビュー     | 任意のドキュメント   | レビュー結果（任意: DR追記）                    |
+| `dr`     | 決定記録追加             | 設計判断の文脈       | `decision-records.md` (追記)                    |
+| `status` | 進捗確認                 | —                    | 現在ステップ・完了状況の表示                    |
+| `update` | 同梱ルールの更新         | —                    | 古い配置済みファイルの一覧（`--update` で反映） |
+| `rev`    | リバースエンジニアリング | 既存コード           | 指定フェーズのドキュメント                      |
 
 ---
 
@@ -606,6 +607,44 @@ docs/.deckrd/<ns>/<mod>/decision-records.md (追記形式)
 │                                        │
 │ Current step: impl                     │
 └────────────────────────────────────────┘
+```
+
+---
+
+## update — 同梱ルールの更新
+
+```bash
+/deckrd update            # 古くなった配置済みファイルを一覧表示する（変更しない）
+/deckrd update --update   # 一覧に出たファイルを同梱ソースで置き換える
+```
+
+`init` は存在しないファイルをコピーするだけで、既存ファイルには手を加えません。
+プラグイン更新で同梱ルールが変わったときは、`init` を再実行せず `update` で確認・反映します。
+`init` 実行後（`.local/deckrd/session.json` がある状態）ならいつでも実行できます。
+
+### 対象と判定条件
+
+`init` が配置するディレクトリ（`docs/.deckrd/rules/`、`.claude/rules/claude-rules/`、
+`.claude/rules/deckrd-rules/`、`docs/.deckrd/`、`.local/deckrd/`）が対象です。
+次の条件をすべて満たすファイルだけを一覧に出します。
+
+- 配置先に既に存在する（未配置のファイルはコピーしない）
+- 同梱ソースの方が新しい（更新日時）
+- 内容が異なる
+
+配置先の方が新しいファイルは、利用者が手元で編集したものとみなし、`--update` の対象にもなりません。
+
+### 表示例
+
+```text
+$ /deckrd update
+[deckrd-rules] deckrd-rule-workflow.md
+
+$ /deckrd update --update
+Updated: [deckrd-rules] deckrd-rule-workflow.md
+
+$ /deckrd update
+Rules are up to date.
 ```
 
 ---

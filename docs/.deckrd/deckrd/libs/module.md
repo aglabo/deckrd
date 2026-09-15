@@ -19,6 +19,7 @@ deckrd プラグインの共有ライブラリ。bootstrap・kv-store・session�
 | `ARLD`  | ai-runner.sh の読み込み (`resolve_ai_cli` 側)   |
 | `ARRC`  | `resolve_ai_cli` (ai-runner.sh)                 |
 | `ARVM`  | `validate_ai_model` (ai-runner.sh)              |
+| `ASDF`  | asset-diff.lib.sh                               |
 | `BDATA` | `DECKRD_DATA_DIR` の決定 (bootstrap.lib.sh)     |
 | `BDOCS` | `DECKRD_DOCS_DIR` の決定                        |
 | `BENV`  | 副作用: シェル環境変数                          |

@@ -7,6 +7,8 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 
+# cspell:words MAINI
+
 # shellcheck disable=SC1090
 
 _RUNTIME_BOOTSTRAP="${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/skills/deckrd/scripts/libs/bootstrap.lib.sh"
@@ -176,6 +178,13 @@ Describe "init.sh: main() integration"
         The path "${CLAUDE_RULES_INDEX_DIR}/deckrd-rules-index.md" should be exist
         The path "${CLAUDE_RULES_INDEX_DIR}/deckrd-rule-bdd-cycle.md" should not be exist
       End
+
+      It "[Edge] T-CLI-MAINI-39: Should: first run does not notify rules updates"
+        When run bash "$SCRIPT" myapp webapp
+        The status should equal 0
+        The stderr should include "Session created"
+        The stderr should not include "Rules update available"
+      End
     End
 
     Describe "When: DECKRD_RULES_DIR/.gitignore already exists"
@@ -191,6 +200,13 @@ Describe "init.sh: main() integration"
         The status should equal 0
         The stderr should include "[init/deckrd-rules] skip (exists): .gitignore"
         The stderr should not include "skip (exists): .gitignore.org"
+      End
+
+      It "[Edge] T-CLI-MAINI-40: Should: not notify a differing file when session.json does not exist"
+        When run bash "$SCRIPT" myapp webapp
+        The status should equal 0
+        The stderr should include "[init/deckrd-rules] skip (exists): .gitignore"
+        The stderr should not include "Rules update available"
       End
     End
   End
@@ -208,6 +224,24 @@ Describe "init.sh: main() integration"
       When run bash "$SCRIPT" myapp webapp
       The status should equal 0
       The stderr should include "Session preserved"
+    End
+
+    It "[Normal] T-CLI-MAINI-37: Should: not notify rules updates when no installed asset differs"
+      When run bash "$SCRIPT" myapp webapp
+      The status should equal 0
+      The stderr should include "Session preserved"
+      The stderr should not include "Rules update available"
+    End
+
+    It "[Edge] T-CLI-MAINI-45: Should: exit 0 without notifying rules updates and keep an outdated installed file"
+      printf '\n# local change\n' >>"${DECKRD_RULES_DIR}/deckrd-rule-workflow.md"
+      touch -d '2000-01-01 00:00:00' "${DECKRD_RULES_DIR}/deckrd-rule-workflow.md"
+      EXPECTED_WORKFLOW="$(cat "${DECKRD_RULES_DIR}/deckrd-rule-workflow.md")"
+      When run bash "$SCRIPT" myapp webapp
+      The status should equal 0
+      The stderr should include "Session preserved"
+      The stderr should not include "Rules update available"
+      The contents of file "${DECKRD_RULES_DIR}/deckrd-rule-workflow.md" should equal "$EXPECTED_WORKFLOW"
     End
   End
 
@@ -383,6 +417,59 @@ Describe "init.sh: main() integration"
         The status should equal 1
         The lines of entire stderr should eq 1
         The stderr should include "jq or jaq is required"
+      End
+    End
+  End
+
+  Describe "Given: project is already initialized"
+    After "teardown_deckrd_tmpdir"
+
+    setup_initialized() {
+      setup_deckrd_tmpdir
+      bash "$SCRIPT" myapp webapp >/dev/null 2>&1
+    }
+    Before "setup_initialized"
+
+    # Simulate an outdated install: upstream source updated after installation
+    # (installed content differs and is older than the source)
+    make_outdated_install() {
+      local file
+      for file in "$@"; do
+        printf '\n# local change\n' >>"$file"
+        touch -d '2000-01-01 00:00:00' "$file"
+      done
+    }
+
+    Describe "When: an installed asset was edited by the user"
+      It "[Edge] T-CLI-MAINI-44: Should: exit 0 without notifying rules updates and keep the edited file"
+        printf '\n# user edit\n' >>"${DECKRD_RULES_DIR}/deckrd-rule-workflow.md"
+        EXPECTED_WORKFLOW="$(cat "${DECKRD_RULES_DIR}/deckrd-rule-workflow.md")"
+        When run bash "$SCRIPT" myapp webapp
+        The status should equal 0
+        The stderr should not include "Rules update available"
+        The contents of file "${DECKRD_RULES_DIR}/deckrd-rule-workflow.md" should equal "$EXPECTED_WORKFLOW"
+      End
+    End
+
+    Describe "When: an installed asset was deleted"
+      It "[Edge] T-CLI-MAINI-42: Should: copy the missing file again without notifying rules updates"
+        rm "${DECKRD_RULES_DIR}/deckrd-rule-workflow.md"
+        When run bash "$SCRIPT" myapp webapp
+        The status should equal 0
+        The stderr should include "[init/deckrd-rules] copied: deckrd-rule-workflow.md"
+        The stderr should not include "Rules update available"
+      End
+    End
+
+    Describe "When: arguments are invalid"
+      It "[Error] T-CLI-MAINI-38: Should: exit 1 without notifying rules updates for --language cobol"
+        make_outdated_install "${DECKRD_RULES_DIR}/deckrd-rule-workflow.md"
+        When run bash "$SCRIPT" myapp webapp --language cobol
+        The status should equal 1
+        # @note: --json モード追加時はこのアサーションを見直すこと
+        The output should be blank
+        The stderr should include "Unsupported language"
+        The stderr should not include "Rules update available"
       End
     End
   End

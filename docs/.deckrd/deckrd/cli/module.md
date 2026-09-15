@@ -8,7 +8,7 @@ owns:
 
 ## cli
 
-deckrd プラグインのコマンドエントリポイント。init / module / project / status の各サブコマンドスクリプトを持つ。
+deckrd プラグインのコマンドエントリポイント。init / module / project / status / update の各サブコマンドスクリプトを持つ。
 
 ## テスト対象の略語
 
@@ -24,5 +24,6 @@ deckrd プラグインのコマンドエントリポイント。init / module / 
 | `RDS`  | `read_declared_scope` (module.sh)            |
 | `RTS`  | `resolve_test_scope` (module.sh)             |
 | `ST`   | status.sh のセッション表示                   |
+| `UPD`  | update.sh の更新一覧表示と反映               |
 | `VA`   | `validate_args` (init.sh)                    |
 | `VL`   | `validate_language` (init.sh)                |
