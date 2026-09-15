@@ -84,6 +84,12 @@ T-02-01-01  → TestTarget 02, Scenario 01, Case 01
 - If expectations represent different behavioral contracts
   (e.g. return value, side effects, error handling),
   they MUST be split into separate it blocks (and tasks).
+- A single task's Scenario (Given/When) MUST name exactly one input.
+  Do NOT list alternative inputs ("A or B", "any of A / B") in one Scenario.
+  Split each input into its own Case with its own Task ID.
+- A contrast case ("an input that does not match is left unchanged") MUST be its own Case.
+- Exception: one assertion over a whole collection ("all extracted IDs are unique") has one input.
+  That collection stays one Case.
 
 ## BDD Structure Mapping
 
@@ -233,6 +239,7 @@ Each task MUST include:
 - NEVER include progress tracking tables
 - NEVER create overly granular tasks (combine related assertions)
 - NEVER generate two tasks that cover the same equivalence class (MECE — ME violation)
+- NEVER list multiple alternative inputs ("A or B", "any of ...") in one task's Scenario
 - NEVER leave a required category or equivalence class without a task (MECE — CE violation)
 - NEVER skip error handling scenarios
 - NEVER omit edge case coverage (include boundary values, state transitions, and false-negative verification)

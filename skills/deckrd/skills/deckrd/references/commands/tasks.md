@@ -116,6 +116,15 @@ Use category prefixes in scenarios:
 | Error     | [異常]         | Error handling      |
 | Edge Case | [エッジケース] | Boundary conditions |
 
+## Case Granularity
+
+- One task = one `it()` = one input.
+- Do NOT write alternative inputs ("A or B", "any of A / B") in a Scenario's Given/When.
+- Split each input into its own Case with its own Task ID.
+- A contrast case (an input that must NOT trigger the behavior) is its own Case.
+- Exception: one assertion over a whole collection ("all extracted IDs are unique") has one input.
+  That collection stays one Case.
+
 ## Document Structure
 
 ```markdown
@@ -173,6 +182,7 @@ YOU MUST verify `tasks.md` by reading it directly — not from memory.
 | -------------------------------------- | ------------------------------- | ------------------------ |
 | Task IDs are unique                    | Scan all T-XX-YY-ZZ IDs in file | No duplicates            |
 | Each task has Target/Scenario/Expected | Read each entry                 | All 3 fields present     |
+| Each Scenario names a single input     | Read each Scenario line         | No "or" / alternatives   |
 | Normal / Error / Edge cases all exist  | Count by category               | >=1 each                 |
 | Tasks trace to specifications          | Cross-ref spec sections         | Each task maps to a spec |
 

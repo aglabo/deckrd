@@ -163,11 +163,17 @@ The agent:
 
 1. 入力を解析してタスクを分解
 2. チェックリストを `temp/tasks/<slug>-<adjective>-checklist.md` に書き込む
-3. チェックリストのパスをメインセッションに返却
+3. チェックリストのパスをメインセッションに返却 (複数入力の Case を検出した場合は `BLOCKED` を返却)
 
 ### Step 1-2: チェックリストの取得
 
-返却されたチェックリストパスを **CHECKLIST PATH** として保存。
+checklist-builder の報告が `BLOCKED:` で始まる場合 (Task ID の Case に複数入力):
+
+- チェックリストは作成されていない。Phase 2 に進まない
+- `BLOCKED` 行と対処 (`/deckrd tasks` で tasks.md の Case を分割し、Task ID で再実行) をユーザーに提示する
+- Phase 6 (セッション終了) へ進む。入力の自力展開や自然言語入力への切り替えはしない
+
+`CHECKLIST:` が返った場合、返却されたチェックリストパスを **CHECKLIST PATH** として保存。
 Phase 2 以降で使用する。
 
 出力: `temp/tasks/<slug>-<adjective>-checklist.md`

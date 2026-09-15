@@ -41,7 +41,11 @@ Determine input type, then extract task information:
 
 1. Read `tasks_md` (path provided by caller).
 2. Extract the matching task entry (Target, Scenario, Given/When/Then).
-3. Use the task entry as the source for checklist generation.
+3. If the task's Scenario lists more than one input (e.g. "A or B", "any of A / B"),
+   do NOT expand it into a multi-row Input/Expected table.
+   `tasks.md` is outside `temp/tasks/`, so you cannot split it yourself:
+   write no checklist, stop, and report `BLOCKED` to the caller (see Output Summary).
+4. Use the task entry as the source for checklist generation.
 
 **If input is a natural-language instruction:**
 
@@ -126,6 +130,12 @@ Guidelines:
 3. 同じ同値クラスから 2 つ以上の Case を作らない (ME の保証)
 4. すべての同値クラスに Case が 1 つ以上あることを確認する (CE の保証)
 
+**1 Case = 1 入力 (有効クラス・無効クラス共通):**
+
+- 1 Case の Input/Expected 表は 1 行だけにする。入力が 2 つあれば、Case と Task ID を 2 つずつに分ける。
+- 振る舞いが起きてはならない入力 (対照ケース) は、独立した Case にする。
+- 集合全体の性質を 1 回で比べるアサーション (例: 全 ID が一意) は、その集合を 1 行の Input として書く。
+
 **5 カテゴリ基準 (Case の分類ラベル):**
 
 | ラベル           | 対象                                                | 必須           |
@@ -196,7 +206,14 @@ After building the checklist draft, cross-check it against the specification to 
 
    1. で統合した Case がある場合は、Task ID Mapping テーブルも更新する。
 
-   すべての必須カテゴリが揃い、重複がなければ Phase 4 に進む。
+3. 入力表の行数チェック
+
+   各 Case の Input/Expected 表が 1 行であることを確認する。
+
+   - 自然言語の指示から作った Case が 2 行以上 → 入力ごとに Case を分け、次の空き Case ID を振る
+   - Task ID 入力の Case が 2 行以上 → 黙って展開しない。チェックリストを書かずに停止し、`BLOCKED` を報告する
+
+   すべての必須カテゴリが揃い、重複がなく、全 Case の入力表が 1 行なら Phase 4 に進む。
 
 ### Phase 4: Write Checklist
 
@@ -221,4 +238,10 @@ CHECKLIST: temp/tasks/<filename>
 TASKS: <count> targets, <count> scenarios, <count> cases
 COVERAGE: spec gaps added=<N>, category gaps added=<N>
 HANDOFF: /bdd-coder --checklist <path>
+```
+
+If stopped because a task lists multiple inputs in one Case, report instead:
+
+```bash
+BLOCKED: <Task ID> has <N> inputs in one Case — split it in tasks.md (/deckrd tasks) before implementing
 ```
