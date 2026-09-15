@@ -47,6 +47,7 @@ unset _SCRIPT_DIR
 
 . "${DECKRD_LIB_DIR}/validate-env.lib.sh"
 . "${DECKRD_LIB_DIR}/utils.lib.sh"
+. "${DECKRD_LIB_DIR}/asset-diff.lib.sh"
 validate_env || exit 1
 
 . "${DECKRD_LIB_DIR}/ai-runner.lib.sh"
@@ -229,9 +230,8 @@ init_directory() {
   for src_file in "$src_dir"/* "$src_dir"/.*; do
     [[ -e "$src_file" ]] || continue
     [[ "$(basename "$src_file")" == "." || "$(basename "$src_file")" == ".." ]] && continue
-    local filename dest_filename dest_file
-    filename="$(basename "$src_file")"
-    dest_filename="${filename%.org}"
+    local dest_filename dest_file
+    dest_filename="$(asset_dest_name "$src_file")"
     dest_file="${dest_dir}/${dest_filename}"
     if [[ -e "$dest_file" ]]; then
       echo "  [init/${label}] skip (exists): ${dest_filename}" >&2

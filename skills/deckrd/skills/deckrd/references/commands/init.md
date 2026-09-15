@@ -97,7 +97,9 @@ Copies deckrd assets into the project on first run. Existing files are never ove
 #### Migrating a project initialized before the rule consolidation
 
 `init` never overwrites an existing file, so re-running it does not refresh a
-stale rule set. Delete these first, then re-run `/deckrd init`:
+stale rule set. To refresh files that still exist in the bundle, use
+[`/deckrd update`](update.md). Files removed from the bundle are not handled by
+`update`. Delete these first, then re-run `/deckrd init`:
 
 - `docs/.deckrd/rules/deckrd-rule-traceability.md`
 - `docs/.deckrd/rules/deckrd-rule-id-system.md`

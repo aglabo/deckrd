@@ -35,6 +35,8 @@ description: Reference table of all deckrd commands
 | Command                                      | Description                                  |
 | -------------------------------------------- | -------------------------------------------- |
 | `status`                                     | Display current workflow progress and status |
+| `update`                                     | List deployed rules assets that are outdated |
+| `update --update`                            | Overwrite outdated rules assets from source  |
 | `review`                                     | Show review command usage                    |
 | `review <doc> [--phase <p>]`                 | Review document with phase-specific analysis |
 | `project --project <name> --language <lang>` | Configure project settings                   |
