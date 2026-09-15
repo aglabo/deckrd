@@ -67,8 +67,8 @@ Workflow Progress:
 
 ## Script
 
-Execute: `.claude/skills/deckrd/scripts/status.sh`
+Execute: [scripts/status.sh](../../scripts/status.sh)
 
 ```bash
-bash .claude/skills/deckrd/scripts/status.sh
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/status.sh
 ```
