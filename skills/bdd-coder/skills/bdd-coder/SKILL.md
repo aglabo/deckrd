@@ -71,6 +71,13 @@ Always spawn **checklist-builder** with the user's instruction or Task ID.
 
 Output: `temp/tasks/<slug>-<adjective>-checklist.md`
 
+If checklist-builder reports `BLOCKED` (a Task ID's Case lists more than one input):
+
+1. Do NOT proceed to Phase 2 — no checklist was written.
+2. Report the `BLOCKED` line to the user verbatim, with the remediation:
+   split the Case in tasks.md via `/deckrd tasks`, then re-run bdd-coder with the Task ID.
+3. End the session (Phase 6). Do NOT expand the inputs yourself or fall back to a natural-language checklist.
+
 ### Phase 3: bdd-coder Dispatch
 
 Pass the following context to each bdd-coder instance:
