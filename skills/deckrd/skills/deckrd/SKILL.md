@@ -51,6 +51,7 @@ Gate Rule: each command requires the previous command's document. No skipping.
 
 > `spec --phase <slug>` re-runs a single spec phase and is exempt from the order gate. See [commands/spec.md](references/commands/spec.md).
 > `project` is project-scoped and can run any time. See [commands/project.md](references/commands/project.md).
+> `update` refreshes deployed rules assets and can run any time after `init`. See [commands/update.md](references/commands/update.md).
 > Full command list: [commands/index.md](references/commands/index.md)
 > Workflow overview: [workflow.md](references/workflow.md) — 経路を選ぶとき、呼び出し例を見たいとき
 > Session management: [session.md](references/session.md)
