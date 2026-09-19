@@ -3,6 +3,8 @@ title: update Command
 description: List or refresh deployed rules assets that are older than the bundled source
 ---
 
+<!-- cspell:words undeployed -->
+
 ## update Command
 
 List deployed deckrd assets that are older than the plugin's bundled source.
