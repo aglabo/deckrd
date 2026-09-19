@@ -101,11 +101,13 @@ Describe "module.sh"
         The output should include "specifications"
         The output should include "implementation"
         The output should include "tasks"
+        The output should include "workspaces"
         The output should include "Session updated"
         The path "${DECKRD_DOCS_DIR}/myns/mymod/requirements" should be directory
         The path "${DECKRD_DOCS_DIR}/myns/mymod/specifications" should be directory
         The path "${DECKRD_DOCS_DIR}/myns/mymod/implementation" should be directory
         The path "${DECKRD_DOCS_DIR}/myns/mymod/tasks" should be directory
+        The path "${DECKRD_DOCS_DIR}/myns/mymod/workspaces" should be directory
         The path "${DECKRD_DOCS_DIR}/myns/mymod/.project.json" should not be exist
       End
     End

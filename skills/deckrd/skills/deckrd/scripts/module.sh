@@ -66,7 +66,7 @@ readonly SESSION_FILE
 
 ##
 # @description Module subdirectories to create
-SUBDIRS=("requirements" "specifications" "implementation" "tasks")
+SUBDIRS=("requirements" "specifications" "implementation" "tasks" "workspaces")
 readonly SUBDIRS
 
 ##
@@ -119,6 +119,7 @@ Created directories:
     ├── specifications/
     ├── implementation/
     ├── tasks/
+    ├── workspaces/
     └── module.md
 
 Session file:

@@ -1,7 +1,7 @@
 ---
 title: "Deckrd Rule: ドキュメントモデル"
 description: "設計チェーン・ID 採番・ドキュメント命名・ディレクトリ配置を定める統一モデル"
-version: 1.1.0
+version: 1.2.0
 ---
 
 <!-- textlint-disable
@@ -139,6 +139,7 @@ docs/.deckrd/
       specifications/
       implementation/
       tasks/
+      workspaces/
       decision-records.md
 ```
 
@@ -149,6 +150,14 @@ docs/.deckrd/
 (`test_scope` / `owns`) はここに置く
 （[Testing Guidelines](deckrd-rule-testing-guidelines.md) 参照）。
 
+`workspaces/` はそのモジュールに関する作業用ファイルを置く場所とする。チェックリスト・
+作業メモ・下書き・調査結果はここに入れる。`requirements/` などと同列のディレクトリであり、
+モジュールに関する作業用ファイルをモジュールディレクトリ直下やドキュメントルート直下に
+置いてはならない。
+
+`workspaces/` の中身は設計チェーンの一部ではない。ID を採番せず、下流ドキュメントから
+参照もしない。
+
 例:
 
 ```text
@@ -158,6 +167,7 @@ docs/.deckrd/chatlog/normalize/
   specifications/specifications.md
   implementation/implementation.md
   tasks/tasks.md
+  workspaces/rename-lib-sh-checklist.md
   decision-records.md
 ```
 
@@ -178,3 +188,4 @@ specifications/specifications-notify.md
 | 番号が飛ぶのは気持ち悪いのでリナンバーする               | 上流 ID は下流から参照されている。振り直せば参照先が静かに別物を指す       |
 | この ID は削除したドキュメントのものだから再利用してよい | 過去のコミットメッセージや履歴が旧 ID を指したまま残り、追跡が壊れる       |
 | 採番済み ID の一覧をメモに書いておけば十分               | メモは更新されなくなる。ドキュメント自身から導出できるものを二重管理しない |
+| 作業メモは一時的なので置き場所はどこでもよい             | 置き場所が決まっていないメモは他の人から見えず、同じ調査が繰り返される     |

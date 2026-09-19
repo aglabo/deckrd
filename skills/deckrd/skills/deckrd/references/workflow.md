@@ -106,9 +106,10 @@ docs/.deckrd/
         │   └── specifications.md
         ├── implementation/
         │   └── implementation.md
-        └── tasks/
-            ├── tasks.md
-            └── implementation-checklist.md
+        ├── tasks/
+        │   ├── tasks.md
+        │   └── implementation-checklist.md
+        └── workspaces/           # Working files for this module (checklists, notes)
 ```
 
 ## Usage Example
