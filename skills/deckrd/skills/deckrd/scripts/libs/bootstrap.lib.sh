@@ -95,6 +95,10 @@ bootstrap_init() {
   DECKRD_LOCAL_DATA="${DECKRD_LOCAL_DATA:-${PROJECT_ROOT}/.local/deckrd}"
   export DECKRD_LOCAL_DATA
 
+  # DECKRD_LOCAL_WORKSPACES: project-local deckrd shared working directory
+  DECKRD_LOCAL_WORKSPACES="${DECKRD_LOCAL_WORKSPACES:-${DECKRD_LOCAL_DATA}/workspaces}"
+  export DECKRD_LOCAL_WORKSPACES
+
   # DECKRD_DOCS_DIR: deckrd docs directory
   DECKRD_DOCS_DIR="${DECKRD_DOCS_DIR:-${PROJECT_ROOT}/docs/.deckrd}"
   export DECKRD_DOCS_DIR

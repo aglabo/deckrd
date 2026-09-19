@@ -592,6 +592,68 @@ Describe "bootstrap.lib.sh"
   End
 
   # ------------------------------------------------------------------ #
+  #  DECKRD_LOCAL_WORKSPACES                                           #
+  #  依存: DECKRD_LOCAL_DATA のみ (DECKRD_ROOT 非依存)                 #
+  # ------------------------------------------------------------------ #
+  Describe "DECKRD_LOCAL_WORKSPACES"
+
+    Describe "Given: PROJECT_ROOT=/tmp/proj、DECKRD_LOCAL_WORKSPACES 未設定"
+      Before "export PROJECT_ROOT=/tmp/proj; unset DECKRD_LOCAL_DATA; unset DECKRD_LOCAL_WORKSPACES; bootstrap_init"
+
+      It "[Normal] T-LIB-BLOCW-01: DECKRD_LOCAL_DATA/workspaces になる"
+        When call echo "$DECKRD_LOCAL_WORKSPACES"
+        The output should equal "/tmp/proj/.local/deckrd/workspaces"
+      End
+
+      It "[Normal] T-LIB-BLOCW-02: DECKRD_LOCAL_DATA との関係式が成立する"
+        When call test "$DECKRD_LOCAL_WORKSPACES" = "${DECKRD_LOCAL_DATA}/workspaces"
+        The status should equal 0
+      End
+
+      It "[Normal] T-LIB-BLOCW-03: export -p で export されている"
+        When call bash -c 'export -p | grep -q "^declare -x DECKRD_LOCAL_WORKSPACES=" && echo ok'
+        The output should equal "ok"
+      End
+    End
+
+    Describe "Given: DECKRD_LOCAL_WORKSPACES=/tmp/myws を事前設定"
+      Before "export PROJECT_ROOT=/tmp/proj; export DECKRD_LOCAL_WORKSPACES=/tmp/myws; bootstrap_init"
+
+      It "[Normal] T-LIB-BLOCW-04: 事前設定値が維持される"
+        When call echo "$DECKRD_LOCAL_WORKSPACES"
+        The output should equal "/tmp/myws"
+      End
+    End
+
+    Describe "Given: DECKRD_LOCAL_WORKSPACES='' (空文字) を事前設定"
+      Before "export PROJECT_ROOT=/tmp/proj; unset DECKRD_LOCAL_DATA; export DECKRD_LOCAL_WORKSPACES=''; bootstrap_init"
+
+      It "[Edge] T-LIB-BLOCW-05: 空文字はデフォルト値にフォールバックする"
+        When call echo "$DECKRD_LOCAL_WORKSPACES"
+        The output should equal "/tmp/proj/.local/deckrd/workspaces"
+      End
+    End
+
+    Describe "Given: PROJECT_ROOT にスペースを含むパス"
+      Before "export PROJECT_ROOT='/tmp/my project'; unset DECKRD_LOCAL_DATA; unset DECKRD_LOCAL_WORKSPACES; bootstrap_init"
+
+      It "[Edge] T-LIB-BLOCW-06: パスが正しく連結される"
+        When call echo "$DECKRD_LOCAL_WORKSPACES"
+        The output should equal "/tmp/my project/.local/deckrd/workspaces"
+      End
+    End
+
+    Describe "Given: DECKRD_ROOT=/tmp/other を設定 (DECKRD_LOCAL_DATA から独立)"
+      Before "export PROJECT_ROOT=/tmp/proj; export DECKRD_ROOT=/tmp/other; unset DECKRD_LOCAL_DATA; unset DECKRD_LOCAL_WORKSPACES; bootstrap_init"
+
+      It "[Edge] T-LIB-BLOCW-07: DECKRD_ROOT に依存せず DECKRD_LOCAL_DATA が基点になる"
+        When call echo "$DECKRD_LOCAL_WORKSPACES"
+        The output should equal "/tmp/proj/.local/deckrd/workspaces"
+      End
+    End
+  End
+
+  # ------------------------------------------------------------------ #
   #  DECKRD_DOCS_DIR                                                    #
   #  依存: PROJECT_ROOT のみ (DECKRD_ROOT 非依存)                      #
   # ------------------------------------------------------------------ #
