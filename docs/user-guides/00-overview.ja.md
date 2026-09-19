@@ -211,6 +211,7 @@ meta:
         ├── tasks/
         │   ├── tasks.md
         │   └── implementation-checklist.md
+        ├── workspaces/            ← モジュールの作業用ファイル
         └── decision-records.md   (任意)
 ```
 
