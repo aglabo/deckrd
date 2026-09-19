@@ -18,5 +18,8 @@
 *session
 *.json
 
+# Git settings
+!**/.gitignore
+
 # checklist
 **/*checklist.md
