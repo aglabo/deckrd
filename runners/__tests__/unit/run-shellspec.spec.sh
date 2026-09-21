@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# runners/tests/unit/run-shellspec.spec.sh
+# runners/__tests__/unit/run-shellspec.spec.sh
 # @(#) : BDD unit tests for run-shellspec.sh
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
@@ -9,285 +9,322 @@
 # shellcheck shell=bash
 # run-shellspec.spec.sh — BDD spec for run-shellspec.sh
 
+# --- テスト基盤 -------------------------------------------------------------
+
 Include "${SHELLSPEC_PROJECT_ROOT}/runners/__tests__/spec_helper.sh"
+
+# --- テスト対象 -------------------------------------------------------------
+
 Include "${SHELLSPEC_PROJECT_ROOT}/runners/run-shellspec.sh"
 
 SCRIPT="${SHELLSPEC_PROJECT_ROOT}/runners/run-shellspec.sh"
 
-Describe 'is_test_type()'
-  Describe 'valid test types'
-    It 'T-RUN-ITT-01: returns success for all'
-      When call is_test_type 'all'
-      The status should be success
+# --- 内部ヘルパー -----------------------------------------------------------
+
+# 定数
+
+# Windows のシェル環境を表す `uname -s` の値。WSL 経路に入るべき入力
+_WINDOWS_OS_NAME='MINGW64_NT-10.0-26200'
+
+# Windows のシェル環境ではない `uname -s` の値。ローカル実行経路に入るべき入力
+_LOCAL_OS_NAME='Linux'
+
+# Windows のシェル環境ではない `uname -s` の値（T-RUN-SUW-03 の入力表）
+%const _SUW_OTHER_OS_NAMES: Linux Darwin
+
+# `%const` の語リストは空語を持てないため、空文字を表す番兵を置く
+_NO_WSL_EMPTY_TOKEN='EMPTY'
+
+# `1` 以外なら WSL 経路を維持することを確かめる SHELLSPEC_NO_WSL の値
+# （T-RUN-SUW-04 の入力表。`EMPTY` は _NO_WSL_EMPTY_TOKEN が表す空文字）
+%const _SUW_KEEP_WSL_FLAGS: 0 EMPTY
+
+# 入口へ渡す spec ファイル引数。解釈されずに本体まで届くことを見る
+_SPEC_ARG='foo.spec.sh'
+
+# 入口へ渡す ShellSpec オプション引数。spec 引数との順序が保たれることを見る
+_OPTION_ARG='--repair'
+
+# dispatch() が本体へ素通しすべき引数列の観測結果
+_FORWARDED_ARGS_OUTPUT="[${_SPEC_ARG}][${_OPTION_ARG}]"
+
+# dispatch() が WSL 側へ渡すべき本体のパス（PROJECT_ROOT からの相対）
+_EXPECTED_EXEC_SCRIPT='runners/exec/shellspec-exec.sh'
+
+# _setup_dispatch_stubs() に渡す、wsl.exe を呼べる状態を表す指定
+_WSL_AVAILABLE='available'
+
+# _setup_dispatch_stubs() に渡す、wsl.exe を呼べない状態を表す指定
+_WSL_MISSING='missing'
+
+# 失敗スタブが返す終了コード。0 でも 1 でもない値にして素通しであることを見分ける
+_DSP_STUB_EXIT_CODE=3
+
+# dispatch() が WSL 起動前に見つける不足コマンド（T-RUN-DSP-07 の入力と期待出力）
+_DSP_MISSING_COMMAND='jq'
+
+# 関数
+
+#
+# @description 入力表に書かれた値を SHELLSPEC_NO_WSL に反映する。
+#              `%const` の語リストで表現できない空文字は番兵 `EMPTY` で受け取る
+# @arg $1 string 入力表の値、または _NO_WSL_EMPTY_TOKEN
+# @return 0 always
+# @sideeffect Sets SHELLSPEC_NO_WSL
+#
+_set_no_wsl_flag() {
+  if [[ "$1" == "$_NO_WSL_EMPTY_TOKEN" ]]; then
+    SHELLSPEC_NO_WSL=''
+  else
+    SHELLSPEC_NO_WSL="$1"
+  fi
+}
+
+#
+# @description ShellSpec を「引数を `[%s]` 形式で出力するだけ」のスタブに差し替える。
+#              本体 (exec/shellspec-exec.sh) まで引数が届いたことを出力で観測する
+# @arg none
+# @return 0 when the stub is ready
+# @sideeffect Sets _STUB_DIR and _SHELLSPEC_STUB
+# @sideeffect Creates the stub directory and the stub script on disk
+#
+_setup_shellspec_stub() {
+  _STUB_DIR="$(mktemp -d)"
+  _SHELLSPEC_STUB="${_STUB_DIR}/shellspec-stub"
+  {
+    echo '#!/usr/bin/env bash'
+    echo 'printf "[%s]" "$@"'
+  } >"$_SHELLSPEC_STUB"
+}
+
+#
+# @description _setup_shellspec_stub() が置いたスタブを消す
+# @arg none
+# @return 0 always
+# @sideeffect Deletes _STUB_DIR and unsets the stub variables
+#
+_teardown_shellspec_stub() {
+  [[ -n "${_STUB_DIR:-}" ]] && rm -rf "$_STUB_DIR"
+  unset _STUB_DIR _SHELLSPEC_STUB
+}
+
+#
+# @description dispatch() の協調相手を「自分の名前と引数を `[%s]` 形式で出力するだけ」の
+#              シェル関数に差し替える。どちらの経路を通ったかと、渡した引数列を
+#              出力だけで観測できるようにする。wsl.exe の実在に依存させないため、
+#              is_wsl_available() と find_missing_wsl_commands() も併せて差し替える。
+#              後者は既定で「不足コマンドなし」を返す。呼び出し元の環境に
+#              SHELLSPEC_NO_WSL が残っていても判定が揺れないよう、併せて解除する
+# @arg $1 string `available` なら is_wsl_available() を成功、それ以外なら失敗させる
+# @return 0 always
+# @sideeffect Defines the run_local, exec_in_wsl, is_wsl_available and
+#             find_missing_wsl_commands shell functions
+# @sideeffect Unsets SHELLSPEC_NO_WSL
+#
+_setup_dispatch_stubs() {
+  local __wsl_state="$1"
+  unset SHELLSPEC_NO_WSL
+  # shellcheck disable=SC2329 # dispatch() から間接的に呼ばれる
+  run_local() {
+    printf '[run_local]'
+    printf '[%s]' "$@"
+  }
+  # shellcheck disable=SC2329 # dispatch() から間接的に呼ばれる
+  exec_in_wsl() {
+    printf '[exec_in_wsl]'
+    printf '[%s]' "$@"
+  }
+  if [[ "$__wsl_state" == "$_WSL_AVAILABLE" ]]; then
+    # shellcheck disable=SC2329 # dispatch() から間接的に呼ばれる
+    is_wsl_available() { return 0; }
+  else
+    # shellcheck disable=SC2329 # dispatch() から間接的に呼ばれる
+    is_wsl_available() { return 1; }
+  fi
+  # shellcheck disable=SC2329 # dispatch() から間接的に呼ばれる
+  find_missing_wsl_commands() { :; }
+}
+
+#
+# @description dispatch() の協調相手を _DSP_STUB_EXIT_CODE で失敗するシェル関数に
+#              差し替える。終了コードが加工されずに返ることを観測するために使う
+# @arg $1 string `available` なら is_wsl_available() を成功、それ以外なら失敗させる
+# @return 0 always
+# @sideeffect Defines the run_local, exec_in_wsl, is_wsl_available and
+#             find_missing_wsl_commands shell functions
+# @sideeffect Unsets SHELLSPEC_NO_WSL
+#
+_setup_failing_dispatch_stubs() {
+  _setup_dispatch_stubs "$1"
+  # shellcheck disable=SC2329 # dispatch() から間接的に呼ばれる
+  run_local() { return "$_DSP_STUB_EXIT_CODE"; }
+  # shellcheck disable=SC2329 # dispatch() から間接的に呼ばれる
+  exec_in_wsl() { return "$_DSP_STUB_EXIT_CODE"; }
+}
+
+#
+# @description dispatch() の協調相手のうち find_missing_wsl_commands() だけを
+#              「_DSP_MISSING_COMMAND を 1 行返す」スタブに差し替える。
+#              WSL 側に必須コマンドが無い状況を、実機の WSL に依存せずに作る
+# @arg $1 string `available` なら is_wsl_available() を成功、それ以外なら失敗させる
+# @return 0 always
+# @sideeffect Defines the same shell functions as _setup_dispatch_stubs()
+# @sideeffect Unsets SHELLSPEC_NO_WSL
+#
+_setup_missing_commands_stubs() {
+  _setup_dispatch_stubs "$1"
+  # shellcheck disable=SC2329 # dispatch() から間接的に呼ばれる
+  find_missing_wsl_commands() { printf '%s\n' "$_DSP_MISSING_COMMAND"; }
+}
+
+#
+# @description _setup_dispatch_stubs() が差し替えたシェル関数を取り除く
+# @arg none
+# @return 0 always
+# @sideeffect Undefines the run_local, exec_in_wsl, is_wsl_available and
+#             find_missing_wsl_commands shell functions
+#
+_teardown_dispatch_stubs() {
+  unset -f run_local exec_in_wsl is_wsl_available find_missing_wsl_commands
+}
+
+# --- テスト本体 -------------------------------------------------------------
+
+#
+# ShellSpec 実行の入口スクリプト。環境を判定して本体 (exec/shellspec-exec.sh) を
+# ローカルで動かすか WSL 上で動かすかだけを決める。
+# 割り当てたテスト ID: T-RUN-SUW-01..04 / T-RUN-DSP-01..07 / T-RUN-MSL-01
+#
+Describe 'run-shellspec.sh'
+  #
+  # `uname -s` の値と SHELLSPEC_NO_WSL だけを見て WSL 経路に入るかを決める純粋関数。
+  # 自身では uname を呼ばないため、OS 名を表から流し込んで検証できる
+  #
+  Describe 'should_use_wsl()'
+    # Windows のシェルから起動され、無効化もされていなければ WSL を使う
+    Describe 'When: 正常系'
+      It 'Then: [Normal] T-RUN-SUW-01: SHELLSPEC_NO_WSL 未設定の Windows ホストでは WSL を使うと判定する'
+        unset SHELLSPEC_NO_WSL
+        When call should_use_wsl "$_WINDOWS_OS_NAME"
+        The status should be success
+      End
     End
 
-    It 'T-RUN-ITT-02: returns success for unit'
-      When call is_test_type 'unit'
-      The status should be success
+    # SHELLSPEC_NO_WSL=1 は WSL 経路の明示的な無効化を意味する
+    Describe 'When: 異常系'
+      It 'Then: [Error] T-RUN-SUW-02: SHELLSPEC_NO_WSL=1 なら Windows ホストでも WSL を使わない'
+        # shellcheck disable=SC2034 # should_use_wsl() が読む
+        SHELLSPEC_NO_WSL=1
+        When call should_use_wsl "$_WINDOWS_OS_NAME"
+        The status should be failure
+      End
+
+      # shellcheck disable=SC2086 # %const の表を 1 ケースずつに単語分割する
+      Parameters:value $_SUW_OTHER_OS_NAMES
+
+      It "Then: [Error] T-RUN-SUW-03: OS 名 $1 では WSL を使わない"
+        unset SHELLSPEC_NO_WSL
+        When call should_use_wsl "$1"
+        The status should be failure
+      End
     End
 
-    It 'T-RUN-ITT-03: returns success for functional'
-      When call is_test_type 'functional'
-      The status should be success
-    End
+    # 無効化は `1` のときだけであり、それ以外の値は WSL 経路のままにする
+    Describe 'When: エッジケース'
+      # shellcheck disable=SC2086 # %const の表を 1 ケースずつに単語分割する
+      Parameters:value $_SUW_KEEP_WSL_FLAGS
 
-    It 'T-RUN-ITT-04: returns success for integration'
-      When call is_test_type 'integration'
-      The status should be success
-    End
-
-    It 'T-RUN-ITT-05: returns success for system'
-      When call is_test_type 'system'
-      The status should be success
-    End
-
-    It 'T-RUN-ITT-06: returns success for e2e'
-      When call is_test_type 'e2e'
-      The status should be success
-    End
-  End
-
-  Describe 'invalid test types'
-    It 'T-RUN-ITT-07: returns failure for spec'
-      When call is_test_type 'spec'
-      The status should be failure
-    End
-
-    It 'T-RUN-ITT-08: returns failure for empty string'
-      When call is_test_type ''
-      The status should be failure
-    End
-
-    It 'T-RUN-ITT-09: returns failure for uppercase ALL'
-      When call is_test_type 'ALL'
-      The status should be failure
-    End
-
-    It 'T-RUN-ITT-10: returns failure for unknowntype'
-      When call is_test_type 'unknowntype'
-      The status should be failure
-    End
-  End
-End
-
-Describe 'is_spec_file()'
-  Describe 'valid spec file paths'
-    It 'T-RUN-ISF-01: returns success for foo.spec.sh'
-      When call is_spec_file 'foo.spec.sh'
-      The status should be success
-    End
-
-    It 'T-RUN-ISF-02: returns success for path/to/bar.spec.sh'
-      When call is_spec_file 'path/to/bar.spec.sh'
-      The status should be success
-    End
-  End
-
-  Describe 'invalid spec file paths'
-    It 'T-RUN-ISF-03: returns failure for foo.sh'
-      When call is_spec_file 'foo.sh'
-      The status should be failure
-    End
-
-    It 'T-RUN-ISF-04: returns failure for unit'
-      When call is_spec_file 'unit'
-      The status should be failure
-    End
-
-    It 'T-RUN-ISF-05: returns failure for spec.sh (no .spec. pattern)'
-      When call is_spec_file 'spec.sh'
-      The status should be failure
-    End
-
-    It 'T-RUN-ISF-06: returns failure for empty string'
-      When call is_spec_file ''
-      The status should be failure
-    End
-  End
-End
-
-Describe 'get_spec_files()'
-  Before 'setup_temp_specs'
-  After 'teardown_temp_specs'
-
-  Describe 'test type expansion'
-    It 'T-RUN-GSF-01: returns spec files under tests/ for all'
-      When call get_spec_files 'all'
-      The output should include '.spec.sh'
-      The status should be success
-    End
-
-    It 'T-RUN-GSF-02: returns only unit spec files for unit'
-      When call get_spec_files 'unit'
-      The output should include 'tests/unit'
-      The status should be success
-    End
-
-    It 'T-RUN-GSF-03: does not include integration files for unit'
-      When call get_spec_files 'unit'
-      The output should not include 'tests/integration'
-    End
-
-    It 'T-RUN-GSF-04: filters by glob pattern init* for unit'
-      When call get_spec_files 'unit' 'init*'
-      The output should include 'init'
-      The status should be success
-    End
-
-    It 'T-RUN-GSF-05: filters by exact name kv-store for unit'
-      When call get_spec_files 'unit' 'kv-store'
-      The output should include 'kv-store'
-      The status should be success
-    End
-
-    It 'T-RUN-GSF-06: output paths do not contain backslashes'
-      When call get_spec_files 'all'
-      # shellcheck disable=SC1003
-      The output should not include '\'
-    End
-  End
-End
-
-Describe 'parse_options()'
-  Before 'SKIP_INTEGRATION_TESTS=1'
-
-  Describe '--integration flag handling'
-    It 'T-RUN-PO-01: removes --integration and sets SKIP_INTEGRATION_TESTS=0'
-      When call parse_options 'unit' '--integration'
-      The output should equal 'unit'
-      The variable SKIP_INTEGRATION_TESTS should equal '0'
-    End
-
-    It 'T-RUN-PO-02: removes leading --integration flag'
-      When call parse_options '--integration' 'unit'
-      The output should equal 'unit'
-    End
-  End
-
-  Describe 'passthrough of other options'
-    It 'T-RUN-PO-03: passes --focus through unchanged'
-      When call parse_options 'unit' '--focus'
-      The output should include 'unit'
-      The output should include '--focus'
-    End
-
-    It 'T-RUN-PO-04: returns empty output for no arguments'
-      When call parse_options
-      The output should equal ''
-    End
-  End
-End
-
-Describe 'is_spec_glob()'
-  Describe 'spec glob patterns'
-    It 'T-RUN-ISG-01: returns success for runners/libs/tests/unit/*.spec.sh'
-      When call is_spec_glob 'runners/libs/tests/unit/*.spec.sh'
-      The status should be success
-    End
-  End
-
-  Describe 'non-spec-glob patterns'
-    It 'T-RUN-ISG-02: returns failure for init* (no .spec.sh)'
-      When call is_spec_glob 'init*'
-      The status should be failure
-    End
-
-    It 'T-RUN-ISG-03: returns failure for foo.spec.sh (no glob)'
-      When call is_spec_glob 'foo.spec.sh'
-      The status should be failure
-    End
-  End
-End
-
-Describe 'expand_spec_glob()'
-  Before 'setup_temp_specs'
-  After 'teardown_temp_specs'
-
-  Describe 'glob expansion'
-    It 'T-RUN-ESG-01: returns matching spec files for runners/libs/tests/unit/*.spec.sh'
-      When call expand_spec_glob 'runners/libs/tests/unit/*.spec.sh'
-      The output should include '.spec.sh'
-      The status should be success
-    End
-
-    It 'T-RUN-ESG-02: exits with 0 and warns for non-matching glob'
-      When call expand_spec_glob 'runners/libs/tests/unit/nonexistent*.spec.sh'
-      The stderr should include 'Warning'
-      The status should be success
-    End
-  End
-End
-
-Describe 'resolve_spec_files()'
-  Before 'SKIP_INTEGRATION_TESTS=1'
-
-  Describe 'single spec file passthrough'
-    It 'T-RUN-RSF-01: returns spec file unchanged for foo.spec.sh'
-      When call resolve_spec_files 'foo.spec.sh'
-      The output should equal 'foo.spec.sh'
-      The status should be success
-    End
-  End
-
-  Describe 'spec glob expansion'
-    It 'T-RUN-RSF-02: expands glob pattern runners/libs/tests/unit/*.spec.sh'
-      When call resolve_spec_files 'runners/libs/tests/unit/*.spec.sh'
-      The output should include '.spec.sh'
-      The status should be success
-    End
-  End
-
-  Describe 'test type expansion'
-    Before 'setup_temp_specs'
-    After 'teardown_temp_specs'
-
-    It 'T-RUN-RSF-03: expands unit to unit spec files'
-      When call resolve_spec_files 'unit'
-      The output should include 'tests/unit'
-      The status should be success
-    End
-
-    It 'T-RUN-RSF-04: sets SKIP_INTEGRATION_TESTS=0 for system'
-      When call resolve_spec_files 'system'
-      The variable SKIP_INTEGRATION_TESTS should equal '0'
-      The output should include 'tests/system'
-      The status should be success
+      It "Then: [Edge] T-RUN-SUW-04: SHELLSPEC_NO_WSL が $1 でも WSL 経路を無効化しない"
+        _set_no_wsl_flag "$1"
+        When call should_use_wsl "$_WINDOWS_OS_NAME"
+        The status should be success
+      End
     End
   End
 
-  Describe 'error handling'
-    It 'T-RUN-RSF-05: exits with failure for unknown test type'
-      When call resolve_spec_files 'unknowntype'
-      The stderr should include "Error: Unknown argument 'unknowntype'"
-      The output should be blank
-      The status should be failure
+  #
+  # 判定結果に応じてローカル実行と WSL 実行を振り分ける。引数は一切解釈せず、
+  # 受け取った順のまま本体へ渡す
+  #
+  Describe 'dispatch()'
+    After '_teardown_dispatch_stubs'
+
+    # Windows 以外のホストでは、従来どおりこのシェルで本体を動かす
+    Describe 'When: 正常系'
+      It 'Then: [Normal] T-RUN-DSP-01: Windows 以外のホストでは run_local に引数を素通しする'
+        _setup_dispatch_stubs "$_WSL_MISSING"
+        When call dispatch "$_LOCAL_OS_NAME" "$_SPEC_ARG" "$_OPTION_ARG"
+        The output should equal "[run_local]${_FORWARDED_ARGS_OUTPUT}"
+        The output should not include 'exec_in_wsl'
+        The status should be success
+      End
+
+      It 'Then: [Normal] T-RUN-DSP-02: Windows ホストでは PROJECT_ROOT と本体パスを先頭に付けて exec_in_wsl を呼ぶ'
+        _setup_dispatch_stubs "$_WSL_AVAILABLE"
+        When call dispatch "$_WINDOWS_OS_NAME" "$_SPEC_ARG" "$_OPTION_ARG"
+        The output should equal "[exec_in_wsl][${PROJECT_ROOT}][${_EXPECTED_EXEC_SCRIPT}]${_FORWARDED_ARGS_OUTPUT}"
+        The output should not include 'run_local'
+        The status should be success
+      End
+
+      It 'Then: [Normal] T-RUN-DSP-06: 不足コマンドが無ければ何も警告せずに exec_in_wsl を呼ぶ'
+        _setup_dispatch_stubs "$_WSL_AVAILABLE"
+        When call dispatch "$_WINDOWS_OS_NAME" "$_SPEC_ARG" "$_OPTION_ARG"
+        The output should start with '[exec_in_wsl]'
+        The stderr should be blank
+        The status should be success
+      End
     End
 
-    It 'T-RUN-RSF-06: reports missing arguments on stderr'
-      When call resolve_spec_files
-      The stderr should include 'Error: No arguments given.'
-      The output should be blank
-      The status should be failure
+    # Windows なのに wsl.exe を呼べない環境は、黙って動かさず理由を 1 行で伝える
+    Describe 'When: 異常系'
+      It 'Then: [Error] T-RUN-DSP-03: wsl.exe を呼べない Windows ホストでは 1 行のエラーを出して失敗する'
+        _setup_dispatch_stubs "$_WSL_MISSING"
+        When call dispatch "$_WINDOWS_OS_NAME" "$_SPEC_ARG" "$_OPTION_ARG"
+        The lines of stderr should equal 1
+        The stderr should include 'wsl.exe'
+        The output should be blank
+        The status should equal 1
+      End
+
+      It 'Then: [Error] T-RUN-DSP-04: ローカル実行経路では run_local の終了コードをそのまま返す'
+        _setup_failing_dispatch_stubs "$_WSL_MISSING"
+        When call dispatch "$_LOCAL_OS_NAME" "$_SPEC_ARG" "$_OPTION_ARG"
+        The status should equal "$_DSP_STUB_EXIT_CODE"
+      End
+
+      It 'Then: [Error] T-RUN-DSP-05: WSL 実行経路では exec_in_wsl の終了コードをそのまま返す'
+        _setup_failing_dispatch_stubs "$_WSL_AVAILABLE"
+        When call dispatch "$_WINDOWS_OS_NAME" "$_SPEC_ARG" "$_OPTION_ARG"
+        The status should equal "$_DSP_STUB_EXIT_CODE"
+      End
+
+      It 'Then: [Error] T-RUN-DSP-07: WSL に必須コマンドが無ければ 1 行のエラーを出して WSL を起動しない'
+        _setup_missing_commands_stubs "$_WSL_AVAILABLE"
+        When call dispatch "$_WINDOWS_OS_NAME" "$_SPEC_ARG" "$_OPTION_ARG"
+        The lines of stderr should equal 1
+        The stderr should include "$_DSP_MISSING_COMMAND"
+        The output should be blank
+        The status should equal 1
+      End
     End
   End
-End
 
-Describe 'main()'
-  Describe 'invalid argument handling'
-    # ShellSpec strips trailing newlines from captured stderr, so a stray blank
-    # line is invisible to 'The lines of stderr'. Count the lines in-pipeline and
-    # propagate the script exit code via PIPESTATUS.
-    It 'T-RUN-MRS-01: writes exactly one stderr line for an unknown argument'
-      When run bash -c "bash \"$SCRIPT\" unknowntype 2>&1 1>/dev/null | grep -c ^; exit \${PIPESTATUS[0]}"
-      The output should equal '1'
-      The status should equal 1
-    End
+  #
+  # 入口として実際に起動されたときの振る舞い。uname の結果を dispatch() へ渡すだけの
+  # 薄い層なので、スクリプトを別プロセスで起動した結合として検証する
+  #
+  Describe 'main()'
+    Before '_setup_shellspec_stub'
+    After '_teardown_shellspec_stub'
 
-    It 'T-RUN-MRS-02: reports the unknown argument on stderr'
-      When run bash "$SCRIPT" unknowntype
-      The stderr should include "Unknown argument 'unknowntype'"
-      The output should be blank
-      The status should equal 1
+    # WSL を無効化した状態なら、どのホストでも本体がこのシェルで走る
+    Describe 'When: 正常系'
+      It 'Then: [Normal] T-RUN-MSL-01: SHELLSPEC_NO_WSL=1 では本体経由で ShellSpec に引数が届く'
+        When run env SHELLSPEC="$_SHELLSPEC_STUB" SHELLSPEC_NO_WSL=1 bash "$SCRIPT" "$_SPEC_ARG"
+        The output should equal "[${_SPEC_ARG}]"
+        The status should be success
+      End
     End
   End
 End
