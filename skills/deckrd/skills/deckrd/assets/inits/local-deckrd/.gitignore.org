@@ -1,5 +1,5 @@
-# src: .gitignore
-# @(#) : deckrd gitignore settings
+# src: .local/deckrd/gitignore
+# @(#) : ignore settings for deckrd local
 #
 # Copyright (c) 2026- atsushifx <http://github.com/atsushifx>
 #
@@ -16,6 +16,7 @@
 !README*
 *kv
 *session
+*.json
 
 # checklist
 **/*checklist.md
