@@ -55,7 +55,8 @@ _resolve_deckrd_root() {
 # bootstrap_init - Set all runtime variables (no readonly yet)
 #
 # Sets: PROJECT_ROOT, DECKRD_ROOT, DECKRD_SCRIPTS_DIR,
-#       DECKRD_LIB_DIR, DECKRD_DATA_DIR, DECKRD_LOCAL_DATA, DECKRD_DOCS_DIR, SYMBOL
+#       DECKRD_LIB_DIR, DECKRD_DATA_DIR, DECKRD_LOCAL_DATA,
+#       DECKRD_LOCAL_WORKSPACES, DECKRD_DOCS_DIR, SYMBOL
 # All variables respect pre-existing values (env var > computed default).
 # Does NOT call readonly — call bootstrap_finalize() after to lock variables.
 #
@@ -129,6 +130,7 @@ bootstrap_finalize() {
   readonly DECKRD_LIB_DIR
   readonly DECKRD_DATA_DIR
   readonly DECKRD_LOCAL_DATA
+  readonly DECKRD_LOCAL_WORKSPACES
   readonly DECKRD_DOCS_DIR
   readonly SYMBOL
 }

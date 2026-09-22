@@ -69,7 +69,7 @@ Describe "bootstrap.lib.sh"
   Describe "export 検証"
 
     Describe "Given: PROJECT_ROOT=/tmp/proj で bootstrap_init を呼ぶ"
-      Before "export PROJECT_ROOT=/tmp/proj; unset DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_LIB_DIR DECKRD_DATA_DIR DECKRD_LOCAL_DATA DECKRD_DOCS_DIR SYMBOL; bootstrap_init"
+      Before "export PROJECT_ROOT=/tmp/proj; unset DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_LIB_DIR DECKRD_DATA_DIR DECKRD_LOCAL_DATA DECKRD_LOCAL_WORKSPACES DECKRD_DOCS_DIR SYMBOL; bootstrap_init"
 
       It "[Normal] T-LIB-BEXP-01: PROJECT_ROOT が export されている"
         When call bash -c 'export -p | grep -q "^declare -x PROJECT_ROOT=" && echo ok'
@@ -113,6 +113,11 @@ Describe "bootstrap.lib.sh"
 
       It "[Normal] T-LIB-BEXP-09: SYMBOL が export されている"
         When call bash -c 'export -p | grep -q "^declare -x SYMBOL=" && echo ok'
+        The output should equal "ok"
+      End
+
+      It "[Normal] T-LIB-BEXP-10: DECKRD_LOCAL_WORKSPACES が export されている"
+        When call bash -c 'export -p | grep -q "^declare -x DECKRD_LOCAL_WORKSPACES=" && echo ok'
         The output should equal "ok"
       End
     End
@@ -191,6 +196,12 @@ Describe "bootstrap.lib.sh"
 
     It "[Normal] T-LIB-BFIN-07: finalize 後は DECKRD_LOCAL_DATA が readonly になっている"
       When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && ( DECKRD_LOCAL_DATA=x ) 2>/dev/null && echo writable || echo readonly"
+      The status should equal 0
+      The output should equal "readonly"
+    End
+
+    It "[Normal] T-LIB-BFIN-11: finalize 後は DECKRD_LOCAL_WORKSPACES が readonly になっている"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && ( DECKRD_LOCAL_WORKSPACES=x ) 2>/dev/null && echo writable || echo readonly"
       The status should equal 0
       The output should equal "readonly"
     End
