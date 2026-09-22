@@ -286,6 +286,31 @@ pnpm run lint:text         # Text quality
 pnpm run test:sh           # ShellSpec tests
 ```
 
+#### Running ShellSpec on Windows
+
+`runners/run-shellspec.sh` is only an entry point: it detects the host and hands the real
+runner, `runners/exec/shellspec-exec.sh`, to WSL when it is running on Git Bash / MSYS2 /
+Cygwin. Spec discovery and ShellSpec itself then run on Linux, which is far faster than
+MSYS2 — the 49-example `shellspec-exec.spec.sh` drops from about 3 minutes to about 5
+seconds.
+
+On Linux, macOS, or inside WSL the entry point runs the body directly. If it detects
+Windows but `wsl.exe` is unavailable it stops with an error rather than falling back to
+the slow path. Set `SHELLSPEC_NO_WSL=1` to force execution on the current shell:
+
+```bash
+SHELLSPEC_NO_WSL=1 pnpm run test:sh   # skip WSL, run on this shell
+```
+
+The WSL distro needs the same command-line tools the specs shell out to — `bash`, `git`,
+`rg`, and `jq`. The entry point checks for them before handing anything over and stops
+with a single line naming what is missing, so a missing `jq` shows up as one error
+instead of a hundred failing examples:
+
+```bash
+sudo apt install jq   # inside the WSL distro
+```
+
 ## Technology Stack
 
 ### Primary Language

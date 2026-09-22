@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# runners/libs/tests/unit/get-filelist.spec.sh
+# runners/libs/__tests__/unit/get-filelist.spec.sh
 # @(#) : BDD unit tests for get-filelist.lib.sh
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
@@ -50,20 +50,20 @@ Describe 'get_filelist()'
     It 'T-RUN-GFL-05: restricts to runners/ directory'
       When call get_filelist "$TEMP_DIR" "*.spec.sh" "runners/"
       The output should include 'runners/'
-      The output should not include 'plugins/'
+      The output should not include 'skills/'
       The status should be success
     End
 
-    It 'T-RUN-GFL-06: restricts to runners/libs/tests/unit path'
-      When call get_filelist "$TEMP_DIR" "*.spec.sh" "runners/libs/tests/unit"
-      The output should include 'tests/unit'
+    It 'T-RUN-GFL-06: restricts to runners/libs/__tests__/unit path'
+      When call get_filelist "$TEMP_DIR" "*.spec.sh" "runners/libs/__tests__/unit"
+      The output should include '__tests__/unit'
       The output should not include 'integration'
       The status should be success
     End
 
-    It 'T-RUN-GFL-07: restricts to tests/unit path filter'
-      When call get_filelist "$TEMP_DIR" "*.spec.sh" "tests/unit"
-      The output should include 'tests/unit'
+    It 'T-RUN-GFL-07: restricts to __tests__/unit path filter'
+      When call get_filelist "$TEMP_DIR" "*.spec.sh" "__tests__/unit"
+      The output should include '__tests__/unit'
       The output should not include 'integration'
       The status should be success
     End
@@ -73,15 +73,15 @@ Describe 'get_filelist()'
     It 'T-RUN-GFL-08: combines runners/ + kv-store'
       When call get_filelist "$TEMP_DIR" "*.spec.sh" "runners/" "kv-store"
       The output should include 'kv-store'
-      The output should not include 'plugins/'
+      The output should not include 'skills/'
       The status should be success
     End
   End
 
   Describe 'バックスラッシュパス対応'
     It 'T-RUN-GFL-09: handles backslash dir_filter'
-      When call get_filelist "$TEMP_DIR" "*.spec.sh" 'runners\libs\tests\unit'
-      The output should include 'tests/unit'
+      When call get_filelist "$TEMP_DIR" "*.spec.sh" 'runners\libs\__tests__\unit'
+      The output should include '__tests__/unit'
       The output should not include 'integration'
       The status should be success
     End
