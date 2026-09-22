@@ -32,6 +32,7 @@ deckrd プラグインの共有ライブラリ。bootstrap・kv-store・session�
 | `BLIBD` | `DECKRD_LIB_DIR` の決定                         |
 | `BLOAD` | bootstrap.lib.sh の読み込み                     |
 | `BLOCD` | `DECKRD_LOCAL_DATA` の決定                      |
+| `BLOCW` | `DECKRD_LOCAL_WORKSPACES` の決定                |
 | `BPR`   | `PROJECT_ROOT`: 事前設定の維持                  |
 | `BPRF`  | `PROJECT_ROOT`: `BASH_SOURCE` fallback          |
 | `BPRG`  | `PROJECT_ROOT`: git 自動検出                    |
