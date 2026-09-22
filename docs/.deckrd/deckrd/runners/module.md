@@ -21,6 +21,7 @@ owns:
 | `CT`   | `check_targets` (検査 D)                    |
 | `DSP`  | `dispatch` (run-shellspec.sh)               |
 | `ECI`  | `extract_case_ids`                          |
+| `EGI`  | `extract_group_ids()`                       |
 | `EIW`  | `exec_in_wsl`                               |
 | `ESG`  | `expand_spec_glob`                          |
 | `FMR`  | `read_module_scalar` / `read_module_owns`   |
@@ -36,13 +37,17 @@ owns:
 | `IVSR` | `init-vars.lib.sh` の `SCRIPT_ROOT` の決定  |
 | `IWA`  | `is_wsl_available`                          |
 | `IWH`  | `is_windows_host`                           |
-| `LS`   | `layer_suffix`                              |
+| `LCI`  | `locate_case_id()`                          |
+| `LCR`  | `load_spec_records()`                       |
+| `LOO`  | `load_owners_of()`                          |
 | `MN`   | `main` (run-check-test-ids.sh)              |
 | `MRS`  | `main` (exec/shellspec-exec.sh)             |
 | `MSL`  | `main` (run-shellspec.sh)                   |
 | `NP`   | `normalize_path`                            |
 | `PMG`  | `path_matches_glob`                         |
 | `PO`   | `parse_options`                             |
+| `RCC`  | `reset_check_caches()`                      |
 | `RMT`  | `read_module_targets`                       |
 | `RSF`  | `resolve_spec_files`                        |
+| `SCD`  | `scan_spec_declarations()`                  |
 | `SUW`  | `should_use_wsl`                            |
