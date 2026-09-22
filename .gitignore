@@ -41,6 +41,9 @@
 !/dprint.jsonc
 !/.shellspec
 !/.mcp.json
+!/deckrd.json
+!/.claude-plugin/
+!/.claude-plugin/**
 !**/CHANGELOG.md
 !**/Release-Note.md
 
@@ -68,12 +71,11 @@
 # documents
 !docs/
 !docs/**
-!docs/**/+.md
+!docs/**/*.md
 
 ## deckrd dirs
 !skills/
 !skills/**
-!skills/**/*.sh
 
 ## AI Agents
 # claude code
@@ -108,3 +110,39 @@
 ##  Git
 # allow all gitignore
 !**/.gitignore
+
+## deckrd local data
+# allowlist details: .local/deckrd/.gitignore
+!/.local/
+!/.local/deckrd/
+
+
+## ------------------------------------------------------------ ##
+##  Re-exclude: secrets and generated files                      ##
+##  Must stay last: these rules undo the broad allow rules above ##
+## ------------------------------------------------------------ ##
+
+# dependencies
+**/node_modules/
+
+# temporary directories, cache
+**/temp/
+**/tmp/
+**/.cache/
+**/.history/
+
+# .env files
+**/.env
+**/.env.*
+
+# logs, patches
+*.log
+*.diff
+*.patch
+
+# backup/swap/temp
+*~
+~*
+$~*
+*.tmp
+*.swp
