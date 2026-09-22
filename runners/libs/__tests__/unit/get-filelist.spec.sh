@@ -12,7 +12,7 @@
 Include "${SHELLSPEC_PROJECT_ROOT}/runners/libs/__tests__/spec_helper.sh"
 Include "${SHELLSPEC_PROJECT_ROOT}/runners/libs/get-filelist.lib.sh"
 
-Describe 'get_filelist()'
+Describe 'T-RUN-GFL: get_filelist()'
   Before 'setup_temp_specs'
   After 'teardown_temp_specs'
 

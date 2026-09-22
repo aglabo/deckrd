@@ -209,15 +209,13 @@ _fake_wsl_call_count() {
 
 #
 # Windows ホスト判定と WSL への委譲だけを担う lib。
-# 割り当てたテスト ID:
-# T-RUN-IWH-01..03 / T-RUN-IWA-01..02 / T-RUN-EIW-01..03 / T-RUN-FMW-01..04
 #
 Describe 'wsl.lib.sh'
   #
   # `uname -s` の値だけを見て Windows のシェル環境かどうかを判定する純粋関数。
   # 自身では uname を呼ばないため、OS 名を表から流し込んで検証できる
   #
-  Describe 'is_windows_host()'
+  Describe 'T-RUN-IWH: is_windows_host()'
     # Git Bash / MSYS2 / Cygwin の uname -s は Windows ホストを表す
     Describe 'When: 正常系'
       # shellcheck disable=SC2086 # %const の表を 1 ケースずつに単語分割する
@@ -253,7 +251,7 @@ Describe 'wsl.lib.sh'
   # このシェルから wsl.exe を呼べるかどうかを判定する。
   # 実機の WSL に依存しないよう、PATH を差し替えたプローブ経由で検証する
   #
-  Describe 'is_wsl_available()'
+  Describe 'T-RUN-IWA: is_wsl_available()'
     Before '_setup_wsl_path_probe'
     After '_teardown_wsl_path_probe'
 
@@ -276,7 +274,7 @@ Describe 'wsl.lib.sh'
   # WSL 上でスクリプトを実行する。Windows 側のパスを持つ変数は引き継がず、
   # SKIP_INTEGRATION_TESTS だけを env(1) 経由で渡す
   #
-  Describe 'exec_in_wsl()'
+  Describe 'T-RUN-EIW: exec_in_wsl()'
     After '_teardown_wsl_exe_stub'
 
     Describe 'When: 正常系'
@@ -317,7 +315,7 @@ Describe 'wsl.lib.sh'
   # 何個調べても起動は 1 回に収める。
   # 実機の WSL に依存しないよう、擬似 WSL を返す wsl.exe スタブ経由で検証する
   #
-  Describe 'find_missing_wsl_commands()'
+  Describe 'T-RUN-FMW: find_missing_wsl_commands()'
     Before '_setup_fake_wsl'
     After '_teardown_fake_wsl'
 

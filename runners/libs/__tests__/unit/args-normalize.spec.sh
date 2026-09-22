@@ -11,7 +11,7 @@
 
 Include "${SHELLSPEC_PROJECT_ROOT}/runners/libs/get-filelist.lib.sh"
 
-Describe 'args_to_filter()'
+Describe 'T-RUN-ATF: args_to_filter()'
   Describe '* wildcard conversion'
     It 'T-RUN-ATF-01: converts trailing wildcard init* to init.*'
       When call args_to_filter "init*"
@@ -44,7 +44,7 @@ Describe 'args_to_filter()'
 End
 
 Describe 'normalize_path()'
-  Describe 'backslash to forward slash conversion'
+  Describe 'T-RUN-NP: backslash to forward slash conversion'
     It 'T-RUN-NP-01: converts backslash separator to forward slash'
       When call normalize_path 'runners\libs\tests'
       The output should equal 'runners/libs/tests'
@@ -71,7 +71,7 @@ Describe 'normalize_path()'
   End
 End
 
-Describe 'is_glob_pattern()'
+Describe 'T-RUN-IGP: is_glob_pattern()'
   Describe 'glob patterns'
     It 'T-RUN-IGP-01: returns success for trailing wildcard init*'
       When call is_glob_pattern 'init*'

@@ -46,7 +46,7 @@ _teardown_shellspec_stub() {
   unset _STUB_DIR _SHELLSPEC_STUB
 }
 
-Describe 'is_test_type()'
+Describe 'T-RUN-ITT: is_test_type()'
   Describe 'valid test types'
     It 'T-RUN-ITT-01: returns success for all'
       When call is_test_type 'all'
@@ -102,7 +102,7 @@ Describe 'is_test_type()'
   End
 End
 
-Describe 'is_spec_file()'
+Describe 'T-RUN-ISF: is_spec_file()'
   Describe 'valid spec file paths'
     It 'T-RUN-ISF-01: returns success for foo.spec.sh'
       When call is_spec_file 'foo.spec.sh'
@@ -142,7 +142,7 @@ Describe 'get_spec_files()'
   Before 'setup_temp_specs'
   After 'teardown_temp_specs'
 
-  Describe 'test type expansion'
+  Describe 'T-RUN-GSF: test type expansion'
     It 'T-RUN-GSF-01: returns spec files under tests/ for all'
       When call get_spec_files 'all'
       The output should include '.spec.sh'
@@ -201,7 +201,7 @@ Describe 'get_spec_files()'
   End
 End
 
-Describe 'parse_options()'
+Describe 'T-RUN-PO: parse_options()'
   Before 'SKIP_INTEGRATION_TESTS=1'
 
   Describe '--integration flag handling'
@@ -231,7 +231,7 @@ Describe 'parse_options()'
   End
 End
 
-Describe 'is_spec_glob()'
+Describe 'T-RUN-ISG: is_spec_glob()'
   Describe 'spec glob patterns'
     It 'T-RUN-ISG-01: returns success for runners/libs/__tests__/unit/*.spec.sh'
       When call is_spec_glob 'runners/libs/__tests__/unit/*.spec.sh'
@@ -256,7 +256,7 @@ Describe 'expand_spec_glob()'
   Before 'setup_temp_specs'
   After 'teardown_temp_specs'
 
-  Describe 'glob expansion'
+  Describe 'T-RUN-ESG: glob expansion'
     It 'T-RUN-ESG-01: returns matching spec files for runners/libs/__tests__/unit/*.spec.sh'
       When call expand_spec_glob 'runners/libs/__tests__/unit/*.spec.sh'
       The output should include '.spec.sh'
@@ -271,7 +271,7 @@ Describe 'expand_spec_glob()'
   End
 End
 
-Describe 'resolve_spec_files()'
+Describe 'T-RUN-RSF: resolve_spec_files()'
   Before 'SKIP_INTEGRATION_TESTS=1'
 
   Describe 'single spec file passthrough'
@@ -352,7 +352,7 @@ Describe 'resolve_spec_files()'
   End
 End
 
-Describe 'main()'
+Describe 'T-RUN-MRS: main()'
   Describe 'invalid argument handling'
     # ShellSpec strips trailing newlines from captured stderr, so a stray blank
     # line is invisible to 'The lines of stderr'. Count the lines in-pipeline and

@@ -128,14 +128,13 @@ _setup_init_vars_fixture() {
 
 #
 # 全ての runner スクリプトが source する共通変数の初期化 lib。
-# 割り当てたテスト ID: T-RUN-IVPR-01..05 / T-RUN-IVSR-01..03
 #
 Describe 'init-vars.lib.sh'
   #
   # プロジェクト根の決定。git が使えるならその出力を、使えないなら
   # lib 自身の位置から導く。呼び出し元の階層の深さに依存してはならない
   #
-  Describe 'PROJECT_ROOT'
+  Describe 'T-RUN-IVPR: PROJECT_ROOT'
     Before '_setup_init_vars_fixture'
 
     # git リポジトリの中では git の答えが正であり、呼び出し元の指定はそれより優先される
@@ -189,7 +188,7 @@ Describe 'init-vars.lib.sh'
   # スクリプトの位置を指し続けなければならない。PROJECT_ROOT のフォールバックが
   # lib 自身の位置を基準にしても、SCRIPT_ROOT の意味は変えてはならない
   #
-  Describe 'SCRIPT_ROOT'
+  Describe 'T-RUN-IVSR: SCRIPT_ROOT'
     Before '_setup_init_vars_fixture'
 
     # git が使えるときも SCRIPT_ROOT は git の答えに引きずられてはならない
