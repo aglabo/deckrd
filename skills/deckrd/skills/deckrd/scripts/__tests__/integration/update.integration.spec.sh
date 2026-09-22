@@ -61,7 +61,7 @@ make_asset() {
 # update.sh: list outdated assets
 # ============================================================================
 
-Describe "update.sh: list outdated assets"
+Describe "T-CLI-UPDI: update.sh: list outdated assets"
 
   Describe "Given: one deployed file older than its differing source"
     Before "setup_update_env"
@@ -214,7 +214,7 @@ End
 # update.sh --update: apply outdated assets
 # ============================================================================
 
-Describe "update.sh --update: apply outdated assets"
+Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
 
   Describe "Given: one deployed file older than its differing source"
     Before "setup_update_env"
@@ -225,7 +225,7 @@ Describe "update.sh --update: apply outdated assets"
     }
     Before "setup_one_outdated_for_update"
 
-    It "[Normal] T-CLI-UPDI-10: Should: exit 0, print Updated: [label] name, and overwrite with the source"
+    It "[Normal] T-CLI-UPDA-01: Should: exit 0, print Updated: [label] name, and overwrite with the source"
       When run bash "$SCRIPT" --update
       The status should equal 0
       The output should equal "Updated: [deckrd-rules] a.md"
@@ -245,7 +245,7 @@ Describe "update.sh --update: apply outdated assets"
     }
     Before "setup_org_outdated"
 
-    It "[Edge] T-CLI-UPDI-11: Should: exit 0, print up to date, and keep the deployed .gitignore"
+    It "[Edge] T-CLI-UPDA-02: Should: exit 0, print up to date, and keep the deployed .gitignore"
       When run bash "$SCRIPT" --update
       The status should equal 0
       The output should equal "Rules are up to date."
@@ -262,7 +262,7 @@ Describe "update.sh --update: apply outdated assets"
     }
     Before "setup_user_edited_for_update"
 
-    It "[Edge] T-CLI-UPDI-12: Should: exit 0, print up to date, and keep the edited file"
+    It "[Edge] T-CLI-UPDA-03: Should: exit 0, print up to date, and keep the edited file"
       When run bash "$SCRIPT" --update
       The status should equal 0
       The output should equal "Rules are up to date."
@@ -279,7 +279,7 @@ Describe "update.sh --update: apply outdated assets"
     }
     Before "setup_undeployed_for_update"
 
-    It "[Edge] T-CLI-UPDI-13: Should: exit 0, print up to date, and not deploy the file"
+    It "[Edge] T-CLI-UPDA-04: Should: exit 0, print up to date, and not deploy the file"
       When run bash "$SCRIPT" --update
       The status should equal 0
       The output should equal "Rules are up to date."
@@ -297,7 +297,7 @@ Describe "update.sh --update: apply outdated assets"
     }
     Before "setup_no_session_for_update"
 
-    It "[Error] T-CLI-UPDI-14: Should: exit 1, stderr prompts init, and leave the deployed file unchanged"
+    It "[Error] T-CLI-UPDA-05: Should: exit 1, stderr prompts init, and leave the deployed file unchanged"
       When run bash "$SCRIPT" --update
       The status should equal 1
       The output should be blank

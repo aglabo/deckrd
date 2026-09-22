@@ -17,7 +17,7 @@ Include ../spec_helper.sh
 SCRIPT="${DECKRD_LIB_DIR}/normalize-doc-type.lib.sh"
 . "${SCRIPT}"
 
-Describe "normalize_doc_type"
+Describe "T-LIB-NDT: normalize_doc_type"
 
   Before "setup_deckrd_tmpdir"
   After "teardown_deckrd_tmpdir"

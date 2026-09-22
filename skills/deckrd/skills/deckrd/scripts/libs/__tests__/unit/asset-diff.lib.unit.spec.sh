@@ -17,7 +17,7 @@ Include ../spec_helper.sh
 SCRIPT="${DECKRD_LIB_DIR}/asset-diff.lib.sh"
 . "$SCRIPT"
 
-Describe "asset-diff.lib.sh"
+Describe "T-LIB-ASDF: asset-diff.lib.sh"
   Describe "asset_dest_name"
     Describe "Given: アセットのソースファイルパス"
       Describe "When: asset_dest_name を呼ぶ"

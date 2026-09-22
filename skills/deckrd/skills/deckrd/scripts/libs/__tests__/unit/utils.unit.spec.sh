@@ -54,7 +54,7 @@ Describe "utils.lib.sh"
   Before "_utils_spec_setup"
   After "_utils_spec_teardown"
 
-  Describe "jq_read"
+  Describe "T-LIB-UJR: jq_read"
 
     Describe "When: 正常系"
       It "Then: [Normal] T-LIB-UJR-01-01: CR を含む出力が LF のみに正規化される"

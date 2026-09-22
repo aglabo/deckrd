@@ -16,7 +16,7 @@ Include ../spec_helper.sh
 
 SCRIPT="${DECKRD_SCRIPTS_DIR}/project.sh"
 
-Describe "project.sh"
+Describe "T-CLI-PRJ: project.sh"
   Before "setup_deckrd_tmpdir"
   After "teardown_deckrd_tmpdir"
 

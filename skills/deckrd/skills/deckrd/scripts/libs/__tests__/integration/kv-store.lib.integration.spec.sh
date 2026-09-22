@@ -20,7 +20,7 @@ Include "../spec_helper.sh"
 
 Describe "kv-store.lib.sh - integration tests"
 
-  Describe "kv_load"
+  Describe "T-LIB-KLOADI: kv_load"
     Describe "Given: ファイルが存在しない"
       Before "kv_init 'loadstore' $'key1|default1\nkey2|default2'"
 
@@ -69,7 +69,7 @@ Describe "kv-store.lib.sh - integration tests"
     End
   End
 
-  Describe "kv_save"
+  Describe "T-LIB-KSAVEI: kv_save"
     Describe "Given: schema 未登録のストア"
       Describe "When: kv_save を呼ぶ"
         It "Then: [Error] T-LIB-KSAVEI-01: return 1 を返し Error: を stderr に出力する"

@@ -17,7 +17,7 @@ Include "../spec_helper.sh"
 
 Describe "naming.lib.sh"
 
-  Describe "naming.lib.sh loading"
+  Describe "T-LIB-NLD: naming.lib.sh loading"
     Describe "When: スクリプトを読み込む"
       It "Then: [Normal] T-LIB-NLD-01: hacker_random 関数が存在する"
         When call type hacker_random
@@ -27,7 +27,7 @@ Describe "naming.lib.sh"
     End
   End
 
-  Describe "hacker_random"
+  Describe "T-LIB-NHR: hacker_random"
     Describe "Given: デフォルトの hackers.dic が存在する"
       Before "PROJECT_ROOT=${SHELLSPEC_PROJECT_ROOT}"
 
@@ -72,7 +72,7 @@ Describe "naming.lib.sh"
     End
   End
 
-  Describe "adjective_random"
+  Describe "T-LIB-NAR: adjective_random"
     Describe "naming.lib.sh loading"
       Describe "When: スクリプトを読み込む"
         It "Then: [Normal] T-LIB-NAR-01: adjective_random 関数が存在する"
@@ -113,7 +113,7 @@ Describe "naming.lib.sh"
     End
   End
 
-  Describe "generate_filename"
+  Describe "T-LIB-NGF: generate_filename"
     Describe "naming.lib.sh loading"
       Describe "When: スクリプトを読み込む"
         It "Then: [Normal] T-LIB-NGF-01: generate_filename 関数が存在する"
@@ -281,7 +281,7 @@ Describe "naming.lib.sh"
     End
   End
 
-  Describe "generate_filename 並列実行 (race condition)"
+  Describe "T-LIB-NGFR: generate_filename 並列実行 (race condition)"
     Before "setup_naming_cache"
     Before "PROJECT_ROOT=${SHELLSPEC_PROJECT_ROOT}"
     After "teardown_naming_cache"
@@ -421,7 +421,7 @@ Describe "naming.lib.sh"
     End
   End
 
-  Describe "_try_create_cache_file"
+  Describe "T-LIB-NTCC: _try_create_cache_file"
     Before "setup_naming_cache"
     After "teardown_naming_cache"
 

@@ -18,7 +18,7 @@ SCRIPT="${DECKRD_LIB_DIR}/ai-runner.lib.sh"
 . "$SCRIPT"
 
 Describe "ai-runner.sh"
-  Describe "run_ai"
+  Describe "T-LIB-RAI: run_ai"
     # Common mock helper
     setup_mock_cli() {
       local name="$1"

@@ -21,7 +21,7 @@ SCRIPT="${DECKRD_SCRIPTS_DIR}/init.sh"
 # init.sh: validate_args + validate_language
 # ============================================================================
 
-Describe "init.sh: validate_args"
+Describe "T-CLI-VA: init.sh: validate_args"
   # shellcheck disable=SC2329
   load_script_with_mocks() {
     # Mock: validate_env を常に成功させる
@@ -104,7 +104,7 @@ Describe "init.sh: validate_args"
 
 End
 
-Describe "init.sh: validate_language"
+Describe "T-CLI-VL: init.sh: validate_language"
   load_script_with_mocks() {
     # shellcheck disable=SC2329
     validate_env() { return 0; }

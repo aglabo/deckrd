@@ -17,7 +17,7 @@ Include ../spec_helper.sh
 # shellcheck source=../generate-doc.sh
 . "${SUBCOMMANDS_DIR}/generate-doc.sh"
 
-Describe "generate-doc.sh get_prompt_file"
+Describe "T-SUB-GPF: generate-doc.sh get_prompt_file"
 
   Before "setup_deckrd_tmpdir"
   After "teardown_deckrd_tmpdir"

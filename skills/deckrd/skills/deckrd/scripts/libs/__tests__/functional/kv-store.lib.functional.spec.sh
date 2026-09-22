@@ -20,7 +20,7 @@ Include "../spec_helper.sh"
 
 Describe "kv-store.lib.sh - functional tests"
 
-  Describe "kv_load"
+  Describe "T-LIB-KLOADF: kv_load"
     Describe "Given: 有効な JSON ファイルが存在する"
       Before "setup_tmpdir; kv_init 'jsonstore' $'key1|default1\nkey2|default2'"
       After "teardown_tmpdir"
@@ -112,7 +112,7 @@ Describe "kv-store.lib.sh - functional tests"
     End
   End
 
-  Describe "kv_save"
+  Describe "T-LIB-KSAVEF: kv_save"
     Describe "Given: データがセットされた状態"
       Before "setup_tmpdir; kv_init 'savestore' $'key1|v1\nkey2|v2'"
       After "teardown_tmpdir"
@@ -256,7 +256,7 @@ Describe "kv-store.lib.sh - functional tests"
     End
   End
 
-  Describe "ラウンドトリップ (kv_save → kv_load)"
+  Describe "T-LIB-KRTF: ラウンドトリップ (kv_save → kv_load)"
     Before "setup_tmpdir; kv_init 'rtstore' $'key1|d1\nkey2|d2'"
     After "teardown_tmpdir"
 
@@ -305,7 +305,7 @@ Describe "kv-store.lib.sh - functional tests"
     End
   End
 
-  Describe "複数ストアの独立性"
+  Describe "T-LIB-KMSF: 複数ストアの独立性"
     Before "kv_init 'store_a' $'key|valueA'; kv_init 'store_b' $'key|valueB'"
 
     Describe "When: store_a の値を変更する"

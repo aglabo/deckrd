@@ -19,7 +19,7 @@ SCRIPT="${DECKRD_LIB_DIR}/ai-runner.lib.sh"
 . "$SCRIPT"
 
 Describe "ai-runner.sh"
-  Describe "ai-runner.sh loading"
+  Describe "T-LIB-ARLD: ai-runner.sh loading"
     Describe "When: スクリプトを読み込む"
       It "Then: [Normal] T-LIB-ARLD-01: resolve_ai_cli 関数が存在する"
         When call type resolve_ai_cli
@@ -35,7 +35,7 @@ Describe "ai-runner.sh"
     End
   End
 
-  Describe "resolve_ai_cli"
+  Describe "T-LIB-ARRC: resolve_ai_cli"
     Describe "Given: provider プレフィックス付きモデル名"
       Describe "When: resolve_ai_cli を呼ぶ"
         Parameters
@@ -148,7 +148,7 @@ Describe "ai-runner.sh"
     End
   End
 
-  Describe "validate_ai_model"
+  Describe "T-LIB-ARVM: validate_ai_model"
     Describe "ai-runner.sh loading"
       It "Then: [Normal] T-LIB-ARVM-01: validate_ai_model 関数が存在する"
         When call type validate_ai_model

@@ -18,7 +18,7 @@ SCRIPT="${DECKRD_LIB_DIR}/validate-env.lib.sh"
 . "$SCRIPT"
 
 Describe "validate-env.sh"
-  Describe "validate-env.sh loading"
+  Describe "T-LIB-VLD: validate-env.sh loading"
     Describe "When: スクリプトを読み込む"
       It "Then: [Normal] T-LIB-VLD-01: validate_env 関数が存在する"
         When call type validate_env
@@ -28,7 +28,7 @@ Describe "validate-env.sh"
     End
   End
 
-  Describe "validate_env"
+  Describe "T-LIB-VENV: validate_env"
     Describe "Given: jq がインストールされている環境"
       Describe "When: validate_env を呼ぶ"
         It "Then: [Normal] T-LIB-VENV-01: exit 0 を返し、jqexe が設定される"
