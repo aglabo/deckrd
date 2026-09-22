@@ -55,7 +55,8 @@ _resolve_deckrd_root() {
 # bootstrap_init - Set all runtime variables (no readonly yet)
 #
 # Sets: PROJECT_ROOT, DECKRD_ROOT, DECKRD_SCRIPTS_DIR,
-#       DECKRD_LIB_DIR, DECKRD_DATA_DIR, DECKRD_LOCAL_DATA, DECKRD_DOCS_DIR, SYMBOL
+#       DECKRD_LIB_DIR, DECKRD_DATA_DIR, DECKRD_LOCAL_DATA,
+#       DECKRD_LOCAL_WORKSPACES, DECKRD_DOCS_DIR, SYMBOL
 # All variables respect pre-existing values (env var > computed default).
 # Does NOT call readonly — call bootstrap_finalize() after to lock variables.
 #
@@ -95,6 +96,10 @@ bootstrap_init() {
   DECKRD_LOCAL_DATA="${DECKRD_LOCAL_DATA:-${PROJECT_ROOT}/.local/deckrd}"
   export DECKRD_LOCAL_DATA
 
+  # DECKRD_LOCAL_WORKSPACES: project-local deckrd shared working directory
+  DECKRD_LOCAL_WORKSPACES="${DECKRD_LOCAL_WORKSPACES:-${DECKRD_LOCAL_DATA}/workspaces}"
+  export DECKRD_LOCAL_WORKSPACES
+
   # DECKRD_DOCS_DIR: deckrd docs directory
   DECKRD_DOCS_DIR="${DECKRD_DOCS_DIR:-${PROJECT_ROOT}/docs/.deckrd}"
   export DECKRD_DOCS_DIR
@@ -125,6 +130,7 @@ bootstrap_finalize() {
   readonly DECKRD_LIB_DIR
   readonly DECKRD_DATA_DIR
   readonly DECKRD_LOCAL_DATA
+  readonly DECKRD_LOCAL_WORKSPACES
   readonly DECKRD_DOCS_DIR
   readonly SYMBOL
 }

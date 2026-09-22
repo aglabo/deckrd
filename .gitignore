@@ -7,95 +7,142 @@
 # https://opensource.org/licenses/MIT
 
 
-##  General
-#   OS specific files
-.DS_Store
-thumbs.db
+# default: ignore all files
+*
 
-#   logs, patches
-*.log
-*.diff
-*.patch
+## Allow Template files
+!/templates
+!/templates/**
 
-#   history, cache
-.history/
-.cache/
-# **/*cache
+# Allow README, LICENSE, CONTRIBUTING
+!**/README*
+!**/LICENSE*
+!**/CONTRIBUTING*
+
+# Allow .github directories
+!.github/
+!.github/**
+
+# Allow other ignore
+!*ignore
+
+# Allow editorconfig
+!**/.editorconfig
+
+# Allow settings
+!**/settings.json
 
 
-#   backup/swap/temp
-$~*
-~*
-*~
-*.tmp
-*.swp
-*.lock
+## Root configs
+!**/package.json
+!**/pnpm-lock.yaml
+!/renovate.json
+!/lefthook.yml
+!/dprint.jsonc
+!/.shellspec
+!/.mcp.json
+!/deckrd.json
+!/.claude-plugin/
+!/.claude-plugin/**
+!**/CHANGELOG.md
+!**/Release-Note.md
 
-# session files
-*session.json
-*session
-**/*session.json
-**/*session
+## Project directories
+# config files
+!/configs/
+!/configs/**
+!/configs/**/*.json
+!/configs/**/*.yml
+!/configs/**/*.yaml
+!/configs/**/*.toml
+!/configs/**/*rc
+!/configs/**/*.js
+!/configs/**/*.mjs
 
-# .env files
-.env*
-.env.*
+# runners & scripts
+!/runners
+!/runners/**
+!/runners/**/*.sh
+!/scripts
+!/scripts/**
+!/scripts/**/*.sh
+!/scripts/**/*.ts
 
-# release
-releases/*
-!releases/.keep
+# documents
+!docs/
+!docs/**
+!docs/**/*.md
 
-##  Git
-!**/.gitignore
+## deckrd dirs
+!skills/
+!skills/**
 
-## Development tools (installed locally)
-.tools/
+## AI Agents
+# claude code
+!**/CLAUDE*.md
 
-## Worktrees
-# worktree base dir
-.worktrees/
-
-## AI generated files
-
-## Coding AI depended
-# SDD (Spec-Driven Development) files
-
-# claude code setting
-.claude/*
-
-# settings
-!.claude/**/settings.json
-
-# agents can tracking
+# allowlist details: .claude/.gitignore
+!.claude/
 !**/CLAUDE*.md
 !.claude/agents/
 !.claude/agents/**
+!.claude/agents/**/*.md
 !.claude/rules/
 !.claude/rules/**
+!.claude/rules/**/*.md
 !.claude/commands/
 !.claude/commands/**
-
-# MCP server dependency files
-.cocoindex_code/
-.serena/
-.lsmcp/
-.codegraph/*
-
-## Temporary directories are never tracked
-temp/
-tmp/
-**/temp/
-**/tmp/
+!.claude/commands/**/*.md
+!.claude/commands/**/*.sh
 
 ##  Editor
 #   VSCode
-.vscode/*
+!.vscode/
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
 !.vscode/*.code-snippets
 !.vscode/cspell*
+!.vscode/cspell*/**
 
-## Node
-node_modules/
+
+##  Git
+# allow all gitignore
+!**/.gitignore
+
+## deckrd local data
+# allowlist details: .local/deckrd/.gitignore
+!/.local/
+!/.local/deckrd/
+
+
+## ------------------------------------------------------------ ##
+##  Re-exclude: secrets and generated files                      ##
+##  Must stay last: these rules undo the broad allow rules above ##
+## ------------------------------------------------------------ ##
+
+# dependencies
+**/node_modules/
+
+# temporary directories, cache
+**/temp/
+**/tmp/
+**/.cache/
+**/.history/
+
+# .env files
+**/.env
+**/.env.*
+
+# logs, patches
+*.log
+*.diff
+*.patch
+
+# backup/swap/temp
+*~
+~*
+$~*
+*.tmp
+*.swp
