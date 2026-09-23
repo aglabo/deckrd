@@ -21,7 +21,7 @@ owns:
 | `CT`   | `check_targets` (検査 D)                    |
 | `DSP`  | `dispatch` (run-shellspec.sh)               |
 | `ECI`  | `extract_case_ids`                          |
-| `EGI`  | `extract_group_ids()`                       |
+| `EGI`  | `extract_group_ids`                         |
 | `EIW`  | `exec_in_wsl`                               |
 | `ESG`  | `expand_spec_glob`                          |
 | `FMR`  | `read_module_scalar` / `read_module_owns`   |
