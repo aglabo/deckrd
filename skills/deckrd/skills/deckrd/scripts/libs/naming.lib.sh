@@ -120,8 +120,13 @@ _generate_filename() {
 
   local base="${slug}-${token}-${timestamp}"
 
+  # hash には $base から導けない値 (PID・$RANDOM・ナノ秒) を混ぜる。
+  # $base だけを入力にすると、同一秒・同一 token の候補が完全に一致し、
+  # 並列実行でリトライを使い切る。名前の形式と 16 進 4 桁は変えない。
+  # hash は衝突確率を下げるだけで、一意性は _try_create_cache_file の
+  # noclobber + generate_filename のリトライが保証する。
   local hash
-  hash=$(printf '%s' "$base" | sha256sum | cut -c1-4)
+  hash=$(printf '%s-%s-%s-%s' "$base" "$$" "$RANDOM" "$(date +%N)" | sha256sum | cut -c1-4)
 
   printf '%s' "${slug}-${token}-${timestamp}-${hash}-${postfix}"
 }
