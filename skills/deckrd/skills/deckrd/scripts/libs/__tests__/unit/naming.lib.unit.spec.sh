@@ -341,12 +341,12 @@ Describe "naming.lib.sh"
     Describe "When: token と timestamp を固定して _generate_filename を 2 回呼ぶ"
       Before "setup_fixed_entropy_mock"
 
-      It "Then: [Normal] T-LIB-NGF-16: 同一 token/timestamp でも呼び出しごとに異なる候補名を返す"
+      It "Then: [Normal] T-LIB-NGFR-03: 同一 token/timestamp でも呼び出しごとに異なる候補名を返す"
         # $() は副シェルになり $RANDOM の進み方が読みにくいため、出力はファイルで受ける
-        _generate_filename 'parallel' 'doc' >"${NAMING_TMPDIR}/ngf16-first"
-        _generate_filename 'parallel' 'doc' >"${NAMING_TMPDIR}/ngf16-second"
-        first=$(cat "${NAMING_TMPDIR}/ngf16-first")
-        second=$(cat "${NAMING_TMPDIR}/ngf16-second")
+        _generate_filename 'parallel' 'doc' >"${NAMING_TMPDIR}/ngfr03-first"
+        _generate_filename 'parallel' 'doc' >"${NAMING_TMPDIR}/ngfr03-second"
+        first=$(cat "${NAMING_TMPDIR}/ngfr03-first")
+        second=$(cat "${NAMING_TMPDIR}/ngfr03-second")
         When call test "$first" != "$second"
         The status should equal 0
       End
@@ -355,29 +355,29 @@ Describe "naming.lib.sh"
     Describe "When: 10並列 × 20回 generate_filename を同時実行する"
       Before "run_parallel_generate 10 20"
 
-      # T-LIB-NGF-17 / -18 は症状カナリアであり、レースの guard ではない。
+      # T-LIB-NGFR-04 / -05 は症状カナリアであり、レースの guard ではない。
       # 並列衝突の再現は確率的で、hash からエントロピー項を外しても両者は PASS しうる。
-      # この欠陥を決定論的に守るのは T-LIB-NGF-16 だけ。
+      # この欠陥を決定論的に守るのは T-LIB-NGFR-03 だけ。
       # ここで押さえるのは「ワーカーが非 0 で落ちる」という唯一のユーザー可視症状で、
       # 追加コストは既存の並列実行 1 回分しかない。
-      It "Then: [Normal] T-LIB-NGF-17: 全ワーカーが成功し xargs の終了コードが 0 になる"
+      It "Then: [Normal] T-LIB-NGFR-04: 全ワーカーが成功し xargs の終了コードが 0 になる"
         When call test "$_PARALLEL_STATUS" -eq 0
         The status should equal 0
       End
 
-      It "Then: [Normal] T-LIB-NGF-18: 生成されたファイル名が 20 件そろう"
+      It "Then: [Normal] T-LIB-NGFR-05: 生成されたファイル名が 20 件そろう"
         generated=$(grep -c '^parallel-' "${_PARALLEL_RESULTS}")
         When call test "$generated" -eq 20
         The status should equal 0
       End
 
-      It "Then: [Normal] T-LIB-NGF-14: 生成されたファイル名に重複がない"
+      It "Then: [Normal] T-LIB-NGFR-01: 生成されたファイル名に重複がない"
         duplicated=$(sort "${_PARALLEL_RESULTS}" | uniq -d)
         When call test -z "$duplicated"
         The status should equal 0
       End
 
-      It "Then: [Normal] T-LIB-NGF-15: 生成されたファイル名が全てキャッシュに存在する"
+      It "Then: [Normal] T-LIB-NGFR-02: 生成されたファイル名が全てキャッシュに存在する"
         missing=0
         while IFS= read -r name; do
           [[ -f "${_FILENAME_CACHE_DIR}/${name}" ]] || missing=1
@@ -388,7 +388,7 @@ Describe "naming.lib.sh"
 
       # 重複検査が vacuous pass でないことの裏付け。実装の printf '%s' は改行を出さないので、
       # ワーカーが改行を付けないと 20 件が 1 行に連結され、uniq -d が常に空になっていた
-      It "Then: [Normal] T-LIB-NGF-19: 結果ファイルが 1 件 1 行の 20 行になる"
+      It "Then: [Normal] T-LIB-NGFR-08: 結果ファイルが 1 件 1 行の 20 行になる"
         lines=$(wc -l <"${_PARALLEL_RESULTS}" | tr -d ' ')
         When call test "$lines" -eq 20
         The status should equal 0
@@ -399,10 +399,10 @@ Describe "naming.lib.sh"
     Describe "When: リトライ上限 0 のワーカーで 10並列 × 20回 実行する"
       Before "run_parallel_generate 10 20 0"
 
-      # T-LIB-NGF-17 のステータス検査が vacuous でないことを示す example。
+      # T-LIB-NGFR-04 のステータス検査が vacuous でないことを示す example。
       # 終了コードだけを見ると source のパス誤りやコマンド不在でも 123 になるので、
       # 原因がリトライ枯渇であることを stderr のメッセージまで確かめる
-      It "Then: [Error] T-LIB-NGF-20: リトライ枯渇が xargs の終了コード 123 と stderr に現れる"
+      It "Then: [Error] T-LIB-NGFR-06: リトライ枯渇が xargs の終了コード 123 と stderr に現れる"
         When call test "$_PARALLEL_STATUS" -eq 123
         The status should equal 0
         The contents of file "${_PARALLEL_STDERR}" should include "max retries"
@@ -412,7 +412,7 @@ Describe "naming.lib.sh"
     Describe "When: 1並列 × 1回 generate_filename を実行する (並列度の下限)"
       Before "run_parallel_generate 1 1"
 
-      It "Then: [Edge] T-LIB-NGF-21: 成功し結果 1 行・キャッシュ 1 件になる"
+      It "Then: [Edge] T-LIB-NGFR-07: 成功し結果 1 行・キャッシュ 1 件になる"
         lines=$(wc -l <"${_PARALLEL_RESULTS}" | tr -d ' ')
         cached=$(find "${_FILENAME_CACHE_DIR}" -type f | wc -l | tr -d ' ')
         When call printf '%s %s %s' "$_PARALLEL_STATUS" "$lines" "$cached"
