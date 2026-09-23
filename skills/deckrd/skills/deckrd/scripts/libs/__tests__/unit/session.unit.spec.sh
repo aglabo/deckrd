@@ -27,7 +27,7 @@ lang|en
 
 Describe "session.sh"
 
-  Describe "session.sh loading"
+  Describe "T-LIB-SLD: session.sh loading"
     Describe "When: スクリプトを読み込む"
       It "Then: [Normal] T-LIB-SLD-01: session_init 関数が存在する"
         When call type session_init
@@ -61,7 +61,7 @@ Describe "session.sh"
     End
   End
 
-  Describe "session_init"
+  Describe "T-LIB-SINI: session_init"
     Describe "Given: schema を登録する"
       Before "declare -gA BUF=()"
 
@@ -96,7 +96,7 @@ Describe "session.sh"
     End
   End
 
-  Describe "session_get / session_set"
+  Describe "T-LIB-SGS: session_get / session_set"
     Before "declare -gA BUF=(); session_init BUF \"$SESSION_SCHEMA_TEST\""
 
     Describe "Given: BUF にキーをセットした状態"
@@ -142,7 +142,7 @@ Describe "session.sh"
     End
   End
 
-  Describe "session_load"
+  Describe "T-LIB-SLOAD: session_load"
     Describe "Given: schema 未登録のバッファ"
       Before "declare -gA UNREGISTERED=()"
 
@@ -222,7 +222,7 @@ Describe "session.sh"
     End
   End
 
-  Describe "session_save"
+  Describe "T-LIB-SSAVE: session_save"
     Describe "Given: BUF にデータがセットされた状態"
       Before "setup_deckrd_tmpdir; declare -gA BUF=(); session_init BUF \"$SESSION_SCHEMA_TEST\""
       After "teardown_deckrd_tmpdir"

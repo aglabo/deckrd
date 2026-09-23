@@ -31,189 +31,192 @@ setup_deckrd_tmpdir_with_project() {
 
 Describe "module.sh"
 
-  # --------------------------------------------------------------------------
-  # Given: no arguments provided
-  # --------------------------------------------------------------------------
+  Describe "T-CLI-MOD: module.sh の引数処理とディレクトリ生成"
 
-  Describe "Given: no arguments provided"
-    Before "setup_deckrd_tmpdir"
-    After "teardown_deckrd_tmpdir"
+    # --------------------------------------------------------------------------
+    # Given: no arguments provided
+    # --------------------------------------------------------------------------
 
-    Describe "When: run without arguments"
-      It "[Error] T-CLI-MOD-01: Should: exit with status 1 and output Usage and 'required' error"
-        When run bash "$SCRIPT"
-        The status should equal 1
-        The output should include "Usage:"
-        The stderr should include "required"
-      End
-    End
-  End
+    Describe "Given: no arguments provided"
+      Before "setup_deckrd_tmpdir"
+      After "teardown_deckrd_tmpdir"
 
-  # --------------------------------------------------------------------------
-  # Given: --help option provided
-  # --------------------------------------------------------------------------
-
-  Describe "Given: --help option provided"
-    Before "setup_deckrd_tmpdir"
-    After "teardown_deckrd_tmpdir"
-
-    Describe "When: run with --help"
-      It "[Normal] T-CLI-MOD-02: Should: exit with status 0 and output Usage"
-        When run bash "$SCRIPT" --help
-        The status should equal 0
-        The output should include "Usage:"
-      End
-    End
-  End
-
-  # --------------------------------------------------------------------------
-  # Given: unknown option provided
-  # --------------------------------------------------------------------------
-
-  Describe "Given: unknown option provided"
-    Before "setup_deckrd_tmpdir"
-    After "teardown_deckrd_tmpdir"
-
-    Describe "When: run with unknown option"
-      It "[Error] T-CLI-MOD-03: Should: exit with status 1 and output 'Unknown option' error"
-        When run bash "$SCRIPT" --unknown
-        The status should equal 1
-        The output should include "Usage:"
-        The stderr should include "Unknown option"
-      End
-    End
-  End
-
-  # --------------------------------------------------------------------------
-  # Given: valid legacy format argument (<namespace>/<module>)
-  # --------------------------------------------------------------------------
-
-  Describe "Given: valid legacy format argument (<namespace>/<module>)"
-    Before "setup_deckrd_tmpdir"
-    After "teardown_deckrd_tmpdir"
-
-    Describe "When: run with 'myns/mymod'"
-      It "[Normal] T-CLI-MOD-04: Should: exit with status 0, create all module directories, skip .project.json, and output 'Session updated'"
-        When run bash "$SCRIPT" myns/mymod
-        The status should equal 0
-        The output should include "myns/mymod"
-        The output should include "requirements"
-        The output should include "specifications"
-        The output should include "implementation"
-        The output should include "tasks"
-        The output should include "workspaces"
-        The output should include "Session updated"
-        The path "${DECKRD_DOCS_DIR}/myns/mymod/requirements" should be directory
-        The path "${DECKRD_DOCS_DIR}/myns/mymod/specifications" should be directory
-        The path "${DECKRD_DOCS_DIR}/myns/mymod/implementation" should be directory
-        The path "${DECKRD_DOCS_DIR}/myns/mymod/tasks" should be directory
-        The path "${DECKRD_DOCS_DIR}/myns/mymod/workspaces" should be directory
-        The path "${DECKRD_DOCS_DIR}/myns/mymod/.project.json" should not be exist
+      Describe "When: run without arguments"
+        It "[Error] T-CLI-MOD-01: Should: exit with status 1 and output Usage and 'required' error"
+          When run bash "$SCRIPT"
+          The status should equal 1
+          The output should include "Usage:"
+          The stderr should include "required"
+        End
       End
     End
 
-    Describe "When: run with uppercase 'MyNS/MyMod'"
-      It "[Edge] T-CLI-MOD-05: Should: exit with status 1 and output 'invalid characters' error"
-        When run bash "$SCRIPT" MyNS/MyMod
-        The status should eq 1
-        The stderr should include "invalid characters"
-      End
-    End
-  End
+    # --------------------------------------------------------------------------
+    # Given: --help option provided
+    # --------------------------------------------------------------------------
 
-# --------------------------------------------------------------------------
-# Given: invalid legacy format argument
-# --------------------------------------------------------------------------
+    Describe "Given: --help option provided"
+      Before "setup_deckrd_tmpdir"
+      After "teardown_deckrd_tmpdir"
 
-  Describe "Given: invalid legacy format argument"
-    Before "setup_deckrd_tmpdir"
-    After "teardown_deckrd_tmpdir"
-
-    Describe "When: run with '/mymod' (empty namespace)"
-      It "[Error] T-CLI-MOD-06: Should: exit with status 1 and output 'empty' error"
-        When run bash "$SCRIPT" "/mymod"
-        The status should equal 1
-        The stderr should include "empty"
+      Describe "When: run with --help"
+        It "[Normal] T-CLI-MOD-02: Should: exit with status 0 and output Usage"
+          When run bash "$SCRIPT" --help
+          The status should equal 0
+          The output should include "Usage:"
+        End
       End
     End
 
-    Describe "When: run with 'myns/' (empty module)"
-      It "[Error] T-CLI-MOD-07: Should: exit with status 1 and output 'empty' error"
-        When run bash "$SCRIPT" "myns/"
-        The status should equal 1
-        The stderr should include "empty"
+    # --------------------------------------------------------------------------
+    # Given: unknown option provided
+    # --------------------------------------------------------------------------
+
+    Describe "Given: unknown option provided"
+      Before "setup_deckrd_tmpdir"
+      After "teardown_deckrd_tmpdir"
+
+      Describe "When: run with unknown option"
+        It "[Error] T-CLI-MOD-03: Should: exit with status 1 and output 'Unknown option' error"
+          When run bash "$SCRIPT" --unknown
+          The status should equal 1
+          The output should include "Usage:"
+          The stderr should include "Unknown option"
+        End
       End
     End
 
-    Describe "When: run with 'my ns/mymod' (space in namespace)"
-      It "[Error] T-CLI-MOD-08: Should: exit with status 1 and output 'invalid characters' error"
-        When run bash "$SCRIPT" "my ns/mymod"
-        The status should equal 1
-        The stderr should include "invalid characters"
-      End
-    End
+    # --------------------------------------------------------------------------
+    # Given: valid legacy format argument (<namespace>/<module>)
+    # --------------------------------------------------------------------------
 
-    Describe "When: run with 'myns/mymod' on existing directory without --force"
-      It "[Error] T-CLI-MOD-09: Should: exit with status 1 and output 'already exists' error"
-        mkdir -p "${DECKRD_DOCS_DIR}/myns/mymod"
-        When run bash "$SCRIPT" myns/mymod
-        The status should equal 1
-        The stderr should include "already exists"
-      End
-    End
+    Describe "Given: valid legacy format argument (<namespace>/<module>)"
+      Before "setup_deckrd_tmpdir"
+      After "teardown_deckrd_tmpdir"
 
-    Describe "When: run with 'myns/mymod' on existing directory with --force"
-      It "[Edge] T-CLI-MOD-10: Should: exit with status 0 and output 'myns/mymod'"
-        mkdir -p "${DECKRD_DOCS_DIR}/myns/mymod"
-        When run bash "$SCRIPT" myns/mymod --force
-        The status should equal 0
-        The output should include "myns/mymod"
+      Describe "When: run with 'myns/mymod'"
+        It "[Normal] T-CLI-MOD-04: Should: exit with status 0, create all module directories, skip .project.json, and output 'Session updated'"
+          When run bash "$SCRIPT" myns/mymod
+          The status should equal 0
+          The output should include "myns/mymod"
+          The output should include "requirements"
+          The output should include "specifications"
+          The output should include "implementation"
+          The output should include "tasks"
+          The output should include "workspaces"
+          The output should include "Session updated"
+          The path "${DECKRD_DOCS_DIR}/myns/mymod/requirements" should be directory
+          The path "${DECKRD_DOCS_DIR}/myns/mymod/specifications" should be directory
+          The path "${DECKRD_DOCS_DIR}/myns/mymod/implementation" should be directory
+          The path "${DECKRD_DOCS_DIR}/myns/mymod/tasks" should be directory
+          The path "${DECKRD_DOCS_DIR}/myns/mymod/workspaces" should be directory
+          The path "${DECKRD_DOCS_DIR}/myns/mymod/.project.json" should not be exist
+        End
+      End
+
+      Describe "When: run with uppercase 'MyNS/MyMod'"
+        It "[Edge] T-CLI-MOD-05: Should: exit with status 1 and output 'invalid characters' error"
+          When run bash "$SCRIPT" MyNS/MyMod
+          The status should eq 1
+          The stderr should include "invalid characters"
+        End
       End
     End
-  End
 
   # --------------------------------------------------------------------------
-  # Given: create subcommand with <namespace>/<module> format
+  # Given: invalid legacy format argument
   # --------------------------------------------------------------------------
 
-  Describe "Given: create subcommand with <namespace>/<module> format"
-    Before "setup_deckrd_tmpdir"
-    After "teardown_deckrd_tmpdir"
+    Describe "Given: invalid legacy format argument"
+      Before "setup_deckrd_tmpdir"
+      After "teardown_deckrd_tmpdir"
 
-    Describe "When: run 'create myns/mymod'"
-      It "[Normal] T-CLI-MOD-11: Should: exit with status 0, create module dirs, and output 'Session updated'"
-        When run bash "$SCRIPT" create myns/mymod
-        The status should equal 0
-        The output should include "myns/mymod"
-        The output should include "Session updated"
-        The path "${DECKRD_DOCS_DIR}/myns/mymod/requirements" should be directory
-        The path "${DECKRD_DOCS_DIR}/myns/mymod/specifications" should be directory
-        The path "${DECKRD_DOCS_DIR}/myns/mymod/.project.json" should not be exist
+      Describe "When: run with '/mymod' (empty namespace)"
+        It "[Error] T-CLI-MOD-06: Should: exit with status 1 and output 'empty' error"
+          When run bash "$SCRIPT" "/mymod"
+          The status should equal 1
+          The stderr should include "empty"
+        End
+      End
+
+      Describe "When: run with 'myns/' (empty module)"
+        It "[Error] T-CLI-MOD-07: Should: exit with status 1 and output 'empty' error"
+          When run bash "$SCRIPT" "myns/"
+          The status should equal 1
+          The stderr should include "empty"
+        End
+      End
+
+      Describe "When: run with 'my ns/mymod' (space in namespace)"
+        It "[Error] T-CLI-MOD-08: Should: exit with status 1 and output 'invalid characters' error"
+          When run bash "$SCRIPT" "my ns/mymod"
+          The status should equal 1
+          The stderr should include "invalid characters"
+        End
+      End
+
+      Describe "When: run with 'myns/mymod' on existing directory without --force"
+        It "[Error] T-CLI-MOD-09: Should: exit with status 1 and output 'already exists' error"
+          mkdir -p "${DECKRD_DOCS_DIR}/myns/mymod"
+          When run bash "$SCRIPT" myns/mymod
+          The status should equal 1
+          The stderr should include "already exists"
+        End
+      End
+
+      Describe "When: run with 'myns/mymod' on existing directory with --force"
+        It "[Edge] T-CLI-MOD-10: Should: exit with status 0 and output 'myns/mymod'"
+          mkdir -p "${DECKRD_DOCS_DIR}/myns/mymod"
+          When run bash "$SCRIPT" myns/mymod --force
+          The status should equal 0
+          The output should include "myns/mymod"
+        End
       End
     End
 
-    Describe "When: run create with invalid namespace 'my ns/mymod'"
-      It "[Error] T-CLI-MOD-12: Should: exit with status 1 and output 'invalid characters' error"
-        When run bash "$SCRIPT" create "my ns/mymod"
-        The status should equal 1
-        The stderr should include "invalid characters"
+    # --------------------------------------------------------------------------
+    # Given: create subcommand with <namespace>/<module> format
+    # --------------------------------------------------------------------------
+
+    Describe "Given: create subcommand with <namespace>/<module> format"
+      Before "setup_deckrd_tmpdir"
+      After "teardown_deckrd_tmpdir"
+
+      Describe "When: run 'create myns/mymod'"
+        It "[Normal] T-CLI-MOD-11: Should: exit with status 0, create module dirs, and output 'Session updated'"
+          When run bash "$SCRIPT" create myns/mymod
+          The status should equal 0
+          The output should include "myns/mymod"
+          The output should include "Session updated"
+          The path "${DECKRD_DOCS_DIR}/myns/mymod/requirements" should be directory
+          The path "${DECKRD_DOCS_DIR}/myns/mymod/specifications" should be directory
+          The path "${DECKRD_DOCS_DIR}/myns/mymod/.project.json" should not be exist
+        End
+      End
+
+      Describe "When: run create with invalid namespace 'my ns/mymod'"
+        It "[Error] T-CLI-MOD-12: Should: exit with status 1 and output 'invalid characters' error"
+          When run bash "$SCRIPT" create "my ns/mymod"
+          The status should equal 1
+          The stderr should include "invalid characters"
+        End
       End
     End
-  End
 
-  # --------------------------------------------------------------------------
-  # Given: create subcommand with <module> format (git remote auto-completion)
-  # --------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
+    # Given: create subcommand with <module> format (git remote auto-completion)
+    # --------------------------------------------------------------------------
 
-  Describe "Given: create subcommand with <module> format"
-    Before "setup_deckrd_tmpdir"
-    After "teardown_deckrd_tmpdir"
+    Describe "Given: create subcommand with <module> format"
+      Before "setup_deckrd_tmpdir"
+      After "teardown_deckrd_tmpdir"
 
-    Describe "When: run 'create myfeature'"
-      It "[Normal] T-CLI-MOD-13: Should: exit with status 0 and output 'myfeature'"
-        When run bash "$SCRIPT" create myfeature
-        The status should equal 0
-        The output should include "myfeature"
+      Describe "When: run 'create myfeature'"
+        It "[Normal] T-CLI-MOD-13: Should: exit with status 0 and output 'myfeature'"
+          When run bash "$SCRIPT" create myfeature
+          The status should equal 0
+          The output should include "myfeature"
+        End
       End
     End
   End
@@ -222,7 +225,7 @@ Describe "module.sh"
   # derive_test_scope
   # --------------------------------------------------------------------------
 
-  Describe "derive_test_scope"
+  Describe "T-CLI-DTS: derive_test_scope"
 
     load_module_functions() {
       # Mock: validate_env を常に成功させる
@@ -298,7 +301,7 @@ Describe "module.sh"
   # collect_declared_scopes
   # --------------------------------------------------------------------------
 
-  Describe "collect_declared_scopes"
+  Describe "T-CLI-CDS: collect_declared_scopes"
 
     load_module_functions_for_scopes() {
       # Mock: validate_env を常に成功させる
@@ -572,7 +575,7 @@ Describe "module.sh"
   # read_declared_scope
   # --------------------------------------------------------------------------
 
-  Describe "read_declared_scope"
+  Describe "T-CLI-RDS: read_declared_scope"
 
     load_module_functions_for_read_declared() {
       # Mock: validate_env を常に成功させる
@@ -664,7 +667,7 @@ Describe "module.sh"
   # resolve_test_scope
   # --------------------------------------------------------------------------
 
-  Describe "resolve_test_scope"
+  Describe "T-CLI-RTS: resolve_test_scope"
 
     load_module_functions_for_resolve() {
       # Mock: validate_env を常に成功させる
@@ -886,182 +889,185 @@ Describe "module.sh"
     End
   End
 
-  # --------------------------------------------------------------------------
-  # create_module_meta / CLI wiring
-  # --------------------------------------------------------------------------
+  Describe "T-CLI-MMT: create_module_meta と CLI 連携"
 
-  Describe "Given: a module path and no explicit test scope"
-    Before "setup_deckrd_tmpdir"
-    After "teardown_deckrd_tmpdir"
+    # --------------------------------------------------------------------------
+    # create_module_meta / CLI wiring
+    # --------------------------------------------------------------------------
 
-    Describe "When: run module.sh with the module path"
-      It "[Normal] T-CLI-MOD-14: Should: exit with status 0 and write module.md declaring the derived test_scope"
-        When run bash "$SCRIPT" myns/mymod
-        The status should equal 0
-        The output should include "module.md"
-        The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/module.md" should include "title: mymod"
-        The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/module.md" should include "test_scope: MYM"
-        The contents of file "${DECKRD_LOCAL_DATA}/session.json" should include '"test_scope": "MYM"'
+    Describe "Given: a module path and no explicit test scope"
+      Before "setup_deckrd_tmpdir"
+      After "teardown_deckrd_tmpdir"
+
+      Describe "When: run module.sh with the module path"
+        It "[Normal] T-CLI-MMT-01: Should: exit with status 0 and write module.md declaring the derived test_scope"
+          When run bash "$SCRIPT" myns/mymod
+          The status should equal 0
+          The output should include "module.md"
+          The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/module.md" should include "title: mymod"
+          The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/module.md" should include "test_scope: MYM"
+          The contents of file "${DECKRD_LOCAL_DATA}/session.json" should include '"test_scope": "MYM"'
+        End
       End
     End
-  End
 
-  Describe "Given: a module path and an explicit test scope"
-    Before "setup_deckrd_tmpdir"
-    After "teardown_deckrd_tmpdir"
+    Describe "Given: a module path and an explicit test scope"
+      Before "setup_deckrd_tmpdir"
+      After "teardown_deckrd_tmpdir"
 
-    Describe "When: run module.sh with --test-scope"
-      It "[Normal] T-CLI-MOD-15: Should: exit with status 0 and write module.md declaring the explicit test_scope"
-        When run bash "$SCRIPT" myns/mymod --test-scope XY
-        The status should equal 0
-        The output should include "module.md"
-        The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/module.md" should include "test_scope: XY"
+      Describe "When: run module.sh with --test-scope"
+        It "[Normal] T-CLI-MMT-02: Should: exit with status 0 and write module.md declaring the explicit test_scope"
+          When run bash "$SCRIPT" myns/mymod --test-scope XY
+          The status should equal 0
+          The output should include "module.md"
+          The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/module.md" should include "test_scope: XY"
+        End
       End
     End
-  End
 
-  Describe "Given: another module already declares the requested test scope"
-    # shellcheck disable=SC2329
-    setup_conflicting_declaration() {
-      setup_deckrd_tmpdir
-      mkdir -p "${DECKRD_DOCS_DIR}/otherns/othermod"
-      printf '%s\n' "---" "test_scope: XY" "---" >"${DECKRD_DOCS_DIR}/otherns/othermod/module.md"
-    }
-    Before "setup_conflicting_declaration"
-    After "teardown_deckrd_tmpdir"
-
-    Describe "When: run module.sh with the taken scope via --test-scope"
-      It "[Error] T-CLI-MOD-16: Should: exit with status 1, report the conflicting module.md and write no module.md"
-        When run bash "$SCRIPT" myns/mymod --test-scope XY
-        The status should equal 1
-        The output should include "Initializing module"
-        The stderr should include "conflict"
-        The stderr should include "otherns/othermod/module.md"
-        The path "${DECKRD_DOCS_DIR}/myns/mymod/module.md" should not be exist
-      End
-    End
-  End
-
-  Describe "Given: an existing module.md declaring a test scope"
-    # shellcheck disable=SC2329
-    setup_existing_module_meta() {
-      setup_deckrd_tmpdir
-      mkdir -p "${DECKRD_DOCS_DIR}/myns/mymod"
-      printf '%s\n' "---" "title: mymod" "test_scope: ZZ" "---" >"${DECKRD_DOCS_DIR}/myns/mymod/module.md"
-    }
-    Before "setup_existing_module_meta"
-    After "teardown_deckrd_tmpdir"
-
-    Describe "When: re-initialize the module with --force"
-      It "[Edge] T-CLI-MOD-17: Should: exit with status 0 and keep the test_scope already declared in module.md"
-        When run bash "$SCRIPT" myns/mymod --force
-        The status should equal 0
-        The output should include "module.md"
-        The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/module.md" should include "test_scope: ZZ"
-      End
-    End
-  End
-
-  Describe "Given: --test-scope given without a value"
-    Before "setup_deckrd_tmpdir"
-    After "teardown_deckrd_tmpdir"
-
-    Describe "When: run module.sh with a trailing --test-scope"
-      It "[Error] T-CLI-MOD-18: Should: exit with status 1 and report that --test-scope requires a value"
-        When run bash "$SCRIPT" myns/mymod --test-scope
-        The status should equal 1
-        The output should include "Usage:"
-        The stderr should include "requires a value"
-      End
-    End
-  End
-
-  Describe "Given: a module initialized with an explicit test scope"
-    # shellcheck disable=SC2329
-    setup_module_with_explicit_scope() {
-      setup_deckrd_tmpdir_with_project
-      bash "$SCRIPT" myns/mymod --test-scope XY >/dev/null 2>&1
-    }
-    Before "setup_module_with_explicit_scope"
-    After "teardown_deckrd_tmpdir"
-
-    Describe "When: re-initialize the module with --force and no --test-scope"
-      It "[Normal] T-CLI-MOD-19: Should: keep the declared scope in both module.md and session.json"
-        When run bash "$SCRIPT" myns/mymod --force
-        The status should equal 0
-        The output should include "module.md"
-        The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/module.md" should include "test_scope: XY"
-        The contents of file "${DECKRD_LOCAL_DATA}/session.json" should include '"test_scope": "XY"'
-        The contents of file "${DECKRD_LOCAL_DATA}/session.json" should not include '"test_scope": "MYM"'
-      End
-    End
-  End
-
-  Describe "Given: a third module already declares the scope derived from the module name"
-    # shellcheck disable=SC2329
-    setup_derived_scope_taken_by_third_module() {
-      setup_deckrd_tmpdir_with_project
-      mkdir -p "${DECKRD_DOCS_DIR}/myns/mymod" "${DECKRD_DOCS_DIR}/thirdns/thirdmod"
-      printf '%s\n' "---" "title: mymod" "test_scope: XY" "---" >"${DECKRD_DOCS_DIR}/myns/mymod/module.md"
-      printf '%s\n' "---" "title: thirdmod" "test_scope: MYM" "---" >"${DECKRD_DOCS_DIR}/thirdns/thirdmod/module.md"
-    }
-    Before "setup_derived_scope_taken_by_third_module"
-    After "teardown_deckrd_tmpdir"
-
-    Describe "When: re-initialize the module with --force and no --test-scope"
-      It "[Edge] T-CLI-MOD-20: Should: exit with status 0 because the declared scope is used instead of the derived one"
-        When run bash "$SCRIPT" myns/mymod --force
-        The status should equal 0
-        The output should include "module.md"
-        The stderr should not include "conflict"
-        The contents of file "${DECKRD_LOCAL_DATA}/session.json" should include '"test_scope": "XY"'
-      End
-    End
-  End
-
-  Describe "Given: an existing module.md whose test_scope value is wrapped in double quotes"
-    # shellcheck disable=SC2329
-    setup_quoted_declaration() {
-      setup_deckrd_tmpdir_with_project
-      mkdir -p "${DECKRD_DOCS_DIR}/myns/mymod"
-      printf '%s\n' "---" "title: mymod" 'test_scope: "ZZ"' "---" \
-        >"${DECKRD_DOCS_DIR}/myns/mymod/module.md"
-    }
-    Before "setup_quoted_declaration"
-    After "teardown_deckrd_tmpdir"
-
-    Describe "When: re-initialize the module with --force and no --test-scope"
-      It "[Normal] T-CLI-MOD-21: Should: exit with status 0 and keep the quoted scope, recording it unquoted in session.json"
-        When run bash "$SCRIPT" myns/mymod --force
-        The status should equal 0
-        The stderr should not include "invalid test scope"
-        The output should include "kept existing test_scope"
-        The contents of file "${DECKRD_LOCAL_DATA}/session.json" should include '"test_scope": "ZZ"'
-        The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/module.md" should include 'test_scope: "ZZ"'
-      End
-    End
-  End
-
-  Describe "Given: the environment has neither jq nor jaq"
-    mock_validate_env_failure() {
-      setup_deckrd_tmpdir
+    Describe "Given: another module already declares the requested test scope"
       # shellcheck disable=SC2329
-      validate_env() { echo "Error: jq or jaq is required but not installed." >&2; return 1; }
-      export -f validate_env
-    }
-    unmock_validate_env_failure() {
-      unset -f validate_env
-      teardown_deckrd_tmpdir
-    }
-    Before "mock_validate_env_failure"
-    After "unmock_validate_env_failure"
+      setup_conflicting_declaration() {
+        setup_deckrd_tmpdir
+        mkdir -p "${DECKRD_DOCS_DIR}/otherns/othermod"
+        printf '%s\n' "---" "test_scope: XY" "---" >"${DECKRD_DOCS_DIR}/otherns/othermod/module.md"
+      }
+      Before "setup_conflicting_declaration"
+      After "teardown_deckrd_tmpdir"
 
-    Describe "When: run module.sh with a module path"
-      It "[Error] T-CLI-MOD-22: Should: exit with status 1 and print only the library message to stderr"
-        When run bash "$SCRIPT" myns/mymod
-        The status should equal 1
-        The lines of entire stderr should eq 1
-        The stderr should include "jq or jaq is required"
+      Describe "When: run module.sh with the taken scope via --test-scope"
+        It "[Error] T-CLI-MMT-03: Should: exit with status 1, report the conflicting module.md and write no module.md"
+          When run bash "$SCRIPT" myns/mymod --test-scope XY
+          The status should equal 1
+          The output should include "Initializing module"
+          The stderr should include "conflict"
+          The stderr should include "otherns/othermod/module.md"
+          The path "${DECKRD_DOCS_DIR}/myns/mymod/module.md" should not be exist
+        End
+      End
+    End
+
+    Describe "Given: an existing module.md declaring a test scope"
+      # shellcheck disable=SC2329
+      setup_existing_module_meta() {
+        setup_deckrd_tmpdir
+        mkdir -p "${DECKRD_DOCS_DIR}/myns/mymod"
+        printf '%s\n' "---" "title: mymod" "test_scope: ZZ" "---" >"${DECKRD_DOCS_DIR}/myns/mymod/module.md"
+      }
+      Before "setup_existing_module_meta"
+      After "teardown_deckrd_tmpdir"
+
+      Describe "When: re-initialize the module with --force"
+        It "[Edge] T-CLI-MMT-04: Should: exit with status 0 and keep the test_scope already declared in module.md"
+          When run bash "$SCRIPT" myns/mymod --force
+          The status should equal 0
+          The output should include "module.md"
+          The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/module.md" should include "test_scope: ZZ"
+        End
+      End
+    End
+
+    Describe "Given: --test-scope given without a value"
+      Before "setup_deckrd_tmpdir"
+      After "teardown_deckrd_tmpdir"
+
+      Describe "When: run module.sh with a trailing --test-scope"
+        It "[Error] T-CLI-MMT-05: Should: exit with status 1 and report that --test-scope requires a value"
+          When run bash "$SCRIPT" myns/mymod --test-scope
+          The status should equal 1
+          The output should include "Usage:"
+          The stderr should include "requires a value"
+        End
+      End
+    End
+
+    Describe "Given: a module initialized with an explicit test scope"
+      # shellcheck disable=SC2329
+      setup_module_with_explicit_scope() {
+        setup_deckrd_tmpdir_with_project
+        bash "$SCRIPT" myns/mymod --test-scope XY >/dev/null 2>&1
+      }
+      Before "setup_module_with_explicit_scope"
+      After "teardown_deckrd_tmpdir"
+
+      Describe "When: re-initialize the module with --force and no --test-scope"
+        It "[Normal] T-CLI-MMT-06: Should: keep the declared scope in both module.md and session.json"
+          When run bash "$SCRIPT" myns/mymod --force
+          The status should equal 0
+          The output should include "module.md"
+          The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/module.md" should include "test_scope: XY"
+          The contents of file "${DECKRD_LOCAL_DATA}/session.json" should include '"test_scope": "XY"'
+          The contents of file "${DECKRD_LOCAL_DATA}/session.json" should not include '"test_scope": "MYM"'
+        End
+      End
+    End
+
+    Describe "Given: a third module already declares the scope derived from the module name"
+      # shellcheck disable=SC2329
+      setup_derived_scope_taken_by_third_module() {
+        setup_deckrd_tmpdir_with_project
+        mkdir -p "${DECKRD_DOCS_DIR}/myns/mymod" "${DECKRD_DOCS_DIR}/thirdns/thirdmod"
+        printf '%s\n' "---" "title: mymod" "test_scope: XY" "---" >"${DECKRD_DOCS_DIR}/myns/mymod/module.md"
+        printf '%s\n' "---" "title: thirdmod" "test_scope: MYM" "---" >"${DECKRD_DOCS_DIR}/thirdns/thirdmod/module.md"
+      }
+      Before "setup_derived_scope_taken_by_third_module"
+      After "teardown_deckrd_tmpdir"
+
+      Describe "When: re-initialize the module with --force and no --test-scope"
+        It "[Edge] T-CLI-MMT-07: Should: exit with status 0 because the declared scope is used instead of the derived one"
+          When run bash "$SCRIPT" myns/mymod --force
+          The status should equal 0
+          The output should include "module.md"
+          The stderr should not include "conflict"
+          The contents of file "${DECKRD_LOCAL_DATA}/session.json" should include '"test_scope": "XY"'
+        End
+      End
+    End
+
+    Describe "Given: an existing module.md whose test_scope value is wrapped in double quotes"
+      # shellcheck disable=SC2329
+      setup_quoted_declaration() {
+        setup_deckrd_tmpdir_with_project
+        mkdir -p "${DECKRD_DOCS_DIR}/myns/mymod"
+        printf '%s\n' "---" "title: mymod" 'test_scope: "ZZ"' "---" \
+          >"${DECKRD_DOCS_DIR}/myns/mymod/module.md"
+      }
+      Before "setup_quoted_declaration"
+      After "teardown_deckrd_tmpdir"
+
+      Describe "When: re-initialize the module with --force and no --test-scope"
+        It "[Normal] T-CLI-MMT-08: Should: exit with status 0 and keep the quoted scope, recording it unquoted in session.json"
+          When run bash "$SCRIPT" myns/mymod --force
+          The status should equal 0
+          The stderr should not include "invalid test scope"
+          The output should include "kept existing test_scope"
+          The contents of file "${DECKRD_LOCAL_DATA}/session.json" should include '"test_scope": "ZZ"'
+          The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/module.md" should include 'test_scope: "ZZ"'
+        End
+      End
+    End
+
+    Describe "Given: the environment has neither jq nor jaq"
+      mock_validate_env_failure() {
+        setup_deckrd_tmpdir
+        # shellcheck disable=SC2329
+        validate_env() { echo "Error: jq or jaq is required but not installed." >&2; return 1; }
+        export -f validate_env
+      }
+      unmock_validate_env_failure() {
+        unset -f validate_env
+        teardown_deckrd_tmpdir
+      }
+      Before "mock_validate_env_failure"
+      After "unmock_validate_env_failure"
+
+      Describe "When: run module.sh with a module path"
+        It "[Error] T-CLI-MMT-09: Should: exit with status 1 and print only the library message to stderr"
+          When run bash "$SCRIPT" myns/mymod
+          The status should equal 1
+          The lines of entire stderr should eq 1
+          The stderr should include "jq or jaq is required"
+        End
       End
     End
   End

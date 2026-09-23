@@ -193,14 +193,13 @@ _teardown_dispatch_stubs() {
 #
 # ShellSpec 実行の入口スクリプト。環境を判定して本体 (exec/shellspec-exec.sh) を
 # ローカルで動かすか WSL 上で動かすかだけを決める。
-# 割り当てたテスト ID: T-RUN-SUW-01..04 / T-RUN-DSP-01..07 / T-RUN-MSL-01
 #
 Describe 'run-shellspec.sh'
   #
   # `uname -s` の値と SHELLSPEC_NO_WSL だけを見て WSL 経路に入るかを決める純粋関数。
   # 自身では uname を呼ばないため、OS 名を表から流し込んで検証できる
   #
-  Describe 'should_use_wsl()'
+  Describe 'T-RUN-SUW: should_use_wsl()'
     # Windows のシェルから起動され、無効化もされていなければ WSL を使う
     Describe 'When: 正常系'
       It 'Then: [Normal] T-RUN-SUW-01: SHELLSPEC_NO_WSL 未設定の Windows ホストでは WSL を使うと判定する'
@@ -246,7 +245,7 @@ Describe 'run-shellspec.sh'
   # 判定結果に応じてローカル実行と WSL 実行を振り分ける。引数は一切解釈せず、
   # 受け取った順のまま本体へ渡す
   #
-  Describe 'dispatch()'
+  Describe 'T-RUN-DSP: dispatch()'
     After '_teardown_dispatch_stubs'
 
     # Windows 以外のホストでは、従来どおりこのシェルで本体を動かす
@@ -314,7 +313,7 @@ Describe 'run-shellspec.sh'
   # 入口として実際に起動されたときの振る舞い。uname の結果を dispatch() へ渡すだけの
   # 薄い層なので、スクリプトを別プロセスで起動した結合として検証する
   #
-  Describe 'main()'
+  Describe 'T-RUN-MSL: main()'
     Before '_setup_shellspec_stub'
     After '_teardown_shellspec_stub'
 

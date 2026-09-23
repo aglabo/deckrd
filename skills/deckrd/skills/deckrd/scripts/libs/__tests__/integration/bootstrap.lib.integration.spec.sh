@@ -22,7 +22,7 @@ Describe "bootstrap.lib.sh"
   # ------------------------------------------------------------------ #
   #  PROJECT_ROOT: git 自動検出                                         #
   # ------------------------------------------------------------------ #
-  Describe "PROJECT_ROOT: git 自動検出"
+  Describe "T-LIB-BPRGI: PROJECT_ROOT: git 自動検出"
 
     It "[Normal] T-LIB-BPRGI-01: 未設定 → git rev-parse --show-toplevel と一致する"
       expected="$(git rev-parse --show-toplevel 2>/dev/null)"
@@ -59,7 +59,7 @@ Describe "bootstrap.lib.sh"
   # ------------------------------------------------------------------ #
   #  PROJECT_ROOT: BASH_SOURCE fallback (git なし)                     #
   # ------------------------------------------------------------------ #
-  Describe "PROJECT_ROOT: BASH_SOURCE fallback"
+  Describe "T-LIB-BPRFI: PROJECT_ROOT: BASH_SOURCE fallback"
 
     It "[Normal] T-LIB-BPRFI-01: git が PATH にない → BASH_SOURCE fallback で PROJECT_ROOT が空でない"
       saved_path="$PATH"
@@ -97,7 +97,7 @@ Describe "bootstrap.lib.sh"
   # ------------------------------------------------------------------ #
   #  冪等性: 2回 source                                                 #
   # ------------------------------------------------------------------ #
-  Describe "冪等性: 2回 source"
+  Describe "T-LIB-BIDM2I: 冪等性: 2回 source"
 
     It "[Normal] T-LIB-BIDM2I-01: 2回 source → PROJECT_ROOT が変化しない"
       When run bash -c ". \"$SCRIPT\" && FIRST=\"\$PROJECT_ROOT\" && . \"$SCRIPT\" && [[ \"\$PROJECT_ROOT\" == \"\$FIRST\" ]] && echo ok"
@@ -157,7 +157,7 @@ Describe "bootstrap.lib.sh"
   # ------------------------------------------------------------------ #
   #  冪等性: 3回 source                                                 #
   # ------------------------------------------------------------------ #
-  Describe "冪等性: 3回 source"
+  Describe "T-LIB-BIDM3I: 冪等性: 3回 source"
 
     It "[Edge] T-LIB-BIDM3I-01: 3回 source → DECKRD_ROOT が変化しない"
       When run bash -c ". \"$SCRIPT\" && FIRST=\"\$DECKRD_ROOT\" && . \"$SCRIPT\" && . \"$SCRIPT\" && [[ \"\$DECKRD_ROOT\" == \"\$FIRST\" ]] && echo ok"

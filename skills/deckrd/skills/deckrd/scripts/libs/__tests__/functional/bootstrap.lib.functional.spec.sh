@@ -22,7 +22,7 @@ Describe "bootstrap.lib.sh"
   # ------------------------------------------------------------------ #
   #  PROJECT_ROOT: 事前設定の維持                                        #
   # ------------------------------------------------------------------ #
-  Describe "PROJECT_ROOT: 事前設定維持"
+  Describe "T-LIB-BPRF: PROJECT_ROOT: 事前設定維持"
 
     It "[Normal] T-LIB-BPRF-01: 事前設定値が維持される"
       When run bash -c "export PROJECT_ROOT=/tmp; . \"$SCRIPT\" && echo \"\$PROJECT_ROOT\""
@@ -46,7 +46,7 @@ Describe "bootstrap.lib.sh"
   # ------------------------------------------------------------------ #
   #  DECKRD_ROOT ← BASH_SOURCE 基点                                    #
   # ------------------------------------------------------------------ #
-  Describe "DECKRD_ROOT: BASH_SOURCE 基点"
+  Describe "T-LIB-BROOTF: DECKRD_ROOT: BASH_SOURCE 基点"
 
     It "[Normal] T-LIB-BROOTF-01: DECKRD_ROOT が /skills/deckrd/skills/deckrd で終わる"
       When run bash -c "unset DECKRD_ROOT; unset PROJECT_ROOT; . \"$SCRIPT\" && [[ \"\$DECKRD_ROOT\" == */skills/deckrd/skills/deckrd ]] && echo ok"
@@ -72,7 +72,7 @@ Describe "bootstrap.lib.sh"
   # ------------------------------------------------------------------ #
   #  DECKRD_ROOT 起点の連鎖 (SCRIPTS/LIB)                              #
   # ------------------------------------------------------------------ #
-  Describe "DECKRD_SCRIPTS_DIR / DECKRD_LIB_DIR: DECKRD_ROOT 連鎖"
+  Describe "T-LIB-BSCRF: DECKRD_SCRIPTS_DIR / DECKRD_LIB_DIR: DECKRD_ROOT 連鎖"
 
     It "[Normal] T-LIB-BSCRF-01: DECKRD_SCRIPTS_DIR が DECKRD_ROOT/scripts との関係式を満たす"
       When run bash -c "export DECKRD_ROOT=/tmp/deckrd; unset DECKRD_SCRIPTS_DIR; . \"$SCRIPT\" && [[ \"\$DECKRD_SCRIPTS_DIR\" == \"\${DECKRD_ROOT}/scripts\" ]] && echo ok"
@@ -103,7 +103,7 @@ Describe "bootstrap.lib.sh"
   # ------------------------------------------------------------------ #
   #  PROJECT_ROOT 起点の連鎖 (LOCAL_DATA/DOCS)                         #
   # ------------------------------------------------------------------ #
-  Describe "DECKRD_LOCAL_DATA / DECKRD_DOCS_DIR: PROJECT_ROOT 連鎖"
+  Describe "T-LIB-BLOCDF: DECKRD_LOCAL_DATA / DECKRD_DOCS_DIR: PROJECT_ROOT 連鎖"
 
     It "[Normal] T-LIB-BLOCDF-01: DECKRD_LOCAL_DATA が PROJECT_ROOT/.local/deckrd との関係式を満たす"
       When run bash -c "export PROJECT_ROOT=/tmp/proj; unset DECKRD_LOCAL_DATA; . \"$SCRIPT\" && [[ \"\$DECKRD_LOCAL_DATA\" == \"\${PROJECT_ROOT}/.local/deckrd\" ]] && echo ok"
@@ -133,7 +133,7 @@ Describe "bootstrap.lib.sh"
   # ------------------------------------------------------------------ #
   #  bdd-coder パス検出                                                #
   # ------------------------------------------------------------------ #
-  Describe "bdd-coder パス検出"
+  Describe "T-LIB-BSRCF: bdd-coder パス検出"
     Before setup_coder_tmpscript
     After teardown_coder_tmpscript
 
@@ -184,7 +184,7 @@ Describe "bootstrap.lib.sh"
   # ------------------------------------------------------------------ #
   #  副作用: 内部変数                                                   #
   # ------------------------------------------------------------------ #
-  Describe "副作用: 内部変数"
+  Describe "T-LIB-BINTF: 副作用: 内部変数"
 
     It "[Normal] T-LIB-BINTF-01: _caller_path が source 後に外部に漏れていない (ローカル変数)"
       When run bash -c ". \"$SCRIPT\" && [[ -z \"\${_caller_path+x}\" ]] && echo ok"
@@ -228,7 +228,7 @@ Describe "bootstrap.lib.sh"
   # ------------------------------------------------------------------ #
   #  副作用: シェル環境変数                                             #
   # ------------------------------------------------------------------ #
-  Describe "副作用: シェル環境変数"
+  Describe "T-LIB-BENVF: 副作用: シェル環境変数"
 
     It "[Normal] T-LIB-BENVF-01: PATH が変化しない"
       When run bash -c "before=\"\$PATH\"; . \"$SCRIPT\"; [[ \"\$PATH\" == \"\$before\" ]] && echo ok"

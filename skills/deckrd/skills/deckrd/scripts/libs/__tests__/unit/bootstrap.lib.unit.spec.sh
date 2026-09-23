@@ -42,7 +42,7 @@ Describe "bootstrap.lib.sh"
   # ------------------------------------------------------------------ #
   #  loading — source/init/finalize を分離して検証                     #
   # ------------------------------------------------------------------ #
-  Describe "loading"
+  Describe "T-LIB-BLOAD: loading"
 
     It "[Normal] T-LIB-BLOAD-01: source して status=0 で終了する"
       When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\"; echo ok"
@@ -66,7 +66,7 @@ Describe "bootstrap.lib.sh"
   # ------------------------------------------------------------------ #
   #  export 検証 — export -p で実際に export されているか確認           #
   # ------------------------------------------------------------------ #
-  Describe "export 検証"
+  Describe "T-LIB-BEXP: export 検証"
 
     Describe "Given: PROJECT_ROOT=/tmp/proj で bootstrap_init を呼ぶ"
       Before "export PROJECT_ROOT=/tmp/proj; unset DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_LIB_DIR DECKRD_DATA_DIR DECKRD_LOCAL_DATA DECKRD_LOCAL_WORKSPACES DECKRD_DOCS_DIR SYMBOL; bootstrap_init"
@@ -126,7 +126,7 @@ Describe "bootstrap.lib.sh"
   # ------------------------------------------------------------------ #
   #  副作用: 他変数への影響なし                                         #
   # ------------------------------------------------------------------ #
-  Describe "副作用: 他変数"
+  Describe "T-LIB-BSIDE: 副作用: 他変数"
 
     It "[Normal] T-LIB-BSIDE-01: 事前設定した任意変数 FOO が bootstrap_init 後も維持される"
       When run bash -c "export FOO=bar; export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\"; [[ \"\$FOO\" == \"bar\" ]] && echo ok"
@@ -156,7 +156,7 @@ Describe "bootstrap.lib.sh"
   # ------------------------------------------------------------------ #
   #  bootstrap_finalize — readonly 化の保証と冪等性                    #
   # ------------------------------------------------------------------ #
-  Describe "bootstrap_finalize"
+  Describe "T-LIB-BFIN: bootstrap_finalize"
 
     It "[Normal] T-LIB-BFIN-01: finalize 後は PROJECT_ROOT が readonly になっている"
       When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && ( PROJECT_ROOT=x ) 2>/dev/null && echo writable || echo readonly"
@@ -228,7 +228,7 @@ Describe "bootstrap.lib.sh"
   # ------------------------------------------------------------------ #
   #  冪等性: bootstrap_init 2回呼び出し                                 #
   # ------------------------------------------------------------------ #
-  Describe "冪等性: bootstrap_init 2回"
+  Describe "T-LIB-BIDEM: 冪等性: bootstrap_init 2回"
 
     It "[Normal] T-LIB-BIDEM-01: PROJECT_ROOT が変化しない"
       When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" --no-finalize; FIRST=\"\$PROJECT_ROOT\"; bootstrap_init; [[ \"\$PROJECT_ROOT\" == \"\$FIRST\" ]] && echo ok"
@@ -260,7 +260,7 @@ Describe "bootstrap.lib.sh"
   #  bootstrap.lib.sh の物理位置 (deckrd スキル) を基点とするため      #
   #  呼び出し元が bdd-coder パスでも DECKRD_ROOT は常に deckrd になる  #
   # ------------------------------------------------------------------ #
-  Describe "BASH_SOURCE 依存: bdd-coder パス検出"
+  Describe "T-LIB-BSRC: BASH_SOURCE 依存: bdd-coder パス検出"
     Before setup_coder_tmpscript
     After teardown_coder_tmpscript
 
@@ -300,7 +300,7 @@ Describe "bootstrap.lib.sh"
   #  DECKRD_ROOT                                                        #
   #  依存: PROJECT_ROOT (未設定時の自動計算はソースパス依存)            #
   # ------------------------------------------------------------------ #
-  Describe "DECKRD_ROOT"
+  Describe "T-LIB-BROOT: DECKRD_ROOT"
 
     Describe "Given: PROJECT_ROOT=/tmp/proj、DECKRD_ROOT 未設定"
       Before "export PROJECT_ROOT=/tmp/proj; unset DECKRD_ROOT; bootstrap_init"
@@ -356,7 +356,7 @@ Describe "bootstrap.lib.sh"
   #  DECKRD_SCRIPTS_DIR                                                 #
   #  依存: DECKRD_ROOT のみ                                            #
   # ------------------------------------------------------------------ #
-  Describe "DECKRD_SCRIPTS_DIR"
+  Describe "T-LIB-BSCR: DECKRD_SCRIPTS_DIR"
 
     Describe "Given: PROJECT_ROOT=/tmp/proj、DECKRD_ROOT=/tmp/deckrd、DECKRD_SCRIPTS_DIR 未設定"
       Before "export PROJECT_ROOT=/tmp/proj; export DECKRD_ROOT=/tmp/deckrd; unset DECKRD_SCRIPTS_DIR; bootstrap_init"
@@ -409,7 +409,7 @@ Describe "bootstrap.lib.sh"
   #  DECKRD_LIB_DIR                                                     #
   #  依存: DECKRD_ROOT のみ                                            #
   # ------------------------------------------------------------------ #
-  Describe "DECKRD_LIB_DIR"
+  Describe "T-LIB-BLIBD: DECKRD_LIB_DIR"
 
     Describe "Given: PROJECT_ROOT=/tmp/proj、DECKRD_ROOT=/tmp/deckrd、DECKRD_LIB_DIR 未設定"
       Before "export PROJECT_ROOT=/tmp/proj; export DECKRD_ROOT=/tmp/deckrd; unset DECKRD_LIB_DIR; bootstrap_init"
@@ -462,7 +462,7 @@ Describe "bootstrap.lib.sh"
   #  DECKRD_DATA_DIR                                                    #
   #  依存: XDG_DATA_HOME または HOME のみ (PROJECT_ROOT/DECKRD_ROOT 非依存) #
   # ------------------------------------------------------------------ #
-  Describe "DECKRD_DATA_DIR"
+  Describe "T-LIB-BDATA: DECKRD_DATA_DIR"
 
     Describe "Given: XDG_DATA_HOME=/tmp/xdg"
       Before "export PROJECT_ROOT=/tmp/proj; export XDG_DATA_HOME=/tmp/xdg; unset DECKRD_DATA_DIR; bootstrap_init"
@@ -553,7 +553,7 @@ Describe "bootstrap.lib.sh"
   #  DECKRD_LOCAL_DATA                                                  #
   #  依存: PROJECT_ROOT のみ (DECKRD_ROOT 非依存)                      #
   # ------------------------------------------------------------------ #
-  Describe "DECKRD_LOCAL_DATA"
+  Describe "T-LIB-BLOCD: DECKRD_LOCAL_DATA"
 
     Describe "Given: PROJECT_ROOT=/tmp/proj、DECKRD_LOCAL_DATA 未設定"
       Before "export PROJECT_ROOT=/tmp/proj; unset DECKRD_LOCAL_DATA; bootstrap_init"
@@ -606,7 +606,7 @@ Describe "bootstrap.lib.sh"
   #  DECKRD_LOCAL_WORKSPACES                                           #
   #  依存: DECKRD_LOCAL_DATA のみ (DECKRD_ROOT 非依存)                 #
   # ------------------------------------------------------------------ #
-  Describe "DECKRD_LOCAL_WORKSPACES"
+  Describe "T-LIB-BLOCW: DECKRD_LOCAL_WORKSPACES"
 
     Describe "Given: PROJECT_ROOT=/tmp/proj、DECKRD_LOCAL_WORKSPACES 未設定"
       Before "export PROJECT_ROOT=/tmp/proj; unset DECKRD_LOCAL_DATA; unset DECKRD_LOCAL_WORKSPACES; bootstrap_init"
@@ -668,7 +668,7 @@ Describe "bootstrap.lib.sh"
   #  DECKRD_DOCS_DIR                                                    #
   #  依存: PROJECT_ROOT のみ (DECKRD_ROOT 非依存)                      #
   # ------------------------------------------------------------------ #
-  Describe "DECKRD_DOCS_DIR"
+  Describe "T-LIB-BDOCS: DECKRD_DOCS_DIR"
 
     Describe "Given: PROJECT_ROOT=/tmp/proj、DECKRD_DOCS_DIR 未設定"
       Before "export PROJECT_ROOT=/tmp/proj; unset DECKRD_DOCS_DIR; bootstrap_init"
@@ -720,7 +720,7 @@ Describe "bootstrap.lib.sh"
   # ------------------------------------------------------------------ #
   #  SYMBOL — 仕様: ^[a-z][a-z_-]*$ (先頭は小文字のみ)                 #
   # ------------------------------------------------------------------ #
-  Describe "SYMBOL"
+  Describe "T-LIB-BSYM: SYMBOL"
 
     Describe "Given: SYMBOL 未設定"
       Before "export PROJECT_ROOT=/tmp/proj; unset SYMBOL; bootstrap_init"

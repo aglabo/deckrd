@@ -21,7 +21,7 @@ SCRIPT="${DECKRD_SCRIPTS_DIR}/init.sh"
 # init.sh: parse_args
 # ============================================================================
 
-Describe "init.sh: parse_args"
+Describe "T-CLI-PA: init.sh: parse_args"
   load_script_with_mocks() {
     # Mock: validate_env を常に成功させる
     # shellcheck disable=SC2329

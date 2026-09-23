@@ -23,7 +23,7 @@ SCRIPT="${DECKRD_SCRIPTS_DIR}/init.sh"
 # init.sh: main() integration
 # ============================================================================
 
-Describe "init.sh: main() integration"
+Describe "T-CLI-MAINI: init.sh: main() integration"
 
   Describe "Given: no arguments provided"
     Before "setup_deckrd_tmpdir"

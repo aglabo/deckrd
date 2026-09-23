@@ -18,7 +18,7 @@ Include "../spec_helper.sh"
 
 Describe "kv-store.lib.sh (store)"
 
-  Describe "_kv_normalize_key"
+  Describe "T-LIB-KSNK: _kv_normalize_key"
     Describe "Given: 有効なキー名"
       Describe "When: _kv_normalize_key を呼ぶ"
         Parameters
@@ -89,7 +89,7 @@ Describe "kv-store.lib.sh (store)"
     End
   End
 
-  Describe "kv_init"
+  Describe "T-LIB-KSIN: kv_init"
     Describe "Given: 複数キーのスキーマ"
       Describe "When: kv_init を呼ぶ"
         It "Then: [Normal] T-LIB-KSIN-01: スキーマが登録される"
@@ -232,7 +232,7 @@ Describe "kv-store.lib.sh (store)"
     End
   End
 
-  Describe "kv_get"
+  Describe "T-LIB-KSGT: kv_get"
     Describe "Given: 初期化済みストア"
       Before "kv_init 'get_store' $'name|alice\nage|30'"
 
@@ -339,7 +339,7 @@ Describe "kv-store.lib.sh (store)"
     End
   End
 
-  Describe "kv_set"
+  Describe "T-LIB-KSST: kv_set"
     Describe "Given: 初期化済みストア"
       Before "kv_init 'set_store' $'name|alice\nage|30'"
 
@@ -442,7 +442,7 @@ Describe "kv-store.lib.sh (store)"
     End
   End
 
-  Describe "kv_all"
+  Describe "T-LIB-KSAL: kv_all"
     Describe "Given: 複数キーを持つ初期化済みストア"
       Before "kv_init 'allstore' $'name|alice\ncity|tokyo'"
 
@@ -500,7 +500,7 @@ Describe "kv-store.lib.sh (store)"
     End
   End
 
-  Describe "kv_load"
+  Describe "T-LIB-KSLD: kv_load"
     Describe "Given: スキーマ未登録のストア"
       Describe "When: kv_load を呼ぶ"
         It "Then: [Error] T-LIB-KSLD-01: return 1 かつ stderr に 'Error: kv_load:' を出力する"
@@ -647,7 +647,7 @@ Describe "kv-store.lib.sh (store)"
     End
   End
 
-  Describe "kv_save"
+  Describe "T-LIB-KSSV: kv_save"
     Describe "Given: スキーマ未登録のストア"
       Describe "When: kv_save を呼ぶ"
         It "Then: [Error] T-LIB-KSSV-01: return 1 かつ stderr に 'Error: kv_save:' を出力する"

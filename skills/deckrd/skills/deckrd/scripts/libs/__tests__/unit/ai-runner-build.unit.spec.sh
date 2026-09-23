@@ -18,7 +18,7 @@ SCRIPT="${DECKRD_LIB_DIR}/ai-runner.lib.sh"
 . "$SCRIPT"
 
 Describe "ai-runner.sh"
-  Describe "_build_ai_command"
+  Describe "T-LIB-ABC: _build_ai_command"
     Describe "Given: claude CLI とモデル名"
       Describe "When: _build_ai_command を呼ぶ"
         Parameters

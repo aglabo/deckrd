@@ -17,7 +17,7 @@ Include ../spec_helper.sh
 SCRIPT="${DECKRD_LIB_DIR}/ai-runner.lib.sh"
 . "$SCRIPT"
 
-Describe "ai-runner.sh"
+Describe "T-LIB-RAS: run_ai"
   Describe "実機テスト (claude)"
     Skip if "integration tests are disabled" [ "${SKIP_INTEGRATION_TESTS:-1}" = "1" ]
     Skip if "claude is not installed" ! command -v claude >/dev/null 2>&1

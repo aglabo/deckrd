@@ -23,7 +23,7 @@ Describe "generate-doc.sh ai-runner.sh integration"
   Before "setup_deckrd_tmpdir"
   After "teardown_deckrd_tmpdir"
 
-  Describe "ai-runner.sh loading"
+  Describe "T-SUB-LD: ai-runner.sh loading"
     Describe "When: generate-doc.sh を source する"
       It "Then: [Normal] T-SUB-LD-01: run_ai 関数が存在する"
         When call type run_ai
@@ -39,7 +39,7 @@ Describe "generate-doc.sh ai-runner.sh integration"
     End
   End
 
-  Describe "validate_ai_model (ai-runner.sh 版)"
+  Describe "T-SUB-VAM: validate_ai_model (ai-runner.sh 版)"
 
     Describe "Given: 有効なモデル識別子"
       Describe "When: validate_ai_model を呼ぶ"
@@ -80,7 +80,7 @@ Describe "generate-doc.sh ai-runner.sh integration"
 
   End
 
-  Describe "execute_prompt (run_ai 呼び出し確認)"
+  Describe "T-SUB-EP: execute_prompt (run_ai 呼び出し確認)"
 
     setup_execute_prompt_tmpdir() {
       setup_deckrd_tmpdir

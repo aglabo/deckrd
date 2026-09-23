@@ -16,7 +16,7 @@ Include ../spec_helper.sh
 
 SCRIPT="${DECKRD_SCRIPTS_DIR}/status.sh"
 
-Describe "status.sh"
+Describe "T-CLI-ST: status.sh"
   Describe "Given: session.json does not exist"
     Before "setup_deckrd_tmpdir"
     After "teardown_deckrd_tmpdir"

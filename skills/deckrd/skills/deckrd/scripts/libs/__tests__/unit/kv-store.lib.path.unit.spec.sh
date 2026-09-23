@@ -17,7 +17,7 @@ Include "../spec_helper.sh"
 
 Describe "kv-store.lib.sh"
 
-  Describe "kv-store.lib.sh loading"
+  Describe "T-LIB-KPLD: kv-store.lib.sh loading"
     Describe "When: スクリプトを読み込む"
       It "Then: [Normal] T-LIB-KPLD-01: kv_init 関数が存在する"
         When call type kv_init
@@ -57,7 +57,7 @@ Describe "kv-store.lib.sh"
     End
   End
 
-  Describe "_kv_file_path"
+  Describe "T-LIB-KPFP: _kv_file_path"
     Describe "Given: Windows パス（バックスラッシュ区切り）"
       Describe "When: _kv_file_path を呼ぶ"
         It "Then: [Normal] T-LIB-KPFP-01: .\\session は ./session.kv になる"
@@ -189,7 +189,7 @@ Describe "kv-store.lib.sh"
     End
   End
 
-  Describe "kv_store_path"
+  Describe "T-LIB-KPSP: kv_store_path"
     Describe "Given: DECKRD_LOCAL_DATA=/tmp/deckrd-test"
       Before "export DECKRD_LOCAL_DATA=/tmp/deckrd-test"
 
@@ -295,7 +295,7 @@ Describe "kv-store.lib.sh"
     End
   End
 
-  Describe "_kv_normalize_filename"
+  Describe "T-LIB-KPNF: _kv_normalize_filename"
     Describe "Given: 通常ファイル名（ドットなし/拡張子あり）"
       Describe "When: _kv_normalize_filename を呼ぶ"
         It "Then: [Normal] T-LIB-KPNF-01: 拡張子なしのファイル名はそのまま返る"

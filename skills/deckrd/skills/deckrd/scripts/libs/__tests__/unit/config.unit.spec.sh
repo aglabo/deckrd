@@ -19,7 +19,7 @@ Include ../spec_helper.sh
 . "${DECKRD_LIB_DIR}/config.lib.sh"
 
 Describe "config.sh"
-  Describe "config.sh loading"
+  Describe "T-LIB-CLD: config.sh loading"
     Describe "When: スクリプトを読み込む"
       It "Then: [Normal] T-LIB-CLD-01: config_init 関数が存在する"
         When call type config_init
@@ -47,7 +47,7 @@ Describe "config.sh"
     End
   End
 
-  Describe "config_get / config_set"
+  Describe "T-LIB-CGS: config_get / config_set"
     Describe "Given: config_init 済みの状態"
       Before "config_init"
 
@@ -98,7 +98,7 @@ Describe "config.sh"
     End
   End
 
-  Describe "config_all"
+  Describe "T-LIB-CALL: config_all"
     Describe "Given: CONFIG に複数のキーがセットされた状態"
       Before "config_init; config_set 'ai_model' 'sonnet'; config_set 'lang' 'ja'"
 
@@ -118,7 +118,7 @@ Describe "config.sh"
     End
   End
 
-  Describe "config_init"
+  Describe "T-LIB-CINI: config_init"
     Describe "Given: セッションファイルなし（引数省略）"
       Before "CONFIG=()"
 
