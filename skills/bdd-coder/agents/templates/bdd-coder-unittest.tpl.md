@@ -49,9 +49,9 @@ Reference this template when implementing tests for bdd-coder tasks.
 
 ### RED-GREEN-REFACTOR Cycle
 
-1. **RED**: Write failing test (test code only, NO implementation)
-2. **GREEN**: Write minimal implementation to pass test
-3. **REFACTOR**: Improve test and code while keeping tests GREEN
+1. RED: Write failing test (test code only, NO implementation)
+2. GREEN: Write minimal implementation to pass test
+3. REFACTOR: Improve test and code while keeping tests GREEN
 
 ## Coverage Categories
 

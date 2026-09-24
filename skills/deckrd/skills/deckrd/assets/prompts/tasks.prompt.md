@@ -141,7 +141,7 @@ Use category prefixes in describe blocks:
 
 ## Generation Rules
 
-1. **Read IMPLEMENTATION document(s) first**:
+1. Read IMPLEMENTATION document(s) first:
    - Identify actual function/class/method names
    - Note any renamed or refactored components
    - Understand the actual implementation structure
@@ -153,10 +153,10 @@ Use category prefixes in describe blocks:
    - Test targets (functions, classes, methods)
    - Input/output constraints
    - Section 4 (Decision Rules): each rule row → candidate task
-   - **Section 5 (Edge Cases)**: every row in the edge case table → candidate task
-   - **Section 2.5 (Behavioral Design Decisions)**: each Active DD row → at least one task
+   - Section 5 (Edge Cases): every row in the edge case table → candidate task
+   - Section 2.5 (Behavioral Design Decisions): each Active DD row → at least one task
      verifying that the decided behavior is observable
-   - **Section 2.6 (Related Decision Records)**: note each DR-ID listed
+   - Section 2.6 (Related Decision Records): note each DR-ID listed
    - Cross-reference with IMPLEMENTATION document(s) for exact names
 
 3. **Read DECISION RECORDS** (if provided):

@@ -73,11 +73,11 @@ fn given_context_when_action_then_result() {
 For canonical host-safety, idempotency, and mock discipline principles, see:
 [../test-quality.md](../test-quality.md)
 
-- **Tempdir**: Use the `tempfile` crate — `tempfile::tempdir()` returns a `TempDir`
+- Tempdir: Use the `tempfile` crate — `tempfile::tempdir()` returns a `TempDir`
   that is automatically deleted when dropped.
-- **Clock injection**: Accept `SystemTime` or `std::time::Instant` as a parameter
-  instead of calling `SystemTime::now()` directly inside the function under test.
-- **No filesystem side effects**: Write test artifacts to `std::env::temp_dir()`,
+- Clock injection: Accept `SystemTime` or `std::time::Instant` as a parameter.
+  Do not call `SystemTime::now()` directly inside the function under test.
+- No filesystem side effects: Write test artifacts to `std::env::temp_dir()`,
   never to the project directory or `$HOME`.
 
 ## Project Detection

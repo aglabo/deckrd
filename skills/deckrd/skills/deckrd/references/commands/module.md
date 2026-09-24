@@ -67,7 +67,7 @@ When the user provides only `<module>` (no `/` separator), YOU (the AI) MUST inf
 1. List existing modules: `ls docs/.deckrd/` → collect all `<namespace>/` directories
 2. Read `project.json` → check `namespace` field if present
 3. Apply semantic matching rules (see table below)
-4. **Confirm with user** — present the inferred path and ask for approval before executing
+4. Confirm with user — present the inferred path and ask for approval before executing
 
 ### Semantic matching rules
 

@@ -126,9 +126,9 @@ Return the **Commands table** and language name to the main session.
 
 <!-- textlint-disable @textlint-ja/ai-writing/no-ai-list-formatting -->
 
-- **Read-only**: MUST NOT use `Write` or `Edit` on any file except `temp/deckrd-work/env-profile.md`
-- **No session files**: MUST NOT read or write `session.json`
-- **No side effects**: MUST NOT run commands that modify the filesystem or network
+- Read-only: MUST NOT use `Write` or `Edit` on any file except `temp/deckrd-work/env-profile.md`
+- No session files: MUST NOT read or write `session.json`
+- No side effects: MUST NOT run commands that modify the filesystem or network
 
 <!-- textlint-enable @textlint-ja/ai-writing/no-ai-list-formatting -->
 

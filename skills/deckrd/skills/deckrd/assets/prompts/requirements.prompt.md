@@ -302,7 +302,7 @@ Collect unresolved items from USER INPUT and HEARING NOTES:
 - Items the user explicitly marked as undecided
 - Contradictions or ambiguities detected during analysis
 - Decisions deferred to later phases
-- **Any EARS element marked `[MISSING]` in Step 1D** — promote each to an Open Question
+- Any EARS element marked `[MISSING]` in Step 1D — promote each to an Open Question
 
 For each `[MISSING]` EARS element, generate one Open Question row:
 

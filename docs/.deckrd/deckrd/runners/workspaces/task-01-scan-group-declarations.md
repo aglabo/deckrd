@@ -1,9 +1,9 @@
 # タスク 1: グループ宣言の走査とインデックス
 
-対象: `runners/run-check-test-ids.sh`
-テスト: `runners/__tests__/unit/run-check-test-ids.spec.sh`
-テストコマンド: `pnpm run test:sh runners/__tests__/unit/run-check-test-ids.spec.sh`
-作業種別: リファクタリング（外部から見える検査結果は本タスクでは変えない）
+- 対象: `runners/run-check-test-ids.sh`
+- テスト: `runners/__tests__/unit/run-check-test-ids.spec.sh`
+- テストコマンド: `pnpm run test:sh runners/__tests__/unit/run-check-test-ids.spec.sh`
+- 作業種別: リファクタリング（外部から見える検査結果は本タスクでは変えない）
 
 本タスクは走査層とインデックス層だけを扱う。検査 A/B/C/D の判定ロジックは
 次のタスクで変更するため、**本タスクでは触らない**。
@@ -40,7 +40,7 @@ readonly TEST_ID_PATTERN='T-[A-Z0-9]{2,4}-[A-Z0-9]+-[0-9]{2}(-[0-9]{2})?'
 `Describe` / `Context` 行も走査対象に加える。awk が線形走査するあいだに「直前の
 グループ ID」を保持し、`I` レコードに載せる。
 
-レコードは **すべて 5 フィールド固定**とし、TAB を含みうる可変長の内容を必ず最後に置く。
+レコードは **すべて 5 フィールド固定** とし、TAB を含みうる可変長の内容を必ず最後に置く。
 
 ```text
 G <TAB> <グループ ID> <TAB> <file> <TAB> <line> <TAB> (空)
@@ -49,11 +49,11 @@ U <TAB> <file> <TAB> <line> <TAB> (空) <TAB> <宣言行の内容>
 ```
 
 `U` の 4 番目を空で埋めるのは、`read -r kind a b c d` で読んだとき宣言行の内容が
-必ず最後の変数に入るようにするため。`U` の内容欄は TAB を含みうる。
+必ず最後の変数へ入る形にするため。`U` の内容欄は TAB を含みうる。
 
 現行の設計制約は維持すること。
 
-- 読めない引数は awk に渡す前に落とし、`>&2` に警告する（gawk は最初の読めない
+- 読めない引数は awk へ渡す前に落とし、警告を `>&2` へ出す（gawk は最初の読めない
   引数で全体を中断し、以降のファイルを読まない。黙って ID 一覧が短くなる）
 - 単一 awk 実行。走査ごとにファイルを読み直さない
 

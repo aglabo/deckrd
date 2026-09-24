@@ -91,7 +91,7 @@ You are a **Design Reviewer**.
 
 **Decision Records:**
 
-- **PROHIBITED** - Do not generate DR entries
+- PROHIBITED - Do not generate DR entries
 - Decisions are not yet mature enough to record
 
 **Output Style:**
@@ -207,7 +207,7 @@ Rule of thumb: If the change could affect test cases, it's semantic → defer to
 
 **Decision Records:**
 
-- **PROHIBITED** - No new decisions in fix phase
+- PROHIBITED - No new decisions in fix phase
 - All decisions should have been made in harden phase
 
 **Output Style:**
