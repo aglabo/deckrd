@@ -101,23 +101,38 @@ cat >"$PROMPT_FILE" <<'CODEX_PROMPT'
 <the prompt below, with every <placeholder> already filled in>
 CODEX_PROMPT
 
-codex exec -s read-only --color never -o "$REVIEW_OUT" - <"$PROMPT_FILE"
-cat "$REVIEW_OUT"
+if codex exec -s read-only --color never -o "$REVIEW_OUT" - <"$PROMPT_FILE" &&
+  [[ -s "$REVIEW_OUT" ]]; then
+  cat "$REVIEW_OUT"
+else
+  echo "CODEX_REVIEW_UNAVAILABLE"
+fi
 ```
 
 `-s read-only` lets Codex run `git diff` and read the tree while making it unable to
 write, which matches this agent's read-only constraint. `-o` captures just the final
 message, so no JSONL parsing is needed.
 
+**Never `cat "$REVIEW_OUT"` unconditionally.** `mktemp` creates the file up front, so a
+`codex exec` that fails at runtime leaves an empty file that `cat` would report with exit
+status 0. A runtime failure is any non-zero exit: an API outage, a rate limit or an
+invalid `--model`. Reading the file unguarded turns a failed second opinion into an empty
+but apparently successful one. The `&& [[ -s ... ]]` guard above covers the non-zero exit
+and the empty-output case, and `CODEX_REVIEW_UNAVAILABLE` routes to the degraded path below.
+
 **Use plain `codex exec`, not `codex exec review`.** `codex exec review` picks the diff
 scope itself (`--uncommitted` / `--base`), which would widen the review past the
 `changed_files` this agent was given and break the scope constraint below. Enumerating
 the files in the prompt keeps the review confined to them.
 
-**When Codex is unavailable** — `codex` missing from `PATH`, or `codex login status`
-reporting logged out — do NOT fail the review. Emit the Phase 1 metrics, record
+**When Codex is unavailable** — `codex` missing from `PATH`, `codex login status`
+reporting logged out, or the run above printing `CODEX_REVIEW_UNAVAILABLE` — do NOT fail
+the review. Emit the Phase 1 metrics, record
 `REVIEW FINDINGS: codex unavailable — metrics only` in the report, and set the verdict
 from the CRAP scores alone. A missing second opinion is a degraded review, not a blocked one.
+
+Do not treat an empty or missing Codex result as "no findings". Absent findings and
+unobtained findings are different outcomes, and only the degraded path may report the second.
 
 Prompt:
 
