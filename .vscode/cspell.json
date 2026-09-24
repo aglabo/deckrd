@@ -25,7 +25,7 @@
     },
     {
       "name": "test-target-dic",
-      "description": "test target abbreviations, generated from docs/.deckrd/*/*/module.md",
+      "description": "test target abbreviations, generated from docs/.deckrd/**/modules/module.md",
       "path": "./cspell/dicts/test-target.dic",
       "addWords": false,
       "scope": "workspace"
