@@ -22,6 +22,13 @@ TEST_ID_CHECK_ROOT="${TEST_ID_CHECK_ROOT:-${PROJECT_ROOT}}"
 # Directory holding module declarations, relative to the scan root
 MODULE_DOCS_SUBDIR="${MODULE_DOCS_SUBDIR:-docs/.deckrd}"
 
+# Path of a module declaration, relative to its module directory. Declared next to
+# MODULE_DOCS_SUBDIR because the two only make sense together: one locates the docs
+# root, the other the declaration inside a module. The canonical definition is §4 of
+# docs/.deckrd/rules/deckrd-rule-document-model.md, and the generator declares the
+# same value in skills/deckrd/skills/deckrd/scripts/module.sh - keep them equal.
+readonly MODULE_META_SUBDIR='workspaces/modules'
+
 # The four constants below are the whole grammar the scanner knows, declared together
 # because they only make sense as two pairs: one declaration pattern and one ID pattern
 # per layer. §6.1 forbids extracting both layers with one pattern, and keeping the
@@ -493,13 +500,34 @@ path_matches_glob() {
 
 #
 # @description List module declaration files under the scan root
-# @stdout One module.md path per line, sorted; empty when the docs root is absent
+# @stdout One `<ns>/<mod>/${MODULE_META_SUBDIR}/module.md` path per line, sorted; empty
+#   when the docs root is absent
 # @exitcode 0 always
 #
 list_module_files() {
   local docs_root="${TEST_ID_CHECK_ROOT}/${MODULE_DOCS_SUBDIR}"
   [[ -d "$docs_root" ]] || return 0
-  find "$docs_root" -type f -name 'module.md' | sort
+  # `-path`, not `-name`: only the declaration inside the metadata subdirectory counts,
+  # and a `module.md` left behind at the old location must stay invisible here so that
+  # check_scopes can report it as a leftover rather than scan it as a declaration.
+  # `-path`'s `*` spans `/`, so the namespace may be nested any number of levels deep
+  find "$docs_root" -type f -path "*/${MODULE_META_SUBDIR}/module.md" | sort
+}
+
+#
+# @description List module declarations left outside the metadata subdirectory, that is,
+#   at the location it replaced. The complement of list_module_files over the same
+#   traversal, written next to it so the two stay exhaustive: every `module.md` under
+#   the docs root is enumerated by exactly one of them, and a declaration this one
+#   returns is one check_scopes reports rather than reads.
+# @stdout One module.md path per line, sorted; empty when none is left behind or the
+#   docs root is absent
+# @exitcode 0 always
+#
+list_legacy_module_files() {
+  local docs_root="${TEST_ID_CHECK_ROOT}/${MODULE_DOCS_SUBDIR}"
+  [[ -d "$docs_root" ]] || return 0
+  find "$docs_root" -type f -name 'module.md' -not -path "*/${MODULE_META_SUBDIR}/*" | sort
 }
 
 #
@@ -513,9 +541,13 @@ list_module_files() {
 module_ref_of() {
   # The docs root comes off the front and the file name off the back, in that order:
   # a namespace may carry slashes of its own, so only the two ends are known. No
-  # trailing newline is appended, for the reason given on module_file_of
+  # trailing newline is appended, for the reason given on module_file_of.
+  # The suffix peeled off the back is the metadata subdirectory as well as the file
+  # name, and it is double quoted: a suffix carrying a parameter expansion is read as a
+  # glob otherwise, so a namespace spelling that happened to match would silently yield
+  # a shortened reference
   local ref="${1#"${TEST_ID_CHECK_ROOT}/${MODULE_DOCS_SUBDIR}/"}"
-  _MODULE_REF="${ref%/module.md}"
+  _MODULE_REF="${ref%"/${MODULE_META_SUBDIR}/module.md"}"
   return 0
 }
 
@@ -536,7 +568,9 @@ module_file_of() {
   # now gone used to strip it, and a path still carrying it would split the
   # "declaration not found" report over two lines. Assigned unconditionally, so a
   # reference resolved earlier is never reported in place of this one.
-  _MODULE_FILE="${TEST_ID_CHECK_ROOT}/${MODULE_DOCS_SUBDIR}/${1}/module.md"
+  # The metadata subdirectory sits between the reference and the file name, which is
+  # exactly the suffix module_ref_of peels back off
+  _MODULE_FILE="${TEST_ID_CHECK_ROOT}/${MODULE_DOCS_SUBDIR}/${1}/${MODULE_META_SUBDIR}/module.md"
   return 0
 }
 
@@ -839,22 +873,37 @@ find_duplicate_ids() {
 }
 
 #
-# @description Check A (§6.2): every `test_scope` is unique and every spec file is
-#   owned by exactly one module. Reads declarations and file names only.
+# @description Check A (§6.2): every `test_scope` is unique, every spec file is owned by
+#   exactly one module, and no declaration is left outside the metadata subdirectory.
+#   Reads declarations and file names only.
 # @stdout Summary counts when the check passes
 # @stderr Offending scopes and files
 # @exitcode 0 Check passed
-# @exitcode 1 Duplicate scope, unowned file, or multiply-owned file found
+# @exitcode 1 Declaration at the old location, duplicate scope, unowned file, or
+#   multiply-owned file found
 #
 check_scopes() {
+  local docs_root="${TEST_ID_CHECK_ROOT}/${MODULE_DOCS_SUBDIR}"
+  local result=0 module scope
   local -a modules=()
   mapfile -t modules < <(list_module_files)
+
+  # Declarations left where the metadata subdirectory now goes. list_module_files matches
+  # on the subdirectory, so an unmoved file is no longer enumerated: without this it would
+  # be neither scanned nor reported, and its stale test_scope and owns would sit in the
+  # tree claiming ownership no check ever reads
+  local -a leftovers=()
+  mapfile -t leftovers < <(list_legacy_module_files)
+  for module in ${leftovers[@]+"${leftovers[@]}"}; do
+    echo "Error: ${module}: module declaration at the old location; move it into ${MODULE_META_SUBDIR}/" >&2
+    result=1
+  done
+
   if [[ ${#modules[@]} -eq 0 ]]; then
-    echo "Error: no module.md found under ${TEST_ID_CHECK_ROOT}/${MODULE_DOCS_SUBDIR}" >&2
+    echo "Error: no module.md found under ${docs_root}/*/*/${MODULE_META_SUBDIR}" >&2
     return 1
   fi
 
-  local result=0 module scope
   local -a declarations=()
   for module in "${modules[@]}"; do
     scope="$(read_module_scalar "$module" 'test_scope')"
