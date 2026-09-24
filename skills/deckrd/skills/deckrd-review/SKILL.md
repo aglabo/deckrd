@@ -10,11 +10,10 @@ metadata:
   version: 0.5.0
   license: MIT
 allowed-tools:
-  - mcp__plugin_deckrd_codex-mcp__codex
-  - mcp__plugin_deckrd_codex-mcp__codex-reply
-  - mcp__plugin_idd_codex-mcp__codex
-  - mcp__plugin_idd_codex-mcp__codex-reply
   - Read
+  - Write
+  - Bash(codex:*)
+  - Bash(mkdir:*)
   - Bash(jq:*)
 argument-hint: "<file_or_phase> [--focus completeness|risk|consistency|feasibility]"
 ---
@@ -102,9 +101,66 @@ Read the resolved file content in full.
 
 ### Step 4: Call codex and display result
 
-Call the available codex MCP tool
-(`mcp__plugin_deckrd_codex-mcp__codex` or `mcp__plugin_idd_codex-mcp__codex`)
-with the constructed prompt.
+Every invocation gets its own working files, so that two `/deckrd:deckrd-review` runs in
+the same checkout never read or overwrite each other's results. Pick a run id once — a UTC
+timestamp such as `20260924T141903Z` — and use it for all three paths below.
+
+| Purpose       | Path                                                   |
+| ------------- | ------------------------------------------------------ |
+| Prompt        | `temp/deckrd-work/deckrd-review-<run-id>.prompt.md`    |
+| Final message | `temp/deckrd-work/deckrd-review-<run-id>.out.md`       |
+| Event stream  | `temp/deckrd-work/deckrd-review-<run-id>.events.jsonl` |
+
+`Write` is allowed for these working files only. Never write to the reviewed document, or
+anywhere outside `temp/deckrd-work/`.
+
+1. Write the Step 3 prompt to the prompt file with the **Write tool**, never through a
+   shell heredoc. The reviewed document is untrusted input: a heredoc ends at a body line
+   equal to its delimiter however the delimiter is quoted, so a document containing that
+   line would truncate the prompt and hand its remainder to the shell. The Write tool does
+   not parse the content, so no delimiter can collide with it.
+
+2. Run codex over the prompt file:
+
+   ```bash
+   mkdir -p temp/deckrd-work
+   ```
+
+   ```bash
+   if codex exec -s read-only --color never --json \
+     -o temp/deckrd-work/deckrd-review-<run-id>.out.md \
+     - <temp/deckrd-work/deckrd-review-<run-id>.prompt.md \
+     >temp/deckrd-work/deckrd-review-<run-id>.events.jsonl &&
+     [[ -s temp/deckrd-work/deckrd-review-<run-id>.out.md ]]; then
+     jq -r 'select(.type == "thread.started") | .thread_id' \
+       temp/deckrd-work/deckrd-review-<run-id>.events.jsonl
+   else
+     echo "CODEX_SECOND_OPINION_UNAVAILABLE"
+   fi
+   ```
+
+3. Read the out file **only when the command above printed a session id**. On
+   `CODEX_SECOND_OPINION_UNAVAILABLE`, do not read it: the file may be empty or hold an
+   earlier run's answer, and presenting that as the second opinion turns a failed run into
+   a fabricated one.
+
+4. Record the printed session id. Step 5 resumes that exact session.
+
+`-s read-only` lets codex read the tree while keeping it unable to write. `-o` captures
+just the final message, and `--json` puts the event stream on stdout, where the single
+`thread.started` event carries the session id. The `&& [[ -s ... ]]` guard covers both a
+non-zero exit — API outage, rate limit, invalid model — and an empty result.
+
+Never read an empty or missing codex result as "no findings". A review that found
+nothing and a review that never ran are different outcomes.
+
+Do **not** pass `--ephemeral`: the `q` branch of Step 5 resumes this session, and an
+ephemeral run leaves nothing to resume.
+
+**If `codex` is missing from `PATH`, or `codex login status` reports logged out**: report
+that the second opinion is unavailable and stop. Do not fall back to a self-review —
+the whole point of this command is that the reviewer is a different model.
+
 Display codex's findings clearly, preceded by:
 
 ```text
@@ -140,11 +196,40 @@ Acknowledge the dismissal with the reason. Done.
 #### q — Ask follow-up
 
 Ask: `Your follow-up question for codex:`
-Call the matching codex reply tool
-(`mcp__plugin_deckrd_codex-mcp__codex-reply` or `mcp__plugin_idd_codex-mcp__codex-reply`)
-with the follow-up question and prior conversation context.
-Display codex's answer.
-Return to the choice prompt.
+
+Write the question to `temp/deckrd-work/deckrd-review-<run-id>.followup-<n>.md` with the
+Write tool, numbering `<n>` from 1 within this invocation. The reason is the same as in
+Step 4: the question is untrusted input and must not reach the shell as a heredoc body.
+
+Resume the Step 4 session by the session id recorded there, so that codex still has the
+document and its own findings in context — do not rebuild the prompt:
+
+```bash
+if codex exec resume <session-id> -c sandbox_mode="read-only" \
+  -o temp/deckrd-work/deckrd-review-<run-id>.followup-<n>.out.md \
+  - <temp/deckrd-work/deckrd-review-<run-id>.followup-<n>.md &&
+  [[ -s temp/deckrd-work/deckrd-review-<run-id>.followup-<n>.out.md ]]; then
+  echo "CODEX_FOLLOWUP_OK"
+else
+  echo "CODEX_SECOND_OPINION_UNAVAILABLE"
+fi
+```
+
+Read that out file and display codex's answer — again only on `CODEX_FOLLOWUP_OK`, and
+never overwriting the Step 4 out file, so the original findings stay readable. Return to
+the choice prompt.
+
+Resume the recorded id, never `--last`. `--last` picks the newest session on the machine,
+so any codex run started between Step 4 and the follow-up — a second
+`/deckrd:deckrd-review` among them — would silently answer against a different document.
+
+If no session id was recorded, re-run Step 4 rather than asking the follow-up. Do not fall
+back to `--last`.
+
+`codex exec resume` takes a narrower set of flags than `codex exec`: `--color` and
+`-s/--sandbox` are rejected, so do not carry them over from Step 4. Without `-s` the
+resumed run falls back to the sandbox in the codex config — usually `workspace-write` —
+so `-c sandbox_mode="read-only"` above keeps the follow-up as read-only as Step 4.
 
 #### d — Done
 
