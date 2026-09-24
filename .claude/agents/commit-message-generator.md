@@ -162,7 +162,7 @@ refactor(logger): ロギングロジックを分離
 
 ## Execution
 
-Remove headers/footers before actual commit. Delegate execution to codex-mcp.
+Remove headers/footers before actual commit. Delegate execution to the codex CLI (`codex exec`).
 
 ---
 

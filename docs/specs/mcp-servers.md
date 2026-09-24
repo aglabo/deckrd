@@ -2,9 +2,9 @@
 title: "MCP Servers API Reference"
 description: "Complete API reference for MCP servers used in deckrd project"
 category: "specs"
-tags: ["api", "mcp", "cocoindex-code", "filesystem", "codex-mcp"]
+tags: ["api", "mcp", "cocoindex-code", "filesystem", "codex"]
 created: "2026-01-14"
-version: "0.2.0"
+version: "0.3.0"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
@@ -12,6 +12,7 @@ changes:
   - 0.1.0   2026-03-21  Update to cocoindex-code / filesystem
   - 0.1.1   2026-09-06  Fix stale plugins/ paths to skills/
   - 0.2.0   2026-09-06  Remove serena-mcp / lsmcp sections, add cocoindex-code and tool naming
+  - 0.3.0   2026-09-24  Drop codex-mcp; Codex is reached through the CLI
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.
@@ -29,14 +30,16 @@ status: "published"
 
 ## Overview
 
-This document provides the API reference for the three MCP servers used in the deckrd project.
-All three are declared by the deckrd plugin in `skills/deckrd/.mcp.json`.
+This document provides the API reference for the two MCP servers used in the deckrd project.
+Both are declared by the deckrd plugin in `skills/deckrd/.mcp.json`.
 
-| Server           | Purpose                    | Declared in               |
-| ---------------- | -------------------------- | ------------------------- |
-| `cocoindex-code` | Semantic code search       | `skills/deckrd/.mcp.json` |
-| `filesystem`     | File system access         | `skills/deckrd/.mcp.json` |
-| `codex-mcp`      | Independent AI code review | `skills/deckrd/.mcp.json` |
+| Server           | Purpose              | Declared in               |
+| ---------------- | -------------------- | ------------------------- |
+| `cocoindex-code` | Semantic code search | `skills/deckrd/.mcp.json` |
+| `filesystem`     | File system access   | `skills/deckrd/.mcp.json` |
+
+Independent Codex review is **not** an MCP server. It is reached through the Codex CLI —
+see [Codex](#codex) below.
 
 The `bdd-coder` plugin declares no MCP server of its own; it uses the servers provided by
 whichever plugins are installed alongside it.
@@ -58,15 +61,13 @@ Because deckrd declares its servers inside the plugin, the scoped form is the on
 ```text
 mcp__plugin_deckrd_cocoindex-code__search
 mcp__plugin_deckrd_filesystem__read_text_file
-mcp__plugin_deckrd_codex-mcp__codex
 ```
 
 Two caveats when writing an agent's `tools:` or a skill's `allowed-tools:`:
 
 - **Deduplication.** When two installed plugins declare the same server command, only one
-  connects. The IDD framework also ships `codex mcp-server` as `codex-mcp`, so on a machine
-  with both plugins the live name may be `mcp__plugin_idd_codex-mcp__codex` instead.
-  List both scoped names; the one that does not resolve is ignored.
+  connects. List both scoped names when a server may come from either plugin; the one that
+  does not resolve is ignored.
 - **Verify, do not guess.** Run `claude mcp list` to see which servers actually connected.
 
 ## cocoindex-code
@@ -130,43 +131,64 @@ Set `refresh_index: false` for consecutive queries when the codebase has not cha
 Each entry in `edits` is `{ oldText, newText }`, and `oldText` must match exactly.
 Use `dryRun: true` to preview the diff before applying.
 
-## codex-mcp
+## Codex
 
 **Purpose**: Run an independent Codex session for second-opinion review and code generation.
 
-**Command**: `codex mcp-server`
+**Not an MCP server.** Codex used to be declared as `codex-mcp` running `codex mcp-server`,
+but that subcommand was removed from the Codex CLI. Today's `codex mcp` is the opposite
+direction — it manages MCP servers that Codex itself consumes — so there is no MCP path
+back into Codex. Reach it through the CLI over Bash instead.
 
 Used by `/deckrd:deckrd-review` and by the `code-reviewer` agent of `bdd-coder`.
 
-### codex
+### codex exec
 
-Starts a Codex session.
+Starts a Codex session and runs it to completion without a TTY.
 
-**Tool name**: `mcp__plugin_deckrd_codex-mcp__codex`
-(or `mcp__plugin_idd_codex-mcp__codex` when the IDD framework wins deduplication)
+```bash
+codex exec -s read-only --color never -o <out-file> - <<'PROMPT'
+<prompt text>
+PROMPT
+```
 
-**Parameters**:
+| Option                        | Purpose                                                         |
+| ----------------------------- | --------------------------------------------------------------- |
+| `-`                           | Read the prompt from stdin                                      |
+| `-s`, `--sandbox`             | `read-only`, `workspace-write`, `danger-full-access`            |
+| `-o`, `--output-last-message` | Write only the final message to a file; no JSONL parsing needed |
+| `-m`, `--model`               | Model override, e.g. `gpt-5.2-codex`                            |
+| `-C`, `--cd`                  | Working directory for the session                               |
+| `--json`                      | Print events to stdout as JSONL                                 |
+| `--output-schema`             | JSON Schema describing the shape of the final response          |
+| `--ephemeral`                 | Do not persist the session; it then cannot be resumed           |
 
-- `prompt` (string, required) - Initial user prompt
-- `model` (string, optional) - Model override, e.g. `gpt-5.2-codex`
-- `cwd` (string, optional) - Working directory for the session
-- `sandbox` (string, optional) - `read-only`, `workspace-write`, or `danger-full-access`
-- `approval-policy` (string, optional) - `untrusted`, `on-request`, or `never`
-- `base-instructions` / `developer-instructions` (string, optional) - Instruction overrides
-- `config` (object, optional) - Settings that override `CODEX_HOME/config.toml`
+For review use, pass `-s read-only` so the reviewer cannot modify the working tree.
 
-For review use, pass `sandbox: "read-only"` so the reviewer cannot modify the working tree.
-
-### codex-reply
+### codex exec resume
 
 Continues an existing Codex conversation.
 
-**Tool name**: `mcp__plugin_deckrd_codex-mcp__codex-reply`
+```bash
+codex exec resume --last -o <out-file> - <<'PROMPT'
+<follow-up text>
+PROMPT
+```
 
-**Parameters**:
+`--last` picks the most recent session on the machine; pass a session id instead when
+another Codex session may have started in between. A session started with `--ephemeral`
+cannot be resumed.
 
-- `prompt` (string, required) - Next user prompt
-- `threadId` (string, required in practice) - Thread id returned by the `codex` call
+This subcommand accepts a narrower set of flags than `codex exec`: `-o`, `--json`,
+`--output-schema`, `-m` and `--ephemeral` work, but `--color` and `-s/--sandbox` are
+rejected.
+
+### codex exec review
+
+Reviews a diff that Codex scopes itself, via `--uncommitted`, `--base <branch>` or
+`--commit <sha>`. Convenient for a whole-branch review, but it does **not** confine the
+review to a caller-supplied file list — `code-reviewer` therefore uses plain `codex exec`
+and enumerates the files in the prompt.
 
 ## Usage Patterns
 
@@ -181,10 +203,10 @@ mcp__plugin_deckrd_cocoindex-code__search
 
 ### Independent review of a change
 
-```text
-mcp__plugin_deckrd_codex-mcp__codex
-  prompt: "Review the following implementation for correctness and test quality: ..."
-  sandbox: "read-only"
+```bash
+codex exec -s read-only --color never -o review.out - <<'PROMPT'
+Review the following implementation for correctness and test quality: ...
+PROMPT
 ```
 
 ## Performance Tips
@@ -203,12 +225,12 @@ mcp__plugin_deckrd_codex-mcp__codex
 
 ## Error Handling
 
-| Symptom                          | Cause and remedy                                                              |
-| -------------------------------- | ----------------------------------------------------------------------------- |
-| The tool call never resolves     | Wrong tool name. Use the scoped form and confirm with `claude mcp list`       |
-| A codex tool is missing          | Deduplicated against another plugin. List both scoped names in `tools:`       |
-| `cocoindex-code` returns nothing | Rephrase the query, or drop the `languages` / `paths` filters                 |
-| `filesystem` access denied       | The path is outside the allowed directories; check `list_allowed_directories` |
+| Symptom                              | Cause and remedy                                                                    |
+| ------------------------------------ | ----------------------------------------------------------------------------------- |
+| The tool call never resolves         | Wrong tool name. Use the scoped form and confirm with `claude mcp list`             |
+| `codex` is not found or fails to run | Codex is a CLI, not an MCP server. Check `codex --version` and `codex login status` |
+| `cocoindex-code` returns nothing     | Rephrase the query, or drop the `languages` / `paths` filters                       |
+| `filesystem` access denied           | The path is outside the allowed directories; check `list_allowed_directories`       |
 
 ## Related Documentation
 

@@ -4,7 +4,7 @@ description: "High-level architecture and design principles of the deckrd projec
 category: "developer-guides"
 tags: ["architecture", "design", "overview"]
 created: "2026-01-14"
-version: "0.5.1"
+version: "0.6.0"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
@@ -13,6 +13,7 @@ changes:
   - 0.4.0   2026-06-19  Rename deckrd-coder to bdd-coder, update paths from plugins/ to skills/
   - 0.5.0   2026-09-06  Add codex-mcp to Layer 3 MCP servers
   - 0.5.1   2026-09-09  Convert bold-label lists to tables for textlint
+  - 0.6.0   2026-09-24  Drop codex-mcp from Layer 3; Codex moves to the CLI
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.
@@ -20,6 +21,7 @@ copyright:
 status: "published"
 ---
 
+<!-- cspell:words MSYS -->
 <!-- textlint-disable ja-technical-writing/sentence-length -->
 <!-- markdownlint-disable line-length -->
 
@@ -129,12 +131,11 @@ Easy to add new skills:
 - File read/write operations
 - Used by: deckrd, bdd-coder
 
-**codex-mcp**:
+Both are declared in `skills/deckrd/.mcp.json`.
 
-- Independent AI code review via a separate Codex session
-- Used by: `/deckrd:deckrd-review`, bdd-coder's `code-reviewer` agent
-
-All three are declared in `skills/deckrd/.mcp.json`.
+Independent Codex review is **not** an MCP server. `codex mcp-server` was removed from the
+Codex CLI, so `/deckrd:deckrd-review` and bdd-coder's `code-reviewer` agent invoke
+`codex exec` over Bash instead.
 
 ### Layer 4: Configuration & Quality Gates
 

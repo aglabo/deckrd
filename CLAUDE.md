@@ -63,7 +63,7 @@ IDD Framework location: `~/.claude/plugins/marketplaces/claude-idd-framework-mar
 | Task                 | Tool                                               |
 | -------------------- | -------------------------------------------------- |
 | Bash code analysis   | serena-mcp                                         |
-| Code generation      | codex-mcp                                          |
+| Code generation      | codex CLI (`codex exec`)                           |
 | Documentation search | Read, Grep                                         |
 | deckrd commands      | `skills/deckrd/skills/deckrd/references/commands/` |
 | bdd-coder skill      | `skills/bdd-coder/skills/bdd-coder/`               |

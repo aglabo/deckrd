@@ -4,7 +4,7 @@ description: "Configuration and usage guide for MCP servers in deckrd project"
 category: "specs"
 tags: ["mcp", "servers", "configuration", "cocoindex-code", "filesystem"]
 created: "2026-01-14"
-version: "0.1.2"
+version: "0.2.0"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
@@ -12,6 +12,7 @@ changes:
   - 0.1.0   2026-03-21  Update configuration to cocoindex-code / filesystem
   - 0.1.1   2026-09-06  Correct .mcp.json table to actual layout, add codex-mcp
   - 0.1.2   2026-09-09  Convert bold-label lists to tables for textlint
+  - 0.2.0   2026-09-24  Remove codex-mcp; Codex is configured as a CLI, not a server
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.
@@ -32,10 +33,10 @@ deckrd uses three Model Context Protocol (MCP) servers to provide specialized de
 
 MCP servers are configured per-plugin in separate `.mcp.json` files:
 
-| File                      | Plugin                | Active servers                        |
-| ------------------------- | --------------------- | ------------------------------------- |
-| `.mcp.json`               | Root (entire project) | (none)                                |
-| `skills/deckrd/.mcp.json` | deckrd plugin         | filesystem, cocoindex-code, codex-mcp |
+| File                      | Plugin                | Active servers             |
+| ------------------------- | --------------------- | -------------------------- |
+| `.mcp.json`               | Root (entire project) | (none)                     |
+| `skills/deckrd/.mcp.json` | deckrd plugin         | filesystem, cocoindex-code |
 
 ## MCP Servers
 
@@ -101,30 +102,32 @@ lang: "bash"
 
 **Used by**: deckrd
 
-### codex-mcp
+### Codex (not an MCP server)
 
-**Purpose**: AI-powered code generation and template processing.
+**Purpose**: AI-powered code generation and independent second-opinion review.
 
-**Configuration**:
+Codex was previously declared as an MCP server running `codex mcp-server`. That subcommand
+no longer exists in the Codex CLI, and the current `codex mcp` manages servers that Codex
+itself consumes, so there is nothing to declare in `.mcp.json`.
 
-```json
-{
-  "mcpServers": {
-    "codex-mcp": {
-      "type": "stdio",
-      "command": "codex",
-      "args": ["mcp-server"]
-    }
-  }
-}
+**Setup**: install the Codex CLI and authenticate once.
+
+```bash
+codex login          # opens the browser; `codex login status` shows the result
+codex --version      # confirm the CLI is on PATH
 ```
 
-**Capabilities**:
+**Invocation**: over Bash, not as a tool call.
 
-- Code generation from a prompt
-- Independent second-opinion review
+```bash
+codex exec -s read-only --color never -o <out-file> - <<'PROMPT'
+<prompt text>
+PROMPT
+```
 
-**Used by**: deckrd
+**Used by**: `/deckrd:deckrd-review`, and the `code-reviewer` agent of bdd-coder.
+
+See [MCP Servers API Reference](./mcp-servers.md) for the full option table.
 
 ## Tool Selection
 
