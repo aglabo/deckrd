@@ -23,6 +23,7 @@
 # https://opensource.org/licenses/MIT
 
 # shellcheck disable=SC1091
+# cspell:words myws mytmp
 
 _RUNTIME_LIBS_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/skills/deckrd/scripts/libs" && pwd)"
 
