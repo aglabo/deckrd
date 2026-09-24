@@ -23,6 +23,7 @@
 # https://opensource.org/licenses/MIT
 
 # shellcheck disable=SC1091
+# cspell:words myws mytmp
 
 _RUNTIME_LIBS_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/skills/deckrd/scripts/libs" && pwd)"
 
@@ -120,6 +121,11 @@ Describe "bootstrap.lib.sh"
         When call bash -c 'export -p | grep -q "^declare -x DECKRD_LOCAL_WORKSPACES=" && echo ok'
         The output should equal "ok"
       End
+
+      It "[Normal] T-LIB-BEXP-11: DECKRD_LOCAL_TEMP が export されている"
+        When call bash -c 'export -p | grep -q "^declare -x DECKRD_LOCAL_TEMP=" && echo ok'
+        The output should equal "ok"
+      End
     End
   End
 
@@ -202,6 +208,12 @@ Describe "bootstrap.lib.sh"
 
     It "[Normal] T-LIB-BFIN-11: finalize 後は DECKRD_LOCAL_WORKSPACES が readonly になっている"
       When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && ( DECKRD_LOCAL_WORKSPACES=x ) 2>/dev/null && echo writable || echo readonly"
+      The status should equal 0
+      The output should equal "readonly"
+    End
+
+    It "[Normal] T-LIB-BFIN-12: finalize 後は DECKRD_LOCAL_TEMP が readonly になっている"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && ( DECKRD_LOCAL_TEMP=x ) 2>/dev/null && echo writable || echo readonly"
       The status should equal 0
       The output should equal "readonly"
     End
@@ -660,6 +672,68 @@ Describe "bootstrap.lib.sh"
       It "[Edge] T-LIB-BLOCW-07: DECKRD_ROOT に依存せず DECKRD_LOCAL_DATA が基点になる"
         When call echo "$DECKRD_LOCAL_WORKSPACES"
         The output should equal "/tmp/proj/.local/deckrd/workspaces"
+      End
+    End
+  End
+
+  # ------------------------------------------------------------------ #
+  #  DECKRD_LOCAL_TEMP                                                 #
+  #  依存: DECKRD_LOCAL_DATA のみ (DECKRD_ROOT 非依存)                 #
+  # ------------------------------------------------------------------ #
+  Describe "T-LIB-BLOCT: DECKRD_LOCAL_TEMP"
+
+    Describe "Given: PROJECT_ROOT=/tmp/proj、DECKRD_LOCAL_TEMP 未設定"
+      Before "export PROJECT_ROOT=/tmp/proj; unset DECKRD_LOCAL_DATA; unset DECKRD_LOCAL_TEMP; bootstrap_init"
+
+      It "[Normal] T-LIB-BLOCT-01: DECKRD_LOCAL_DATA/temp になる"
+        When call echo "$DECKRD_LOCAL_TEMP"
+        The output should equal "/tmp/proj/.local/deckrd/temp"
+      End
+
+      It "[Normal] T-LIB-BLOCT-02: DECKRD_LOCAL_DATA との関係式が成立する"
+        When call test "$DECKRD_LOCAL_TEMP" = "${DECKRD_LOCAL_DATA}/temp"
+        The status should equal 0
+      End
+
+      It "[Normal] T-LIB-BLOCT-03: export -p で export されている"
+        When call bash -c 'export -p | grep -q "^declare -x DECKRD_LOCAL_TEMP=" && echo ok'
+        The output should equal "ok"
+      End
+    End
+
+    Describe "Given: DECKRD_LOCAL_TEMP=/tmp/mytmp を事前設定"
+      Before "export PROJECT_ROOT=/tmp/proj; export DECKRD_LOCAL_TEMP=/tmp/mytmp; bootstrap_init"
+
+      It "[Normal] T-LIB-BLOCT-04: 事前設定値が維持される"
+        When call echo "$DECKRD_LOCAL_TEMP"
+        The output should equal "/tmp/mytmp"
+      End
+    End
+
+    Describe "Given: DECKRD_LOCAL_TEMP='' (空文字) を事前設定"
+      Before "export PROJECT_ROOT=/tmp/proj; unset DECKRD_LOCAL_DATA; export DECKRD_LOCAL_TEMP=''; bootstrap_init"
+
+      It "[Edge] T-LIB-BLOCT-05: 空文字はデフォルト値にフォールバックする"
+        When call echo "$DECKRD_LOCAL_TEMP"
+        The output should equal "/tmp/proj/.local/deckrd/temp"
+      End
+    End
+
+    Describe "Given: PROJECT_ROOT にスペースを含むパス"
+      Before "export PROJECT_ROOT='/tmp/my project'; unset DECKRD_LOCAL_DATA; unset DECKRD_LOCAL_TEMP; bootstrap_init"
+
+      It "[Edge] T-LIB-BLOCT-06: パスが正しく連結される"
+        When call echo "$DECKRD_LOCAL_TEMP"
+        The output should equal "/tmp/my project/.local/deckrd/temp"
+      End
+    End
+
+    Describe "Given: DECKRD_ROOT=/tmp/other を設定 (DECKRD_LOCAL_DATA から独立)"
+      Before "export PROJECT_ROOT=/tmp/proj; export DECKRD_ROOT=/tmp/other; unset DECKRD_LOCAL_DATA; unset DECKRD_LOCAL_TEMP; bootstrap_init"
+
+      It "[Edge] T-LIB-BLOCT-07: DECKRD_ROOT に依存せず DECKRD_LOCAL_DATA が基点になる"
+        When call echo "$DECKRD_LOCAL_TEMP"
+        The output should equal "/tmp/proj/.local/deckrd/temp"
       End
     End
   End

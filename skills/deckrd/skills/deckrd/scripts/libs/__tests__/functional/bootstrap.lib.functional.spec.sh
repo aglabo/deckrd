@@ -198,10 +198,10 @@ Describe "bootstrap.lib.sh"
       The output should equal "ok"
     End
 
-    It "[Normal] T-LIB-BINTF-03: 公開変数 8 つが全て export されている"
+    It "[Normal] T-LIB-BINTF-03: 公開変数 10 個が全て export されている"
       When run bash -c "
         . \"$SCRIPT\"
-        expected='PROJECT_ROOT DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_LIB_DIR DECKRD_DATA_DIR DECKRD_LOCAL_DATA DECKRD_DOCS_DIR SYMBOL'
+        expected='PROJECT_ROOT DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_LIB_DIR DECKRD_DATA_DIR DECKRD_LOCAL_DATA DECKRD_LOCAL_WORKSPACES DECKRD_LOCAL_TEMP DECKRD_DOCS_DIR SYMBOL'
         for var in \$expected; do
           [[ -n \"\${!var+x}\" ]] || { echo \"missing: \$var\"; exit 1; }
         done
@@ -211,10 +211,10 @@ Describe "bootstrap.lib.sh"
       The output should equal "ok"
     End
 
-    It "[Normal] T-LIB-BINTF-04: PROJECT_ROOT〜DECKRD_DOCS_DIR の 7 変数が全て readonly になっている"
+    It "[Normal] T-LIB-BINTF-04: PROJECT_ROOT〜DECKRD_DOCS_DIR の 9 変数が全て readonly になっている"
       When run bash -c "
         . \"$SCRIPT\"
-        readonly_vars='PROJECT_ROOT DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_LIB_DIR DECKRD_DATA_DIR DECKRD_LOCAL_DATA DECKRD_DOCS_DIR'
+        readonly_vars='PROJECT_ROOT DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_LIB_DIR DECKRD_DATA_DIR DECKRD_LOCAL_DATA DECKRD_LOCAL_WORKSPACES DECKRD_LOCAL_TEMP DECKRD_DOCS_DIR'
         for var in \$readonly_vars; do
           ( eval \"\$var=x\" ) 2>/dev/null && { echo \"not readonly: \$var\"; exit 1; }
         done
