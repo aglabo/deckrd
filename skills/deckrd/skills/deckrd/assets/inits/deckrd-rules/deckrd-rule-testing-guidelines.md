@@ -1,7 +1,7 @@
 ---
 title: "Deckrd Rule: テストコード規約 (汎用)"
 description: "テストの階層・テーブル駆動・テストデータ・テスト ID・ファイル構成の規約"
-version: 2.0.0
+version: 2.0.1
 ---
 
 <!-- textlint-disable
@@ -152,7 +152,7 @@ group "T-CFG-GI: getInstance"
 `scope` を書くたびに未使用かを全テストから探してはならない。
 **モジュールが自分の `scope` を宣言し、テスト ID はその宣言から導く。**
 
-モジュールディレクトリ直下の `module.md` が宣言を持つ
+モジュールの `workspaces/modules/module.md` が宣言を持つ
 （配置は [ドキュメントモデル](deckrd-rule-document-model.md) 参照）。
 
 ```yaml

@@ -1,7 +1,7 @@
 ---
 title: "Deckrd Rule: ドキュメントモデル"
 description: "設計チェーン・ID 採番・ドキュメント命名・ディレクトリ配置を定める統一モデル"
-version: 1.3.0
+version: 2.0.0
 ---
 
 <!-- textlint-disable
@@ -93,7 +93,7 @@ grep -rl "REQ-<new-namespace>-" --include=*.md docs/.deckrd/
 
 ここで定めるのはドキュメントの ID に限る。テストコードのケースに割り当てる
 テストケース ID の第 1 セグメント (`test_scope`) は、本ルールの名前空間ではなく
-モジュール直下の `module.md` が宣言する
+モジュールの `workspaces/modules/module.md` が宣言する
 （[Testing Guidelines](deckrd-rule-testing-guidelines.md) 参照）。
 
 ### 重複検出
@@ -134,12 +134,15 @@ Deckrd の成果物は、初期化されたドキュメントルート `docs/.de
 docs/.deckrd/
   <namespace>/
     <module>/
-      module.md
       requirements/
       specifications/
       implementation/
       tasks/
       workspaces/
+        modules/
+          module.md
+      temp/
+        checklists/
       decision-records.md
 ```
 
@@ -149,37 +152,70 @@ docs/.deckrd/
 `module.md` はモジュールのメタデータを持つ。テストケース ID のスコープ宣言
 (`test_scope` / `owns`) はここに置く
 （[Testing Guidelines](deckrd-rule-testing-guidelines.md) 参照）。
+設計チェーンの成果物ではなくモジュール自身のメタデータであるため、`requirements/` などと
+同列には置かず、`workspaces/modules/` に置く。
 
-`workspaces/` はそのモジュールに関する作業用ファイルを置く場所とする。チェックリスト・
-作業メモ・下書き・調査結果・設計メモはここに入れる。`requirements/` などと同列の
-ディレクトリとする。
+### 作業用ファイルの置き場所
+
+作業用ファイルは `workspaces/` と `temp/` の 2 つに分ける。**分ける基準は
+仕様書チェーンに紐づくかどうかの 1 点とする。**
+
+| ディレクトリ  | 置くもの                                                   | Git        |
+| ------------- | ---------------------------------------------------------- | ---------- |
+| `workspaces/` | 調査結果、設計メモ、レビュー記録。チェーンに紐づく作業成果 | 管理する   |
+| `temp/`       | スクラッチ、下書き、コマンド出力、一時ログ                 | 管理しない |
+
+`temp/` が Git に載らないことは `**/temp/` が保証する。したがって置き場所を選ぶことが、
+そのまま残すかどうかを選ぶことになる。ファイル名で判断してはならない。
+
+判断に迷ったときは次の問いに答える。
+
+| 問い                                       | Yes           | No            |
+| ------------------------------------------ | ------------- | ------------- |
+| 消えたら他の人が同じ調査をやり直すか       | `workspaces/` | `temp/`       |
+| 後からレビューや決定の根拠として引かれるか | `workspaces/` | `temp/`       |
+| コマンド出力・その場限りの下書きか         | `temp/`       | `workspaces/` |
+
+**迷ったら `workspaces/` に置く。** `temp/` に入れてよいのは、消えても誰も困らないものだけとする。
+
+手書きの作業チェックリストは `temp/checklists/` に置く。
+`tasks/implementation-checklist.md` は `tasks` コマンドが生成する設計チェーンの成果物であり、
+これとは別物とする。`tasks/` に置き、Git で管理する。
+
+### 置いてよいファイル
 
 置いてよいファイルは次の表のとおりとする。これ以外のファイルは、モジュールに関するもので
-あってもすべて `workspaces/` に入れる。
+あってもすべて `workspaces/` か `temp/` に入れる。
 
 | 場所                                                         | 置いてよいもの                                                                           |
 | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
-| モジュールディレクトリ直下                                   | `module.md`、`decision-records.md`、および上のツリーが示す 5 つのディレクトリ            |
+| モジュールディレクトリ直下                                   | `decision-records.md`、および上のツリーが示す 6 つのディレクトリ                         |
 | `requirements/` `specifications/` `tasks/` `implementation/` | [2. 種別の定義](#2-種別の定義) が定めるファイル名、集約ファイル、分割時の index ファイル |
+| `workspaces/modules/`                                        | `module.md` のみ                                                                         |
+| `workspaces/`（`modules/` 以外）                             | チェーンに紐づく作業ファイル                                                             |
+| `temp/`                                                      | チェーンに紐づかない一時ファイル                                                         |
 
 規定のファイルだけが並んでいれば、一覧を見たときに消してよいものと消してはならないものが
 区別できる。作業用ファイルが混ざると、正規のドキュメントごと誤って削除・編集する危険がある。
 
 ドキュメントルート直下も同様とし、モジュールに関する作業用ファイルを置いてはならない。
 
-`workspaces/` の中身は設計チェーンの一部ではない。ID を採番せず、下流ドキュメントから
+`workspaces/` と `temp/` の中身は設計チェーンの一部ではない。ID を採番せず、下流ドキュメントから
 参照もしない。
 
 例:
 
 ```text
 docs/.deckrd/chatlog/normalize/
-  module.md
   requirements/requirements.md
   specifications/specifications.md
   implementation/implementation.md
   tasks/tasks.md
-  workspaces/rename-lib-sh-checklist.md
+  tasks/implementation-checklist.md
+  workspaces/modules/module.md
+  workspaces/rename-lib-sh-survey.md
+  temp/checklists/rename-lib-sh-checklist.md
+  temp/grep-output.txt
   decision-records.md
 ```
 
@@ -187,11 +223,14 @@ docs/.deckrd/chatlog/normalize/
 
 ```text
 docs/.deckrd/chatlog/normalize/
+  module.md                          # モジュール直下のメタデータ
   todo.md                            # モジュール直下の作業メモ
   requirements/req-draft-memo.md     # 規定の命名でない下書き
+  temp/design-review-notes.md        # 後から引かれる記録を temp に置いている
 ```
 
-どちらも `workspaces/` に移す。
+`module.md` は `workspaces/modules/` へ、残りの作業用ファイルは内容に応じて `workspaces/`
+か `temp/` へ移す。最後の 1 行はレビューで引かれる記録なので `temp/` ではなく `workspaces/` とする。
 
 ### 仕様書を分割する場合
 
@@ -212,3 +251,5 @@ specifications/specifications-notify.md
 | 採番済み ID の一覧をメモに書いておけば十分                       | メモは更新されなくなる。ドキュメント自身から導出できるものを二重管理しない                   |
 | 作業メモは一時的なので置き場所はどこでもよい                     | 置き場所が決まっていないメモは他の人から見えず、同じ調査が繰り返される                       |
 | requirements/ の中の下書きなら設計チェーンの一部だから置いてよい | 規定の命名に従わないファイルは下流から参照できない。正規のドキュメントに紛れて誤って消される |
+| 消せる場所のほうが気楽なので作業メモは全部 temp/ に入れる        | `temp/` は Git に載らない。調査結果を入れれば他の人から見えず、同じ調査が繰り返される        |
+| module.md は今まで直下にあったのだから直下でよい                 | 直下は正規のドキュメントだけが並ぶ場所とする。メタデータが混ざると一覧で区別できなくなる     |
