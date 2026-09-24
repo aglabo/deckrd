@@ -4,11 +4,11 @@ title: code-reviewer
 description: >
   Post-implementation code review agent for bdd-coder.
   Computes cyclomatic complexity (CC) and CRAP scores per function,
-  then delegates a full code review to codex-mcp for an independent
+  then delegates a full code review to the Codex CLI for an independent
   second opinion on correctness, design, and test quality.
   Spawned by the bdd-coder skill at Phase 4, or by /bdd-coder:bdd-coder-review
   on demand. Do NOT invoke directly.
-tools: Bash, Read, Grep, Glob, mcp__plugin_deckrd_codex-mcp__codex, mcp__plugin_idd_codex-mcp__codex
+tools: Bash, Read, Grep, Glob
 model: inherit
 color: yellow
 ---
@@ -87,11 +87,39 @@ Instead, classify by CC alone using the following table and mark the score as `c
 | 6–10 | WARN             | Moderate complexity; coverage is needed   |
 | ≥ 11 | CRITICAL         | High complexity; untested is unacceptable |
 
-### Phase 2: Code Review via codex-mcp
+### Phase 2: Code Review via the Codex CLI
 
-Delegate a full review to the available codex MCP tool
-(`mcp__plugin_deckrd_codex-mcp__codex` or `mcp__plugin_idd_codex-mcp__codex`)
-with the following prompt:
+Delegate a full review to Codex by running `codex exec` over Bash. Write the prompt to a
+file first, so that the placeholders below are substituted textually and nothing in the
+prompt is re-interpreted by the shell:
+
+```bash
+PROMPT_FILE="$(mktemp)"
+REVIEW_OUT="$(mktemp)"
+
+cat >"$PROMPT_FILE" <<'CODEX_PROMPT'
+<the prompt below, with every <placeholder> already filled in>
+CODEX_PROMPT
+
+codex exec -s read-only --color never -o "$REVIEW_OUT" - <"$PROMPT_FILE"
+cat "$REVIEW_OUT"
+```
+
+`-s read-only` lets Codex run `git diff` and read the tree while making it unable to
+write, which matches this agent's read-only constraint. `-o` captures just the final
+message, so no JSONL parsing is needed.
+
+**Use plain `codex exec`, not `codex exec review`.** `codex exec review` picks the diff
+scope itself (`--uncommitted` / `--base`), which would widen the review past the
+`changed_files` this agent was given and break the scope constraint below. Enumerating
+the files in the prompt keeps the review confined to them.
+
+**When Codex is unavailable** — `codex` missing from `PATH`, or `codex login status`
+reporting logged out — do NOT fail the review. Emit the Phase 1 metrics, record
+`REVIEW FINDINGS: codex unavailable — metrics only` in the report, and set the verdict
+from the CRAP scores alone. A missing second opinion is a degraded review, not a blocked one.
+
+Prompt:
 
 ```markdown
 Review the following implementation for task <task_id>.
@@ -122,12 +150,12 @@ Return findings as a structured list:
 
 ### Phase 3: Compile Report
 
-Combine metrics and codex-mcp findings into a single report:
+Combine metrics and Codex findings into a single report:
 
 ```markdown
 CODE REVIEW REPORT
 Task: <task_id>
-Reviewer: code-reviewer (codex-mcp)
+Reviewer: code-reviewer (codex exec)
 
 CRAP SCORES:
 <function> CC=<n> cov=<n>% CRAP=<n> [PASS|WARN|CRITICAL]
