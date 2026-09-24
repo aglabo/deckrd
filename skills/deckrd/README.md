@@ -106,7 +106,9 @@ deckrd stores workflow state and generated documents separately:
   - `specifications/` — specification documents
   - `implementation/` — implementation plan
   - `tasks/` — executable task documents
-  - `workspaces/` — working files for the module (checklists, notes, drafts)
+  - `workspaces/` — Git-tracked working files tied to the design chain (surveys, design notes, review records)
+    - `workspaces/modules/module.md` — module metadata (`test_scope` / `owns`)
+  - `temp/` — untracked scratch files (drafts, command output, logs); `temp/checklists/` holds hand-written work checklists
 
 You can browse the derived requirements, specifications, and tasks at any time using your editor or file explorer.
 
