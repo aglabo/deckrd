@@ -109,7 +109,11 @@ docs/.deckrd/
         ├── tasks/
         │   ├── tasks.md
         │   └── implementation-checklist.md
-        └── workspaces/           # Working files for this module (checklists, notes)
+        ├── workspaces/           # Git-tracked working files tied to the design chain
+        │   └── modules/
+        │       └── module.md     # test_scope / owns declaration
+        └── temp/                 # Untracked scratch files
+            └── checklists/
 ```
 
 ## Usage Example

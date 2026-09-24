@@ -117,7 +117,11 @@ AI runs: bash module.sh auth/user-login
    ├── specifications/
    ├── implementation/
    ├── tasks/
-   └── workspaces/
+   ├── workspaces/
+   │   └── modules/
+   │       └── module.md
+   └── temp/
+       └── checklists/
    ```
 
    - Without `--force`: exits with error if directory already exists
