@@ -20,6 +20,7 @@ copyright:
 status: "published"
 ---
 
+<!-- cspell:words MSYS -->
 <!-- textlint-disable ja-technical-writing/sentence-length -->
 <!-- markdownlint-disable line-length -->
 
