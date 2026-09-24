@@ -225,12 +225,12 @@ PROMPT
 
 ## Error Handling
 
-| Symptom                          | Cause and remedy                                                              |
-| -------------------------------- | ----------------------------------------------------------------------------- |
-| The tool call never resolves     | Wrong tool name. Use the scoped form and confirm with `claude mcp list`       |
-| A codex tool is missing          | Deduplicated against another plugin. List both scoped names in `tools:`       |
-| `cocoindex-code` returns nothing | Rephrase the query, or drop the `languages` / `paths` filters                 |
-| `filesystem` access denied       | The path is outside the allowed directories; check `list_allowed_directories` |
+| Symptom                              | Cause and remedy                                                                    |
+| ------------------------------------ | ----------------------------------------------------------------------------------- |
+| The tool call never resolves         | Wrong tool name. Use the scoped form and confirm with `claude mcp list`             |
+| `codex` is not found or fails to run | Codex is a CLI, not an MCP server. Check `codex --version` and `codex login status` |
+| `cocoindex-code` returns nothing     | Rephrase the query, or drop the `languages` / `paths` filters                       |
+| `filesystem` access denied           | The path is outside the allowed directories; check `list_allowed_directories`       |
 
 ## Related Documentation
 
