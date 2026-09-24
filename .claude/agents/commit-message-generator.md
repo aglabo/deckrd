@@ -5,9 +5,9 @@ tools: Bash, Read, Grep
 model: inherit
 
 title: commit-message-generator
-version: 0.7.0
+version: 0.8.0
 created: 2025-01-28
-updated: 2026-09-01  strengthen deterministic header, scope, and body generation
+updated: 2026-09-25  define repo-relative path normalization for diff paths
 authors:
   - atsushifx
 copyright:
@@ -39,7 +39,7 @@ Interpret the staged diff before writing.
 - Extract facts only from the diff
 - Do not infer intent, rationale, motivation, or future work
 - Treat each changed file as one review unit
-- Preserve file paths exactly as they appear in the diff
+- Normalize file paths as defined in Path Normalization
 - Identify the change surface of each file:
   - public interface or entry point
   - implementation
@@ -139,8 +139,11 @@ Review the generated message from the reviewer’s perspective.
 - Verify that the selected type matches the dominant change surface
 - Verify that the selected scope follows the Scope Selection rules
 - Verify that the summary is supported by the staged diff
+- Verify that every body path follows Path Normalization
 - Reject vague wording, broad summaries, opinions, and inferred rationale
 - Reject missing file paths
+- Reject paths that retain an `a/` or `b/` prefix
+- Reject `/dev/null` as a file path
 - Reject merged explanations across files
 - Reject descriptions of behavior not demonstrated by the diff
 - Reject duplicated descriptions of the same change
@@ -157,6 +160,7 @@ Do not output the message unless all gates pass.
 - The scope, when present, follows Scope Selection
 - The summary is backed by the staged diff
 - The body contains only diff-backed facts
+- Every body path is a repository-relative path with no `a/` or `b/` prefix
 - No body description combines facts from unrelated files
 - No rationale, opinion, or future intention is present
 - The output is deterministic in structure for the same staged diff
@@ -292,13 +296,46 @@ src/backend/openai.ts
 
 ---
 
+## Path Normalization
+
+Derive every path from the diff, then normalize it to a repository-relative path.
+
+- Strip the `a/` and `b/` prefixes from `diff --git a/<path> b/<path>`, `--- a/<path>`, and `+++ b/<path>`
+- Never write a path that still carries an `a/` or `b/` prefix
+- Treat `/dev/null` as the absence of a path, not as a path
+  - added file: take the path from the `+++ b/<path>` side
+  - deleted file: take the path from the `--- a/<path>` side
+- Unquote and unescape paths that git quotes for non-ASCII or special characters
+- Keep the path relative to the repository root and use `/` as the separator
+- Do not add a leading `./` or `/`
+
+### Renamed and Copied Files
+
+A rename or copy exposes two paths through `rename from` and `rename to`, or through `copy from` and `copy to`.
+
+- Write exactly one top-level bullet, using the destination path (`rename to` or `copy to`)
+- Do not put the source path on the bullet line
+- Record the source path as a change description under that bullet
+- Add content changes as further descriptions under the same bullet
+- Do not write a separate bullet for the source path
+
+Example:
+
+```text
+- docs/guides/workflow.md:
+  docs/workflow.md から改名
+  手順セクションの箇条書きを整理
+```
+
+---
+
 ## Body Rules
 
 The body provides file-level traceability.
 
 - Write exactly one top-level bullet for every changed file
 - Preserve changed files in diff order
-- Write the exact file path from the diff
+- Write the repository-relative path defined by Path Normalization
 - End the file path with `:`
 - Put concrete change descriptions under the file path
 - A file may contain multiple change descriptions
