@@ -27,8 +27,8 @@ status: "published"
 
 The deckrd project uses a two-layer development workflow:
 
-1. **deckrd workflow** - Planning and documentation (Goals → Tasks)
-2. **IDD Framework workflow** - Execution and GitHub integration (Issues → PRs → Commits)
+1. deckrd workflow - Planning and documentation (Goals → Tasks)
+2. IDD Framework workflow - Execution and GitHub integration (Issues → PRs → Commits)
 
 ## deckrd Workflow: Planning and Documentation
 

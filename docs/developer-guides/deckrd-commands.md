@@ -267,12 +267,12 @@ Status:
 
 ## Best Practices
 
-1. **Follow the workflow order**: Don't skip steps
-2. **Use /deckrd status frequently**: Track your progress
-3. **Iterate as needed**: Revisit earlier steps if requirements change
-4. **Keep documents focused**: Each document has a specific purpose
-5. **Use decision records**: Capture important architectural decisions
-6. **Run deckrd-review**: Get codex second opinion before phase transitions
+1. Follow the workflow order: Don't skip steps
+2. Use /deckrd status frequently: Track your progress
+3. Iterate as needed: Revisit earlier steps if requirements change
+4. Keep documents focused: Each document has a specific purpose
+5. Use decision records: Capture important architectural decisions
+6. Run deckrd-review: Get codex second opinion before phase transitions
 
 ## Integration with IDD Framework
 
