@@ -9,7 +9,7 @@ deckrd ワークフローと統合された BDD コーディングスキルで�
 - BDD 厳格プロセス: Red → Green → Refactor の各フェーズを 1 アサーションずつ確実に実施
 - マルチ言語対応: TypeScript/Vitest、Go、Rust、Shell/ShellSpec など任意の言語に対応
 - 品質ゲート統合: 型チェック・Lint・テスト・カバレッジ・CRAP スコア算出を自動実行
-- 独立コードレビュー: codex-mcp による実装者とは独立したコードレビュー
+- 独立コードレビュー: codex CLI による実装者とは独立したコードレビュー
 
 ## 使用方法
 
@@ -67,7 +67,7 @@ skills/bdd-coder/
 - `bdd-coder.md` — Red-Green-Refactor 実装エージェント
 - `checklist-builder.md` — BDD チェックリスト生成エージェント
 - `explore-agent-coder.md` — 開発環境検出エージェント
-- `code-reviewer.md` — CC/CRAP 算出・codex-mcp コードレビューエージェント
+- `code-reviewer.md` — CC/CRAP 算出・codex CLI コードレビューエージェント
 
 ## ライセンス
 
