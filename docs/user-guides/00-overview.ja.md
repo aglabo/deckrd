@@ -211,7 +211,11 @@ meta:
         ├── tasks/
         │   ├── tasks.md
         │   └── implementation-checklist.md
-        ├── workspaces/            ← モジュールの作業用ファイル
+        ├── workspaces/            ← チェーンに紐づく作業ファイル (Git 管理)
+        │   └── modules/
+        │       └── module.md      ← test_scope / owns の宣言
+        ├── temp/                  ← 一時ファイル (Git 管理外)
+        │   └── checklists/
         └── decision-records.md   (任意)
 ```
 

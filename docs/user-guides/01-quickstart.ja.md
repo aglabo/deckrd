@@ -94,7 +94,11 @@ docs/.deckrd/http/retry-client/
 ├── specifications/
 ├── implementation/
 ├── tasks/
-└── workspaces/
+├── workspaces/
+│   └── modules/
+│       └── module.md
+└── temp/
+    └── checklists/
 ```
 
 ---
