@@ -23,6 +23,3 @@ rules/
 # session filles
 *kv
 *session
-
-# checklist
-**/*checklist.md
