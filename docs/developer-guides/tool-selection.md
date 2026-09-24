@@ -4,13 +4,14 @@ description: "Guide for selecting the right tool for each development task in de
 category: "developer-guides"
 tags: ["tools", "mcp", "selection-guide", "cocoindex-code"]
 created: "2026-01-14"
-version: "0.4.0"
+version: "0.5.0"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
   - 0.0.4   2026-01-14  Initial version
   - 0.1.0   2026-03-21  Update from serena-mcp/lsmcp/codex-mcp to cocoindex-code/filesystem
   - 0.4.0   2026-06-19  Update skill paths from plugins/ to skills/, rename deckrd-coder to bdd-coder
+  - 0.5.0   2026-09-24  Replace codex-mcp with the codex CLI
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.
@@ -36,7 +37,7 @@ The deckrd project uses multiple tools and MCP servers for different tasks. This
 | Pattern search        | Grep tool      | Fast keyword search   |
 | List files            | Glob tool      | Pattern matching      |
 | File operations       | filesystem MCP | Read/write operations |
-| Code generation       | codex-mcp      | AI-powered generation |
+| Code generation       | codex CLI      | AI-powered generation |
 | Format code           | dprint         | Consistent formatting |
 | Check commit messages | commitlint     | Conventional Commits  |
 | Detect secrets        | gitleaks       | Security scanning     |
@@ -127,7 +128,10 @@ Grep "bdd-coder" --path .claude-plugin/
 
 ## For Code Generation
 
-### Use codex-mcp
+### Use the codex CLI
+
+Codex is reached with `codex exec` over Bash. It is not an MCP server — `codex mcp-server`
+was removed from the CLI.
 
 **When**:
 
@@ -208,7 +212,7 @@ What do you need?
   ├─ Specific file? → Read tool
   ├─ Find files by pattern? → Glob
   ├─ Search content? → Grep or cocoindex-code
-  └─ Generate code? → codex-mcp
+  └─ Generate code? → codex CLI (`codex exec`)
 ```
 
 ### For Project Understanding
