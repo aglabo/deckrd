@@ -31,6 +31,10 @@ setup_deckrd_tmpdir_with_project() {
 
 Describe "module.sh"
 
+  # モジュールディレクトリから見た module.md の相対ディレクトリ
+  # 実装側の MODULE_META_SUBDIR (module.sh) と値を一致させること
+  _META_SUBDIR='workspaces/modules'
+
   Describe "T-CLI-MOD: module.sh の引数処理とディレクトリ生成"
 
     # --------------------------------------------------------------------------
@@ -192,6 +196,15 @@ Describe "module.sh"
           The path "${DECKRD_DOCS_DIR}/myns/mymod/specifications" should be directory
           The path "${DECKRD_DOCS_DIR}/myns/mymod/.project.json" should not be exist
         End
+
+        It "[Normal] T-CLI-MOD-14: Should: create the module declaration directory and the working directories"
+          When run bash "$SCRIPT" create myns/mymod
+          The status should equal 0
+          The output should include "temp/checklists"
+          The path "${DECKRD_DOCS_DIR}/myns/mymod/${_META_SUBDIR}" should be directory
+          The path "${DECKRD_DOCS_DIR}/myns/mymod/temp" should be directory
+          The path "${DECKRD_DOCS_DIR}/myns/mymod/temp/checklists" should be directory
+        End
       End
 
       Describe "When: run create with invalid namespace 'my ns/mymod'"
@@ -314,13 +327,13 @@ Describe "module.sh"
       . "$SCRIPT"
     }
 
-    # Helper: 一時 docs ディレクトリに <namespace>/<module>/module.md を作る
+    # Helper: 一時 docs ディレクトリに <namespace>/<module>/workspaces/modules/module.md を作る
     # shellcheck disable=SC2329
     write_module_md() {
       local module_path="$1"
       shift
-      mkdir -p "${DECKRD_DOCS_DIR}/${module_path}"
-      printf '%s\n' "$@" >"${DECKRD_DOCS_DIR}/${module_path}/module.md"
+      mkdir -p "${DECKRD_DOCS_DIR}/${module_path}/${_META_SUBDIR}"
+      printf '%s\n' "$@" >"${DECKRD_DOCS_DIR}/${module_path}/${_META_SUBDIR}/module.md"
     }
 
     Before "setup_deckrd_tmpdir" "load_module_functions_for_scopes"
@@ -338,7 +351,7 @@ Describe "module.sh"
         It "[Normal] T-CLI-CDS-01: Should: exit with status 0 and output '<test_scope><TAB><relative module.md path>' per module"
           When call collect_declared_scopes
           The status should equal 0
-          The output should equal "$(printf 'NOR\talpha/normalize/module.md\nPAR\tbravo/parser/module.md')"
+          The output should equal "$(printf 'NOR\talpha/normalize/workspaces/modules/module.md\nPAR\tbravo/parser/workspaces/modules/module.md')"
         End
       End
     End
@@ -354,7 +367,7 @@ Describe "module.sh"
         It "[Normal] T-CLI-CDS-02: Should: exit with status 0 and output the scope with surrounding whitespace stripped"
           When call collect_declared_scopes
           The status should equal 0
-          The output should equal "$(printf 'PAD\tcharlie/padded/module.md')"
+          The output should equal "$(printf 'PAD\tcharlie/padded/workspaces/modules/module.md')"
         End
       End
     End
@@ -371,7 +384,7 @@ Describe "module.sh"
         It "[Normal] T-CLI-CDS-03: Should: exit with status 0 and output only the module that declares test_scope"
           When call collect_declared_scopes
           The status should equal 0
-          The output should equal "$(printf 'ECH\techo/scoped/module.md')"
+          The output should equal "$(printf 'ECH\techo/scoped/workspaces/modules/module.md')"
         End
       End
     End
@@ -400,7 +413,7 @@ Describe "module.sh"
         It "[Edge] T-CLI-CDS-05: Should: exit with status 0 and read test_scope only from the frontmatter"
           When call collect_declared_scopes
           The status should equal 0
-          The output should equal "$(printf 'GOL\tgolf/both/module.md')"
+          The output should equal "$(printf 'GOL\tgolf/both/workspaces/modules/module.md')"
         End
       End
     End
@@ -416,7 +429,7 @@ Describe "module.sh"
         It "[Normal] T-CLI-CDS-06: Should: exit with status 0 and output the scope with the surrounding double quotes stripped"
           When call collect_declared_scopes
           The status should equal 0
-          The output should equal "$(printf 'QDQ\tindia/quoted/module.md')"
+          The output should equal "$(printf 'QDQ\tindia/quoted/workspaces/modules/module.md')"
         End
       End
     End
@@ -432,7 +445,7 @@ Describe "module.sh"
         It "[Normal] T-CLI-CDS-07: Should: exit with status 0 and output the scope with the surrounding single quotes stripped"
           When call collect_declared_scopes
           The status should equal 0
-          The output should equal "$(printf 'QSQ\tjuliett/quoted/module.md')"
+          The output should equal "$(printf 'QSQ\tjuliett/quoted/workspaces/modules/module.md')"
         End
       End
     End
@@ -448,7 +461,7 @@ Describe "module.sh"
         It "[Edge] T-CLI-CDS-08: Should: exit with status 0 and output the scope with both the whitespace and the quotes stripped"
           When call collect_declared_scopes
           The status should equal 0
-          The output should equal "$(printf 'QPD\tkilo/padded/module.md')"
+          The output should equal "$(printf 'QPD\tkilo/padded/workspaces/modules/module.md')"
         End
       End
     End
@@ -464,7 +477,7 @@ Describe "module.sh"
         It "[Error] T-CLI-CDS-09: Should: exit with status 0 and keep the unmatched trailing quote"
           When call collect_declared_scopes
           The status should equal 0
-          The output should equal "$(printf 'QTR"\tlima/unbalanced/module.md')"
+          The output should equal "$(printf 'QTR"\tlima/unbalanced/workspaces/modules/module.md')"
         End
       End
     End
@@ -480,7 +493,7 @@ Describe "module.sh"
         It "[Error] T-CLI-CDS-10: Should: exit with status 0 and keep the unmatched leading quote"
           When call collect_declared_scopes
           The status should equal 0
-          The output should equal "$(printf '"QLD\tmike/unbalanced/module.md')"
+          The output should equal "$(printf '"QLD\tmike/unbalanced/workspaces/modules/module.md')"
         End
       End
     End
@@ -496,7 +509,7 @@ Describe "module.sh"
         It "[Error] T-CLI-CDS-11: Should: exit with status 0 and keep both mismatched quotes"
           When call collect_declared_scopes
           The status should equal 0
-          The output should equal "$(printf "'QMX\"\tnovember/unbalanced/module.md")"
+          The output should equal "$(printf "'QMX\"\tnovember/unbalanced/workspaces/modules/module.md")"
         End
       End
     End
@@ -512,7 +525,7 @@ Describe "module.sh"
         It "[Edge] T-CLI-CDS-12: Should: exit with status 0 and keep the empty quote pair as a declared but invalid value"
           When call collect_declared_scopes
           The status should equal 0
-          The output should equal "$(printf '""\toscar/emptyquotes/module.md')"
+          The output should equal "$(printf '""\toscar/emptyquotes/workspaces/modules/module.md')"
           The stderr should equal ""
         End
       End
@@ -529,7 +542,7 @@ Describe "module.sh"
         It "[Edge] T-CLI-CDS-14: Should: exit with status 0 and keep the empty quote pair as a declared but invalid value"
           When call collect_declared_scopes
           The status should equal 0
-          The output should equal "$(printf "''\tquebec/emptysinglequotes/module.md")"
+          The output should equal "$(printf "''\tquebec/emptysinglequotes/workspaces/modules/module.md")"
           The stderr should equal ""
         End
       End
@@ -548,7 +561,7 @@ Describe "module.sh"
         It "[Edge] T-CLI-CDS-15: Should: exit with status 0 and strip the trailing carriage return as whitespace"
           When call collect_declared_scopes
           The status should equal 0
-          The output should equal "$(printf 'ALP\tromeo/crscope/module.md')"
+          The output should equal "$(printf 'ALP\tromeo/crscope/workspaces/modules/module.md')"
           The stderr should equal ""
         End
       End
@@ -565,7 +578,7 @@ Describe "module.sh"
         It "[Edge] T-CLI-CDS-13: Should: exit with status 0 and keep the lone quote because it has no pair"
           When call collect_declared_scopes
           The status should equal 0
-          The output should equal "$(printf '"\tpapa/lonequote/module.md')"
+          The output should equal "$(printf '"\tpapa/lonequote/workspaces/modules/module.md')"
         End
       End
     End
@@ -594,9 +607,9 @@ Describe "module.sh"
     declare_raw_module_scope() {
       local module_path="$1"
       local raw_value="$2"
-      mkdir -p "${DECKRD_DOCS_DIR}/${module_path}"
+      mkdir -p "${DECKRD_DOCS_DIR}/${module_path}/${_META_SUBDIR}"
       printf '%s\n' "---" "title: normalize" "test_scope: ${raw_value}" "---" \
-        >"${DECKRD_DOCS_DIR}/${module_path}/module.md"
+        >"${DECKRD_DOCS_DIR}/${module_path}/${_META_SUBDIR}/module.md"
     }
 
     Before "setup_deckrd_tmpdir" "load_module_functions_for_read_declared"
@@ -680,13 +693,14 @@ Describe "module.sh"
       . "$SCRIPT"
     }
 
-    # Helper: 一時 docs ディレクトリに <namespace>/<module>/module.md を作る
+    # Helper: 一時 docs ディレクトリに <namespace>/<module>/workspaces/modules/module.md を作る
     # shellcheck disable=SC2329
     declare_module_scope() {
       local module_path="$1"
       local scope="$2"
-      mkdir -p "${DECKRD_DOCS_DIR}/${module_path}"
-      printf '%s\n' "---" "test_scope: ${scope}" "---" >"${DECKRD_DOCS_DIR}/${module_path}/module.md"
+      mkdir -p "${DECKRD_DOCS_DIR}/${module_path}/${_META_SUBDIR}"
+      printf '%s\n' "---" "test_scope: ${scope}" "---" \
+        >"${DECKRD_DOCS_DIR}/${module_path}/${_META_SUBDIR}/module.md"
     }
 
     Before "setup_deckrd_tmpdir" "load_module_functions_for_resolve"
@@ -762,7 +776,7 @@ Describe "module.sh"
           When call resolve_test_scope "alpha/normalize"
           The status should equal 1
           The stderr should include "conflict"
-          The stderr should include "bravo/notation/module.md"
+          The stderr should include "bravo/notation/workspaces/modules/module.md"
           The stderr should include "--test-scope"
           The output should equal ""
         End
@@ -773,7 +787,7 @@ Describe "module.sh"
           When call resolve_test_scope "alpha/normalize" "NOR"
           The status should equal 1
           The stderr should include "conflict"
-          The stderr should include "bravo/notation/module.md"
+          The stderr should include "bravo/notation/workspaces/modules/module.md"
           The stderr should include "--test-scope"
           The output should equal ""
         End
@@ -828,7 +842,7 @@ Describe "module.sh"
           When call resolve_test_scope "alpha/normalize" "NOR"
           The status should equal 1
           The stderr should include "conflict"
-          The stderr should include "bravo/notation/module.md"
+          The stderr should include "bravo/notation/workspaces/modules/module.md"
           The stderr should include "--test-scope"
           The output should equal ""
         End
@@ -847,7 +861,7 @@ Describe "module.sh"
           When call resolve_test_scope "alpha/normalize" "NOR"
           The status should equal 1
           The stderr should include "conflict"
-          The stderr should include "bravo/notation/module.md"
+          The stderr should include "bravo/notation/workspaces/modules/module.md"
           The stderr should include "--test-scope"
           The output should equal ""
         End
@@ -904,8 +918,8 @@ Describe "module.sh"
           When run bash "$SCRIPT" myns/mymod
           The status should equal 0
           The output should include "module.md"
-          The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/module.md" should include "title: mymod"
-          The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/module.md" should include "test_scope: MYM"
+          The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/${_META_SUBDIR}/module.md" should include "title: mymod"
+          The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/${_META_SUBDIR}/module.md" should include "test_scope: MYM"
           The contents of file "${DECKRD_LOCAL_DATA}/session.json" should include '"test_scope": "MYM"'
         End
       End
@@ -920,7 +934,7 @@ Describe "module.sh"
           When run bash "$SCRIPT" myns/mymod --test-scope XY
           The status should equal 0
           The output should include "module.md"
-          The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/module.md" should include "test_scope: XY"
+          The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/${_META_SUBDIR}/module.md" should include "test_scope: XY"
         End
       End
     End
@@ -929,8 +943,9 @@ Describe "module.sh"
       # shellcheck disable=SC2329
       setup_conflicting_declaration() {
         setup_deckrd_tmpdir
-        mkdir -p "${DECKRD_DOCS_DIR}/otherns/othermod"
-        printf '%s\n' "---" "test_scope: XY" "---" >"${DECKRD_DOCS_DIR}/otherns/othermod/module.md"
+        mkdir -p "${DECKRD_DOCS_DIR}/otherns/othermod/${_META_SUBDIR}"
+        printf '%s\n' "---" "test_scope: XY" "---" \
+          >"${DECKRD_DOCS_DIR}/otherns/othermod/${_META_SUBDIR}/module.md"
       }
       Before "setup_conflicting_declaration"
       After "teardown_deckrd_tmpdir"
@@ -941,8 +956,8 @@ Describe "module.sh"
           The status should equal 1
           The output should include "Initializing module"
           The stderr should include "conflict"
-          The stderr should include "otherns/othermod/module.md"
-          The path "${DECKRD_DOCS_DIR}/myns/mymod/module.md" should not be exist
+          The stderr should include "otherns/othermod/workspaces/modules/module.md"
+          The path "${DECKRD_DOCS_DIR}/myns/mymod/${_META_SUBDIR}/module.md" should not be exist
         End
       End
     End
@@ -951,8 +966,9 @@ Describe "module.sh"
       # shellcheck disable=SC2329
       setup_existing_module_meta() {
         setup_deckrd_tmpdir
-        mkdir -p "${DECKRD_DOCS_DIR}/myns/mymod"
-        printf '%s\n' "---" "title: mymod" "test_scope: ZZ" "---" >"${DECKRD_DOCS_DIR}/myns/mymod/module.md"
+        mkdir -p "${DECKRD_DOCS_DIR}/myns/mymod/${_META_SUBDIR}"
+        printf '%s\n' "---" "title: mymod" "test_scope: ZZ" "---" \
+          >"${DECKRD_DOCS_DIR}/myns/mymod/${_META_SUBDIR}/module.md"
       }
       Before "setup_existing_module_meta"
       After "teardown_deckrd_tmpdir"
@@ -962,7 +978,7 @@ Describe "module.sh"
           When run bash "$SCRIPT" myns/mymod --force
           The status should equal 0
           The output should include "module.md"
-          The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/module.md" should include "test_scope: ZZ"
+          The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/${_META_SUBDIR}/module.md" should include "test_scope: ZZ"
         End
       End
     End
@@ -995,7 +1011,7 @@ Describe "module.sh"
           When run bash "$SCRIPT" myns/mymod --force
           The status should equal 0
           The output should include "module.md"
-          The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/module.md" should include "test_scope: XY"
+          The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/${_META_SUBDIR}/module.md" should include "test_scope: XY"
           The contents of file "${DECKRD_LOCAL_DATA}/session.json" should include '"test_scope": "XY"'
           The contents of file "${DECKRD_LOCAL_DATA}/session.json" should not include '"test_scope": "MYM"'
         End
@@ -1006,9 +1022,12 @@ Describe "module.sh"
       # shellcheck disable=SC2329
       setup_derived_scope_taken_by_third_module() {
         setup_deckrd_tmpdir_with_project
-        mkdir -p "${DECKRD_DOCS_DIR}/myns/mymod" "${DECKRD_DOCS_DIR}/thirdns/thirdmod"
-        printf '%s\n' "---" "title: mymod" "test_scope: XY" "---" >"${DECKRD_DOCS_DIR}/myns/mymod/module.md"
-        printf '%s\n' "---" "title: thirdmod" "test_scope: MYM" "---" >"${DECKRD_DOCS_DIR}/thirdns/thirdmod/module.md"
+        mkdir -p "${DECKRD_DOCS_DIR}/myns/mymod/${_META_SUBDIR}" \
+          "${DECKRD_DOCS_DIR}/thirdns/thirdmod/${_META_SUBDIR}"
+        printf '%s\n' "---" "title: mymod" "test_scope: XY" "---" \
+          >"${DECKRD_DOCS_DIR}/myns/mymod/${_META_SUBDIR}/module.md"
+        printf '%s\n' "---" "title: thirdmod" "test_scope: MYM" "---" \
+          >"${DECKRD_DOCS_DIR}/thirdns/thirdmod/${_META_SUBDIR}/module.md"
       }
       Before "setup_derived_scope_taken_by_third_module"
       After "teardown_deckrd_tmpdir"
@@ -1028,9 +1047,9 @@ Describe "module.sh"
       # shellcheck disable=SC2329
       setup_quoted_declaration() {
         setup_deckrd_tmpdir_with_project
-        mkdir -p "${DECKRD_DOCS_DIR}/myns/mymod"
+        mkdir -p "${DECKRD_DOCS_DIR}/myns/mymod/${_META_SUBDIR}"
         printf '%s\n' "---" "title: mymod" 'test_scope: "ZZ"' "---" \
-          >"${DECKRD_DOCS_DIR}/myns/mymod/module.md"
+          >"${DECKRD_DOCS_DIR}/myns/mymod/${_META_SUBDIR}/module.md"
       }
       Before "setup_quoted_declaration"
       After "teardown_deckrd_tmpdir"
@@ -1042,7 +1061,7 @@ Describe "module.sh"
           The stderr should not include "invalid test scope"
           The output should include "kept existing test_scope"
           The contents of file "${DECKRD_LOCAL_DATA}/session.json" should include '"test_scope": "ZZ"'
-          The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/module.md" should include 'test_scope: "ZZ"'
+          The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/${_META_SUBDIR}/module.md" should include 'test_scope: "ZZ"'
         End
       End
     End

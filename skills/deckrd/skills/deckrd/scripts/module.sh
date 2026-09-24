@@ -65,8 +65,19 @@ SESSION_FILE="${DECKRD_LOCAL_DATA}/session.json"
 readonly SESSION_FILE
 
 ##
+# @description モジュールディレクトリから見た、モジュール宣言ファイルの相対ディレクトリ
+# @description 正典は docs/.deckrd/rules/deckrd-rule-document-model.md の §4 ディレクトリ配置
+# @description 検査側の同名定数は runners/run-check-test-ids.sh にある (値を一致させること)
+MODULE_META_SUBDIR='workspaces/modules'
+readonly MODULE_META_SUBDIR
+
+##
 # @description Module subdirectories to create
-SUBDIRS=("requirements" "specifications" "implementation" "tasks" "workspaces")
+SUBDIRS=(
+  "requirements" "specifications" "implementation" "tasks"
+  "workspaces" "${MODULE_META_SUBDIR}"
+  "temp" "temp/checklists"
+)
 readonly SUBDIRS
 
 ##
@@ -120,7 +131,10 @@ Created directories:
     ├── implementation/
     ├── tasks/
     ├── workspaces/
-    └── module.md
+    │   └── modules/
+    │       └── module.md
+    └── temp/
+        └── checklists/
 
 Session file:
   .local/deckrd/session.json
@@ -338,13 +352,13 @@ _read_frontmatter_scope() {
 
 ##
 # @description List the test scopes already declared by existing modules
-# @description Reads test_scope from the frontmatter of ${DECKRD_DOCS_DIR}/*/*/module.md
+# @description Reads test_scope from the frontmatter of ${DECKRD_DOCS_DIR}/*/*/${MODULE_META_SUBDIR}/module.md
 # @stdout One line per declared scope: <test_scope><TAB><path relative to DECKRD_DOCS_DIR>
 # @exitcode 0 Always (no module.md means no output)
 collect_declared_scopes() {
   local module_file scope
 
-  for module_file in "${DECKRD_DOCS_DIR}"/*/*/module.md; do
+  for module_file in "${DECKRD_DOCS_DIR}"/*/*/"${MODULE_META_SUBDIR}"/module.md; do
     # nullglob is not set: an unmatched glob stays as a literal path
     [[ -f "$module_file" ]] || continue
     scope=$(_read_frontmatter_scope "$module_file")
@@ -361,7 +375,7 @@ collect_declared_scopes() {
 # @stdout The declared test scope, or nothing when module.md or its test_scope is absent
 # @exitcode 0 Always (an absent declaration is not an error)
 read_declared_scope() {
-  local module_file="${DECKRD_DOCS_DIR}/$1/module.md"
+  local module_file="${DECKRD_DOCS_DIR}/$1/${MODULE_META_SUBDIR}/module.md"
 
   [[ -f "$module_file" ]] || return 0
   _read_frontmatter_scope "$module_file"
@@ -404,7 +418,7 @@ resolve_test_scope() {
   declared=$(collect_declared_scopes)
   while IFS=$'\t' read -r scope owner; do
     # The module's own declaration is not a conflict (--force re-initialization)
-    [[ "$owner" != "${path}/module.md" ]] || continue
+    [[ "$owner" != "${path}/${MODULE_META_SUBDIR}/module.md" ]] || continue
     [[ "$scope" == "$candidate" ]] || continue
     echo "Error: test scope '${candidate}' conflicts with an existing module" >&2
     echo "  already declared in: ${owner}" >&2
@@ -441,7 +455,7 @@ create_module_dirs() {
 }
 
 ##
-# @description Create the module metadata file (module.md)
+# @description Create the module metadata file (<namespace>/<module>/${MODULE_META_SUBDIR}/module.md)
 # @description An existing module.md is left untouched so that --force re-initialization keeps its test_scope
 # @arg $1 string Normalized module path (namespace/module)
 # @arg $2 string Resolved test scope
@@ -451,7 +465,7 @@ create_module_meta() {
   local path="$1"
   local scope="$2"
   local module="${path#*/}"
-  local base="${DECKRD_DOCS_DIR}/${path}"
+  local base="${DECKRD_DOCS_DIR}/${path}/${MODULE_META_SUBDIR}"
   local meta_file="${base}/module.md"
 
   if [[ -f "$meta_file" ]]; then
