@@ -132,10 +132,13 @@ Or resume existing module:
 For the active module, documents are located at:
 
 ```bash
-${DECKRD_DOCS}/<namespace>/<module>/<document-type>/<filename>
+${DECKRD_DOCS_DIR}/<namespace>/<module>/<document-type>/<filename>
 ```
 
-Default (`DECKRD_DOCS` = `<repo-root>/docs/.deckrd`):
+`DECKRD_DOCS_DIR` is exported by `bootstrap.lib.sh`. `DECKRD_DOCS` remains a
+backward-compatible override: when set and non-empty it wins over `DECKRD_DOCS_DIR`.
+
+Default (`DECKRD_DOCS_DIR` = `<repo-root>/docs/.deckrd`):
 
 ```bash
 docs/.deckrd/agt-kind/is-collection/requirements/requirements.md

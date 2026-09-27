@@ -33,7 +33,7 @@ Active Module: agt-kind/is-collection
 Current Step:  spec
 Completed:     module, req
 
-Module Path:   docs/.deckrd/agt-kind/is-collection  (DECKRD_DOCS default)
+Module Path:   docs/.deckrd/agt-kind/is-collection  (DECKRD_DOCS_DIR default)
 
 Configuration:
   Language:    ja
