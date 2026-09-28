@@ -54,7 +54,7 @@ _resolve_deckrd_root() {
 
 # bootstrap_init - Set all runtime variables (no readonly yet)
 #
-# Sets: PROJECT_ROOT, DECKRD_ROOT, DECKRD_SCRIPTS_DIR,
+# Sets: PROJECT_ROOT, DECKRD_ROOT, DECKRD_SCRIPTS_DIR, DECKRD_ASSETS_DIR,
 #       DECKRD_LIB_DIR, DECKRD_DATA_DIR, DECKRD_LOCAL_DATA,
 #       DECKRD_LOCAL_WORKSPACES, DECKRD_DOCS_DIR, SYMBOL
 # All variables respect pre-existing values (env var > computed default).
@@ -83,6 +83,10 @@ bootstrap_init() {
   # DECKRD_SCRIPTS_DIR: deckrd scripts directory
   DECKRD_SCRIPTS_DIR="${DECKRD_SCRIPTS_DIR:-${DECKRD_ROOT}/scripts}"
   export DECKRD_SCRIPTS_DIR
+
+  # DECKRD_ASSETS_DIR: deckrd assets directory
+  DECKRD_ASSETS_DIR="${DECKRD_ASSETS_DIR:-${DECKRD_ROOT}/assets}"
+  export DECKRD_ASSETS_DIR
 
   # DECKRD_LIB_DIR: deckrd library directory
   DECKRD_LIB_DIR="${DECKRD_LIB_DIR:-${DECKRD_ROOT}/scripts/libs}"
@@ -127,6 +131,7 @@ bootstrap_finalize() {
   readonly PROJECT_ROOT
   readonly DECKRD_ROOT
   readonly DECKRD_SCRIPTS_DIR
+  readonly DECKRD_ASSETS_DIR
   readonly DECKRD_LIB_DIR
   readonly DECKRD_DATA_DIR
   readonly DECKRD_LOCAL_DATA

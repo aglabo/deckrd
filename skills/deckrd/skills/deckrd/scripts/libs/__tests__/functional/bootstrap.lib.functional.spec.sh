@@ -101,6 +101,24 @@ Describe "bootstrap.lib.sh"
   End
 
   # ------------------------------------------------------------------ #
+  #  DECKRD_ASSETS_DIR: 事前設定の維持と実アセットツリー                 #
+  # ------------------------------------------------------------------ #
+  Describe "T-LIB-BASSETF: DECKRD_ASSETS_DIR: 事前設定維持と実アセットツリー"
+
+    It "[Normal] T-LIB-BASSETF-01: 事前設定値が維持される"
+      When run bash -c "export DECKRD_ASSETS_DIR=/tmp/custom-assets; . \"$SCRIPT\" && echo \"\$DECKRD_ASSETS_DIR\""
+      The status should equal 0
+      The output should equal "/tmp/custom-assets"
+    End
+
+    It "[Normal] T-LIB-BASSETF-02: 既定値の実ディレクトリが prompts/ と templates/ を持つ"
+      When run bash -c "unset DECKRD_ASSETS_DIR; . \"$SCRIPT\" && [[ -d \"\$DECKRD_ASSETS_DIR\" && -d \"\${DECKRD_ASSETS_DIR}/prompts\" && -d \"\${DECKRD_ASSETS_DIR}/templates\" ]] && echo ok"
+      The status should equal 0
+      The output should equal "ok"
+    End
+  End
+
+  # ------------------------------------------------------------------ #
   #  PROJECT_ROOT 起点の連鎖 (LOCAL_DATA/DOCS)                         #
   # ------------------------------------------------------------------ #
   Describe "T-LIB-BLOCDF: DECKRD_LOCAL_DATA / DECKRD_DOCS_DIR: PROJECT_ROOT 連鎖"
@@ -198,10 +216,10 @@ Describe "bootstrap.lib.sh"
       The output should equal "ok"
     End
 
-    It "[Normal] T-LIB-BINTF-03: 公開変数 8 つが全て export されている"
+    It "[Normal] T-LIB-BINTF-03: bootstrap_init が設定する公開変数 10 個が全て export されている"
       When run bash -c "
         . \"$SCRIPT\"
-        expected='PROJECT_ROOT DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_LIB_DIR DECKRD_DATA_DIR DECKRD_LOCAL_DATA DECKRD_DOCS_DIR SYMBOL'
+        expected='PROJECT_ROOT DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_ASSETS_DIR DECKRD_LIB_DIR DECKRD_DATA_DIR DECKRD_LOCAL_DATA DECKRD_LOCAL_WORKSPACES DECKRD_DOCS_DIR SYMBOL'
         for var in \$expected; do
           [[ -n \"\${!var+x}\" ]] || { echo \"missing: \$var\"; exit 1; }
         done
@@ -211,10 +229,10 @@ Describe "bootstrap.lib.sh"
       The output should equal "ok"
     End
 
-    It "[Normal] T-LIB-BINTF-04: PROJECT_ROOT〜DECKRD_DOCS_DIR の 7 変数が全て readonly になっている"
+    It "[Normal] T-LIB-BINTF-04: bootstrap_finalize が locking する 10 変数が全て readonly になっている"
       When run bash -c "
         . \"$SCRIPT\"
-        readonly_vars='PROJECT_ROOT DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_LIB_DIR DECKRD_DATA_DIR DECKRD_LOCAL_DATA DECKRD_DOCS_DIR'
+        readonly_vars='PROJECT_ROOT DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_ASSETS_DIR DECKRD_LIB_DIR DECKRD_DATA_DIR DECKRD_LOCAL_DATA DECKRD_LOCAL_WORKSPACES DECKRD_DOCS_DIR SYMBOL'
         for var in \$readonly_vars; do
           ( eval \"\$var=x\" ) 2>/dev/null && { echo \"not readonly: \$var\"; exit 1; }
         done

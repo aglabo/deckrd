@@ -182,6 +182,12 @@ Describe "bootstrap.lib.sh"
       The output should equal "readonly"
     End
 
+    It "[Normal] T-LIB-BFIN-12: finalize 後は DECKRD_ASSETS_DIR が readonly になっている"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && ( DECKRD_ASSETS_DIR=x ) 2>/dev/null && echo writable || echo readonly"
+      The status should equal 0
+      The output should equal "readonly"
+    End
+
     It "[Normal] T-LIB-BFIN-05: finalize 後は DECKRD_LIB_DIR が readonly になっている"
       When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && ( DECKRD_LIB_DIR=x ) 2>/dev/null && echo writable || echo readonly"
       The status should equal 0
@@ -401,6 +407,45 @@ Describe "bootstrap.lib.sh"
       It "[Edge] T-LIB-BSCR-06: PROJECT_ROOT に依存せず DECKRD_ROOT が基点になる"
         When call echo "$DECKRD_SCRIPTS_DIR"
         The output should equal "/tmp/deckrd/scripts"
+      End
+    End
+  End
+
+  # ------------------------------------------------------------------ #
+  #  DECKRD_ASSETS_DIR                                                  #
+  #  依存: DECKRD_ROOT のみ                                            #
+  # ------------------------------------------------------------------ #
+  Describe "T-LIB-BASSET: DECKRD_ASSETS_DIR"
+
+    Describe "Given: PROJECT_ROOT=/tmp/proj、DECKRD_ROOT=/tmp/deckrd、DECKRD_ASSETS_DIR 未設定"
+      Before "export PROJECT_ROOT=/tmp/proj; export DECKRD_ROOT=/tmp/deckrd; unset DECKRD_ASSETS_DIR; bootstrap_init"
+
+      It "[Normal] T-LIB-BASSET-01: DECKRD_ROOT/assets になる"
+        When call echo "$DECKRD_ASSETS_DIR"
+        The output should equal "/tmp/deckrd/assets"
+      End
+
+      It "[Normal] T-LIB-BASSET-02: export -p で export されている"
+        When call bash -c 'export -p | grep -q "^declare -x DECKRD_ASSETS_DIR=" && echo ok'
+        The output should equal "ok"
+      End
+    End
+
+    Describe "Given: DECKRD_ROOT にスペースを含むパス"
+      Before "export PROJECT_ROOT=/tmp/proj; export DECKRD_ROOT='/tmp/my deckrd'; unset DECKRD_ASSETS_DIR; bootstrap_init"
+
+      It "[Edge] T-LIB-BASSET-03: パスが正しく連結される"
+        When call echo "$DECKRD_ASSETS_DIR"
+        The output should equal "/tmp/my deckrd/assets"
+      End
+    End
+
+    Describe "Given: PROJECT_ROOT=/tmp/other を設定 (DECKRD_ROOT から独立)"
+      Before "export PROJECT_ROOT=/tmp/other; export DECKRD_ROOT=/tmp/deckrd; unset DECKRD_ASSETS_DIR; bootstrap_init"
+
+      It "[Edge] T-LIB-BASSET-04: PROJECT_ROOT に依存せず DECKRD_ROOT が基点になる"
+        When call echo "$DECKRD_ASSETS_DIR"
+        The output should equal "/tmp/deckrd/assets"
       End
     End
   End
