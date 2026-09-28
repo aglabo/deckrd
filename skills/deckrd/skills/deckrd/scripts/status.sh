@@ -45,7 +45,8 @@ validate_env || exit 1
 # Initialize configuration variables (mock-friendly)
 init_vars() {
   SESSION_FILE="${SESSION_FILE:-${DECKRD_LOCAL_DATA}/session.json}"
-  DECKRD_DOCS="${DECKRD_DOCS:-${PROJECT_ROOT}/docs/.deckrd}"
+  # DECKRD_DOCS is a backward-compatible override; bootstrap exports DECKRD_DOCS_DIR.
+  DECKRD_DOCS="${DECKRD_DOCS:-${DECKRD_DOCS_DIR}}"
   WORKFLOW_STEPS=(module req spec impl tasks)
 }
 
