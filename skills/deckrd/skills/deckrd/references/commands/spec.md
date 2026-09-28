@@ -132,7 +132,7 @@ deckrd/assets/
 Execute: [generate-doc.sh](../../scripts/subcommands/generate-doc.sh)
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh @specifications @requirements/requirements.md [--lang <lang>] --output "specifications/specifications.md"
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/subcommands/generate-doc.sh @specifications @requirements/requirements.md [--lang <lang>] --output "specifications/specifications.md"
 ```
 
 > **Note**:
@@ -141,7 +141,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh @specifications @requirements
 
 ## Session Update
 
-After Phase 12 (or Phase 11 if Phase 12 is skipped), update `.session.json`:
+After Phase 12 (or Phase 11 if Phase 12 is skipped), update `.local/deckrd/session.json`:
 
 ```json
 {
