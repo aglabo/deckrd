@@ -66,21 +66,21 @@ Describe "ai-runner.sh"
         It "Then: [Error] T-LIB-RAI-01: copilot 非対応モデルは exit 1 と 'unsupported model' を返す"
           When call run_ai "copilot/unknown-model"
           The status should equal 1
-          The output should equal "1"
+          The output should equal ""
           The error should include "unsupported model"
         End
 
         It "Then: [Error] T-LIB-RAI-02: github/unknown-model は exit 1 と 'unsupported model' を返す"
           When call run_ai "github/unknown-model"
           The status should equal 1
-          The output should equal "1"
+          The output should equal ""
           The error should include "unsupported model"
         End
 
         It "Then: [Error] T-LIB-RAI-03: github-copilot/unknown-model は exit 1 と 'unsupported model' を返す"
           When call run_ai "github-copilot/unknown-model"
           The status should equal 1
-          The output should equal "1"
+          The output should equal ""
           The error should include "unsupported model"
         End
       End
@@ -265,7 +265,7 @@ Describe "ai-runner.sh"
           It "Then: [Error] T-LIB-RAI-20: CLI が存在しない場合は exit 2 と 'CLI not found' を返す"
             When call run_ai 'claude-3-opus'
             The status should equal 2
-            The output should equal "2"
+            The output should equal ""
             The error should include "CLI not found"
           End
         End
@@ -279,7 +279,7 @@ Describe "ai-runner.sh"
           It "Then: [Error] T-LIB-RAI-21: タイムアウト時は exit 124 と 'timeout' を返す"
             When call run_ai 'sonnet' 1
             The status should equal 124
-            The output should equal "124"
+            The output should equal ""
             The error should include "timeout"
           End
         End
@@ -296,10 +296,14 @@ Describe "ai-runner.sh"
             The output should include "MOCK_CLAUDE:"
           End
 
+          # 'invalid time interval' は timeout(1) 自身が stderr へ出す診断である。
+          # run_ai は CLI の stderr を stdout へ畳み込まないので、期待は stderr 側に置く
+          # (同じ形を T-LIB-RAI-21 がタイムアウト診断に対して既に使っている)。
           It "Then: [Edge] T-LIB-RAI-23: タイムアウトに文字列を渡すと 'invalid time interval' を返す"
             When call run_ai 'sonnet' 'notanumber'
             The status should equal 125
-            The output should include "invalid time interval"
+            The error should include "invalid time interval"
+            The output should be blank
           End
         End
       End

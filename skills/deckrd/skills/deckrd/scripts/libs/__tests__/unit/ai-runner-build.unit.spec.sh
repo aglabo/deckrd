@@ -86,5 +86,41 @@ Describe "ai-runner.sh"
         End
       End
     End
+
+    Describe "Given: claude CLI と全モデル分岐"
+      Describe "When: _build_ai_command を呼ぶ"
+        Parameters
+          "default"
+          "sonnet"
+          "sonnet-1m"
+          "opusplan"
+          "claude-3-opus"
+        End
+
+        It "Then: [Normal] T-LIB-ABC-07: $1 は --permission-mode を含まない"
+          _cmd=()
+          When call _build_ai_command "claude" "$1" _cmd
+          The status should equal 0
+          The variable '_cmd[*]' should not include "--permission-mode"
+          The variable '_cmd[*]' should not include "acceptEdits"
+        End
+
+        It "Then: [Normal] T-LIB-ABC-08: $1 は --strict-mcp-config と MCP 遮断設定を保つ"
+          _cmd=()
+          When call _build_ai_command "claude" "$1" _cmd
+          The status should equal 0
+          The variable '_cmd[*]' should include "--strict-mcp-config"
+          The variable '_cmd[*]' should include "--mcp-config"
+          The variable '_cmd[*]' should include '{"mcpServers":{}}'
+        End
+
+        It "Then: [Normal] T-LIB-ABC-09: $1 は非対話実行の -p を保つ"
+          _cmd=()
+          When call _build_ai_command "claude" "$1" _cmd
+          The status should equal 0
+          The variable '_cmd[*]' should include "-p"
+        End
+      End
+    End
   End
 End

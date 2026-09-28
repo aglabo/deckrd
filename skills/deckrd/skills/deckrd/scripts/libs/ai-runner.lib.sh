@@ -234,7 +234,7 @@ _build_ai_command() {
       _ai_options=("--model" "$model")
       ;;
     esac
-    _ai_options+=("--permission-mode" "acceptEdits" "--strict-mcp-config" "--mcp-config" '{"mcpServers":{}}')
+    _ai_options+=("--strict-mcp-config" "--mcp-config" '{"mcpServers":{}}')
     _cmd_ref=("claude" "${_ai_options[@]}" "-p")
     ;;
   codex)
@@ -265,12 +265,25 @@ _build_ai_command() {
   esac
 }
 
+# resolve_ai_timeout - Resolve the timeout (in seconds) used to run an AI CLI
+#
+# Priority: positional arg > DECKRD_AI_TIMEOUT > default (300). Keep this the single
+# source of the default so the docstring and the callers cannot drift apart again.
+#
+# @arg $1  int     Timeout in seconds. Empty or omitted falls back to DECKRD_AI_TIMEOUT
+# @stdout  int     Resolved timeout in seconds (no trailing newline)
+# @exitcode 0  Always succeeds; the value itself is validated by timeout(1)
+resolve_ai_timeout() {
+  printf '%s' "${1:-${DECKRD_AI_TIMEOUT:-300}}"
+}
+
 # run_ai - Run AI model with prompt via stdin pipe and return response
 #
 # @arg $1  string  AI model identifier: "<org>/<model>" or "<model>"
-# @arg $2  int     Timeout in seconds (default: 5)
+# @arg $2  int     Timeout in seconds. Empty or omitted falls back to DECKRD_AI_TIMEOUT,
+#                  then to 300. See resolve_ai_timeout
 # @stdin   string  Prompt text (piped in)
-# @stdout  string  AI response on success; exit status code on error
+# @stdout  string  AI response only. The 1 / 2 / 124 error branches write nothing
 # @stderr  string  Error reason on failure
 # @exitcode 0    Success
 # @exitcode 1    Unknown model / empty argument
@@ -282,41 +295,37 @@ _build_ai_command() {
 #   echo "prompt" | run_ai "openai/gpt-4o" 30
 run_ai() {
   local model="${1:-}"
-  local timeout_sec="${2:-120}"
+  local timeout_sec
+  timeout_sec="$(resolve_ai_timeout "${2:-}")"
 
   if [[ -z "$model" ]]; then
     echo "Error: model is required" >&2
-    echo 1
     return 1
   fi
 
   local cli
   cli=$(resolve_ai_cli "$model") || {
     echo "Error: unknown model: $model" >&2
-    echo 1
     return 1
   }
 
   if ! command -v "$cli" >/dev/null 2>&1; then
     echo "Error: CLI not found: $cli" >&2
-    echo 2
     return 2
   fi
 
   local _AI_CMD=()
   _build_ai_command "$cli" "$model" _AI_CMD || {
     echo "Error: unsupported model for $cli: $model" >&2
-    echo 1
     return 1
   }
 
   local output
-  output=$(timeout "$timeout_sec" "${_AI_CMD[@]}" 2>&1)
+  output=$(timeout "$timeout_sec" "${_AI_CMD[@]}")
   local exit_code=$?
 
   if [[ $exit_code -eq 124 ]]; then
     echo "Error: timeout after ${timeout_sec}s (model: $model)" >&2
-    echo 124
     return 124
   fi
 
