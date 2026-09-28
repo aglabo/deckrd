@@ -24,14 +24,14 @@ Describe "ai-runner.sh"
         It "Then: [Error] T-LIB-RAF-01: モデル引数なしは exit 1 と 'model is required' を返す"
           When call run_ai
           The status should equal 1
-          The output should equal "1"
+          The output should equal ""
           The error should include "model is required"
         End
 
         It "Then: [Error] T-LIB-RAF-02: 未知モデルは exit 1 と 'unknown model' を返す"
           When call run_ai "unknown/model"
           The status should equal 1
-          The output should equal "1"
+          The output should equal ""
           The error should include "unknown model"
         End
       End

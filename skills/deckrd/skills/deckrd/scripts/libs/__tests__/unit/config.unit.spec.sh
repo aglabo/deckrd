@@ -7,7 +7,7 @@
 # https://opensource.org/licenses/MIT
 
 # shellcheck disable=SC1090,SC1091
-# cspell:words myproject
+# cspell:words myproject myns mymod jqexe jaq
 
 _RUNTIME_BOOTSTRAP="${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/skills/deckrd/scripts/libs/bootstrap.lib.sh"
 . "$_RUNTIME_BOOTSTRAP" "--no-finalize"
@@ -17,6 +17,131 @@ Include ../spec_helper.sh
 
 . "${DECKRD_LIB_DIR}/session.lib.sh"
 . "${DECKRD_LIB_DIR}/config.lib.sh"
+
+# ============================================================================
+# 内部ヘルパー
+# ============================================================================
+
+# 関数
+
+# _write_session_json - 標準入力の内容を ${DECKRD_LOCAL}/session.json に書き出す
+#
+# 各フィクスチャ共通の書き出し処理。中身だけがケースごとに変わるので、
+# 置き場所とディレクトリ作成をここに 1 箇所だけ持つ。
+#
+# 前提: setup_deckrd_tmpdir が DECKRD_LOCAL を export していること
+#
+# @stdin session.json として書き出す JSON テキスト
+# @return 0 always
+_write_session_json() {
+  mkdir -p "$DECKRD_LOCAL"
+  cat >"${DECKRD_LOCAL}/session.json"
+}
+
+# _write_session_json_minimal - deckrd が読む 3 キーだけを持つ session.json を書き出す
+#
+# active / ai_model / lang の反映だけを検査するための最小形式。
+# active は 1 階層 (myproject) とし、deckrd_base の連結結果を短く保つ。
+#
+# 前提: setup_deckrd_tmpdir が DECKRD_LOCAL を export していること
+#
+# @return 0 always
+_write_session_json_minimal() {
+  _write_session_json <<'JSON'
+{
+  "active": "myproject",
+  "ai_model": "opus",
+  "lang": "ja"
+}
+JSON
+}
+
+# _write_session_json_broken - JSON として閉じていない session.json を書き出す
+#
+# 途中で切れた書き込みや手による編集ミスを模す。config_init が壊れた入力を
+# 既定値で素通りさせないことを検査する。
+#
+# 前提: setup_deckrd_tmpdir が DECKRD_LOCAL を export していること
+#
+# @return 0 always
+_write_session_json_broken() {
+  _write_session_json <<'JSON'
+{
+  "active": "myproject",
+  "ai_model": "opus
+JSON
+}
+
+# _write_session_json_empty - 0 バイトの session.json を書き出す
+#
+# 書き込みが始まる前に中断された状態を模す。空入力を妥当な JSON と見なす判定は
+# 存在するため、この入力が既定値のまま無言で素通りしないことを検査する。
+#
+# 前提: setup_deckrd_tmpdir が DECKRD_LOCAL を export していること
+#
+# @return 0 always
+_write_session_json_empty() {
+  _write_session_json </dev/null
+}
+
+# _write_session_json_array - トップレベルが配列の session.json を書き出す
+#
+# JSON としては妥当だがオブジェクトではない入力を模す。値の取得が生の jq エラー
+# (Cannot index array with string) を stderr に漏らさないことを検査する。
+#
+# 前提: setup_deckrd_tmpdir が DECKRD_LOCAL を export していること
+#
+# @return 0 always
+_write_session_json_array() {
+  _write_session_json <<'JSON'
+[]
+JSON
+}
+
+# _write_session_json_null_active - active が null の session.json を書き出す
+#
+# session_save がアクティブモジュール未設定のまま書き出した状態を模す。
+# JSON の null が空文字として扱われ、deckrd_base が組み立てられないことを検査する。
+#
+# 前提: setup_deckrd_tmpdir が DECKRD_LOCAL を export していること
+#
+# @return 0 always
+_write_session_json_null_active() {
+  _write_session_json <<'JSON'
+{
+  "active": null,
+  "ai_model": "opus",
+  "lang": "ja"
+}
+JSON
+}
+
+# _write_session_json_real - 実運用形式の session.json を書き出す
+#
+# deckrd が実際に保存する形を再現する。ネストした modules と created_at /
+# updated_at を含み、active は <namespace>/<module> の 2 階層とする。
+# これにより deckrd_base が階層を保ったまま解決されることを検査できる。
+#
+# 前提: setup_deckrd_tmpdir が DECKRD_LOCAL を export していること
+#
+# @return 0 always
+_write_session_json_real() {
+  _write_session_json <<'JSON'
+{
+  "active": "myns/mymod",
+  "ai_model": "opus",
+  "lang": "ja",
+  "modules": {
+    "myns/mymod": {
+      "current_step": "req",
+      "completed": ["module", "req"]
+    }
+  },
+  "created_at": "2025-01-01T00:00:00Z",
+  "updated_at": "2026-06-01T00:00:00Z"
+}
+JSON
+}
 
 Describe "config.sh"
   Describe "T-LIB-CLD: config.sh loading"
@@ -153,45 +278,120 @@ Describe "config.sh"
       End
     End
 
-    Describe "Given: 有効な session.kv が存在する"
-      Before "setup_deckrd_tmpdir; CONFIG=(); SESSION=()"
+    Describe "Given: 実セッション形式の session.json が存在する"
+      Before "setup_deckrd_tmpdir; unset DECKRD_DOCS; CONFIG=(); SESSION=()"
       After "teardown_deckrd_tmpdir"
 
-      Describe "When: config_init をセッションファイルパスを指定して呼ぶ"
+      Describe "When: 正常系"
+        It "Then: [Normal] T-LIB-CINI-08: modules/created_at/updated_at を含む実形式 JSON でも active が読める"
+          _write_session_json_real
+          config_init "${DECKRD_LOCAL}/session.json"
+          When call config_get "deckrd_base"
+          The status should equal 0
+          The output should equal "${DECKRD_DOCS_DIR}/myns/mymod"
+        End
+
         It "Then: [Normal] T-LIB-CINI-05: セッションの ai_model が CONFIG に読み込まれる"
-          kv_init "_test_session" $'\nactive|\nai_model|\nlang|\n'
-          kv_set "_test_session" "active" "myproject"
-          kv_set "_test_session" "ai_model" "opus"
-          kv_set "_test_session" "lang" "ja"
-          kv_save "_test_session" "${DECKRD_LOCAL}/session"
-          config_init "${DECKRD_LOCAL}/session.kv"
+          _write_session_json_minimal
+          config_init "${DECKRD_LOCAL}/session.json"
           When call config_get "ai_model"
           The status should equal 0
           The output should equal "opus"
         End
 
         It "Then: [Normal] T-LIB-CINI-06: セッションの lang が CONFIG に読み込まれる"
-          kv_init "_test_session" $'\nactive|\nai_model|\nlang|\n'
-          kv_set "_test_session" "active" "myproject"
-          kv_set "_test_session" "ai_model" "opus"
-          kv_set "_test_session" "lang" "ja"
-          kv_save "_test_session" "${DECKRD_LOCAL}/session"
-          config_init "${DECKRD_LOCAL}/session.kv"
+          _write_session_json_minimal
+          config_init "${DECKRD_LOCAL}/session.json"
           When call config_get "lang"
           The status should equal 0
           The output should equal "ja"
         End
 
         It "Then: [Normal] T-LIB-CINI-07: セッションの active から deckrd_base が計算される"
-          kv_init "_test_session" $'\nactive|\nai_model|\nlang|\n'
-          kv_set "_test_session" "active" "myproject"
-          kv_set "_test_session" "ai_model" "opus"
-          kv_set "_test_session" "lang" "ja"
-          kv_save "_test_session" "${DECKRD_LOCAL}/session"
-          config_init "${DECKRD_LOCAL}/session.kv"
+          _write_session_json_minimal
+          config_init "${DECKRD_LOCAL}/session.json"
           When call config_get "deckrd_base"
           The status should equal 0
-          The output should include "myproject"
+          The output should equal "${DECKRD_DOCS_DIR}/myproject"
+        End
+      End
+    End
+
+    Describe "Given: JSON オブジェクトとして読めない session.json が存在する"
+      Before "setup_deckrd_tmpdir; unset DECKRD_DOCS; CONFIG=(); SESSION=()"
+      After "teardown_deckrd_tmpdir"
+
+      Describe "When: 異常系"
+        It "Then: [Error] T-LIB-CINI-09: 壊れた JSON は status 1 で報告する"
+          _write_session_json_broken
+          When call config_init "${DECKRD_LOCAL}/session.json"
+          The status should equal 1
+          The stderr should include "Error: config_init:"
+        End
+
+        It "Then: [Error] T-LIB-CINI-12: 0 バイトのセッションファイルは status 1 で報告する"
+          _write_session_json_empty
+          When call config_init "${DECKRD_LOCAL}/session.json"
+          The status should equal 1
+          The stderr should include "Error: config_init:"
+        End
+
+        It "Then: [Error] T-LIB-CINI-13: オブジェクトでない JSON は status 1 で報告し生の jq エラーを漏らさない"
+          _write_session_json_array
+          When call config_init "${DECKRD_LOCAL}/session.json"
+          The status should equal 1
+          The stderr should include "Error: config_init:"
+          The stderr should not include "Cannot index"
+        End
+      End
+    End
+
+    Describe "Given: session.json は正常だが jq も jaq も利用できない"
+      Before "setup_deckrd_tmpdir; unset DECKRD_DOCS; CONFIG=(); SESSION=(); export jqexe='deckrd-no-such-jq'"
+      After "unset jqexe; teardown_deckrd_tmpdir"
+
+      Describe "When: 異常系"
+        It "Then: [Error] T-LIB-CINI-14: jq インタプリタ不在は探した名前を挙げて status 1 で報告する"
+          _write_session_json_minimal
+          When call config_init "${DECKRD_LOCAL}/session.json"
+          The status should equal 1
+          The stderr should include "deckrd-no-such-jq"
+        End
+
+        It "Then: [Error] T-LIB-CINI-15: jq インタプリタ不在を session.json の形状不正として報告しない"
+          _write_session_json_minimal
+          When call config_init "${DECKRD_LOCAL}/session.json"
+          The status should equal 1
+          The stderr should not include "as a JSON object"
+        End
+      End
+    End
+
+    Describe "Given: session.json がまだ作成されていない"
+      Before "setup_deckrd_tmpdir; unset DECKRD_DOCS; CONFIG=(); SESSION=()"
+      After "teardown_deckrd_tmpdir"
+
+      Describe "When: エッジケース"
+        It "Then: [Edge] T-LIB-CINI-10: セッションファイル不在は既定値のまま静かに成功する"
+          When call config_init "${DECKRD_LOCAL}/session.json"
+          The status should equal 0
+          The stderr should equal ""
+          The value "$(config_get "ai_model")" should equal "sonnet"
+        End
+      End
+    End
+
+    Describe "Given: active が null の session.json が存在する"
+      Before "setup_deckrd_tmpdir; unset DECKRD_DOCS; CONFIG=(); SESSION=()"
+      After "teardown_deckrd_tmpdir"
+
+      Describe "When: エッジケース"
+        It "Then: [Edge] T-LIB-CINI-11: active が null なら deckrd_base を設定しない"
+          _write_session_json_null_active
+          config_init "${DECKRD_LOCAL}/session.json"
+          When call config_get "deckrd_base"
+          The status should equal 0
+          The output should equal ""
         End
       End
     End

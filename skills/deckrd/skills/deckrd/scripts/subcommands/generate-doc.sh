@@ -46,6 +46,10 @@ unset _SCRIPT_DIR
 # Library Dependencies
 # ============================================================================
 
+. "${DECKRD_LIB_DIR}/validate-env.lib.sh"
+. "${DECKRD_LIB_DIR}/utils.lib.sh"
+validate_env || exit 1
+
 . "${DECKRD_LIB_DIR}/session.lib.sh"
 . "${DECKRD_LIB_DIR}/config.lib.sh"
 . "${DECKRD_LIB_DIR}/ai-runner.lib.sh"
@@ -57,21 +61,22 @@ unset _SCRIPT_DIR
 
 ##
 # @description Session file path
-SESSION_FILE="${DECKRD_LOCAL_DATA}/session.json"
-
-# ============================================================================
-# Script Configuration
-# ============================================================================
-
-##
-# @description deckrd assets directory
-# shellcheck disable=SC2153
-DECKRD_ASSETS_DIR="${SCRIPT_DIR}/../assets"
-readonly DECKRD_ASSETS_DIR
+SESSION_FILE="${SESSION_FILE:-${DECKRD_LOCAL_DATA}/session.json}"
 
 # ============================================================================
 # Functions
 # ============================================================================
+
+##
+# @description Resolve the deckrd docs base directory (DECKRD_BASE)
+#   Priority: DECKRD_DOCS (backward-compatible override) > DECKRD_DOCS_DIR
+#   (exported by bootstrap.lib.sh) > <repo root>/docs/.deckrd. Same 3-stage
+#   resolution as config.lib.sh; keep both in step.
+# @stdout Resolved deckrd docs base directory path (no trailing newline)
+# @return 0 always
+resolve_deckrd_base() {
+  printf '%s' "${DECKRD_DOCS:-${DECKRD_DOCS_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)/docs/.deckrd}}"
+}
 
 ##
 # @description Show usage information
@@ -104,6 +109,7 @@ Options:
   --output <file>     Output file path relative to DECKRD_BASE (default: stdout)
                       Example: --output requirements/requirements.md
                       → writes to \${DECKRD_BASE}/requirements/requirements.md
+  --verbose           Dump the resolved configuration to stderr
   -h, --help          Show this help message
 
 Session Configuration:
@@ -185,6 +191,10 @@ parse_options() {
       ;;
     --output=*)
       config_set "output_file" "${1#*=}"
+      shift
+      ;;
+    --verbose)
+      config_set "verbose" "1"
       shift
       ;;
     -*)
@@ -354,7 +364,7 @@ execute_prompt() {
   local ai_model
   ai_model=$(config_get "ai_model")
 
-  build_ai_input "$prompt_path" "$template_path" "$lang" "$context" | run_ai "$ai_model" 300
+  build_ai_input "$prompt_path" "$template_path" "$lang" "$context" | run_ai "$ai_model"
 }
 
 ##
@@ -385,7 +395,8 @@ main() {
   local session_file="${SESSION_FILE}"
 
   # config 初期化（デフォルト + セッション読込）
-  config_init "$session_file"
+  # session.json が読めないときは既定値で続行せず中断する（理由は config_init が出力する）。
+  config_init "$session_file" || exit 1
 
   # コマンドライン引数の解析
   parse_options "$@"
@@ -394,7 +405,7 @@ main() {
   local deckrd_base
   deckrd_base=$(config_get "deckrd_base")
   if [[ -z "$deckrd_base" ]]; then
-    deckrd_base="${DECKRD_DOCS:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)/docs/.deckrd}"
+    deckrd_base="$(resolve_deckrd_base)"
     config_set "deckrd_base" "$deckrd_base"
   fi
   export DECKRD_BASE="$deckrd_base"
@@ -428,9 +439,11 @@ main() {
     config_set "context_input" "$(cat)"
   fi
 
-  # デバッグ出力
-  config_all >&2
-  echo "" >&2
+  # デバッグ出力（--verbose 指定時のみ）
+  if [[ "$(config_get "verbose")" == "1" ]]; then
+    config_all >&2
+    echo "" >&2
+  fi
 
   # prompt_path チェック
   local prompt_path

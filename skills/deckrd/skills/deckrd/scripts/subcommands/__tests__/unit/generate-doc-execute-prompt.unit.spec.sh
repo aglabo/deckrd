@@ -94,21 +94,42 @@ Describe "generate-doc.sh ai-runner.sh integration"
     After "teardown_deckrd_tmpdir"
 
     Describe "When: run_ai をモックして execute_prompt を呼ぶ"
+      ##
+      # @description execute_prompt が参照する ai_model を設定する
+      _setup_ai_model() {
+        config_init ""
+        config_set "ai_model" "sonnet"
+      }
+
+      Before "_setup_ai_model"
+
+      ##
+      # @description run_ai のモック。受け取ったモデル名と引数の個数を stdout へ出す
+      # @stdout MOCK_RUN_AI_CALLED:model=<model> と MOCK_RUN_AI_ARGC:<引数の個数>
       run_ai() {
         cat >/dev/null
         echo "MOCK_RUN_AI_CALLED:model=$1"
+        echo "MOCK_RUN_AI_ARGC:$#"
         return 0
       }
 
       It "Then: [Normal] T-SUB-EP-01: run_ai が ai_model で呼ばれる"
-        config_init ""
-        config_set "ai_model" "sonnet"
         When call execute_prompt \
           "${DECKRD_TMPDIR}/assets/prompts/requirements.prompt.md" \
           "${DECKRD_TMPDIR}/assets/templates/requirements.template.md" \
           "ja" ""
         The status should equal 0
         The output should include "MOCK_RUN_AI_CALLED:model=sonnet"
+      End
+
+      It "Then: [Normal] T-SUB-EP-02: run_ai にタイムアウトの位置引数を渡さない"
+        When call execute_prompt \
+          "${DECKRD_TMPDIR}/assets/prompts/requirements.prompt.md" \
+          "${DECKRD_TMPDIR}/assets/templates/requirements.template.md" \
+          "ja" ""
+        The status should equal 0
+        # 行全体で突き合わせる。部分一致だと ARGC:10 のような別の個数でも通ってしまう
+        The line 2 of output should equal "MOCK_RUN_AI_ARGC:1"
       End
     End
 

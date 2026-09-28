@@ -13,8 +13,8 @@
 #   Include spec_helper.sh   (shellspec DSL)
 # ============================================================================
 
-# Helper: create an isolated temp directory and set DECKRD_DOCS / DECKRD_LOCAL / DECKRD_LOCAL_DATA /
-#         DECKRD_RULES_DIR / CLAUDE_RULES_DIR / CLAUDE_RULES_INDEX_DIR
+# Helper: create an isolated temp directory and set DECKRD_TMPDIR / DECKRD_DOCS_DIR / DECKRD_LOCAL /
+#         DECKRD_LOCAL_DATA / DECKRD_RULES_DIR / CLAUDE_RULES_DIR / CLAUDE_RULES_INDEX_DIR
 setup_deckrd_tmpdir() {
   DECKRD_TMPDIR="$(mktemp -d)"
   export DECKRD_DOCS_DIR="${DECKRD_TMPDIR}/docs/.deckrd"
