@@ -49,7 +49,7 @@ Extract and analyze existing code for reverse engineering:
 5. Use `Bash` (`git log --oneline`, `git diff --stat`) to identify historical change units
 6. Identify items that can be directly traced vs. items that must be inferred
 
-Output file: `temp/deckrd-work/codebase-extraction.md`
+Output file: `.local/deckrd/temp/deckrd-work/codebase-extraction.md`
 
 ### `codebase-survey`
 
@@ -61,7 +61,7 @@ Survey the module and surrounding codebase:
 4. Use `Grep` to locate source files relevant to `focus` keywords
 5. Identify existing patterns, naming conventions, and integration points
 
-Output file: `temp/deckrd-work/codebase-context.md`
+Output file: `.local/deckrd/temp/deckrd-work/codebase-context.md`
 
 ### `prior-art`
 
@@ -71,7 +71,7 @@ Search for prior experiments and related work:
 2. Run `git log --oneline --all` to find branches with related work
 3. Note any decisions already made in prior experiments
 
-Output file: `temp/deckrd-work/prior-art.md`
+Output file: `.local/deckrd/temp/deckrd-work/prior-art.md`
 
 ### `pattern-detection`
 
@@ -83,7 +83,7 @@ Detect development environment configuration (used by bdd-coder):
 3. Identify tool configurations: build, lint, type-check, test, formatter
 4. Read `.deckrd/project.json` if present
 
-Output file: `temp/deckrd-work/env-profile.md`
+Output file: `.local/deckrd/temp/deckrd-work/env-profile.md`
 
 ## Output Format
 
@@ -117,7 +117,7 @@ The main session reads the full output file only when needed.
 
 - Allowed tools: `Read`, `Grep`, `Glob`, `Bash` (read-only commands only, e.g., `git log --oneline`)
 
-- Output file exception: MAY write to `temp/deckrd-work/*.md`
+- Output file exception: MAY write to `.local/deckrd/temp/deckrd-work/*.md`
 
 ## Agent Invocation Pattern
 
@@ -134,4 +134,4 @@ The main session then:
 
 1. Continues with non-blocking work while the agent runs
 2. Reads the Summary from the agent result
-3. Reads `temp/deckrd-work/codebase-context.md` only when deeper context is needed
+3. Reads `.local/deckrd/temp/deckrd-work/codebase-context.md` only when deeper context is needed
