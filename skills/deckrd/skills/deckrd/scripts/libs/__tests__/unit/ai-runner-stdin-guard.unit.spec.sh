@@ -81,6 +81,21 @@ _run_ai_with_stdin_prompt() {
   run_ai "$@" <<<"$_STDIN_PROMPT"
 }
 
+# _run_ai_with_errexit_stdin_prompt - errexit を有効にしたうえで、非空のプロンプト
+# (_STDIN_PROMPT) を stdin に与えて run_ai を呼ぶ
+#
+# 実際の呼び出し元 (generate-doc.sh) は `set -eo pipefail` 配下でパイプラインの
+# 要素として run_ai を呼ぶ。errexit はパイプライン要素のサブシェルでも生きているので、
+# 読み取り失敗の扱いは errexit 有効下でも変わらないことを確かめる必要がある。
+# set -e はシェル全体の設定であり関数スコープに閉じないため、このヘルパーは
+# ShellSpec 自身のシェルへ設定を漏らさないよう `When run` (サブシェル) から呼ぶ。
+#
+# @arg $@  run_ai へそのまま渡す引数
+_run_ai_with_errexit_stdin_prompt() {
+  set -e
+  _run_ai_with_stdin_prompt "$@"
+}
+
 # ============================================================================
 # テスト本体
 # ============================================================================
@@ -157,6 +172,11 @@ Describe "T-LIB-RASI: ai-runner.lib.sh run_ai の stdin ガード"
   # 読み取りを包む timeout(1) の終了ステータスだけがガードへの入力なので、
   # 以下の 2 グループはその値だけを前提として撃ち分ける。どちらのモックも stdin を読まず
   # stdout へ何も書かないため、CLI 起動まで届いていれば claude モックの印が stdout に現れる。
+  #
+  # 各グループは同じ前提を errexit 無効・有効の 2 通りで撃つ。実際の呼び出し元
+  # (generate-doc.sh) は `set -eo pipefail` 配下のパイプラインの要素として run_ai を呼び、
+  # errexit はパイプライン要素のサブシェルでも生きている。読み取りの診断と終了ステータスが
+  # errexit に奪われないことは、errexit を有効にしたケースだけが観測できる。
 
   Describe "Given: stdin の読み取りが制限時間内に終わらない"
 
@@ -176,6 +196,13 @@ Describe "T-LIB-RASI: ai-runner.lib.sh run_ai の stdin ガード"
         # 文言を問わないと、CLI 実行側のタイムアウト経路と区別できない
         The stderr should include "while reading the prompt from stdin"
       End
+
+      It "Then: [Error] T-LIB-RASI-06: errexit 有効でも打ち切りの診断を出して 124 を返す"
+        When run _run_ai_with_errexit_stdin_prompt "sonnet"
+        The status should equal "$_EXIT_READ_TIMEOUT"
+        The entire output should equal "$_EMPTY_STDOUT"
+        The stderr should include "while reading the prompt from stdin"
+      End
     End
   End
 
@@ -190,6 +217,13 @@ Describe "T-LIB-RASI: ai-runner.lib.sh run_ai の stdin ガード"
     Describe "When: 異常系"
       It "Then: [Error] T-LIB-RASI-05: 読み取りが失敗したら CLI を起動せず 3 を返す"
         When call _run_ai_with_stdin_prompt "sonnet"
+        The status should equal "$_EXIT_STDIN_GUARD"
+        The entire output should equal "$_EMPTY_STDOUT"
+        The stderr should include "failed to read prompt"
+      End
+
+      It "Then: [Error] T-LIB-RASI-07: errexit 有効でも読み取り失敗の診断を出して 3 を返す"
+        When run _run_ai_with_errexit_stdin_prompt "sonnet"
         The status should equal "$_EXIT_STDIN_GUARD"
         The entire output should equal "$_EMPTY_STDOUT"
         The stderr should include "failed to read prompt"

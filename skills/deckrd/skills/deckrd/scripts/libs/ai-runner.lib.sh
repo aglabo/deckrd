@@ -334,6 +334,14 @@ _ai_stdin_is_tty() {
 # @exitcode 4    CLI が exit 0 を返したのに応答が空だった
 # @exitcode 124  Timeout exceeded (stdin の読み取り中・CLI の実行中のどちらでも)
 #
+# タイムアウトが縛るのは run_ai 自身の待ち時間だけである。stdin へ書くプロデューサが
+# EOF を返さないまま生き続けると (例: `{ printf p; sleep infinity; } | run_ai sonnet 1`)、
+# 読み取りは所定の秒数で打ち切られて run_ai は 124 を返すが、パイプライン全体は親シェルが
+# 全メンバーの終了を待つため返らない。run_ai は読み取り端にいるだけなのでプロデューサを
+# 終わらせられない (書き込まないプロセスに SIGPIPE は届かず、プロセスグループへの
+# シグナルは呼び出し元のシェルも終了させるおそれがある)。そのようなプロデューサの束縛は、
+# パイプライン全体を所有する側の責任とする。
+#
 # Usage:
 #   # source と実行は必ず別コマンドにする
 #   . "<path>/ai-runner.lib.sh"
@@ -380,9 +388,17 @@ run_ai() {
   # ここが CLI 起動前に無制限にブロックしてしまう。
   # 代入を local と分けるのは、local の終了ステータスが cat の終了ステータスを
   # 上書きして read_status が常に 0 になるのを避けるためである。
+  # その代入を if の条件へ置くのは、呼び出し元の errexit を避けるためである。
+  # run_ai は `set -eo pipefail` 配下のパイプラインの要素として呼ばれる
+  # (generate-doc.sh)。errexit はパイプライン要素のサブシェルでも生きているので、
+  # 素の代入のままだと cat が非 0 を返した時点でシェルが落ち、read_status を保存する前に
+  # 以降の診断と終了ステータスの写し替えが丸ごと飛ぶ。条件文脈の中では errexit が働かない。
   local prompt read_status
-  prompt=$(timeout "$timeout_sec" cat)
-  read_status=$?
+  if prompt=$(timeout "$timeout_sec" cat); then
+    read_status=0
+  else
+    read_status=$?
+  fi
 
   if [[ $read_status -eq 124 ]]; then
     echo "Error: timeout after ${timeout_sec}s while reading the prompt from stdin (model: $model)" >&2
@@ -399,9 +415,15 @@ run_ai() {
     return 3
   fi
 
-  local output
-  output=$(timeout "$timeout_sec" "${_AI_CMD[@]}" <<<"$prompt")
-  local exit_code=$?
+  # 代入を local と分けて条件文脈へ置く理由は、上の読み取りと同じである。
+  # 素の代入のままだと CLI が非 0 を返した時点で呼び出し元の errexit がシェルを落とし、
+  # 打ち切りの診断も応答本文も呼び出し元へ届かなくなる。
+  local output exit_code
+  if output=$(timeout "$timeout_sec" "${_AI_CMD[@]}" <<<"$prompt"); then
+    exit_code=0
+  else
+    exit_code=$?
+  fi
 
   if [[ $exit_code -eq 124 ]]; then
     echo "Error: timeout after ${timeout_sec}s (model: $model)" >&2

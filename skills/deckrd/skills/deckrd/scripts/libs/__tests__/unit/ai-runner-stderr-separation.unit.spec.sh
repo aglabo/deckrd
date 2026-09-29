@@ -48,6 +48,9 @@ _NOISE_SENTINEL='CLI-DIAGNOSTIC-NOISE'
 # _EXIT_CLI_FAILURE - CLI の異常終了を表す終了ステータス。run_ai 自身が返す 1 / 2 / 124 のどれとも異なる値にする
 _EXIT_CLI_FAILURE='3'
 
+# _EXIT_CLI_TIMEOUT - CLI の実行が打ち切られたことを表す終了ステータス。timeout(1) が打ち切り時に返す 124 に合わせる
+_EXIT_CLI_TIMEOUT='124'
+
 # 関数
 
 # _arrange_cli - timeout モックが出す応答本文と返す終了ステータスをケースの前提へ整える
@@ -68,6 +71,20 @@ _arrange_cli() {
 # @return 0 always
 _restore_mock_state() {
   unset _mock_body _mock_exit
+}
+
+# _run_ai_with_errexit - errexit を有効にしたうえで、固定プロンプトを stdin に与えて run_ai を呼ぶ
+#
+# 実際の呼び出し元 (generate-doc.sh) は `set -eo pipefail` 配下でパイプラインの要素として
+# run_ai を呼び、errexit はパイプライン要素のサブシェルでも生きている。CLI の実行結果を
+# 伝える経路が errexit に奪われないことは、errexit を有効にしたケースだけが観測できる。
+# set -e はシェル全体の設定であり関数スコープに閉じないため、このヘルパーは
+# ShellSpec 自身のシェルへ設定を漏らさないよう `When run` (サブシェル) から呼ぶ。
+#
+# @arg $@  run_ai へそのまま渡す引数
+_run_ai_with_errexit() {
+  set -e
+  run_ai_piped "$@"
 }
 
 # ============================================================================
@@ -144,6 +161,30 @@ Describe "T-LIB-RASE: ai-runner.lib.sh run_ai の stdout/stderr 分離"
         The status should equal "$_EXIT_CLI_FAILURE"
         The output should equal "$_BODY_SENTINEL"
         The stderr should include "$_NOISE_SENTINEL"
+      End
+
+      It "Then: [Error] T-LIB-RASE-04: errexit 有効でも応答本文と終了ステータスがそのまま返る"
+        When run _run_ai_with_errexit "sonnet"
+        The status should equal "$_EXIT_CLI_FAILURE"
+        The output should equal "$_BODY_SENTINEL"
+        The stderr should include "$_NOISE_SENTINEL"
+      End
+    End
+  End
+
+  # CLI の実行が打ち切られたときだけを見るグループ。モックに応答本文を出させるのは、
+  # 本文が空だと errexit 下でモック自身の `[[ ]] &&` が先に死に、run_ai ではなく
+  # モックを測ってしまうためである。打ち切り経路は $output を出さずに戻るので、
+  # 本文を出しても stdout が空のままであることは変わらない
+  Describe "Given: AI CLI の実行が制限時間内に終わらない"
+    Before "_arrange_cli '$_BODY_SENTINEL' '$_EXIT_CLI_TIMEOUT'"
+
+    Describe "When: 異常系"
+      It "Then: [Error] T-LIB-RASE-05: errexit 有効でも打ち切りの診断を出して 124 を返す"
+        When run _run_ai_with_errexit "sonnet"
+        The status should equal "$_EXIT_CLI_TIMEOUT"
+        The entire output should equal ""
+        The stderr should include "timeout after"
       End
     End
   End
