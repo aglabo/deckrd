@@ -60,6 +60,8 @@ deckrd は **Goals → Requirements → Specifications → Implementation → Ta
 
 - `.local/deckrd/project.json` — プロジェクト設定
 - `.local/deckrd/session.json` — セッション状態
+- `.local/deckrd/temp/` — 一時作業ファイル置き場（git 追跡外）
+- `.local/deckrd/workspaces/` — モジュールに属さない共通メモ置き場（git 追跡）
 - `docs/.deckrd/` — ドキュメント格納ディレクトリ
 - `docs/.deckrd/rules/` — deckrd ルール本体（必要なときだけ読み込む）
 - `.claude/rules/deckrd-rules/deckrd-rules-index.md` — ルールの目次（毎セッション読み込まれる）

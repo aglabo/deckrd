@@ -132,7 +132,9 @@ docs/.deckrd/<ns>/<mod>/  (ディレクトリ作成)
 │                                                 │
 │  .local/deckrd/                                 │
 │  ├── project.json   ← プロジェクト設定           │
-│  └── session.json   ← セッション状態             │
+│  ├── session.json   ← セッション状態             │
+│  ├── temp/          ← 一時作業 (追跡外)          │
+│  └── workspaces/    ← 共通メモ (追跡)            │
 │                                                 │
 │  docs/.deckrd/                                  │
 │  ├── notes/                                     │
@@ -310,7 +312,7 @@ bash module.sh auth/user-login
      v
 Phase 0: コードベース調査
      |   └─ explore-agent に委譲
-     |       └─ temp/deckrd-work/codebase-context.md 生成
+     |       └─ .local/deckrd/temp/deckrd-work/codebase-context.md 生成
      |
      v  (並行して)
 Phase 1: ユーザー入力収集

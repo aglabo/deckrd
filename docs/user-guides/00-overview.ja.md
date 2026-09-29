@@ -194,7 +194,9 @@ meta:
 プロジェクトルート/
 ├── .local/deckrd/
 │   ├── project.json          ← プロジェクト設定
-│   └── session.json          ← 進捗・アクティブモジュール
+│   ├── session.json          ← 進捗・アクティブモジュール
+│   ├── temp/                 ← 一時作業ファイル (git 追跡外)
+│   └── workspaces/           ← 共通メモ (git 追跡)
 │
 ├── .claude/rules/deckrd-rules/
 │   └── deckrd-rules-index.md ← ルールの目次 (常時ロード)
