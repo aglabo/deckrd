@@ -246,7 +246,7 @@ make_context_block() {
 #   get_model_command "claude-sonnet-4-5"
 #   echo "data" | "${AI_COMMAND[@]}"
 #
-#   get_model_command "gpt-5" || { echo "Error"; exit 1; }
+#   get_model_command "gpt-5.6-luna" || { echo "Error"; exit 1; }
 get_model_command() {
   local model="${1:-${DEFAULT_AI_MODEL}}"
 
@@ -257,7 +257,7 @@ get_model_command() {
     ;;
 
   # Anthropic (Claude) models
-  claude-* | haiku | sonnet | opus)
+  claude-* | haiku | sonnet | opus | fable)
     # execute claude with no-mcp, accept edits permission
     AI_COMMAND=("claude" "-p" "--permission-mode" "acceptEdits" "--strict-mcp-config" "--mcp-config" '{"mcpServers":{}}' "--model" "${model}")
     ;;
