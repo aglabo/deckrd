@@ -4,7 +4,7 @@ description: "Complete API reference for MCP servers used in deckrd project"
 category: "specs"
 tags: ["api", "mcp", "cocoindex-code", "filesystem", "codex"]
 created: "2026-01-14"
-version: "0.3.0"
+version: "0.4.0"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
@@ -13,6 +13,7 @@ changes:
   - 0.1.1   2026-09-06  Fix stale plugins/ paths to skills/
   - 0.2.0   2026-09-06  Remove serena-mcp / lsmcp sections, add cocoindex-code and tool naming
   - 0.3.0   2026-09-24  Drop codex-mcp; Codex is reached through the CLI
+  - 0.4.0   2026-09-29  Document --ignore-user-config as the MCP isolation flag
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.
@@ -152,18 +153,60 @@ codex exec -s read-only --color never -o <out-file> - <<'PROMPT'
 PROMPT
 ```
 
-| Option                        | Purpose                                                         |
-| ----------------------------- | --------------------------------------------------------------- |
-| `-`                           | Read the prompt from stdin                                      |
-| `-s`, `--sandbox`             | `read-only`, `workspace-write`, `danger-full-access`            |
-| `-o`, `--output-last-message` | Write only the final message to a file; no JSONL parsing needed |
-| `-m`, `--model`               | Model override, e.g. `gpt-5.2-codex`                            |
-| `-C`, `--cd`                  | Working directory for the session                               |
-| `--json`                      | Print events to stdout as JSONL                                 |
-| `--output-schema`             | JSON Schema describing the shape of the final response          |
-| `--ephemeral`                 | Do not persist the session; it then cannot be resumed           |
+| Option                        | Purpose                                                             |
+| ----------------------------- | ------------------------------------------------------------------- |
+| `-`                           | Read the prompt from stdin                                          |
+| `-s`, `--sandbox`             | `read-only`, `workspace-write`, `danger-full-access`                |
+| `-o`, `--output-last-message` | Write only the final message to a file; no JSONL parsing needed     |
+| `-m`, `--model`               | Model override, e.g. `gpt-5.2-codex`                                |
+| `-C`, `--cd`                  | Working directory for the session                                   |
+| `--skip-git-repo-check`       | Allow running outside a git repository / untrusted directory        |
+| `--ignore-user-config`        | Do not load `$CODEX_HOME/config.toml`; auth still uses `CODEX_HOME` |
+| `--json`                      | Print events to stdout as JSONL                                     |
+| `--output-schema`             | JSON Schema describing the shape of the final response              |
+| `--ephemeral`                 | Do not persist the session; it then cannot be resumed               |
 
 For review use, pass `-s read-only` so the reviewer cannot modify the working tree.
+
+`codex exec` refuses to start when the working directory is neither inside a git
+repository nor a trusted project in `~/.codex/config.toml`. Any caller whose working
+directory it does not control must pass `--skip-git-repo-check`; the `run_ai` helper in
+`skills/deckrd/skills/deckrd/scripts/libs/ai-runner.lib.sh` does so because it inherits
+the caller's working directory.
+
+#### Isolating Codex from the user's MCP servers
+
+`codex exec` starts every enabled MCP server declared in `~/.codex/config.toml`. A server that keeps
+working files under the working directory — `cocoindex-code` writes `.cocoindex_code/` — holds
+them open for the life of the run, so the caller's directory is left polluted and sometimes
+undeletable (`rm` fails with `Device or resource busy`). Pass `--ignore-user-config` to stop
+this; it is the Codex counterpart of `--strict-mcp-config --mcp-config '{"mcpServers":{}}'` on
+the `claude` CLI.
+
+What does *not* work, verified against codex-cli 0.158.0:
+
+| Attempt                                     | Result                                                                                             |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `-c 'mcp_servers={}'`                       | No effect. Codex merges TOML tables recursively, so an empty table removes no existing key         |
+| `--config <file>`                           | Does not exist. `--config` is the long name of `-c` and takes `key=value` only                     |
+| `CODEX_HOME=<dir with minimal config.toml>` | Works for the config, but `auth.json` lives in that same directory, so the login is lost           |
+| `-c 'mcp_servers.<name>.enabled=false'`     | Works, but the server names come from the user's own config, making the argv environment-dependent |
+
+`--ignore-user-config` keeps authentication: Codex reads `auth.json` from `CODEX_HOME`, not from
+`config.toml`. What it drops is everything the config file holds, and all of it — the user's
+defaults (`model_reasoning_effort`, `service_tier`), `[windows] sandbox`,
+`[shell_environment_policy]`, `[features]`, `[projects.*]` trust entries, and any custom
+`model_providers`. `~/.codex/AGENTS.md` does **not** come from `config.toml` and is still loaded
+(verified). Losing the `[projects.*]` entries costs nothing here only because
+`--skip-git-repo-check` covers the one use they served for `run_ai` — starting outside a git
+repository; their other effects are simply gone.
+
+One consequence deserves its own line: config-driven permission to run shell commands
+(`[windows] sandbox = "elevated"`, for instance) is dropped with everything else, and Codex then
+refuses to spawn any process — `blocked by policy`. So use this flag only for prompt-in /
+text-out invocations such as `run_ai`. Callers that need Codex to run commands itself, like
+`deckrd-review` and `code-reviewer` running `git diff`, must **not** pass it; give them the diff
+in the prompt instead.
 
 ### codex exec resume
 
