@@ -81,6 +81,7 @@ deckrd プラグインの共有ライブラリ。bootstrap・kv-store・session�
 | `RAS`     | `run_ai` (system)                                                   |
 | `RASC`    | `run_ai` の stdout 契約 (unit)                                      |
 | `RASE`    | `run_ai` の stdout/stderr 分離 (unit)                               |
+| `RASI`    | `run_ai` の stdin ガード (unit)                                     |
 | `RATW`    | `run_ai` のタイムアウト解決の配線 (unit)                            |
 | `SGS`     | `session_get` / `session_set`                                       |
 | `SINI`    | `session_init`                                                      |

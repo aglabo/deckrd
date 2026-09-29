@@ -49,6 +49,9 @@ _EXIT_INVALID_MODEL='1'
 # _EXIT_CLI_NOT_FOUND - CLI が見つからないときの終了ステータス
 _EXIT_CLI_NOT_FOUND='2'
 
+# _EXIT_EMPTY_RESPONSE - CLI が exit 0 を返したのに応答が空だったときの終了ステータス
+_EXIT_EMPTY_RESPONSE='4'
+
 # _EXIT_TIMEOUT - timeout(1) が制限時間の超過を伝えるときの終了ステータス
 _EXIT_TIMEOUT='124'
 
@@ -89,6 +92,13 @@ _restore_path() {
 # 失敗の理由と重さは終了ステータスと stderr のメッセージだけが伝える。
 Describe "T-LIB-RASC: ai-runner.lib.sh run_ai の stdout 契約"
 
+  # この分類グループのケースのうち、stdin を与えずに run_ai を直接呼んでいるものは、
+  # 「stdin ガードが既存の検証より後にある」という不変条件の回帰ネットでもある。
+  # ガードより手前で止まるからこそ stdin を渡さずに済んでいるのであり、揃えるつもりで
+  # run_ai_piped へ移し替えてはならない。移すとガードを検証の前へ動かす変異が
+  # どのケースも PASS のまま通り、順序の保護だけが静かに消える。
+  # run_ai_piped を使っているケースが 1 つだけあるのは、そのケースが CLI 起動まで
+  # 到達することを前提にしているためである。
   Describe "Given: モデル引数が空である"
     Describe "When: 異常系"
       It "Then: [Error] T-LIB-RASC-01: モデル引数が空でも stdout には何も残らない"
@@ -144,8 +154,21 @@ Describe "T-LIB-RASC: ai-runner.lib.sh run_ai の stdout 契約"
 
   Describe "Given: CLI の実行がタイムアウトする"
 
-    # timeout - timeout(1) を差し替えるモック。本文もノイズも出さず制限時間の超過だけを伝える
+    # timeout - timeout(1) を差し替えるモック。本文もノイズも出さず制限時間の超過だけを伝える。
+    # run_ai は stdin の読み取りも timeout 配下で行うため、読み取り側（cat）は実物へ素通しし、
+    # 超過を伝えるのは CLI 起動側の呼び出しだけにする。両方で超過させると、
+    # 読み取りの超過経路に吸われて CLI 実行の超過を確かめられなくなる。
+    # ShellSpec は Describe ごとに評価するので、後続の Describe が同名で別のモックを
+    # 置いてもこの定義はこのグループ内で生きている。SC2329 はその再定義を
+    # 「一度も呼ばれない」と読むので、ここだけ黙らせる
+    # shellcheck disable=SC2329
     timeout() {
+      shift
+      if [[ "$1" == "cat" ]]; then
+        "$@"
+        return
+      fi
+
       return "$_EXIT_TIMEOUT"
     }
 
@@ -156,10 +179,36 @@ Describe "T-LIB-RASC: ai-runner.lib.sh run_ai の stdout 契約"
 
     Describe "When: 異常系"
       It "Then: [Error] T-LIB-RASC-05: タイムアウトしても stdout には何も残らない"
-        When call run_ai "sonnet"
+        When call run_ai_piped "sonnet"
         The status should equal "$_EXIT_TIMEOUT"
         The entire output should equal "$_EMPTY_STDOUT"
         The stderr should include "timeout after"
+      End
+    End
+  End
+
+  Describe "Given: CLI が exit 0 を返しながら応答を返さない"
+
+    # timeout - timeout(1) を差し替えるモック。制限時間は判定せず素通しで実行する。
+    # 実物の timeout(1) は外部コマンドしか起動できず、シェル関数で差し替えた CLI へは
+    # 届かない。この経路は CLI の終了ステータスと stdout を見るので、素通しが要る
+    timeout() {
+      shift
+      "$@"
+    }
+
+    # codex - 起動拒否を exit 0 + 空 stdout で伝える CLI モック。
+    # codex-cli 0.157 系が `Not inside a trusted directory ...` を返すときの形である
+    codex() {
+      return 0
+    }
+
+    Describe "When: 異常系"
+      It "Then: [Error] T-LIB-RASC-06: 応答が空でも stdout には何も残らない"
+        When call run_ai_piped "gpt-4o"
+        The status should equal "$_EXIT_EMPTY_RESPONSE"
+        The entire output should equal "$_EMPTY_STDOUT"
+        The stderr should include "without a response"
       End
     End
   End

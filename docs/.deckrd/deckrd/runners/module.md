@@ -19,10 +19,13 @@ owns:
 | `CM`   | `check_module` (検査 B)                     |
 | `CS`   | `check_scopes` (検査 A)                     |
 | `CT`   | `check_targets` (検査 D)                    |
+| `DPE`  | `drop_empty_path_entries`                   |
 | `DSP`  | `dispatch` (run-shellspec.sh)               |
 | `ECI`  | `extract_case_ids`                          |
 | `EGI`  | `extract_group_ids`                         |
+| `EIP`  | `ensure_integration_path`                   |
 | `EIW`  | `exec_in_wsl`                               |
+| `EMP`  | `extract_marked_path`                       |
 | `ESG`  | `expand_spec_glob`                          |
 | `FMR`  | `read_module_scalar` / `read_module_owns`   |
 | `FMW`  | `find_missing_wsl_commands`                 |
@@ -50,4 +53,5 @@ owns:
 | `RMT`  | `read_module_targets`                       |
 | `RSF`  | `resolve_spec_files`                        |
 | `SCD`  | `scan_spec_declarations()`                  |
+| `SEI`  | `should_enable_integration`                 |
 | `SUW`  | `should_use_wsl`                            |

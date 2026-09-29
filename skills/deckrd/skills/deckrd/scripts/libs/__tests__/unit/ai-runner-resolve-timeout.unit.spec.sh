@@ -187,8 +187,16 @@ Describe "T-LIB-RATW: ai-runner.lib.sh run_ai のタイムアウト解決の配�
 
   After "_restore_env"
 
-  # timeout - timeout(1) を差し替えるモック。受け取った秒数だけを印付きで出力し、CLI は起動しない
+  # timeout - timeout(1) を差し替えるモック。受け取った秒数だけを印付きで出力し、CLI は起動しない。
+  # run_ai は stdin の読み取りも timeout 配下で行うため、読み取り側（cat）は実物へ素通しする。
+  # 素通しにしないと、秒数の印がプロンプトとして読まれ、空でないことに依存した観測になる
   timeout() {
+    if [[ "$2" == "cat" ]]; then
+      shift
+      "$@"
+      return
+    fi
+
     echo "${_MOCK_TIMEOUT_PREFIX}$1"
     return 0
   }
@@ -203,7 +211,7 @@ Describe "T-LIB-RATW: ai-runner.lib.sh run_ai のタイムアウト解決の配�
 
     Describe "When: 正常系"
       It "Then: [Normal] T-LIB-RATW-01: DECKRD_AI_TIMEOUT の値で timeout を起動する"
-        When call run_ai "sonnet"
+        When call run_ai_piped "sonnet"
         The status should equal 0
         The output should equal "${_MOCK_TIMEOUT_PREFIX}${_SENTINEL_ENV_TIMEOUT}"
       End
@@ -215,7 +223,7 @@ Describe "T-LIB-RATW: ai-runner.lib.sh run_ai のタイムアウト解決の配�
 
     Describe "When: 正常系"
       It "Then: [Normal] T-LIB-RATW-02: 位置引数の値で timeout を起動する"
-        When call run_ai "sonnet" "$_SENTINEL_ARG_TIMEOUT"
+        When call run_ai_piped "sonnet" "$_SENTINEL_ARG_TIMEOUT"
         The status should equal 0
         The output should equal "${_MOCK_TIMEOUT_PREFIX}${_SENTINEL_ARG_TIMEOUT}"
       End
@@ -231,7 +239,7 @@ Describe "T-LIB-RATW: ai-runner.lib.sh run_ai のタイムアウト解決の配�
 
     Describe "When: 正常系"
       It "Then: [Normal] T-LIB-RATW-03: 既定値で timeout を起動する"
-        When call run_ai "sonnet"
+        When call run_ai_piped "sonnet"
         The status should equal 0
         The output should equal "${_MOCK_TIMEOUT_PREFIX}${_EXPECTED_DEFAULT_TIMEOUT}"
       End

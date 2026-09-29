@@ -104,3 +104,18 @@ run_coder_tmpscript() {
 
   bash "$_CODER_TMPSCRIPT"
 }
+
+# ---- ai-runner helpers ----
+
+# _SPEC_AI_PROMPT - run_ai の stdin ガードを通すためのダミープロンプト。内容は検証しない
+_SPEC_AI_PROMPT='spec prompt'
+
+# run_ai_piped - 固定プロンプトを stdin で与えて run_ai を呼ぶ
+#
+# stdin の内容自体を検証しないケース（タイムアウト・argv・stderr 分離）から、
+# ガードを通すためだけの stdin 供給を消す。
+#
+# @arg $@  run_ai へそのまま渡す引数
+run_ai_piped() {
+  run_ai "$@" <<<"$_SPEC_AI_PROMPT"
+}

@@ -22,6 +22,10 @@ readonly TEST_TYPES=("all" "unit" "functional" "integration" "system" "e2e")
 # Directory name that roots every spec tree (runners/__tests__/unit/... etc.)
 readonly TESTS_DIR='__tests__'
 
+# login shell の報告を見分ける目印。行頭に現れたら、その行の残りが報告された PATH。
+# ユーザーの起動ファイルは stdout へ進捗行を書くので、報告を丸ごと読むことはできない
+readonly LOGIN_PATH_MARKER='__DECKRD_LOGIN_PATH__'
+
 # Test mode: set SKIP_INTEGRATION_TESTS=1 by default (development mode)
 # Override with INTEGRATION_TEST=1 env var or --integration flag to run real-machine tests
 SKIP_INTEGRATION_TESTS="${SKIP_INTEGRATION_TESTS:-1}"
@@ -113,19 +117,118 @@ get_spec_files() {
 }
 
 #
-# @description Parse options, extracting --integration flag
+# @description Decide whether real-machine (integration) tests should be enabled.
+#              Pure: reads only its arguments so the caller can assign the result
+#              in its own shell
+# @arg $@ Command line arguments
+# @exitcode 0 if --integration is given or the target is the system test type,
+#           1 otherwise
+#
+should_enable_integration() {
+  local arg
+  for arg in "$@"; do
+    [[ "$arg" == "--integration" ]] && return 0
+  done
+  # ターゲットは先頭に並ぶので、種別は $1 に現れる。$1 が --integration の場合は
+  # 上のループで確定済み
+  [[ "${1:-}" == "system" ]]
+}
+
+#
+# @description Pick the PATH a probe reported out of the probe's whole stdout. The
+#              startup files a login shell reads write their own lines to stdout, so
+#              the report cannot be taken wholesale; only the line the probe introduced
+#              with the marker carries the PATH. The marker counts at the start of a
+#              line only, and the last such line wins, so a startup file that prints the
+#              marker's spelling cannot shadow what the probe appended last.
+#              Pure function: reads only its arguments
+# @arg $1 string Marker the probe printed in front of the PATH
+# @arg $2 string Whole stdout of the probe
+# @stdout The rest of the marked line, i.e. the reported PATH; empty when the marked
+#         line carries none
+# @exitcode 0 when the output holds a marked line, 1 when it holds none
+#
+extract_marked_path() {
+  local __marker="$1"
+  local __raw="$2"
+  # 先頭へ改行を足す。目印を行頭でだけ認めるための下ごしらえで、目印行が 1 行目に
+  # 来る入力も 2 行目以降と同じ規則で扱える
+  local __haystack=$'\n'"$__raw"
+  # 目印行が 1 本も無ければ失敗させる。切り出せなかったことを呼び出し元へ伝えないと、
+  # 進捗行が PATH として採られる
+  [[ "$__haystack" == *$'\n'"$__marker"* ]] || return 1
+  # 最後の目印行より後ろを残す。起動ファイルが目印と同じ綴りを印字しても、
+  # プローブが最後に足した 1 行が勝つ
+  local __tail="${__haystack##*$'\n'"$__marker"}"
+  printf '%s\n' "${__tail%%$'\n'*}"
+}
+
+#
+# @description Drop the empty entries of a colon separated PATH. An empty entry names
+#              the current directory, so one left in a reported PATH puts whatever
+#              directory ShellSpec runs from on the command search path.
+#              Pure function: reads only its argument
+# @arg $1 string Colon separated PATH
+# @stdout The same PATH without its empty entries; empty when every entry was empty
+# @exitcode 0 always
+#
+drop_empty_path_entries() {
+  local __path="$1"
+  local -a __entries=()
+  # here-string が末尾へ改行を足すので read は必ず 1 行読み切って 0 を返す。
+  # 末尾の空要素はこの分割で落ちるが、落としたいものと同じなので構わない
+  IFS=':' read -ra __entries <<<"$__path"
+
+  local __entry
+  local __kept=''
+  for __entry in ${__entries[@]+"${__entries[@]}"}; do
+    [[ -n "$__entry" ]] || continue
+    __kept="${__kept:+${__kept}:}${__entry}"
+  done
+  printf '%s\n' "$__kept"
+}
+
+#
+# @description Replace PATH with the one a login and interactive shell reports, so that
+#              tools installed by the user's startup files (volta, linuxbrew, nix) become
+#              reachable. Real-machine tests need them; the non-login, non-interactive
+#              shell that runs this script reads no startup file and has none of them.
+#              `-lic` rather than `-lc`: a startup chain may add its entries from the
+#              interactive rc, and only a shell that is both login and interactive reads
+#              both halves — the same shell the user gets when opening a terminal.
+#              The report replaces PATH instead of extending it: it is a superset of the
+#              inherited PATH, so nothing is lost, and the inherited entries no longer
+#              shadow the copy of a tool the startup files installed
+# @sideeffect Replaces PATH when the login shell reports one
+# @exitcode 0 always; a login shell that fails, reports no marked line, or reports
+#           nothing but empty entries leaves PATH untouched
+#
+ensure_integration_path() {
+  local _raw _marked _cleaned
+  # 目印は位置パラメータで渡す。プローブ本文を単引用符のままに保てるので、入れ子の
+  # 引用符を数えずに済む ($0 に当たる 'bash' はエラー表示用の名前)。
+  # stdin は閉じる: 対話シェルは stdin を読む権利があり、起動ファイルが read すると
+  # テスト実行全体が失敗ではなく停止する
+  # shellcheck disable=SC2016 # プローブ本文。$1 と $PATH は login shell が解決する
+  _raw="$(bash -lic 'printf "\n%s%s\n" "$1" "$PATH"' bash "$LOGIN_PATH_MARKER" 2>/dev/null </dev/null)" || return 0
+  _marked="$(extract_marked_path "$LOGIN_PATH_MARKER" "$_raw")" || return 0
+  _cleaned="$(drop_empty_path_entries "$_marked")"
+  [[ -n "$_cleaned" ]] && PATH="$_cleaned"
+  return 0
+}
+
+#
+# @description Drop the --integration flag from the argument list. The flag is
+#              consumed here; the gate it opens is decided by
+#              should_enable_integration() in the caller's own shell
 # @arg $@ Command line arguments
 # @stdout Remaining arguments (without --integration), newline-separated
-# @sideeffect Sets SKIP_INTEGRATION_TESTS=0 if --integration found
 #
 parse_options() {
   local arg
   for arg in "$@"; do
-    if [[ "$arg" == "--integration" ]]; then
-      SKIP_INTEGRATION_TESTS=0
-    else
-      printf '%s\n' "$arg"
-    fi
+    [[ "$arg" == "--integration" ]] && continue
+    printf '%s\n' "$arg"
   done
 }
 
@@ -165,7 +268,6 @@ resolve_spec_files() {
   # テスト種別 → get_spec_files で展開
   local test_type="$1"
   shift
-  [[ "$test_type" == "system" ]] && SKIP_INTEGRATION_TESTS=0
   local -a spec_files
   mapfile -t spec_files < <(get_spec_files "$test_type" "$@")
   if [[ ${#spec_files[@]} -eq 0 || -z "${spec_files[0]}" ]]; then
@@ -209,6 +311,13 @@ main() {
   if [[ $# -eq 0 ]]; then
     echo "Usage: run-shellspec.sh <test-type|spec-file|spec-glob> [--integration] [shellspec-options]" >&2
     exit 1
+  fi
+
+  # 実機テストの有効化は親シェルで決める。parse_options / resolve_spec_files は
+  # サブシェルで呼ぶため、その中で代入しても呼び出し元へは戻らない
+  if should_enable_integration "$@"; then
+    SKIP_INTEGRATION_TESTS=0
+    ensure_integration_path
   fi
 
   local -a filtered_args
