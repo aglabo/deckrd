@@ -66,6 +66,7 @@ init_vars() {
   CLAUDE_RULES_SRC_DIR="${CLAUDE_RULES_SRC_DIR:-${INITS_DIR}/claude-rules}"
   DOCS_SRC_DIR="${DOCS_SRC_DIR:-${INITS_DIR}/docs}"
   LOCAL_SRC_DIR="${LOCAL_SRC_DIR:-${INITS_DIR}/local-deckrd}"
+  LOCAL_WORKSPACES_SRC_DIR="${LOCAL_WORKSPACES_SRC_DIR:-${INITS_DIR}/local-workspaces}"
   DECKRD_RULES_DIR="${DECKRD_RULES_DIR:-${DECKRD_DOCS_DIR}/rules}"
   CLAUDE_RULES_DIR="${CLAUDE_RULES_DIR:-${PROJECT_ROOT}/.claude/rules/claude-rules}"
   CLAUDE_RULES_INDEX_DIR="${CLAUDE_RULES_INDEX_DIR:-${PROJECT_ROOT}/.claude/rules/deckrd-rules}"
@@ -256,6 +257,8 @@ init_directories() {
   init_directory "$CLAUDE_RULES_INDEX_DIR" "$RULES_INDEX_SRC_DIR" "deckrd-rules-index"
   init_directory "$DECKRD_DOCS_DIR" "$DOCS_SRC_DIR" "docs"
   init_directory "$DECKRD_LOCAL_DATA" "$LOCAL_SRC_DIR" "local-deckrd"
+  init_directory "$DECKRD_LOCAL_TEMP"
+  init_directory "$DECKRD_LOCAL_WORKSPACES" "$LOCAL_WORKSPACES_SRC_DIR" "local-workspaces"
   for subdir in "${BASE_SUBDIRS[@]}"; do
     init_directory "${DECKRD_DOCS_DIR}/${subdir}"
   done

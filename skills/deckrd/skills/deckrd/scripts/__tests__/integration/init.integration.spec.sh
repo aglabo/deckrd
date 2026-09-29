@@ -15,6 +15,14 @@ _RUNTIME_BOOTSTRAP="${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/skills/deckrd/script
 . "$_RUNTIME_BOOTSTRAP" "--no-finalize"
 unset _RUNTIME_BOOTSTRAP
 
+# 上の bootstrap は DECKRD_LOCAL_TEMP / DECKRD_LOCAL_WORKSPACES を
+# 「実リポジトリの」 .local/deckrd/ 配下として export する。
+# setup_deckrd_tmpdir が差し替えるのは DECKRD_LOCAL_DATA だけなので、
+# この 2 つを残したまま init.sh を起動すると、テストが一時ディレクトリではなく
+# 実リポジトリにディレクトリを作ってしまう。
+# unset して、子プロセス側の bootstrap に DECKRD_LOCAL_DATA から導出させる。
+unset DECKRD_LOCAL_TEMP DECKRD_LOCAL_WORKSPACES
+
 Include ../spec_helper.sh
 
 SCRIPT="${DECKRD_SCRIPTS_DIR}/init.sh"
@@ -109,6 +117,27 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
       The status should equal 0
       The stderr should include "Init complete"
       The path "${DECKRD_LOCAL_DATA}" should be directory
+    End
+
+    It "[Normal] T-CLI-MAINI-46: Should: create the temporary working directory under DECKRD_LOCAL_DATA"
+      When run bash "$SCRIPT" myapp webapp
+      The status should equal 0
+      The stderr should include "Init complete"
+      The path "${DECKRD_LOCAL_DATA}/temp" should be directory
+    End
+
+    It "[Normal] T-CLI-MAINI-47: Should: create the shared workspaces directory under DECKRD_LOCAL_DATA"
+      When run bash "$SCRIPT" myapp webapp
+      The status should equal 0
+      The stderr should include "Init complete"
+      The path "${DECKRD_LOCAL_DATA}/workspaces" should be directory
+    End
+
+    It "[Normal] T-CLI-MAINI-48: Should: install README.md into the workspaces directory"
+      When run bash "$SCRIPT" myapp webapp
+      The status should equal 0
+      The stderr should include "[init/local-workspaces] copied: README.md"
+      The path "${DECKRD_LOCAL_DATA}/workspaces/README.md" should be file
     End
 
     It "[Normal] T-CLI-MAINI-08: Should: create .project.json with project, project-type, language"
