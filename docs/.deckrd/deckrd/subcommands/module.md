@@ -18,6 +18,7 @@ owns:
 | `GPF`   | `get_prompt_file` (generate-doc.sh)                              |
 | `LD`    | generate-doc.sh の読み込みと ai-runner.sh 連携                   |
 | `MAINF` | `main` (generate-doc.sh, functional)                             |
+| `MAINS` | `main` (generate-doc.sh, system)                                 |
 | `PO`    | `parse_options` (generate-doc.sh)                                |
 | `RDB`   | `resolve_deckrd_base` (generate-doc.sh)                          |
 | `RDP`   | `resolve_doc_paths` (generate-doc.sh)                            |
