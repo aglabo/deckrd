@@ -312,6 +312,23 @@ instead of a hundred failing examples:
 sudo apt install jq   # inside the WSL distro
 ```
 
+Those four tools have to be on the PATH the runner inherits, which is the plain non-login
+one WSL hands to `wsl.exe -e`. The real-machine tests need more than that — `claude`,
+`codex` and `opencode` — and those live wherever your WSL startup files install them
+(volta, linuxbrew or nix). So when the integration gate opens (`--integration`, or the
+`system` test type) the runner asks a login **and** interactive shell for its PATH — the
+same shell you get when you open a terminal — and runs ShellSpec under it:
+
+```bash
+pnpm run test:sh system          # gate open, startup-file PATH in effect
+pnpm run test:sh unit runners    # gate closed, inherited PATH untouched
+```
+
+A startup file that prints progress lines to stdout is fine: the reported PATH is read off
+a marker line rather than from the whole output, and empty entries (`::`, which name the
+current directory) are dropped. A login shell that fails leaves PATH alone, so a broken
+startup file costs you the real-machine tests and nothing else.
+
 ## Technology Stack
 
 ### Primary Language
