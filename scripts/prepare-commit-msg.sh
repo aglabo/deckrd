@@ -47,7 +47,7 @@
 # @exitcode 1 Error during generation (AI output invalid, markers missing, etc.)
 #
 # @author atsushifx
-# @version 1.3.0
+# @version 1.3.1
 # @license MIT
 
 # shellcheck disable=SC2034
@@ -119,7 +119,7 @@ and recent commit history using AI.
 Options:
   --output FILE, -o FILE      Write commit message to FILE instead of stdout
   --model MODEL               AI model name (default: sonnet)
-                              Supported: gpt-*, o1-*, claude-*, haiku, sonnet, opus
+                              Supported: gpt-*, o1-*, claude-*, haiku, sonnet, opus, fable
   -h, --help                  Show this help message
 
 Examples:
@@ -230,7 +230,7 @@ make_context_block() {
 #
 # **Supported Providers:**
 # - OpenAI (gpt-*, o1-*) → codex exec --model <model>
-# - Anthropic (claude-*, haiku, sonnet, opus) → claude -p --model <model>
+# - Anthropic (claude-*, haiku, sonnet, opus, fable) → claude -p --model <model>
 # - OpenCode (org/model) → opencode run --model <model>
 #
 # **Safety Notes:**
