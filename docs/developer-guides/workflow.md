@@ -348,9 +348,18 @@ temp/idd/
 ### bdd-coder Working Files
 
 ```text
-temp/bdd-coder/
+.local/deckrd/temp/bdd-coder/
 └── bdd-todo.md                # BDD task progress tracking
 ```
+
+### Migrating Old Working Files
+
+Working files used to live under `temp/deckrd-work/`, `temp/tasks/` and
+`temp/bdd-coder/`. They now live under `.local/deckrd/temp/`.
+
+No automatic migration is provided. Every file in the old locations is machine-generated
+and reproducible by re-running the command that wrote it, so the old directories can be
+deleted by hand at any time.
 
 ## Quality Assurance
 
