@@ -69,7 +69,7 @@ Always spawn **checklist-builder** with the user's instruction or Task ID.
 | Task ID (e.g. T01-02) | Read tasks.md entry, expand into BDD checklist, generate file |
 | `--checklist <path>`  | Skip checklist-builder, use the specified existing file       |
 
-Output: `temp/tasks/<slug>-<adjective>-checklist.md`
+Output: `.local/deckrd/temp/tasks/<slug>-<adjective>-checklist.md`
 
 If checklist-builder reports `BLOCKED` (a Task ID's Case lists more than one input):
 
@@ -121,7 +121,7 @@ aggregate review over every file changed in Phase 3, not one invocation per task
 | `task_id`       | The Task ID of this invocation, or `N/A` for multiple tasks                    |
 | `changed_files` | Implementation files from the session scope resolved below                     |
 | `test_files`    | Test files from that same scope, split by the ENV PROFILE test-file convention |
-| `env_profile`   | `temp/deckrd-work/env-profile.md` (Phase 0 output)                             |
+| `env_profile`   | `.local/deckrd/temp/deckrd-work/env-profile.md` (Phase 0 output)               |
 | `coverage_cmd`  | Coverage command from ENV PROFILE                                              |
 
 **Session scope**, in this order:
@@ -209,7 +209,7 @@ and the Status column of the affected Test Targets (Step 3).
 
 Regardless of input type, also update the checklist file:
 
-1. Open `temp/tasks/<slug>-<adjective>-checklist.md`
+1. Open `.local/deckrd/temp/tasks/<slug>-<adjective>-checklist.md`
 2. For every case reported `DONE` / `DONE_WITH_CONCERNS` in Phase 3, confirm its
    `-R` / `-G` / `-F` items are `[x]`. Check any the bdd-coder instance left behind,
    and list them in the Step 5 report so the gap is visible.
