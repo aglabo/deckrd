@@ -47,7 +47,7 @@ Spawn **explore-agent** (non-blocking) with:
 - `focus`: feature keywords from REQ SUMMARY
 - Agent definition: [`plugins/deckrd/agents/explore-agent.md`](../../../../../agents/explore-agent.md)
 
-The agent writes findings to `temp/deckrd-work/codebase-context.md`.
+The agent writes findings to `.local/deckrd/temp/deckrd-work/codebase-context.md`.
 Proceed to Phase 2 immediately in parallel — do NOT wait for this agent.
 
 Store the agent Summary as **CODEBASE CONTEXT** when it completes:
@@ -66,7 +66,7 @@ Create the ledger directory before the first write — Phase 1 is the first writ
 this two-level module path does not exist on a fresh module:
 
 ```bash
-mkdir -p temp/deckrd-work/<namespace>/<module>
+mkdir -p .local/deckrd/temp/deckrd-work/<namespace>/<module>
 ```
 
 Append **REQ SUMMARY**, **REQ VERSION**, and **CODEBASE CONTEXT** to the Context Ledger.

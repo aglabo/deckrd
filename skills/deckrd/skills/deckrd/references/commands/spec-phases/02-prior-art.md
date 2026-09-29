@@ -32,7 +32,7 @@ Spawn **explore-agent** (non-blocking, parallel with Step 1-2) with:
 - `focus`: feature keywords from REQ SUMMARY
 - Agent definition: [`plugins/deckrd/agents/explore-agent.md`](../../../../../agents/explore-agent.md)
 
-The agent writes findings to `temp/deckrd-work/prior-art.md`.
+The agent writes findings to `.local/deckrd/temp/deckrd-work/prior-art.md`.
 
 Store the agent Summary as **PRIOR ART** when it completes:
 

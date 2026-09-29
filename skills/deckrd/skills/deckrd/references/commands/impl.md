@@ -70,7 +70,7 @@ Spawn **explore-agent** (non-blocking) with:
 - `focus`: feature keywords from SPEC SUMMARY
 - Agent definition: [`plugins/deckrd/agents/explore-agent.md`](../../../../agents/explore-agent.md)
 
-The agent writes findings to `temp/deckrd-work/codebase-context.md`.
+The agent writes findings to `.local/deckrd/temp/deckrd-work/codebase-context.md`.
 Proceed to Phase B immediately in parallel — do NOT wait for this agent.
 
 Store the agent Summary as **CODEBASE CONTEXT** when it completes:
@@ -94,7 +94,7 @@ Spawn **explore-agent** (non-blocking, parallel with A-2) with:
 - `focus`: feature keywords from SPEC SUMMARY
 - Agent definition: [`plugins/deckrd/agents/explore-agent.md`](../../../../agents/explore-agent.md)
 
-The agent writes findings to `temp/deckrd-work/prior-art.md`.
+The agent writes findings to `.local/deckrd/temp/deckrd-work/prior-art.md`.
 
 Store the agent Summary as **PRIOR ART** when it completes:
 

@@ -70,7 +70,7 @@ Delegate deep codebase extraction to explore-agent:
    - `directory`: project root
    - `focus`: module name + target document type (e.g., `requirements`, `specifications`)
    - Agent definition: [`plugins/deckrd/agents/explore-agent.md`](../../../../agents/explore-agent.md)
-3. The agent writes findings to `temp/deckrd-work/codebase-extraction.md`
+3. The agent writes findings to `.local/deckrd/temp/deckrd-work/codebase-extraction.md`
 4. Read the **Summary** returned by the agent and store as **EXTRACTION CONTEXT**
 
 ---
