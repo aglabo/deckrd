@@ -2,6 +2,7 @@
 adr
 clippy
 deckrd
+envrc
 euo
 gofmt
 goimports
