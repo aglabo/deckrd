@@ -87,6 +87,48 @@ Describe "ai-runner.sh"
       End
     End
 
+    Describe "Given: codex CLI と openai 系モデル名"
+      Describe "When: _build_ai_command を呼ぶ"
+        It "Then: [Normal] T-LIB-ABC-10: codex は exec と --model <model> を含む"
+          _cmd=()
+          When call _build_ai_command "codex" "gpt-4o" _cmd
+          The status should equal 0
+          The variable '_cmd[*]' should include "exec"
+          The variable '_cmd[*]' should include "--model"
+          The variable '_cmd[*]' should include "gpt-4o"
+        End
+
+        # codex exec は cwd が git リポジトリ外だと起動を拒む。run_ai は cd しないので、
+        # このフラグが落ちると「リポジトリ外の呼び出し元からは無言で空応答」へ逆戻りする
+        It "Then: [Normal] T-LIB-ABC-11: codex は --skip-git-repo-check を保つ"
+          _cmd=()
+          When call _build_ai_command "codex" "gpt-4o" _cmd
+          The status should equal 0
+          The variable '_cmd[*]' should include "--skip-git-repo-check"
+        End
+
+        # 短いフラグは部分一致では守れない。"-s" は "--skip-git-repo-check" の部分文字列
+        # としても一致するため、`should include "-s"` は -s read-only を消しても PASS する。
+        # 並び順も含めて完全一致で固定する
+        It "Then: [Normal] T-LIB-ABC-12: codex の argv は隔離フラグ込みで完全一致する"
+          _cmd=()
+          When call _build_ai_command "codex" "gpt-4o" _cmd
+          The status should equal 0
+          The variable '_cmd[*]' should equal "codex exec --model gpt-4o --skip-git-repo-check --ignore-user-config -s read-only --color never"
+        End
+
+        # ユーザー設定 (~/.codex/config.toml) の MCP サーバ起動を止めるフラグ。これが落ちると
+        # codex exec が [mcp_servers.*] を起動し、MCP サーバが cwd 配下に作業ファイル
+        # (.cocoindex_code/ 等) を作って掴んだままにするため、呼び出し元の cwd が汚れる
+        It "Then: [Normal] T-LIB-ABC-13: codex は --ignore-user-config を保つ"
+          _cmd=()
+          When call _build_ai_command "codex" "gpt-4o" _cmd
+          The status should equal 0
+          The variable '_cmd[*]' should include "--ignore-user-config"
+        End
+      End
+    End
+
     Describe "Given: claude CLI と全モデル分岐"
       Describe "When: _build_ai_command を呼ぶ"
         Parameters

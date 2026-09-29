@@ -82,8 +82,17 @@ Describe "T-LIB-RASE: ai-runner.lib.sh run_ai の stdout/stderr 分離"
 
   After "_restore_mock_state"
 
-  # timeout - timeout(1) を差し替えるモック。stdout へ応答本文を、stderr へ診断の印を出して CLI は起動しない
+  # timeout - timeout(1) を差し替えるモック。stdout へ応答本文を、stderr へ診断の印を出して CLI は起動しない。
+  # run_ai は stdin の読み取りも timeout 配下で行うため、このモックは 1 回の呼び出しで 2 度踏まれる。
+  # 読み取り側（cat）を模してしまうと応答本文がプロンプトに化けるので、そちらは実物へ素通しし、
+  # CLI 起動側の呼び出しだけを差し替える
   timeout() {
+    shift
+    if [[ "$1" == "cat" ]]; then
+      "$@"
+      return
+    fi
+
     [[ -n "${_mock_body:-}" ]] && echo "${_mock_body}"
     echo "${_NOISE_SENTINEL}" >&2
     return "${_mock_exit:-0}"
@@ -99,7 +108,7 @@ Describe "T-LIB-RASE: ai-runner.lib.sh run_ai の stdout/stderr 分離"
 
     Describe "When: 正常系"
       It "Then: [Normal] T-LIB-RASE-01: stdout に応答本文だけが残り、診断は stderr へ届く"
-        When call run_ai "sonnet"
+        When call run_ai_piped "sonnet"
         The status should equal 0
         The output should equal "$_BODY_SENTINEL"
         The stderr should include "$_NOISE_SENTINEL"
@@ -110,12 +119,18 @@ Describe "T-LIB-RASE: ai-runner.lib.sh run_ai の stdout/stderr 分離"
   Describe "Given: AI CLI が stdout へ何も出さず stderr へ診断だけを出す"
     Before "_arrange_cli '' 0"
 
+    # CLI が exit 0 を返しても応答本文が無ければ run_ai は成功にしない (exit 4)。
+    # codex-cli 0.157 系は起動拒否を exit 0 + 空 stdout で返すため、ここを成功として
+    # 通すと呼び出し元には「空の応答で成功した」としか見えなくなる。
+    # このケースが見ているのは経路の分離なので、stdout が空のままであること、
+    # CLI の診断が stderr へ届くことは変わらない
     Describe "When: エッジケース"
-      It "Then: [Edge] T-LIB-RASE-02: 応答本文が無ければ stdout は空になる"
-        When call run_ai "sonnet"
-        The status should equal 0
+      It "Then: [Edge] T-LIB-RASE-02: 応答本文が無ければ stdout は空のまま exit 4 になる"
+        When call run_ai_piped "sonnet"
+        The status should equal 4
         The output should equal ""
         The stderr should include "$_NOISE_SENTINEL"
+        The stderr should include "without a response"
       End
     End
   End
@@ -125,7 +140,7 @@ Describe "T-LIB-RASE: ai-runner.lib.sh run_ai の stdout/stderr 分離"
 
     Describe "When: 異常系"
       It "Then: [Error] T-LIB-RASE-03: 非 0 終了でも stdout は応答本文のみで、終了ステータスはそのまま返る"
-        When call run_ai "sonnet"
+        When call run_ai_piped "sonnet"
         The status should equal "$_EXIT_CLI_FAILURE"
         The output should equal "$_BODY_SENTINEL"
         The stderr should include "$_NOISE_SENTINEL"
