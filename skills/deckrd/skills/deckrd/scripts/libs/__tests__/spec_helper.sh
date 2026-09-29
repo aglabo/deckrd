@@ -30,17 +30,26 @@ teardown_tmpdir() {
 }
 
 # Helper: create isolated cache directory for naming cache tests
+#
+# DECKRD_LOCAL_* の差し替えは export_sandbox_local_dirs に任せる。ここで 1 変数ずつ
+# 並べ直すと、変数が増えたときに片方のヘルパーだけが取り残される。
+#
+# DECKRD_LOCAL_DATA は NAMING_TMPDIR そのものを指す。naming.lib.sh はここから
+# _FILENAME_CACHE_DIR を導くので、間に階層を挟んではならない。
 setup_naming_cache() {
   NAMING_TMPDIR="$(mktemp -d)"
   export NAMING_TMPDIR
-  export DECKRD_LOCAL_DATA="${NAMING_TMPDIR}"
+  export_sandbox_local_dirs "$NAMING_TMPDIR"
   export _FILENAME_CACHE_DIR="${NAMING_TMPDIR}/cache/filenames"
 }
 
 # Helper: clean up naming cache temp directory
+#
+# setup_naming_cache が差し替えた変数と対を成す。差し替えた変数は全部 unset する。
 teardown_naming_cache() {
   [[ -n "${NAMING_TMPDIR:-}" && -d "$NAMING_TMPDIR" ]] && rm -rf "$NAMING_TMPDIR"
-  unset NAMING_TMPDIR DECKRD_LOCAL_DATA _FILENAME_CACHE_DIR
+  unset_sandbox_local_dirs
+  unset NAMING_TMPDIR _FILENAME_CACHE_DIR
 }
 
 # ---- integration test helpers ----
@@ -76,16 +85,28 @@ teardown_nongit_tmpdir() {
 # ---- bdd-coder path detection helpers ----
 
 # Before: create a temp script file under a bdd-coder path
+#
+# 親は example ごとに mktemp -d で取る。固定パスを共有しないので、`--jobs 4` の
+# 並列実行でジョブ同士が衝突せず、共有ホストで他ユーザーとも衝突しない。
+#
+# `plugins/bdd-coder` はパスの 1 セグメントとして保つ。bdd-coder のパスから
+# bootstrap を source する状況を作るのがこのヘルパーの役目であり、
+# T-LIB-BSRC-02 / T-LIB-BSRCF-02 の意図がパス名に表れている。
+# `bdd-coder-XXXXXX` のようにサフィックスを付けてセグメントを崩してはならない。
 setup_coder_tmpscript() {
-  mkdir -p /tmp/plugins/bdd-coder
-  _CODER_TMPSCRIPT="$(mktemp /tmp/plugins/bdd-coder/XXXXXX.sh)"
+  _CODER_TMPROOT="$(mktemp -d)"
+  _CODER_TMPDIR="${_CODER_TMPROOT}/plugins/bdd-coder"
+  mkdir -p "$_CODER_TMPDIR"
+  _CODER_TMPSCRIPT="$(mktemp "${_CODER_TMPDIR}/XXXXXX.sh")"
   export _CODER_TMPSCRIPT
 }
 
-# After: remove the temp script file
+# After: remove the temp script file along with the directory tree that held it
+#
+# 後始末は親ごと消す。ファイルだけ消すと作ったディレクトリが残り続ける。
 teardown_coder_tmpscript() {
-  [[ -n "${_CODER_TMPSCRIPT:-}" ]] && rm -f "$_CODER_TMPSCRIPT"
-  unset _CODER_TMPSCRIPT
+  [[ -n "${_CODER_TMPROOT:-}" && -d "$_CODER_TMPROOT" ]] && rm -rf "$_CODER_TMPROOT"
+  unset _CODER_TMPSCRIPT _CODER_TMPDIR _CODER_TMPROOT
 }
 
 # Run bootstrap.lib.sh from bdd-coder path and print the value of VAR_NAME.

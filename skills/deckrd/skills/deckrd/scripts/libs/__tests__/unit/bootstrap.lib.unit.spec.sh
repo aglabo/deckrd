@@ -301,14 +301,7 @@ Describe "bootstrap.lib.sh"
     End
 
     It "[Normal] T-LIB-BSRC-04: bdd-coder パスでも DECKRD_ROOT 事前設定値が優先される"
-      When run bash -c "
-        mkdir -p /tmp/plugins/bdd-coder
-        tmpscript=\"\$(mktemp /tmp/plugins/bdd-coder/XXXXXX.sh)\"
-        printf 'export DECKRD_ROOT=/tmp/custom\n. \"%s\" && echo \"\$DECKRD_ROOT\"\n' \"$SCRIPT\" > \"\$tmpscript\"
-        result=\$(bash \"\$tmpscript\")
-        rm -f \"\$tmpscript\"
-        echo \"\$result\"
-      "
+      When call run_coder_tmpscript DECKRD_ROOT "DECKRD_ROOT=/tmp/custom"
       The status should equal 0
       The output should equal "/tmp/custom"
     End
