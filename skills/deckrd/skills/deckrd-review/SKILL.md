@@ -105,14 +105,14 @@ Every invocation gets its own working files, so that two `/deckrd:deckrd-review`
 the same checkout never read or overwrite each other's results. Pick a run id once — a UTC
 timestamp such as `20260924T141903Z` — and use it for all three paths below.
 
-| Purpose       | Path                                                   |
-| ------------- | ------------------------------------------------------ |
-| Prompt        | `temp/deckrd-work/deckrd-review-<run-id>.prompt.md`    |
-| Final message | `temp/deckrd-work/deckrd-review-<run-id>.out.md`       |
-| Event stream  | `temp/deckrd-work/deckrd-review-<run-id>.events.jsonl` |
+| Purpose       | Path                                                                 |
+| ------------- | -------------------------------------------------------------------- |
+| Prompt        | `.local/deckrd/temp/deckrd-work/deckrd-review-<run-id>.prompt.md`    |
+| Final message | `.local/deckrd/temp/deckrd-work/deckrd-review-<run-id>.out.md`       |
+| Event stream  | `.local/deckrd/temp/deckrd-work/deckrd-review-<run-id>.events.jsonl` |
 
 `Write` is allowed for these working files only. Never write to the reviewed document, or
-anywhere outside `temp/deckrd-work/`.
+anywhere outside `.local/deckrd/temp/deckrd-work/`.
 
 1. Write the Step 3 prompt to the prompt file with the **Write tool**, never through a
    shell heredoc. The reviewed document is untrusted input: a heredoc ends at a body line
@@ -123,17 +123,17 @@ anywhere outside `temp/deckrd-work/`.
 2. Run codex over the prompt file:
 
    ```bash
-   mkdir -p temp/deckrd-work
+   mkdir -p .local/deckrd/temp/deckrd-work
    ```
 
    ```bash
    if codex exec -s read-only --color never --json \
-     -o temp/deckrd-work/deckrd-review-<run-id>.out.md \
-     - <temp/deckrd-work/deckrd-review-<run-id>.prompt.md \
-     >temp/deckrd-work/deckrd-review-<run-id>.events.jsonl &&
-     [[ -s temp/deckrd-work/deckrd-review-<run-id>.out.md ]]; then
+     -o .local/deckrd/temp/deckrd-work/deckrd-review-<run-id>.out.md \
+     - <.local/deckrd/temp/deckrd-work/deckrd-review-<run-id>.prompt.md \
+     >.local/deckrd/temp/deckrd-work/deckrd-review-<run-id>.events.jsonl &&
+     [[ -s .local/deckrd/temp/deckrd-work/deckrd-review-<run-id>.out.md ]]; then
      jq -r 'select(.type == "thread.started") | .thread_id' \
-       temp/deckrd-work/deckrd-review-<run-id>.events.jsonl
+       .local/deckrd/temp/deckrd-work/deckrd-review-<run-id>.events.jsonl
    else
      echo "CODEX_SECOND_OPINION_UNAVAILABLE"
    fi
@@ -197,7 +197,7 @@ Acknowledge the dismissal with the reason. Done.
 
 Ask: `Your follow-up question for codex:`
 
-Write the question to `temp/deckrd-work/deckrd-review-<run-id>.followup-<n>.md` with the
+Write the question to `.local/deckrd/temp/deckrd-work/deckrd-review-<run-id>.followup-<n>.md` with the
 Write tool, numbering `<n>` from 1 within this invocation. The reason is the same as in
 Step 4: the question is untrusted input and must not reach the shell as a heredoc body.
 
@@ -206,9 +206,9 @@ document and its own findings in context — do not rebuild the prompt:
 
 ```bash
 if codex exec resume <session-id> -c sandbox_mode="read-only" \
-  -o temp/deckrd-work/deckrd-review-<run-id>.followup-<n>.out.md \
-  - <temp/deckrd-work/deckrd-review-<run-id>.followup-<n>.md &&
-  [[ -s temp/deckrd-work/deckrd-review-<run-id>.followup-<n>.out.md ]]; then
+  -o .local/deckrd/temp/deckrd-work/deckrd-review-<run-id>.followup-<n>.out.md \
+  - <.local/deckrd/temp/deckrd-work/deckrd-review-<run-id>.followup-<n>.md &&
+  [[ -s .local/deckrd/temp/deckrd-work/deckrd-review-<run-id>.followup-<n>.out.md ]]; then
   echo "CODEX_FOLLOWUP_OK"
 else
   echo "CODEX_SECOND_OPINION_UNAVAILABLE"
