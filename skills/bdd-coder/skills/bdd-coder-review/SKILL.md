@@ -94,7 +94,7 @@ If the resolved list is empty: report `No changes to review` with the resolution
 
 ### Step 2: Split into `changed_files` and `test_files`
 
-If `temp/deckrd-work/env-profile.md` exists, follow its test-file convention.
+If `.local/deckrd/temp/deckrd-work/env-profile.md` exists, follow its test-file convention.
 
 If it does not, fall back to the common conventions below and **state in the report which rule was used**:
 
@@ -107,16 +107,16 @@ If it does not, fall back to the common conventions below and **state in the rep
 
 ### Step 3: Resolve `task_id`
 
-Argument → `temp/bdd-coder/bdd-todo.md` → `N/A`, in that order.
+Argument → `.local/deckrd/temp/bdd-coder/bdd-todo.md` → `N/A`, in that order.
 
 `N/A` is normal, not an error: an aggregate review spanning several tasks has no single task ID.
 
 ### Step 4: Resolve `env_profile` and `coverage_cmd`
 
-| Input          | Resolution                                                          |
-| -------------- | ------------------------------------------------------------------- |
-| `env_profile`  | `temp/deckrd-work/env-profile.md` if present, else `N/A`            |
-| `coverage_cmd` | `--coverage-cmd` argument → coverage command in ENV PROFILE → `N/A` |
+| Input          | Resolution                                                             |
+| -------------- | ---------------------------------------------------------------------- |
+| `env_profile`  | `.local/deckrd/temp/deckrd-work/env-profile.md` if present, else `N/A` |
+| `coverage_cmd` | `--coverage-cmd` argument → coverage command in ENV PROFILE → `N/A`    |
 
 Do NOT spawn explore-agent and do NOT define degraded behaviour here. When coverage is
 unavailable, code-reviewer applies its own fallback: CC-only classification reported as `cov=N/A`
