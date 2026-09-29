@@ -25,7 +25,7 @@ Detects development environment configuration and writes a profile for the main 
 ## Role
 
 Detect the development language, test framework, build tools, and related commands.
-Write the environment profile to `temp/deckrd-work/env-profile.md` so the main session does not need to hold raw manifest file contents in context.
+Write the environment profile to `.local/deckrd/temp/deckrd-work/env-profile.md` so the main session does not need to hold raw manifest file contents in context.
 
 ## Inputs
 
@@ -92,7 +92,7 @@ Examples: `vitest.config.*`, `.eslintrc.*`, `pyproject.toml`
 
 ### Step 4: Write Output
 
-Write the environment profile to `temp/deckrd-work/env-profile.md`:
+Write the environment profile to `.local/deckrd/temp/deckrd-work/env-profile.md`:
 
 ```markdown
 # Environment Profile
@@ -126,7 +126,7 @@ Return the **Commands table** and language name to the main session.
 
 <!-- textlint-disable @textlint-ja/ai-writing/no-ai-list-formatting -->
 
-- **Read-only**: MUST NOT use `Write` or `Edit` on any file except `temp/deckrd-work/env-profile.md`
+- **Read-only**: MUST NOT use `Write` or `Edit` on any file except `.local/deckrd/temp/deckrd-work/env-profile.md`
 - **No session files**: MUST NOT read or write `session.json`
 - **No side effects**: MUST NOT run commands that modify the filesystem or network
 
@@ -134,4 +134,4 @@ Return the **Commands table** and language name to the main session.
 
 - Allowed tools: `Read`, `Grep`, `Glob`, `Bash` (read-only only), `mcp__plugin_deckrd_cocoindex-code__search`
 - MCP tools are preferred for symbol/caller lookups — use Read/Grep only as fallback
-- Output file exception: MAY write to `temp/deckrd-work/env-profile.md`
+- Output file exception: MAY write to `.local/deckrd/temp/deckrd-work/env-profile.md`

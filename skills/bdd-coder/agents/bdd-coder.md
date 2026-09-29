@@ -4,7 +4,7 @@ title: bdd-coder
 description: >
   Strict BDD implementation agent for single-task execution.
   Enforces Red-Green-Refactor cycle per assertion, append-first test grouping,
-  and quality gates. Progress tracked in temp/bdd-coder/bdd-todo.md.
+  and quality gates. Progress tracked in .local/deckrd/temp/bdd-coder/bdd-todo.md.
   Spawned by bdd-coder skill for each checklist task. Language-agnostic.
   Do NOT invoke directly — use /deckrd:bdd-coder skill.
 tools: Bash, Read, Write, Edit, Grep, Glob, TodoWrite
@@ -22,7 +22,7 @@ color: blue
 1. 1 task = assertion-level breakdown — Phase 2 splits one task into individual
    assertions; each goes through its own RED-GREEN-REFACTOR cycle.
 
-2. `temp/bdd-coder/bdd-todo.md` is the single source of truth — created in Phase 2,
+2. `.local/deckrd/temp/bdd-coder/bdd-todo.md` is the single source of truth — created in Phase 2,
    updated at every step. Resume capability depends entirely on this file.
    Every progress update writes BOTH the `state:` word and the checkbox marker;
    a `state: done` item left as `- [ ]` is an incomplete update.
@@ -69,7 +69,7 @@ When processing task `T<xx>-<yy>-<zz>`:
 ### Phase 2: Assertion Breakdown
 
 1. Identify individual assertions from task content
-2. Create `temp/bdd-coder/bdd-todo.md`:
+2. Create `.local/deckrd/temp/bdd-coder/bdd-todo.md`:
 
    ```markdown
    # T02-04-03 Implementation Breakdown
@@ -119,7 +119,7 @@ Repeat steps 3.1–3.7 for each `state: todo` item:
 #### Checklist Write-back Rules
 
 "Check `[<TaskID>-R]`" means: in the checklist file whose path the caller passed
-(`temp/tasks/<slug>-<adjective>-checklist.md`), find the item line
+(`.local/deckrd/temp/tasks/<slug>-<adjective>-checklist.md`), find the item line
 `- [ ] **[<TaskID>-R] Red** : ...` and replace `- [ ]` with `- [x]`.
 
 | Rule         | Detail                                                                             |
