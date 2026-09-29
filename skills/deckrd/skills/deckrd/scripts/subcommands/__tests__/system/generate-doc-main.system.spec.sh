@@ -75,6 +75,17 @@ readonly _OUTPUT_RELATIVE_PATH='requirements/requirements.md'
 # _VALIDATE_ENV_ERROR - jq も jaq も無いときに validate_env が出す唯一のメッセージ
 readonly _VALIDATE_ENV_ERROR='Error: jq or jaq is required but not installed.'
 
+# _STDERR_MARKER - AI CLI の stderr へ注入する目印。本文への漏れ検出に使う
+#
+# 形は意図的に「雑音カウンタが拾えないもの」にしてある。`Error:` で始まらず、
+# 数字だけの行でもないので _count_body_noise_lines の grep は決してこれを数えない。
+# 実機 CLI が出す banner や progress と同じ側に属する形であり、これが本文へ現れたら
+# 「任意の stderr が本文へ流れ込む」回帰（issue #205）が戻ったことを意味する。
+readonly _STDERR_MARKER='deckrd-spec-stderr-marker[7f3c1a9e] injected banner line'
+
+# _LEAK_VERDICT_CLEAN - 漏れ検査が何も見つけなかったときの唯一の正常値
+readonly _LEAK_VERDICT_CLEAN='clean'
+
 # 関数
 
 # _write_session - session.json を tmpdir に書き出し、そのパスを返す
@@ -270,6 +281,116 @@ _count_body_noise_lines() {
   grep -cE '^(Error:|[0-9]+$)' "$_path" || true
 }
 
+# _shim_dir_injecting_stderr - AI CLI を包む shim を作り、その置き場所を返す
+#
+# shim は実機 CLI をそのまま exec する。応答本文は実機のものであり、
+# stderr に _STDERR_MARKER の 1 行だけを足す。stub とは違い CLI の挙動は変えないので、
+# 「実機の AI CLI を使う」という system 層の前提は保たれる。
+#
+# 実機 CLI のパスは PATH を触る前に解決しておく。shim 自身が PATH 越しに CLI を
+# 引くと、shim が自分を呼び直して無限に入れ子になる。
+# mise / volta の shim は argv[0] の basename で対象を決めるため、絶対パスで
+# exec しても basename が `claude` であるかぎり素通りする。
+#
+# 前提: setup_deckrd_tmpdir が済んでいること（DECKRD_TMPDIR が tmpdir を指すこと）。
+#
+# @arg $1 string 包む CLI の名前
+# @return 0 on success, 1 if the CLI is absent or the shim could not be built
+# @stdout 作った shim ディレクトリの絶対パス
+_shim_dir_injecting_stderr() {
+  local _name="$1"
+
+  local _real
+  _real="$(command -v "$_name")" || return 1
+
+  local _dst
+  _dst="$(mktemp -d "${DECKRD_TMPDIR}/ai-shim.XXXXXX")" || return 1
+
+  # marker と実機パスは printf %q で shim 自身に焼き込む。この関数は
+  # `$(...)` から呼ばれるので、export した環境変数はサブシェルと共に消え、
+  # shim には届かない（`exec "" "$@"` で exit 127 になる）。
+  # %q が値をシェルの構文として安全な形に直すので、marker の `[` `]` のような
+  # 文字で展開が壊れることもない。
+  {
+    printf '#!/usr/bin/env bash\n'
+    printf '_marker=%q\n' "$_STDERR_MARKER"
+    printf '_real=%q\n' "$_real"
+    cat <<'SHIM'
+printf '%s\n' "$_marker" >&2
+exec "$_real" "$@"
+SHIM
+  } >"${_dst}/${_name}" || return 1
+  chmod +x "${_dst}/${_name}" || return 1
+
+  printf '%s' "$_dst"
+}
+
+# _body_stderr_leak_verdict - CLI の stderr が本文へ流れ込んでいないかを判定する
+#
+# _count_body_noise_lines は `Error:` 行と数字だけの行しか数えない。実機 CLI は
+# banner・progress・warning を別の形で出すので、`2>&1` を戻す回帰が入っても
+# 雑音カウントは 0 のまま緑になりうる。そこで本文の側ではなく stderr の実体を基準にする。
+#
+# 判定は 2 本立てとする。注入した marker が本文に無いこと（回帰があれば必ず現れる）と、
+# 実際に観測した stderr の各行が本文に完全一致行として現れないこと。部分一致で見ると
+# 本文中の語に偶然含まれて誤検知するため、行全体で突き合わせる。
+#
+# marker が stderr に出たことを先に確かめる。ここを省くと、shim が働かなかった場合に
+# 「何も漏れていない」と「何も注入できていない」が区別できず、空振りのまま緑になる。
+#
+# 起動が失敗したときは終了ステータスと捕らえた stderr を返す。`run-failed` だけでは
+# shim 自身が壊れている場合に原因が分からず、切り分けに実行の再現が要る。
+# 状態の取得に `|| _status=$?` を使うのは、呼び出し側の errexit を踏まないためである。
+#
+# 前提: setup_deckrd_tmpdir が済んでいること。
+#
+# @return 0 always
+# @stdout _LEAK_VERDICT_CLEAN、または失敗の原因を示す文字列
+_body_stderr_leak_verdict() {
+  local _shim
+  _shim="$(_shim_dir_injecting_stderr claude)" || {
+    printf 'shim-build-failed'
+    return 0
+  }
+
+  local _stderr="${DECKRD_TMPDIR}/captured-stderr.txt"
+  local _status=0
+  _run_generate_doc_with_path "${_shim}:${PATH}" >/dev/null 2>"$_stderr" || _status=$?
+  if [[ $_status -ne 0 ]]; then
+    printf 'run-failed(%s): %s' "$_status" "$(tr '\n' '|' <"$_stderr")"
+    return 0
+  fi
+
+  local _path="${DECKRD_DOCS_DIR}/${_SESSION_ACTIVE}/${_OUTPUT_RELATIVE_PATH}"
+  if [[ ! -s "$_path" ]]; then
+    printf 'no-body-written'
+    return 0
+  fi
+
+  # shim が実際に働いたことの確認。これが無いと以降の検査が空振りになる
+  if ! grep -Fqx -- "$_STDERR_MARKER" "$_stderr"; then
+    printf 'marker-missing-from-stderr'
+    return 0
+  fi
+
+  if grep -Fqx -- "$_STDERR_MARKER" "$_path"; then
+    printf 'marker-leaked-into-body'
+    return 0
+  fi
+
+  # 観測した stderr をそのまま突き合わせる。空行は本文の空行に必ず当たるので除く
+  local _line
+  while IFS= read -r _line; do
+    [[ -n "$_line" ]] || continue
+    if grep -Fqx -- "$_line" "$_path"; then
+      printf 'stderr-line-leaked-into-body: %s' "$_line"
+      return 0
+    fi
+  done <"$_stderr"
+
+  printf '%s' "$_LEAK_VERDICT_CLEAN"
+}
+
 # _run_generate_doc_jaq_only - jq を隠し jaq だけを残した PATH で main を起動する
 #
 # 組み立てた PATH が狙いどおりになっているかを先に確かめる。ここを確かめないと、
@@ -327,6 +448,14 @@ Describe "T-SUB-MAINS: generate-doc.sh main"
       It "Then: [Normal] T-SUB-MAINS-03: 生成本文に AI CLI の出力と終了コードを混ぜない"
         When call _count_body_noise_lines
         The output should equal "0"
+      End
+
+      It "Then: [Normal] T-SUB-MAINS-06: 生成本文に AI CLI の stderr を 1 行も混ぜない"
+        # T-SUB-MAINS-03 の雑音カウンタは `Error:` 行と数字だけの行しか見ないため、
+        # banner 形の stderr が本文へ流れ込む回帰を取り逃がす。ここでは観測した
+        # stderr の実体そのものを基準に突き合わせる
+        When call _body_stderr_leak_verdict
+        The output should equal "$_LEAK_VERDICT_CLEAN"
       End
     End
   End
