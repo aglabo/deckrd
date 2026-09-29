@@ -24,6 +24,9 @@ deckrd プラグインのコマンドエントリポイント。init / module / 
 | `PRJ`   | project.sh の引数処理と `.project.json` 更新            |
 | `RDS`   | `read_declared_scope` (module.sh)                       |
 | `RTS`   | `resolve_test_scope` (module.sh)                        |
+| `SHIV`  | spec_helper.sh の sandbox 隔離不変条件                  |
+| `SHPO`  | `path_outside_repo` (spec_helper.sh)                    |
+| `SHTD`  | `setup_deckrd_tmpdir` (spec_helper.sh)                  |
 | `ST`    | status.sh のセッション表示                              |
 | `UPDA`  | update.sh --update: apply outdated assets (integration) |
 | `UPDI`  | update.sh: list outdated assets (integration)           |
