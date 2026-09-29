@@ -48,6 +48,9 @@ _NOISE_SENTINEL='CLI-DIAGNOSTIC-NOISE'
 # _EXIT_CLI_FAILURE - CLI の異常終了を表す終了ステータス。run_ai 自身が返す 1 / 2 / 124 のどれとも異なる値にする
 _EXIT_CLI_FAILURE='3'
 
+# _EXIT_CLI_TIMEOUT - CLI の実行が打ち切られたことを表す終了ステータス。timeout(1) が打ち切り時に返す 124 に合わせる
+_EXIT_CLI_TIMEOUT='124'
+
 # 関数
 
 # _arrange_cli - timeout モックが出す応答本文と返す終了ステータスをケースの前提へ整える
@@ -70,6 +73,20 @@ _restore_mock_state() {
   unset _mock_body _mock_exit
 }
 
+# _run_ai_with_errexit - errexit を有効にしたうえで、固定プロンプトを stdin に与えて run_ai を呼ぶ
+#
+# 実際の呼び出し元 (generate-doc.sh) は `set -eo pipefail` 配下でパイプラインの要素として
+# run_ai を呼び、errexit はパイプライン要素のサブシェルでも生きている。CLI の実行結果を
+# 伝える経路が errexit に奪われないことは、errexit を有効にしたケースだけが観測できる。
+# set -e はシェル全体の設定であり関数スコープに閉じないため、このヘルパーは
+# ShellSpec 自身のシェルへ設定を漏らさないよう `When run` (サブシェル) から呼ぶ。
+#
+# @arg $@  run_ai へそのまま渡す引数
+_run_ai_with_errexit() {
+  set -e
+  run_ai_piped "$@"
+}
+
 # ============================================================================
 # テスト本体
 # ============================================================================
@@ -82,8 +99,17 @@ Describe "T-LIB-RASE: ai-runner.lib.sh run_ai の stdout/stderr 分離"
 
   After "_restore_mock_state"
 
-  # timeout - timeout(1) を差し替えるモック。stdout へ応答本文を、stderr へ診断の印を出して CLI は起動しない
+  # timeout - timeout(1) を差し替えるモック。stdout へ応答本文を、stderr へ診断の印を出して CLI は起動しない。
+  # run_ai は stdin の読み取りも timeout 配下で行うため、このモックは 1 回の呼び出しで 2 度踏まれる。
+  # 読み取り側（cat）を模してしまうと応答本文がプロンプトに化けるので、そちらは実物へ素通しし、
+  # CLI 起動側の呼び出しだけを差し替える
   timeout() {
+    shift
+    if [[ "$1" == "cat" ]]; then
+      "$@"
+      return
+    fi
+
     [[ -n "${_mock_body:-}" ]] && echo "${_mock_body}"
     echo "${_NOISE_SENTINEL}" >&2
     return "${_mock_exit:-0}"
@@ -99,7 +125,7 @@ Describe "T-LIB-RASE: ai-runner.lib.sh run_ai の stdout/stderr 分離"
 
     Describe "When: 正常系"
       It "Then: [Normal] T-LIB-RASE-01: stdout に応答本文だけが残り、診断は stderr へ届く"
-        When call run_ai "sonnet"
+        When call run_ai_piped "sonnet"
         The status should equal 0
         The output should equal "$_BODY_SENTINEL"
         The stderr should include "$_NOISE_SENTINEL"
@@ -110,12 +136,18 @@ Describe "T-LIB-RASE: ai-runner.lib.sh run_ai の stdout/stderr 分離"
   Describe "Given: AI CLI が stdout へ何も出さず stderr へ診断だけを出す"
     Before "_arrange_cli '' 0"
 
+    # CLI が exit 0 を返しても応答本文が無ければ run_ai は成功にしない (exit 4)。
+    # codex-cli 0.157 系は起動拒否を exit 0 + 空 stdout で返すため、ここを成功として
+    # 通すと呼び出し元には「空の応答で成功した」としか見えなくなる。
+    # このケースが見ているのは経路の分離なので、stdout が空のままであること、
+    # CLI の診断が stderr へ届くことは変わらない
     Describe "When: エッジケース"
-      It "Then: [Edge] T-LIB-RASE-02: 応答本文が無ければ stdout は空になる"
-        When call run_ai "sonnet"
-        The status should equal 0
+      It "Then: [Edge] T-LIB-RASE-02: 応答本文が無ければ stdout は空のまま exit 4 になる"
+        When call run_ai_piped "sonnet"
+        The status should equal 4
         The output should equal ""
         The stderr should include "$_NOISE_SENTINEL"
+        The stderr should include "without a response"
       End
     End
   End
@@ -125,10 +157,34 @@ Describe "T-LIB-RASE: ai-runner.lib.sh run_ai の stdout/stderr 分離"
 
     Describe "When: 異常系"
       It "Then: [Error] T-LIB-RASE-03: 非 0 終了でも stdout は応答本文のみで、終了ステータスはそのまま返る"
-        When call run_ai "sonnet"
+        When call run_ai_piped "sonnet"
         The status should equal "$_EXIT_CLI_FAILURE"
         The output should equal "$_BODY_SENTINEL"
         The stderr should include "$_NOISE_SENTINEL"
+      End
+
+      It "Then: [Error] T-LIB-RASE-04: errexit 有効でも応答本文と終了ステータスがそのまま返る"
+        When run _run_ai_with_errexit "sonnet"
+        The status should equal "$_EXIT_CLI_FAILURE"
+        The output should equal "$_BODY_SENTINEL"
+        The stderr should include "$_NOISE_SENTINEL"
+      End
+    End
+  End
+
+  # CLI の実行が打ち切られたときだけを見るグループ。モックに応答本文を出させるのは、
+  # 本文が空だと errexit 下でモック自身の `[[ ]] &&` が先に死に、run_ai ではなく
+  # モックを測ってしまうためである。打ち切り経路は $output を出さずに戻るので、
+  # 本文を出しても stdout が空のままであることは変わらない
+  Describe "Given: AI CLI の実行が制限時間内に終わらない"
+    Before "_arrange_cli '$_BODY_SENTINEL' '$_EXIT_CLI_TIMEOUT'"
+
+    Describe "When: 異常系"
+      It "Then: [Error] T-LIB-RASE-05: errexit 有効でも打ち切りの診断を出して 124 を返す"
+        When run _run_ai_with_errexit "sonnet"
+        The status should equal "$_EXIT_CLI_TIMEOUT"
+        The entire output should equal ""
+        The stderr should include "timeout after"
       End
     End
   End
