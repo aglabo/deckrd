@@ -33,6 +33,11 @@
 ##  Must stay last: these rules undo the broad allow rules above ##
 ## ------------------------------------------------------------ ##
 
+# temp directory, checklist: re-exclude inside workspaces/
+**/temp/
+**/tmp/
+**/*checklist.md
+
 # .env files
 **/.env
 **/.env.*
