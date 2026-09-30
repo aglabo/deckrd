@@ -7,16 +7,47 @@
 # https://opensource.org/licenses/MIT
 
 # deckrd (micro framework of create specs)
-# temp directory
+# temp directory: temporary working layer, never tracked
 **/temp/
 **/tmp/
 
 # session filles
 *
 !README*
+!.gitignore
 *kv
 *session
 *.json
 
 # checklist
 **/*checklist.md
+
+## ------------------------------------------------------------ ##
+##  Shared notes layer: track workspaces/ only                   ##
+## ------------------------------------------------------------ ##
+!/workspaces/
+!/workspaces/**
+
+## ------------------------------------------------------------ ##
+##  Re-exclude: secrets and generated files                      ##
+##  Must stay last: these rules undo the broad allow rules above ##
+## ------------------------------------------------------------ ##
+
+# temp directory, checklist: re-exclude inside workspaces/
+**/temp/
+**/tmp/
+**/*checklist.md
+
+# .env files
+**/.env
+**/.env.*
+
+# logs, patches
+*.log
+*.diff
+*.patch
+
+# backup/swap/temp
+*~
+*.tmp
+*.swp
