@@ -15,11 +15,14 @@ deckrd プラグインのコマンドエントリポイント。init / module / 
 | 略語    | 対象                                                    |
 | ------- | ------------------------------------------------------- |
 | `CDS`   | `collect_declared_scopes` (module.sh)                   |
+| `CMD`   | `create_module_dirs` (module.sh)                        |
 | `DTS`   | `derive_test_scope` (module.sh)                         |
 | `GDN`   | `_get_default_ns` (module.sh)                           |
 | `MAINI` | init.sh: main() integration (integration)               |
+| `MIV`   | `init_vars` (module.sh)                                 |
 | `MMT`   | create_module_meta と CLI 連携                          |
 | `MOD`   | module.sh の引数処理とディレクトリ生成                  |
+| `MPA`   | `parse_args` (module.sh)                                |
 | `PA`    | `parse_args` (init.sh)                                  |
 | `PRJ`   | project.sh の引数処理と `.project.json` 更新            |
 | `RDS`   | `read_declared_scope` (module.sh)                       |
@@ -32,4 +35,6 @@ deckrd プラグインのコマンドエントリポイント。init / module / 
 | `UPDA`  | update.sh --update: apply outdated assets (integration) |
 | `UPDI`  | update.sh: list outdated assets (integration)           |
 | `VA`    | `validate_args` (init.sh)                               |
+| `VAN`   | `validate_and_normalize` (module.sh)                    |
 | `VL`    | `validate_language` (init.sh)                           |
+| `VNF`   | `validate_and_normalize_with_fallback` (module.sh)      |
