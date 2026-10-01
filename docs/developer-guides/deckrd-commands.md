@@ -76,6 +76,8 @@ docs/.deckrd/myProject/authentication/
 ├── implementation/
 ├── tasks/
 └── workspaces/
+    └── module/
+        └── module.md
 ```
 
 ### /deckrd req
