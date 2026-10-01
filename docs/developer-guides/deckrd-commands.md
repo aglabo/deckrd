@@ -42,7 +42,7 @@ Deckrd provides a document-driven workflow that transforms goals and ideas into 
 
 ## Session Management
 
-**Session File**: `docs/.deckrd/.session.json`
+**Session File**: `.local/deckrd/session.json`
 
 The session file tracks:
 
