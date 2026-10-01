@@ -58,10 +58,17 @@ _resolve_deckrd_root() {
 # Sets: PROJECT_ROOT, SKILL_ROOT, DECKRD_ROOT, DECKRD_SCRIPTS_DIR,
 #       DECKRD_ASSETS_DIR, DECKRD_LIB_DIR, DECKRD_DATA_DIR, DECKRD_LOCAL_DATA,
 #       DECKRD_LOCAL_WORKSPACES, DECKRD_LOCAL_TEMP, DECKRD_DOCS_DIR, SYMBOL
-# All variables respect pre-existing values (env var > computed default).
+# All variables except SKILL_ROOT respect pre-existing values
+# (env var > computed default); SKILL_ROOT is always computed.
+# Exported: PROJECT_ROOT, DECKRD_DATA_DIR, DECKRD_LOCAL_DATA,
+#   DECKRD_LOCAL_WORKSPACES, DECKRD_LOCAL_TEMP, DECKRD_DOCS_DIR, SYMBOL
+#   (project-dependent).
+# Not exported: SKILL_ROOT, and computed values of DECKRD_ROOT,
+#   DECKRD_SCRIPTS_DIR, DECKRD_ASSETS_DIR, DECKRD_LIB_DIR (skill-dependent);
+#   a value of these four exported by the caller keeps its export.
 # Does NOT call readonly; call bootstrap_finalize() after to lock variables.
 #
-# @return 0 always
+# @return 0 on success, 1 if a readonly SKILL_ROOT differs from the computed value
 bootstrap_init() {
   # PROJECT_ROOT: env var > git > BASH_SOURCE fallback
   if [[ -z "${PROJECT_ROOT:-}" ]]; then
@@ -69,34 +76,49 @@ bootstrap_init() {
   fi
   export PROJECT_ROOT
 
-  # SKILL_ROOT: root of the deckrd skill - env var > computed
+  # SKILL_ROOT: root of the skill that sourced this library - always computed
   # Computed from BASH_SOURCE of this file (independent of PROJECT_ROOT and the
   # caller path); relies on the layout <SKILL_ROOT>/scripts/libs/*.lib.sh.
+  # Skills share this library through links, so a value inherited from a parent
+  # process may belong to another skill: any pre-set value is ignored, and the
+  # variable is not exported (export -n also drops an inherited export, and
+  # works on readonly variables).
+  # A readonly SKILL_ROOT is accepted only when it equals the computed value;
+  # a mismatch fails fast (a readonly assignment error would abort the caller's
+  # whole command without a usable status, so it is checked up front).
   # Resolved before DECKRD_ROOT.
-  if [[ -z "${SKILL_ROOT:-}" ]]; then
-    SKILL_ROOT="$(_resolve_deckrd_root)"
+  local _skill_root
+  _skill_root="$(_resolve_deckrd_root)"
+  if [[ "${SKILL_ROOT:-}" != "${_skill_root}" ]]; then
+    if [[ "$(declare -p SKILL_ROOT 2>/dev/null)" =~ ^declare\ -[a-zA-Z]*r ]]; then
+      printf 'bootstrap.lib.sh: SKILL_ROOT: readonly variable (%s, expected %s)\n' \
+        "${SKILL_ROOT}" "${_skill_root}" >&2
+      return 1
+    fi
+    SKILL_ROOT="${_skill_root}"
   fi
-  export SKILL_ROOT
+  export -n SKILL_ROOT
 
   # DECKRD_ROOT: root of the deckrd skill - env var > SKILL_ROOT
-  # Kept for compatibility: when unset (or empty) it takes the same value as
-  # SKILL_ROOT, so a pre-set SKILL_ROOT flows into all DECKRD_* directories.
+  # Kept for compatibility: when unset (or empty) it takes the computed
+  # SKILL_ROOT; a pre-set DECKRD_ROOT flows into the DECKRD_* skill directories
+  # below. Setting DECKRD_ROOT never changes SKILL_ROOT.
+  # DECKRD_ROOT, DECKRD_SCRIPTS_DIR, DECKRD_ASSETS_DIR and DECKRD_LIB_DIR are
+  # skill-dependent: computed values are not exported, so a child process that
+  # sources another skill's linked copy of this library computes its own.
+  # Explicit env overrides are honored and keep their export (no export -n).
   if [[ -z "${DECKRD_ROOT:-}" ]]; then
     DECKRD_ROOT="${SKILL_ROOT}"
   fi
-  export DECKRD_ROOT
 
   # DECKRD_SCRIPTS_DIR: deckrd scripts directory
   DECKRD_SCRIPTS_DIR="${DECKRD_SCRIPTS_DIR:-${DECKRD_ROOT}/scripts}"
-  export DECKRD_SCRIPTS_DIR
 
   # DECKRD_ASSETS_DIR: deckrd assets directory
   DECKRD_ASSETS_DIR="${DECKRD_ASSETS_DIR:-${DECKRD_ROOT}/assets}"
-  export DECKRD_ASSETS_DIR
 
   # DECKRD_LIB_DIR: deckrd library directory
   DECKRD_LIB_DIR="${DECKRD_LIB_DIR:-${DECKRD_ROOT}/scripts/libs}"
-  export DECKRD_LIB_DIR
 
   # DECKRD_DATA_DIR: user-level deckrd data directory
   DECKRD_DATA_DIR="${DECKRD_DATA_DIR:-${XDG_DATA_HOME:-${HOME}/.local/share}/deckrd}"
@@ -158,7 +180,7 @@ bootstrap_finalize() {
 # Pass "no-finalize" as an argument to skip finalize:
 #   . bootstrap.lib.sh no-finalize   # init only - variables remain writable
 #   . bootstrap.lib.sh               # init + finalize - variables locked
-bootstrap_init
+bootstrap_init || return 1
 if [[ "${1:-}" != "--no-finalize" ]]; then
   bootstrap_finalize
 fi
