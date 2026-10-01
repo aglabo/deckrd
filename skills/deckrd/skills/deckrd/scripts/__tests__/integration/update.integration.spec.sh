@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # skills/deckrd/skills/deckrd/scripts/__tests__/integration/update.integration.spec.sh
-# @(#) : Integration tests for update.sh - list outdated rules assets (no mocks)
+# @(#) : Integration tests for update.sh - list outdated assets (no mocks)
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #
@@ -27,10 +27,10 @@ setup_update_env() {
   setup_deckrd_tmpdir
   export INITS_DIR="${DECKRD_TMPDIR}/inits"
   local label
-  for label in deckrd-rules claude-rules deckrd-rules-index docs local-deckrd; do
+  for label in deckrd-rules claude-rules deckrd-rules-index docs local-deckrd local-workspaces; do
     mkdir -p "${INITS_DIR}/${label}"
   done
-  mkdir -p "$DECKRD_RULES_DIR" "$CLAUDE_RULES_DIR" "$CLAUDE_RULES_INDEX_DIR"
+  mkdir -p "$DECKRD_RULES_DIR" "$CLAUDE_RULES_DIR" "$CLAUDE_RULES_INDEX_DIR" "$DECKRD_LOCAL_WORKSPACES"
   printf '{}\n' >"${DECKRD_LOCAL_DATA}/session.json"
 }
 
@@ -107,8 +107,7 @@ make_ruled_crlf_local_gitignore() {
 # Helper: place a template without the workspaces rule marker and an old local gitignore
 make_markerless_template_local_gitignore() {
   make_old_local_gitignore
-  printf '%s
-' '*' '!README*' >"${INITS_DIR}/local-deckrd/.gitignore.org"
+  printf '%s\n' '*' '!README*' >"${INITS_DIR}/local-deckrd/.gitignore.org"
 }
 
 # Helper: place the template and an old local gitignore whose last line has no trailing newline
@@ -131,6 +130,38 @@ make_readonly_local_gitignore() {
 # Helper: give the local gitignore its normal mode back so that teardown can remove it
 restore_local_gitignore_mode() {
   [[ ! -f "${DECKRD_LOCAL_DATA:-}/.gitignore" ]] || chmod 644 "${DECKRD_LOCAL_DATA}/.gitignore"
+}
+
+# Helper: remove the workspaces directory and place a local-workspaces README source
+setup_workspaces_missing() {
+  rm -rf "$DECKRD_LOCAL_WORKSPACES"
+  printf '%s\n' '# workspaces' >"${INITS_DIR}/local-workspaces/README.md"
+}
+
+# Fixture: target path of the dangling README symlink (inside the test temp area, never created)
+dangling_readme_target() {
+  printf '%s\n' "${DECKRD_TMPDIR}/readme-target.md"
+}
+
+# Helper: occupy the workspaces README path with a symlink to a nonexistent target
+# MSYS=winsymlinks:nativestrict lets Git Bash create a native dangling symlink; harmless elsewhere.
+setup_workspaces_readme_dangling_symlink() {
+  mkdir -p "$DECKRD_LOCAL_WORKSPACES"
+  MSYS=winsymlinks:nativestrict ln -s "$(dangling_readme_target)" "${DECKRD_LOCAL_WORKSPACES}/README.md"
+}
+
+# Helper: report whether this host cannot create a dangling symlink
+#
+# Keeps the negation inside the function so that `Skip if` works (see command_missing in spec_helper.sh).
+#
+# @return 0 if a dangling symlink cannot be created, 1 if it can
+dangling_symlink_unsupported() {
+  local probe_dir rc=1
+  probe_dir="$(mktemp -d)" || return 0
+  { MSYS=winsymlinks:nativestrict ln -s "${probe_dir}/missing" "${probe_dir}/link" 2>/dev/null &&
+    [[ -L "${probe_dir}/link" ]]; } || rc=0
+  rm -rf "$probe_dir"
+  return "$rc"
 }
 
 # ============================================================================
@@ -169,6 +200,8 @@ Describe "T-CLI-UPDI: update.sh: list outdated assets"
     setup_multi_outdated() {
       make_asset deckrd-rules "$DECKRD_RULES_DIR" a.md new old "$NEW_MTIME" "$OLD_MTIME"
       make_asset docs "$DECKRD_DOCS_DIR" b.md new old "$NEW_MTIME" "$OLD_MTIME"
+      make_asset local-deckrd "$DECKRD_LOCAL_DATA" c.md new old "$NEW_MTIME" "$OLD_MTIME"
+      make_asset local-workspaces "$DECKRD_LOCAL_WORKSPACES" README.md new old "$NEW_MTIME" "$OLD_MTIME"
     }
     Before "setup_multi_outdated"
 
@@ -177,7 +210,9 @@ Describe "T-CLI-UPDI: update.sh: list outdated assets"
       The status should equal 0
       The line 1 of output should equal "[deckrd-rules] a.md"
       The line 2 of output should equal "[docs] b.md"
-      The lines of output should equal 2
+      The line 3 of output should equal "[local-deckrd] c.md"
+      The line 4 of output should equal "[local-workspaces] README.md"
+      The lines of output should equal 4
     End
   End
 
@@ -190,10 +225,10 @@ Describe "T-CLI-UPDI: update.sh: list outdated assets"
     }
     Before "setup_same_content"
 
-    It "[Normal] T-CLI-UPDI-04: Should: exit 0 and print that rules are up to date"
+    It "[Normal] T-CLI-UPDI-04: Should: exit 0 and print that assets are up to date"
       When run bash "$SCRIPT"
       The status should equal 0
-      The output should equal "Rules are up to date."
+      The output should equal "Assets are up to date."
     End
   End
 
@@ -209,7 +244,7 @@ Describe "T-CLI-UPDI: update.sh: list outdated assets"
     It "[Edge] T-CLI-UPDI-05: Should: exit 0, print up to date, and keep the edited file"
       When run bash "$SCRIPT"
       The status should equal 0
-      The output should equal "Rules are up to date."
+      The output should equal "Assets are up to date."
       The contents of file "${DECKRD_RULES_DIR}/a.md" should equal "edited"
     End
   End
@@ -226,7 +261,7 @@ Describe "T-CLI-UPDI: update.sh: list outdated assets"
     It "[Edge] T-CLI-UPDI-06: Should: exit 0, print up to date, and not deploy the file"
       When run bash "$SCRIPT"
       The status should equal 0
-      The output should equal "Rules are up to date."
+      The output should equal "Assets are up to date."
       The path "${DECKRD_RULES_DIR}/new-rule.md" should not be exist
     End
   End
@@ -281,6 +316,7 @@ Describe "T-CLI-UPDI: update.sh: list outdated assets"
       The status should equal 0
       The output should be blank
       The stderr should include "Usage:"
+      The stderr should include "workspaces/README.md"
     End
   End
 
@@ -294,6 +330,67 @@ Describe "T-CLI-UPDI: update.sh: list outdated assets"
       The status should equal 0
       The output should equal "[local-deckrd] .gitignore (workspaces rule)"
       The contents of file "${DECKRD_LOCAL_DATA}/.gitignore" should equal "$(_old_local_gitignore)"
+    End
+  End
+
+  Describe "Given: outdated README in the local-workspaces target"
+    Before "setup_update_env"
+    After "teardown_update_env"
+
+    setup_workspaces_outdated() {
+      make_asset local-workspaces "$DECKRD_LOCAL_WORKSPACES" README.md new old "$NEW_MTIME" "$OLD_MTIME"
+    }
+    Before "setup_workspaces_outdated"
+
+    It "[Normal] T-CLI-UPDI-11: Should: exit 0, print [local-workspaces] README.md, and leave the file unchanged"
+      When run bash "$SCRIPT"
+      The status should equal 0
+      The output should equal "[local-workspaces] README.md"
+      The contents of file "${DECKRD_LOCAL_WORKSPACES}/README.md" should equal "old"
+    End
+  End
+
+  Describe "Given: workspaces directory missing and a local-workspaces README source"
+    Before "setup_update_env" "setup_workspaces_missing"
+    After "teardown_update_env"
+
+    It "[Normal] T-CLI-UPDI-12: Should: exit 0, print the missing workspaces README label, and not create the directory"
+      When run bash "$SCRIPT"
+      The status should equal 0
+      The output should equal "[local-workspaces] README.md (missing)"
+      The path "$DECKRD_LOCAL_WORKSPACES" should not be exist
+    End
+  End
+
+  Describe "Given: workspaces directory missing and no local-workspaces README source"
+    Before "setup_update_env"
+    After "teardown_update_env"
+
+    setup_workspaces_missing_no_source() {
+      rm -rf "$DECKRD_LOCAL_WORKSPACES"
+    }
+    Before "setup_workspaces_missing_no_source"
+
+    It "[Edge] T-CLI-UPDI-13: Should: exit 0, print that assets are up to date, and not create the directory"
+      When run bash "$SCRIPT"
+      The status should equal 0
+      The output should equal "Assets are up to date."
+      The path "$DECKRD_LOCAL_WORKSPACES" should not be exist
+    End
+  End
+
+  Describe "Given: workspaces README path occupied by a dangling symlink and a local-workspaces README source"
+    Skip if "dangling symlinks are not supported on this host" dangling_symlink_unsupported
+    Before "setup_update_env" "setup_workspaces_missing" "setup_workspaces_readme_dangling_symlink"
+    After "teardown_update_env"
+
+    # A dangling symlink at the README path counts as deployed
+    It "[Edge] T-CLI-UPDI-14: Should: exit 0, print up to date, and keep the symlink without creating its target"
+      When run bash "$SCRIPT"
+      The status should equal 0
+      The output should equal "Assets are up to date."
+      The path "${DECKRD_LOCAL_WORKSPACES}/README.md" should be symlink
+      The path "$(dangling_readme_target)" should not be exist
     End
   End
 
@@ -337,7 +434,7 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
     It "[Edge] T-CLI-UPDA-02: Should: exit 0, print up to date, and keep the deployed .gitignore"
       When run bash "$SCRIPT" --update
       The status should equal 0
-      The output should equal "Rules are up to date."
+      The output should equal "Assets are up to date."
       The contents of file "${DECKRD_RULES_DIR}/.gitignore" should equal "old"
     End
   End
@@ -354,7 +451,7 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
     It "[Edge] T-CLI-UPDA-03: Should: exit 0, print up to date, and keep the edited file"
       When run bash "$SCRIPT" --update
       The status should equal 0
-      The output should equal "Rules are up to date."
+      The output should equal "Assets are up to date."
       The contents of file "${DECKRD_RULES_DIR}/a.md" should equal "edited"
     End
   End
@@ -371,7 +468,7 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
     It "[Edge] T-CLI-UPDA-04: Should: exit 0, print up to date, and not deploy the file"
       When run bash "$SCRIPT" --update
       The status should equal 0
-      The output should equal "Rules are up to date."
+      The output should equal "Assets are up to date."
       The path "${DECKRD_RULES_DIR}/new-rule.md" should not be exist
     End
   End
@@ -428,7 +525,7 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
     It "[Normal] T-CLI-UPDA-07: Should: exit 0, print up to date, and leave the migrated gitignore unchanged"
       When run bash "$SCRIPT" --update
       The status should equal 0
-      The output should equal "Rules are up to date."
+      The output should equal "Assets are up to date."
       The contents of file "${DECKRD_LOCAL_DATA}/.gitignore" should equal "$MIGRATED_GITIGNORE"
     End
   End
@@ -441,7 +538,7 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
     It "[Edge] T-CLI-UPDA-08: Should: exit 0, print up to date, and leave the gitignore unchanged"
       When run bash "$SCRIPT" --update
       The status should equal 0
-      The output should equal "Rules are up to date."
+      The output should equal "Assets are up to date."
       The contents of file "${DECKRD_LOCAL_DATA}/.gitignore" should equal "$(_ruled_local_gitignore)"
     End
   End
@@ -473,7 +570,7 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
     It "[Edge] T-CLI-UPDA-10: Should: exit 0, print up to date, and leave the CRLF gitignore unchanged"
       When run bash "$SCRIPT" --update
       The status should equal 0
-      The output should equal "Rules are up to date."
+      The output should equal "Assets are up to date."
       # no migration needed, so the file keeps its CRLF line endings
       The contents of file "${DECKRD_LOCAL_DATA}/.gitignore" should equal "$(_ruled_local_gitignore | _to_crlf)"
     End
@@ -541,6 +638,126 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
         echo
         _workspaces_rule_block
       )"
+    End
+  End
+
+  Describe "Given: outdated README in the local-workspaces target"
+    Before "setup_update_env"
+    After "teardown_update_env"
+
+    setup_workspaces_outdated_for_update() {
+      make_asset local-workspaces "$DECKRD_LOCAL_WORKSPACES" README.md new old "$NEW_MTIME" "$OLD_MTIME"
+    }
+    Before "setup_workspaces_outdated_for_update"
+
+    It "[Normal] T-CLI-UPDA-15: Should: exit 0, print Updated: [local-workspaces] README.md, and overwrite with the source"
+      When run bash "$SCRIPT" --update
+      The status should equal 0
+      The output should equal "Updated: [local-workspaces] README.md"
+      The contents of file "${DECKRD_LOCAL_WORKSPACES}/README.md" should equal "new"
+    End
+  End
+
+  Describe "Given: workspaces directory missing and a local-workspaces README source"
+    Before "setup_update_env" "setup_workspaces_missing"
+    After "teardown_update_env"
+
+    It "[Normal] T-CLI-UPDA-16: Should: exit 0, print Updated: with the missing workspaces README label, and copy the source"
+      When run bash "$SCRIPT" --update
+      The status should equal 0
+      The output should equal "Updated: [local-workspaces] README.md (missing)"
+      The contents of file "${DECKRD_LOCAL_WORKSPACES}/README.md" should equal "$(cat "${INITS_DIR}/local-workspaces/README.md")"
+    End
+  End
+
+  Describe "Given: missing workspaces README already copied by a previous --update run"
+    Before "setup_update_env" "setup_workspaces_missing"
+    After "teardown_update_env"
+
+    # Runs the first --update so that the README is already deployed
+    setup_workspaces_readme_copied() {
+      bash "$SCRIPT" --update >/dev/null
+    }
+    Before "setup_workspaces_readme_copied"
+
+    It "[Edge] T-CLI-UPDA-17: Should: exit 0, print up to date, and keep the copied README"
+      When run bash "$SCRIPT" --update
+      The status should equal 0
+      The output should equal "Assets are up to date."
+      The contents of file "${DECKRD_LOCAL_WORKSPACES}/README.md" should equal "$(cat "${INITS_DIR}/local-workspaces/README.md")"
+    End
+  End
+
+  Describe "Given: workspaces README path occupied by a directory and a local-workspaces README source"
+    Before "setup_update_env" "setup_workspaces_missing"
+    After "teardown_update_env"
+
+    # Any existing entry at the README path counts as deployed
+    setup_workspaces_readme_dir() {
+      mkdir -p "${DECKRD_LOCAL_WORKSPACES}/README.md"
+    }
+    Before "setup_workspaces_readme_dir"
+
+    It "[Edge] T-CLI-UPDA-18: Should: exit 0, print up to date, and copy nothing into the README directory"
+      When run bash "$SCRIPT" --update
+      The status should equal 0
+      The output should equal "Assets are up to date."
+      The path "${DECKRD_LOCAL_WORKSPACES}/README.md" should be directory
+      The path "${DECKRD_LOCAL_WORKSPACES}/README.md/README.md" should not be exist
+    End
+  End
+
+  Describe "Given: workspaces path occupied by a regular file and a local-workspaces README source"
+    Before "setup_update_env" "setup_workspaces_missing"
+    After "teardown_update_env"
+
+    # A regular file at the workspaces path makes mkdir -p fail
+    setup_workspaces_path_file() {
+      : >"$DECKRD_LOCAL_WORKSPACES"
+    }
+    Before "setup_workspaces_path_file"
+
+    It "[Error] T-CLI-UPDA-19: Should: exit 1, stderr reports the failed update, and leave the workspaces path a regular file"
+      When run bash "$SCRIPT" --update
+      The status should equal 1
+      The stderr should include "Error: failed to update: ${DECKRD_LOCAL_WORKSPACES}/README.md"
+      The output should not include "Updated:"
+      The path "$DECKRD_LOCAL_WORKSPACES" should be file
+    End
+  End
+
+  Describe "Given: workspaces directory with another file but no README and a local-workspaces README source"
+    Before "setup_update_env"
+    After "teardown_update_env"
+
+    # Keeps the workspaces directory (unlike setup_workspaces_missing) so that only the README is missing
+    setup_workspaces_readme_only_missing() {
+      printf '%s\n' '# workspaces' >"${INITS_DIR}/local-workspaces/README.md"
+      printf '%s\n' 'keep' >"${DECKRD_LOCAL_WORKSPACES}/notes.md"
+    }
+    Before "setup_workspaces_readme_only_missing"
+
+    It "[Edge] T-CLI-UPDA-20: Should: exit 0, print Updated: with the missing workspaces README label, copy the source, and keep other files"
+      When run bash "$SCRIPT" --update
+      The status should equal 0
+      The output should equal "Updated: [local-workspaces] README.md (missing)"
+      The contents of file "${DECKRD_LOCAL_WORKSPACES}/README.md" should equal "$(cat "${INITS_DIR}/local-workspaces/README.md")"
+      The contents of file "${DECKRD_LOCAL_WORKSPACES}/notes.md" should equal "keep"
+    End
+  End
+
+  Describe "Given: workspaces README path occupied by a dangling symlink and a local-workspaces README source"
+    Skip if "dangling symlinks are not supported on this host" dangling_symlink_unsupported
+    Before "setup_update_env" "setup_workspaces_missing" "setup_workspaces_readme_dangling_symlink"
+    After "teardown_update_env"
+
+    # A dangling symlink at the README path counts as deployed, so nothing is copied over it
+    It "[Edge] T-CLI-UPDA-21: Should: exit 0, print up to date, and keep the symlink without creating its target"
+      When run bash "$SCRIPT" --update
+      The status should equal 0
+      The output should equal "Assets are up to date."
+      The path "${DECKRD_LOCAL_WORKSPACES}/README.md" should be symlink
+      The path "$(dangling_readme_target)" should not be exist
     End
   End
 

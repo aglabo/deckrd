@@ -58,19 +58,12 @@ validate_env || exit 1
 
 ##
 # @description Initialize script configuration variables
+# @description Asset source/destination path variables and ASSET_TARGETS come from
+#   init_asset_dirs (libs/asset-diff.lib.sh), the single asset target list shared with update
 # @description Path variables use ${VAR:-default} to allow external override (mock)
 # @description OPTIONS is declared here and filled by parse_args
 init_vars() {
-  INITS_DIR="${INITS_DIR:-${DECKRD_ROOT}/assets/inits}"
-  RULES_SRC_DIR="${RULES_SRC_DIR:-${INITS_DIR}/deckrd-rules}"
-  RULES_INDEX_SRC_DIR="${RULES_INDEX_SRC_DIR:-${INITS_DIR}/deckrd-rules-index}"
-  CLAUDE_RULES_SRC_DIR="${CLAUDE_RULES_SRC_DIR:-${INITS_DIR}/claude-rules}"
-  DOCS_SRC_DIR="${DOCS_SRC_DIR:-${INITS_DIR}/docs}"
-  LOCAL_SRC_DIR="${LOCAL_SRC_DIR:-${INITS_DIR}/local-deckrd}"
-  LOCAL_WORKSPACES_SRC_DIR="${LOCAL_WORKSPACES_SRC_DIR:-${INITS_DIR}/local-workspaces}"
-  DECKRD_RULES_DIR="${DECKRD_RULES_DIR:-${DECKRD_DOCS_DIR}/rules}"
-  CLAUDE_RULES_DIR="${CLAUDE_RULES_DIR:-${PROJECT_ROOT}/.claude/rules/claude-rules}"
-  CLAUDE_RULES_INDEX_DIR="${CLAUDE_RULES_INDEX_DIR:-${PROJECT_ROOT}/.claude/rules/deckrd-rules}"
+  init_asset_dirs
   PROJECT_FILE="${PROJECT_FILE:-${DECKRD_LOCAL_DATA}/.project.json}"
   SESSION_FILE="${SESSION_FILE:-${DECKRD_LOCAL_DATA}/session.json}"
   BASE_SUBDIRS=("notes" "temp")
@@ -258,20 +251,21 @@ init_directory() {
 
 ##
 # @description Initialize all project directories and install assets
+# @description Order: DECKRD_LOCAL_TEMP (no assets), then each ASSET_TARGETS entry
+#   (`<label>|<src>|<dest>`, set by init_asset_dirs), then the BASE_SUBDIRS under DECKRD_DOCS_DIR
 # @description Stops at the first init_directory failure without printing "Init complete."
 # @exitcode 0 All directories initialized
 # @exitcode 1 An init_directory call failed
 # @stderr Progress messages
 # @stderr Error message from the failing init_directory
 init_directories() {
+  local entry label src dest subdir
   echo "Init: creating directories and installing assets..." >&2
-  init_directory "$DECKRD_RULES_DIR" "$RULES_SRC_DIR" "deckrd-rules" || return 1
-  init_directory "$CLAUDE_RULES_DIR" "$CLAUDE_RULES_SRC_DIR" "claude-rules" || return 1
-  init_directory "$CLAUDE_RULES_INDEX_DIR" "$RULES_INDEX_SRC_DIR" "deckrd-rules-index" || return 1
-  init_directory "$DECKRD_DOCS_DIR" "$DOCS_SRC_DIR" "docs" || return 1
-  init_directory "$DECKRD_LOCAL_DATA" "$LOCAL_SRC_DIR" "local-deckrd" || return 1
   init_directory "$DECKRD_LOCAL_TEMP" || return 1
-  init_directory "$DECKRD_LOCAL_WORKSPACES" "$LOCAL_WORKSPACES_SRC_DIR" "local-workspaces" || return 1
+  for entry in "${ASSET_TARGETS[@]}"; do
+    IFS='|' read -r label src dest <<<"$entry"
+    init_directory "$dest" "$src" "$label" || return 1
+  done
   for subdir in "${BASE_SUBDIRS[@]}"; do
     init_directory "${DECKRD_DOCS_DIR}/${subdir}" || return 1
   done

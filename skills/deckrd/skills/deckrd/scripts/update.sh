@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # src: ./skills/deckrd/scripts/update.sh
-# @(#) : deckrd rules assets 更新一覧・更新スクリプト
+# @(#) : deckrd assets 更新一覧・更新スクリプト
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #
@@ -8,12 +8,14 @@
 # https://opensource.org/licenses/MIT
 #
 # @file update.sh
-# @brief List or update deployed rules assets that are outdated
+# @brief List or update deployed assets that are outdated
 # @description
 #   Compares each asset source directory with its deployed directory and lists
 #   deployed files that are older than and differ from the source.
 #   It also reports an existing `.local/deckrd/.gitignore` that lacks the
-#   `!/workspaces/` rule as `[local-deckrd] .gitignore (workspaces rule)`.
+#   `!/workspaces/` rule as `[local-deckrd] .gitignore (workspaces rule)`, and a
+#   workspaces README whose source exists but which is not deployed as
+#   `[local-workspaces] README.md (missing)`.
 #   Deployed files are not modified unless --update is given, in which case
 #   each outdated file is overwritten with its source and the workspaces rule
 #   block of the template is appended to the old gitignore.
@@ -49,6 +51,8 @@ validate_env || exit 1
 
 # Label reported for an old local gitignore that lacks the workspaces rule
 readonly WORKSPACES_RULE_LABEL='[local-deckrd] .gitignore (workspaces rule)'
+# Label reported for a workspaces README that has a source but is not deployed
+readonly WORKSPACES_README_LABEL='[local-workspaces] README.md (missing)'
 
 # ============================================================================
 # Functions
@@ -61,13 +65,15 @@ show_usage() {
   cat >&2 <<EOF
 Usage: update.sh [OPTIONS]
 
-List deployed rules assets that are older than and differ from the source,
+List deployed assets that are older than and differ from the source,
 and an existing .local/deckrd/.gitignore that lacks the workspaces rule.
+A missing .local/deckrd/workspaces/README.md is reported as well when its source exists.
 Deployed files are not modified unless --update is given.
 
 Options:
-  --update      Overwrite outdated deployed files with their source and
-                append the workspaces rule block to the old .gitignore
+  --update      Overwrite outdated deployed files with their source,
+                append the workspaces rule block to the old .gitignore,
+                and copy the missing workspaces README from its source
   -h, --help    Show this help message
 EOF
 }
@@ -134,18 +140,71 @@ apply_workspaces_rule() {
 }
 
 ##
+# @description Print (and in update mode, append to) the local gitignore when it lacks the
+#   workspaces rule
+#   The local gitignore is not a migration target when it does not exist; otherwise it is read
+#   once and its content is checked with workspaces_rule_missing and passed to apply_workspaces_rule.
+# @arg $1 true to append the workspaces rule, false to only list it
+# @stdout WORKSPACES_RULE_LABEL (`Updated: ` prefixed in update mode) when the rule is missing
+# @stderr Error message when the local gitignore cannot be read or updated (exits 1)
+# @return 0 when the local gitignore was reported, 1 otherwise
+print_workspaces_rule() {
+  local update_mode="$1" gitignore="${DECKRD_LOCAL_DATA}/.gitignore" content
+  [[ -f "$gitignore" ]] ||
+    return 1
+  content="$(cat -- "$gitignore" 2>/dev/null)" || {
+    echo "Error: cannot read: ${gitignore}" >&2
+    exit 1
+  }
+  workspaces_rule_missing "$content" ||
+    return 1
+  if [[ "$update_mode" != true ]]; then
+    printf '%s\n' "$WORKSPACES_RULE_LABEL"
+    return 0
+  fi
+  apply_workspaces_rule "$gitignore" "$content"
+  printf 'Updated: %s\n' "$WORKSPACES_RULE_LABEL"
+}
+
+##
+# @description Print (and in update mode, deploy) the workspaces README when its source exists
+#   but it is not deployed ("not deployed" means nothing exists at the README path; any existing
+#   entry, even a directory or a dangling symlink, counts as deployed and is left untouched)
+#   A README missing from both sides is not reported and nothing is created. In list mode
+#   neither the workspaces directory nor the README is created; in update mode the directory
+#   is created if needed and the source README is copied into it.
+# @arg $1 true to deploy the missing README, false to only list it
+# @stdout WORKSPACES_README_LABEL (`Updated: ` prefixed in update mode) when the README is missing
+# @stderr Error message when the directory cannot be created or the README cannot be copied (exits 1)
+# @return 0 when the README was reported, 1 otherwise
+print_missing_workspaces_readme() {
+  local update_mode="$1" readme="${DECKRD_LOCAL_WORKSPACES}/README.md"
+  [[ -f "${LOCAL_WORKSPACES_SRC_DIR}/README.md" && ! -e "$readme" && ! -L "$readme" ]] ||
+    return 1
+  if [[ "$update_mode" != true ]]; then
+    printf '%s\n' "$WORKSPACES_README_LABEL"
+    return 0
+  fi
+  { mkdir -p "$DECKRD_LOCAL_WORKSPACES" && cp "${LOCAL_WORKSPACES_SRC_DIR}/README.md" "$readme"; } || {
+    echo "Error: failed to update: ${readme}" >&2
+    exit 1
+  }
+  printf 'Updated: %s\n' "$WORKSPACES_README_LABEL"
+}
+
+##
 # @description Print (and in update mode, overwrite) outdated deployed assets of every ASSET_TARGETS entry,
-#   then the local gitignore that lacks the workspaces rule (appended to in update mode).
-#   The local gitignore is not a target when it does not exist; otherwise it is read once
-#   and its content is checked with workspaces_rule_missing and passed to apply_workspaces_rule.
+#   then the local gitignore that lacks the workspaces rule (appended to in update mode),
+#   then the workspaces README that has a source but is not deployed.
+#   The last two are delegated to print_workspaces_rule and print_missing_workspaces_readme.
 # @arg $1 true to overwrite outdated assets, false to only list them
 # @stdout `[label] name` (`Updated: [label] name` in update mode) per outdated asset
-#   and WORKSPACES_RULE_LABEL for the local gitignore, or `Rules are up to date.` when none
+#   WORKSPACES_RULE_LABEL for the local gitignore, WORKSPACES_README_LABEL for a missing
+#   workspaces README, or `Assets are up to date.` when none
 # @stderr Error message when a file cannot be updated or the local gitignore cannot be read (exits 1)
 print_updated_assets() {
   local update_mode="$1"
   local entry label src dest name count=0
-  local gitignore="${DECKRD_LOCAL_DATA}/.gitignore" content
 
   for entry in "${ASSET_TARGETS[@]}"; do
     IFS='|' read -r label src dest <<<"$entry"
@@ -163,25 +222,16 @@ print_updated_assets() {
     done < <(list_updated_assets "$src" "$dest")
   done
 
-  # A missing gitignore is not a migration target; an existing one is read once here
-  if [[ -f "$gitignore" ]]; then
-    content="$(cat -- "$gitignore" 2>/dev/null)" || {
-      echo "Error: cannot read: ${gitignore}" >&2
-      exit 1
-    }
-    if workspaces_rule_missing "$content"; then
-      if [[ "$update_mode" == true ]]; then
-        apply_workspaces_rule "$gitignore" "$content"
-        printf 'Updated: %s\n' "$WORKSPACES_RULE_LABEL"
-      else
-        printf '%s\n' "$WORKSPACES_RULE_LABEL"
-      fi
-      count=$((count + 1))
-    fi
+  if print_workspaces_rule "$update_mode"; then
+    count=$((count + 1))
+  fi
+
+  if print_missing_workspaces_readme "$update_mode"; then
+    count=$((count + 1))
   fi
 
   if [[ "$count" -eq 0 ]]; then
-    echo "Rules are up to date."
+    echo "Assets are up to date."
   fi
 }
 
