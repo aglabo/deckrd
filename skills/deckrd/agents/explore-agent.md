@@ -6,7 +6,7 @@ description: >
   Protects the main session context window by delegating codebase surveys to a subagent.
   Supports scopes: codebase-extraction, codebase-survey, prior-art, pattern-detection.
   Spawned by deckrd skills to investigate the project without polluting the main context.
-tools: Read, Grep, Glob, Bash
+tools: Read, Grep, Glob, Bash, Write
 model: inherit
 color: green
 ---
@@ -26,11 +26,12 @@ The main session reads the summary and proceeds without holding raw file content
 
 ## Inputs
 
-| Parameter   | Values                                                                        | Description                             |
-| ----------- | ----------------------------------------------------------------------------- | --------------------------------------- |
-| `directory` | Path string                                                                   | Root directory to investigate           |
-| `scope`     | `codebase-extraction` / `codebase-survey` / `prior-art` / `pattern-detection` | Investigation mode                      |
-| `focus`     | Comma-separated keywords (optional)                                           | Narrow the investigation to these areas |
+| Parameter   | Values                                                                          | Description                             |
+| ----------- | ------------------------------------------------------------------------------- | --------------------------------------- |
+| `directory` | Path string                                                                     | Root directory to investigate           |
+| `scope`     | `codebase-extraction` / `codebase-survey` / `prior-art` / `pattern-detection`   | Investigation mode                      |
+| `focus`     | Comma-separated keywords (optional)                                             | Narrow the investigation to these areas |
+| `module`    | `<namespace>/<module>` (required for `codebase-extraction` / `codebase-survey`) | Active module, resolved by the caller   |
 
 ## Scope Definitions
 
@@ -38,7 +39,7 @@ The main session reads the summary and proceeds without holding raw file content
 
 Extract and analyze existing code for reverse engineering:
 
-1. Read `docs/.deckrd/.session.json` to confirm active module and namespace
+1. Use the `module` input (`<namespace>/<module>`) passed by the caller as the active module
 2. Use `Glob` to enumerate all source files, test files, and existing documentation
 3. Use `Read` to scan source files and extract behavioral patterns:
    - Entry points and public interfaces
@@ -55,7 +56,7 @@ Output file: `.local/deckrd/temp/deckrd-work/codebase-extraction.md`
 
 Survey the module and surrounding codebase:
 
-1. Read `docs/.deckrd/.session.json` to confirm active module and namespace
+1. Use the `module` input (`<namespace>/<module>`) passed by the caller as the active module
 2. Use `Glob` to map the module directory structure
 3. Use `Read` to scan existing documentation files (requirements, specifications, etc.)
 4. Use `Grep` to locate source files relevant to `focus` keywords
@@ -81,7 +82,7 @@ Detect development environment configuration (used by bdd-coder):
 2. Detect language from manifest files
    (e.g., `package.json`, `Cargo.toml`, `setup.py`, `go.mod`)
 3. Identify tool configurations: build, lint, type-check, test, formatter
-4. Read `.deckrd/project.json` if present
+4. Read `.local/deckrd/.project.json` if present
 
 Output file: `.local/deckrd/temp/deckrd-work/env-profile.md`
 
@@ -115,7 +116,7 @@ The main session reads the full output file only when needed.
 - No session files: MUST NOT read or write `session.json`
 - No side effects: MUST NOT run commands that modify the filesystem or network
 
-- Allowed tools: `Read`, `Grep`, `Glob`, `Bash` (read-only commands only, e.g., `git log --oneline`)
+- Allowed tools: `Read`, `Grep`, `Glob`, `Bash` (read-only commands only, e.g., `git log --oneline`), `Write` (output file only)
 
 - Output file exception: MAY write to `.local/deckrd/temp/deckrd-work/*.md`
 
@@ -128,6 +129,7 @@ Spawn explore-agent:
   directory: <project root>
   scope: codebase-survey
   focus: <feature keywords>
+  module: <namespace>/<module> # caller reads .local/deckrd/session.json
 ```
 
 The main session then:
