@@ -81,7 +81,7 @@ claude plugin install bdd-coder@deckrd
 
 # Phase 2: Plan with deckrd
 /deckrd init myProject shell
-/deckrd module myProject/feature
+/deckrd module myProject/feature   # or: /deckrd module feature
 /deckrd req
 /deckrd spec
 /deckrd impl
