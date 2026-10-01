@@ -186,14 +186,7 @@ Describe "bootstrap.lib.sh"
     End
 
     It "[Normal] T-LIB-BSRCF-06: bdd-coder パスでも DECKRD_ROOT 事前設定値が優先される"
-      When run bash -c "
-        mkdir -p /tmp/plugins/bdd-coder
-        tmpscript=\"\$(mktemp /tmp/plugins/bdd-coder/XXXXXX.sh)\"
-        printf 'export DECKRD_ROOT=/tmp/custom\n. \"%s\" && echo \"\$DECKRD_ROOT\"\n' \"$SCRIPT\" > \"\$tmpscript\"
-        result=\$(bash \"\$tmpscript\")
-        rm -f \"\$tmpscript\"
-        echo \"\$result\"
-      "
+      When call run_coder_tmpscript DECKRD_ROOT "DECKRD_ROOT=/tmp/custom"
       The status should equal 0
       The output should equal "/tmp/custom"
     End
@@ -216,10 +209,10 @@ Describe "bootstrap.lib.sh"
       The output should equal "ok"
     End
 
-    It "[Normal] T-LIB-BINTF-03: bootstrap_init が設定する公開変数 10 個が全て export されている"
+    It "[Normal] T-LIB-BINTF-03: bootstrap_init が設定する公開変数 11 個が全て export されている"
       When run bash -c "
         . \"$SCRIPT\"
-        expected='PROJECT_ROOT DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_ASSETS_DIR DECKRD_LIB_DIR DECKRD_DATA_DIR DECKRD_LOCAL_DATA DECKRD_LOCAL_WORKSPACES DECKRD_DOCS_DIR SYMBOL'
+        expected='PROJECT_ROOT DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_ASSETS_DIR DECKRD_LIB_DIR DECKRD_DATA_DIR DECKRD_LOCAL_DATA DECKRD_LOCAL_WORKSPACES DECKRD_LOCAL_TEMP DECKRD_DOCS_DIR SYMBOL'
         for var in \$expected; do
           [[ -n \"\${!var+x}\" ]] || { echo \"missing: \$var\"; exit 1; }
         done
@@ -229,10 +222,10 @@ Describe "bootstrap.lib.sh"
       The output should equal "ok"
     End
 
-    It "[Normal] T-LIB-BINTF-04: bootstrap_finalize が locking する 10 変数が全て readonly になっている"
+    It "[Normal] T-LIB-BINTF-04: bootstrap_finalize が locking する 11 変数が全て readonly になっている"
       When run bash -c "
         . \"$SCRIPT\"
-        readonly_vars='PROJECT_ROOT DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_ASSETS_DIR DECKRD_LIB_DIR DECKRD_DATA_DIR DECKRD_LOCAL_DATA DECKRD_LOCAL_WORKSPACES DECKRD_DOCS_DIR SYMBOL'
+        readonly_vars='PROJECT_ROOT DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_ASSETS_DIR DECKRD_LIB_DIR DECKRD_DATA_DIR DECKRD_LOCAL_DATA DECKRD_LOCAL_WORKSPACES DECKRD_LOCAL_TEMP DECKRD_DOCS_DIR SYMBOL'
         for var in \$readonly_vars; do
           ( eval \"\$var=x\" ) 2>/dev/null && { echo \"not readonly: \$var\"; exit 1; }
         done

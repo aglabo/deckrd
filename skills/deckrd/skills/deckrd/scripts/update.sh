@@ -12,8 +12,11 @@
 # @description
 #   Compares each asset source directory with its deployed directory and lists
 #   deployed files that are older than and differ from the source.
+#   It also reports an existing `.local/deckrd/.gitignore` that lacks the
+#   `!/workspaces/` rule as `[local-deckrd] .gitignore (workspaces rule)`.
 #   Deployed files are not modified unless --update is given, in which case
-#   each outdated file is overwritten with its source.
+#   each outdated file is overwritten with its source and the workspaces rule
+#   block of the template is appended to the old gitignore.
 #
 # @usage
 #   update.sh [OPTIONS]
@@ -44,6 +47,9 @@ unset _SCRIPT_DIR
 . "${DECKRD_LIB_DIR}/asset-diff.lib.sh"
 validate_env || exit 1
 
+# Label reported for an old local gitignore that lacks the workspaces rule
+readonly WORKSPACES_RULE_LABEL='[local-deckrd] .gitignore (workspaces rule)'
+
 # ============================================================================
 # Functions
 # ============================================================================
@@ -55,40 +61,45 @@ show_usage() {
   cat >&2 <<EOF
 Usage: update.sh [OPTIONS]
 
-List deployed rules assets that are older than and differ from the source.
+List deployed rules assets that are older than and differ from the source,
+and an existing .local/deckrd/.gitignore that lacks the workspaces rule.
 Deployed files are not modified unless --update is given.
 
 Options:
-  --update      Overwrite outdated deployed files with their source
+  --update      Overwrite outdated deployed files with their source and
+                append the workspaces rule block to the old .gitignore
   -h, --help    Show this help message
 EOF
 }
 
 ##
-# @description Parse command-line options
-# @return 0 on success, 1 on error (no output; caller handles error message)
-# @var PARSE_ARGS_ERROR set to error description on failure
-# @var UPDATE_MODE set to true when --update is given, false otherwise
+# @description Parse command-line options into a caller-provided associative array
+#   The array is reset on every call. Help returns immediately without output,
+#   so arguments after it are not checked; the caller shows usage.
+# @arg $1 Name of an associative array to fill (nameref): keys update, help, error
+# @arg $@ CLI arguments
+# @return 0 on success (including help), 1 on invalid argument (error key set)
 parse_args() {
-  PARSE_ARGS_ERROR=""
-  UPDATE_MODE=false
+  local -n _opts_ref="$1"
+  shift
+  _opts_ref=(['update']=false ['help']=false ['error']="")
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
     -h | --help)
-      show_usage
-      exit 0
+      _opts_ref['help']=true
+      return 0
       ;;
     --update)
-      UPDATE_MODE=true
+      _opts_ref['update']=true
       shift
       ;;
     -*)
-      PARSE_ARGS_ERROR="Unknown option: $1"
+      _opts_ref['error']="Unknown option: $1"
       return 1
       ;;
     *)
-      PARSE_ARGS_ERROR="Unexpected argument: $1"
+      _opts_ref['error']="Unexpected argument: $1"
       return 1
       ;;
     esac
@@ -96,17 +107,50 @@ parse_args() {
 }
 
 ##
-# @description Print (and with UPDATE_MODE, overwrite) outdated deployed assets of every ASSET_TARGETS entry
-# @stdout `[label] name` (`Updated: [label] name` in UPDATE_MODE) per outdated asset,
-#   or `Rules are up to date.` when none
-# @stderr Error message when a file cannot be updated (exits 1)
+# @description Append the workspaces rule block of the local gitignore template to a gitignore
+#   The template is read here and its content is passed to workspaces_rule_block. The block is
+#   obtained before anything is written, so a missing or unreadable template, or one without
+#   the block, leaves the file untouched (all three report the same "block not found" error).
+#   The file is rewritten in one go from the given content with CRs removed (LF line endings),
+#   the original lines followed by exactly one blank line and the block, so a CRLF file does
+#   not end up mixed. The gitignore itself is not read again.
+# @arg $1 Path to the gitignore to update
+# @arg $2 Current content of the gitignore, as read by the caller
+# @stderr Error message when the template block cannot be obtained or the file cannot be
+#   written (exits 1)
+apply_workspaces_rule() {
+  local gitignore="$1" content="${2//$'\r'/}" template template_content block
+  template="$(asset_src_path "$LOCAL_SRC_DIR" .gitignore)"
+  if ! template_content="$(cat -- "$template" 2>/dev/null)" ||
+    ! block="$(workspaces_rule_block "$template_content")"; then
+    echo "Error: workspaces rule block not found: ${template}" >&2
+    exit 1
+  fi
+  # The caller's $(...) dropped trailing newlines, so the printf below always leaves one blank line
+  printf '%s\n\n%s\n' "$content" "$block" >"$gitignore" || {
+    echo "Error: failed to update: ${gitignore}" >&2
+    exit 1
+  }
+}
+
+##
+# @description Print (and in update mode, overwrite) outdated deployed assets of every ASSET_TARGETS entry,
+#   then the local gitignore that lacks the workspaces rule (appended to in update mode).
+#   The local gitignore is not a target when it does not exist; otherwise it is read once
+#   and its content is checked with workspaces_rule_missing and passed to apply_workspaces_rule.
+# @arg $1 true to overwrite outdated assets, false to only list them
+# @stdout `[label] name` (`Updated: [label] name` in update mode) per outdated asset
+#   and WORKSPACES_RULE_LABEL for the local gitignore, or `Rules are up to date.` when none
+# @stderr Error message when a file cannot be updated or the local gitignore cannot be read (exits 1)
 print_updated_assets() {
+  local update_mode="$1"
   local entry label src dest name count=0
+  local gitignore="${DECKRD_LOCAL_DATA}/.gitignore" content
 
   for entry in "${ASSET_TARGETS[@]}"; do
     IFS='|' read -r label src dest <<<"$entry"
     while IFS= read -r name; do
-      if [[ "$UPDATE_MODE" == true ]]; then
+      if [[ "$update_mode" == true ]]; then
         cp "$(asset_src_path "$src" "$name")" "${dest}/${name}" || {
           echo "Error: failed to update: ${dest}/${name}" >&2
           exit 1
@@ -119,6 +163,23 @@ print_updated_assets() {
     done < <(list_updated_assets "$src" "$dest")
   done
 
+  # A missing gitignore is not a migration target; an existing one is read once here
+  if [[ -f "$gitignore" ]]; then
+    content="$(cat -- "$gitignore" 2>/dev/null)" || {
+      echo "Error: cannot read: ${gitignore}" >&2
+      exit 1
+    }
+    if workspaces_rule_missing "$content"; then
+      if [[ "$update_mode" == true ]]; then
+        apply_workspaces_rule "$gitignore" "$content"
+        printf 'Updated: %s\n' "$WORKSPACES_RULE_LABEL"
+      else
+        printf '%s\n' "$WORKSPACES_RULE_LABEL"
+      fi
+      count=$((count + 1))
+    fi
+  fi
+
   if [[ "$count" -eq 0 ]]; then
     echo "Rules are up to date."
   fi
@@ -129,11 +190,17 @@ print_updated_assets() {
 # ============================================================================
 
 main() {
-  parse_args "$@" || {
-    echo "Error: ${PARSE_ARGS_ERROR}" >&2
+  local -A opts
+  parse_args opts "$@" || {
+    echo "Error: ${opts[error]}" >&2
     show_usage
     exit 1
   }
+
+  if [[ "${opts[help]}" == true ]]; then
+    show_usage
+    exit 0
+  fi
 
   if [[ ! -f "${DECKRD_LOCAL_DATA}/session.json" ]]; then
     echo "Error: session not found: ${DECKRD_LOCAL_DATA}/session.json. Run init first." >&2
@@ -141,7 +208,7 @@ main() {
   fi
 
   init_asset_dirs
-  print_updated_assets
+  print_updated_assets "${opts[update]}"
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then

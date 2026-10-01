@@ -41,61 +41,61 @@ Describe "T-CLI-VA: init.sh: validate_args"
   Before "load_script_with_mocks"
   Before "init_vars"
 
-  Describe "Given: valid PROJECT_NAME and PROJECT_TYPE"
+  Describe "Given: valid OPTIONS[project] and OPTIONS[project_type]"
     It "[Normal] T-CLI-VA-01: Should: return 0"
-      PROJECT_NAME="myapp"
-      PROJECT_TYPE="webapp"
+      OPTIONS["project"]="myapp"
+      OPTIONS["project_type"]="webapp"
       When call validate_args
       The status should equal 0
     End
   End
 
-  Describe "Given: PROJECT_NAME is empty"
+  Describe "Given: OPTIONS[project] is empty"
     It "[Error] T-CLI-VA-02: Should: return 1 and set VALIDATE_ARGS_ERROR"
-      PROJECT_NAME=""
-      PROJECT_TYPE="webapp"
+      OPTIONS["project"]=""
+      OPTIONS["project_type"]="webapp"
       When call validate_args
       The status should equal 1
       The variable VALIDATE_ARGS_ERROR should include "required"
     End
   End
 
-  Describe "Given: PROJECT_TYPE is empty"
+  Describe "Given: OPTIONS[project_type] is empty"
     It "[Error] T-CLI-VA-03: Should: return 1 and set VALIDATE_ARGS_ERROR"
-      PROJECT_NAME="myapp"
-      PROJECT_TYPE=""
+      OPTIONS["project"]="myapp"
+      OPTIONS["project_type"]=""
       When call validate_args
       The status should equal 1
       The variable VALIDATE_ARGS_ERROR should include "required"
     End
   End
 
-  Describe "Given: PROJECT_NAME has uppercase"
+  Describe "Given: OPTIONS[project] has uppercase"
     It "[Error] T-CLI-VA-04: Should: return 1 and set VALIDATE_ARGS_ERROR with 'invalid characters'"
-      PROJECT_NAME="MyApp"
-      PROJECT_TYPE="webapp"
+      OPTIONS["project"]="MyApp"
+      OPTIONS["project_type"]="webapp"
       When call validate_args
       The status should equal 1
       The variable VALIDATE_ARGS_ERROR should include "invalid characters"
     End
   End
 
-  Describe "Given: PROJECT_TYPE has uppercase"
+  Describe "Given: OPTIONS[project_type] has uppercase"
     It "[Error] T-CLI-VA-05: Should: return 1 and set VALIDATE_ARGS_ERROR with 'invalid characters'"
-      PROJECT_NAME="myapp"
-      PROJECT_TYPE="WebApp"
+      OPTIONS["project"]="myapp"
+      OPTIONS["project_type"]="WebApp"
       When call validate_args
       The status should equal 1
       The variable VALIDATE_ARGS_ERROR should include "invalid characters"
     End
   End
 
-  Describe "Given: PROJECT_NAME has space"
+  Describe "Given: OPTIONS[project] has space"
     It "[Edge] T-CLI-VA-06: Should: return 1 and set VALIDATE_ARGS_ERROR with 'invalid characters'"
       # shellcheck disable=SC2034
-      PROJECT_NAME="my app"
+      OPTIONS["project"]="my app"
       # shellcheck disable=SC2034
-      PROJECT_TYPE="webapp"
+      OPTIONS["project_type"]="webapp"
       When call validate_args
       The status should equal 1
       The variable VALIDATE_ARGS_ERROR should include "invalid characters"

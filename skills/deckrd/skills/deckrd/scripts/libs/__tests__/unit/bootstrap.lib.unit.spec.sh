@@ -22,6 +22,7 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 
+# cspell:words myws mytmp
 # shellcheck disable=SC1091
 
 _RUNTIME_LIBS_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/skills/deckrd/scripts/libs" && pwd)"
@@ -69,7 +70,7 @@ Describe "bootstrap.lib.sh"
   Describe "T-LIB-BEXP: export 検証"
 
     Describe "Given: PROJECT_ROOT=/tmp/proj で bootstrap_init を呼ぶ"
-      Before "export PROJECT_ROOT=/tmp/proj; unset DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_LIB_DIR DECKRD_DATA_DIR DECKRD_LOCAL_DATA DECKRD_LOCAL_WORKSPACES DECKRD_DOCS_DIR SYMBOL; bootstrap_init"
+      Before "export PROJECT_ROOT=/tmp/proj; unset DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_LIB_DIR DECKRD_DATA_DIR DECKRD_LOCAL_DATA DECKRD_LOCAL_WORKSPACES DECKRD_LOCAL_TEMP DECKRD_DOCS_DIR SYMBOL; bootstrap_init"
 
       It "[Normal] T-LIB-BEXP-01: PROJECT_ROOT が export されている"
         When call bash -c 'export -p | grep -q "^declare -x PROJECT_ROOT=" && echo ok'
@@ -118,6 +119,11 @@ Describe "bootstrap.lib.sh"
 
       It "[Normal] T-LIB-BEXP-10: DECKRD_LOCAL_WORKSPACES が export されている"
         When call bash -c 'export -p | grep -q "^declare -x DECKRD_LOCAL_WORKSPACES=" && echo ok'
+        The output should equal "ok"
+      End
+
+      It "[Normal] T-LIB-BEXP-11: DECKRD_LOCAL_TEMP が export されている"
+        When call bash -c 'export -p | grep -q "^declare -x DECKRD_LOCAL_TEMP=" && echo ok'
         The output should equal "ok"
       End
     End
@@ -212,6 +218,12 @@ Describe "bootstrap.lib.sh"
       The output should equal "readonly"
     End
 
+    It "[Normal] T-LIB-BFIN-13: finalize 後は DECKRD_LOCAL_TEMP が readonly になっている"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && ( DECKRD_LOCAL_TEMP=x ) 2>/dev/null && echo writable || echo readonly"
+      The status should equal 0
+      The output should equal "readonly"
+    End
+
     It "[Normal] T-LIB-BFIN-08: finalize 後は DECKRD_DOCS_DIR が readonly になっている"
       When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && ( DECKRD_DOCS_DIR=x ) 2>/dev/null && echo writable || echo readonly"
       The status should equal 0
@@ -289,14 +301,7 @@ Describe "bootstrap.lib.sh"
     End
 
     It "[Normal] T-LIB-BSRC-04: bdd-coder パスでも DECKRD_ROOT 事前設定値が優先される"
-      When run bash -c "
-        mkdir -p /tmp/plugins/bdd-coder
-        tmpscript=\"\$(mktemp /tmp/plugins/bdd-coder/XXXXXX.sh)\"
-        printf 'export DECKRD_ROOT=/tmp/custom\n. \"%s\" && echo \"\$DECKRD_ROOT\"\n' \"$SCRIPT\" > \"\$tmpscript\"
-        result=\$(bash \"\$tmpscript\")
-        rm -f \"\$tmpscript\"
-        echo \"\$result\"
-      "
+      When call run_coder_tmpscript DECKRD_ROOT "DECKRD_ROOT=/tmp/custom"
       The status should equal 0
       The output should equal "/tmp/custom"
     End
@@ -705,6 +710,68 @@ Describe "bootstrap.lib.sh"
       It "[Edge] T-LIB-BLOCW-07: DECKRD_ROOT に依存せず DECKRD_LOCAL_DATA が基点になる"
         When call echo "$DECKRD_LOCAL_WORKSPACES"
         The output should equal "/tmp/proj/.local/deckrd/workspaces"
+      End
+    End
+  End
+
+  # ------------------------------------------------------------------ #
+  #  DECKRD_LOCAL_TEMP                                                 #
+  #  依存: DECKRD_LOCAL_DATA のみ (DECKRD_ROOT 非依存)                 #
+  # ------------------------------------------------------------------ #
+  Describe "T-LIB-BLOCT: DECKRD_LOCAL_TEMP"
+
+    Describe "Given: PROJECT_ROOT=/tmp/proj、DECKRD_LOCAL_TEMP 未設定"
+      Before "export PROJECT_ROOT=/tmp/proj; unset DECKRD_LOCAL_DATA; unset DECKRD_LOCAL_TEMP; bootstrap_init"
+
+      It "[Normal] T-LIB-BLOCT-01: DECKRD_LOCAL_DATA/temp になる"
+        When call echo "$DECKRD_LOCAL_TEMP"
+        The output should equal "/tmp/proj/.local/deckrd/temp"
+      End
+
+      It "[Normal] T-LIB-BLOCT-02: DECKRD_LOCAL_DATA との関係式が成立する"
+        When call test "$DECKRD_LOCAL_TEMP" = "${DECKRD_LOCAL_DATA}/temp"
+        The status should equal 0
+      End
+
+      It "[Normal] T-LIB-BLOCT-03: export -p で export されている"
+        When call bash -c 'export -p | grep -q "^declare -x DECKRD_LOCAL_TEMP=" && echo ok'
+        The output should equal "ok"
+      End
+    End
+
+    Describe "Given: DECKRD_LOCAL_TEMP=/tmp/mytmp を事前設定"
+      Before "export PROJECT_ROOT=/tmp/proj; export DECKRD_LOCAL_TEMP=/tmp/mytmp; bootstrap_init"
+
+      It "[Normal] T-LIB-BLOCT-04: 事前設定値が維持される"
+        When call echo "$DECKRD_LOCAL_TEMP"
+        The output should equal "/tmp/mytmp"
+      End
+    End
+
+    Describe "Given: DECKRD_LOCAL_TEMP='' (空文字) を事前設定"
+      Before "export PROJECT_ROOT=/tmp/proj; unset DECKRD_LOCAL_DATA; export DECKRD_LOCAL_TEMP=''; bootstrap_init"
+
+      It "[Edge] T-LIB-BLOCT-05: 空文字はデフォルト値にフォールバックする"
+        When call echo "$DECKRD_LOCAL_TEMP"
+        The output should equal "/tmp/proj/.local/deckrd/temp"
+      End
+    End
+
+    Describe "Given: PROJECT_ROOT にスペースを含むパス"
+      Before "export PROJECT_ROOT='/tmp/my project'; unset DECKRD_LOCAL_DATA; unset DECKRD_LOCAL_TEMP; bootstrap_init"
+
+      It "[Edge] T-LIB-BLOCT-06: パスが正しく連結される"
+        When call echo "$DECKRD_LOCAL_TEMP"
+        The output should equal "/tmp/my project/.local/deckrd/temp"
+      End
+    End
+
+    Describe "Given: DECKRD_ROOT=/tmp/other を設定 (DECKRD_LOCAL_DATA から独立)"
+      Before "export PROJECT_ROOT=/tmp/proj; export DECKRD_ROOT=/tmp/other; unset DECKRD_LOCAL_DATA; unset DECKRD_LOCAL_TEMP; bootstrap_init"
+
+      It "[Edge] T-LIB-BLOCT-07: DECKRD_ROOT に依存せず DECKRD_LOCAL_DATA が基点になる"
+        When call echo "$DECKRD_LOCAL_TEMP"
+        The output should equal "/tmp/proj/.local/deckrd/temp"
       End
     End
   End

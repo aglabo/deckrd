@@ -57,6 +57,82 @@ make_asset() {
   touch -d "$7" "$dest"
 }
 
+# Fixture: workspaces rule block of the local gitignore template (banner to EOF)
+_workspaces_rule_block() {
+  printf '%s\n' '## ---- ##' '##  Shared notes layer: track workspaces/ only ##' '## ---- ##' \
+    '!/workspaces/' '!/workspaces/**'
+}
+
+# Fixture: old local gitignore content without the workspaces rule
+_old_local_gitignore() {
+  printf '%s\n' '*' '!README*' '!.gitignore'
+}
+
+# Fixture: local gitignore content that already has the workspaces rule
+_ruled_local_gitignore() {
+  printf '%s\n' '*' '!/workspaces/'
+}
+
+# Helper: place the local gitignore template and a local gitignore read from stdin
+_make_local_gitignore() {
+  { printf '%s\n' '*'; _workspaces_rule_block; } >"${INITS_DIR}/local-deckrd/.gitignore.org"
+  cat >"${DECKRD_LOCAL_DATA}/.gitignore"
+}
+
+# Helper: place the template and an old local gitignore without the workspaces rule
+make_old_local_gitignore() {
+  _old_local_gitignore | _make_local_gitignore
+}
+
+# Helper: place the template and a local gitignore that already has the workspaces rule
+make_ruled_local_gitignore() {
+  _ruled_local_gitignore | _make_local_gitignore
+}
+
+# Helper: convert LF line endings from stdin to CRLF
+_to_crlf() {
+  sed 's/$/\r/'
+}
+
+# Helper: place the template and an old CRLF local gitignore without the workspaces rule
+make_old_crlf_local_gitignore() {
+  _old_local_gitignore | _to_crlf | _make_local_gitignore
+}
+
+# Helper: place the template and a CRLF local gitignore that already has the workspaces rule
+make_ruled_crlf_local_gitignore() {
+  _ruled_local_gitignore | _to_crlf | _make_local_gitignore
+}
+
+# Helper: place a template without the workspaces rule marker and an old local gitignore
+make_markerless_template_local_gitignore() {
+  make_old_local_gitignore
+  printf '%s
+' '*' '!README*' >"${INITS_DIR}/local-deckrd/.gitignore.org"
+}
+
+# Helper: place the template and an old local gitignore whose last line has no trailing newline
+make_unterminated_local_gitignore() {
+  printf '*\n!README*\n!.gitignore' | _make_local_gitignore
+}
+
+# Helper: place the template and an old local gitignore that cannot be read
+make_unreadable_local_gitignore() {
+  make_old_local_gitignore
+  chmod 000 "${DECKRD_LOCAL_DATA}/.gitignore"
+}
+
+# Helper: place the template and an old local gitignore that can be read but not written
+make_readonly_local_gitignore() {
+  make_old_local_gitignore
+  chmod 444 "${DECKRD_LOCAL_DATA}/.gitignore"
+}
+
+# Helper: give the local gitignore its normal mode back so that teardown can remove it
+restore_local_gitignore_mode() {
+  [[ ! -f "${DECKRD_LOCAL_DATA:-}/.gitignore" ]] || chmod 644 "${DECKRD_LOCAL_DATA}/.gitignore"
+}
+
 # ============================================================================
 # update.sh: list outdated assets
 # ============================================================================
@@ -208,6 +284,19 @@ Describe "T-CLI-UPDI: update.sh: list outdated assets"
     End
   End
 
+  Describe "Given: old local gitignore without the workspaces rule"
+    Before "setup_update_env"
+    After "teardown_update_env"
+    Before "make_old_local_gitignore"
+
+    It "[Normal] T-CLI-UPDI-10: Should: exit 0, print the workspaces rule label, and leave the gitignore unchanged"
+      When run bash "$SCRIPT"
+      The status should equal 0
+      The output should equal "[local-deckrd] .gitignore (workspaces rule)"
+      The contents of file "${DECKRD_LOCAL_DATA}/.gitignore" should equal "$(_old_local_gitignore)"
+    End
+  End
+
 End
 
 # ============================================================================
@@ -303,6 +392,155 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
       The output should be blank
       The stderr should include "init"
       The contents of file "${DECKRD_RULES_DIR}/a.md" should equal "old"
+    End
+  End
+
+  Describe "Given: old local gitignore without the workspaces rule"
+    Before "setup_update_env"
+    After "teardown_update_env"
+    Before "make_old_local_gitignore"
+
+    It "[Normal] T-CLI-UPDA-06: Should: exit 0, print Updated: with the workspaces rule label, and append the block"
+      When run bash "$SCRIPT" --update
+      The status should equal 0
+      The output should equal "Updated: [local-deckrd] .gitignore (workspaces rule)"
+      # original lines kept at the top, then one blank line, then the template block
+      The contents of file "${DECKRD_LOCAL_DATA}/.gitignore" should equal "$(
+        _old_local_gitignore
+        echo
+        _workspaces_rule_block
+      )"
+    End
+  End
+
+  Describe "Given: old local gitignore already migrated by a previous --update run"
+    Before "setup_update_env"
+    After "teardown_update_env"
+
+    # Runs the first --update and keeps its result as the snapshot to compare with
+    setup_migrated_gitignore() {
+      make_old_local_gitignore
+      bash "$SCRIPT" --update >/dev/null
+      MIGRATED_GITIGNORE="$(cat "${DECKRD_LOCAL_DATA}/.gitignore")"
+    }
+    Before "setup_migrated_gitignore"
+
+    It "[Normal] T-CLI-UPDA-07: Should: exit 0, print up to date, and leave the migrated gitignore unchanged"
+      When run bash "$SCRIPT" --update
+      The status should equal 0
+      The output should equal "Rules are up to date."
+      The contents of file "${DECKRD_LOCAL_DATA}/.gitignore" should equal "$MIGRATED_GITIGNORE"
+    End
+  End
+
+  Describe "Given: local gitignore that already has the workspaces rule"
+    Before "setup_update_env"
+    After "teardown_update_env"
+    Before "make_ruled_local_gitignore"
+
+    It "[Edge] T-CLI-UPDA-08: Should: exit 0, print up to date, and leave the gitignore unchanged"
+      When run bash "$SCRIPT" --update
+      The status should equal 0
+      The output should equal "Rules are up to date."
+      The contents of file "${DECKRD_LOCAL_DATA}/.gitignore" should equal "$(_ruled_local_gitignore)"
+    End
+  End
+
+  Describe "Given: old CRLF local gitignore without the workspaces rule"
+    Before "setup_update_env"
+    After "teardown_update_env"
+    Before "make_old_crlf_local_gitignore"
+
+    It "[Normal] T-CLI-UPDA-09: Should: exit 0, print Updated: with the workspaces rule label, and rewrite as LF with the block"
+      When run bash "$SCRIPT" --update
+      The status should equal 0
+      The output should equal "Updated: [local-deckrd] .gitignore (workspaces rule)"
+      The contents of file "${DECKRD_LOCAL_DATA}/.gitignore" should not include "$(printf '\r')"
+      # original lines converted to LF, then one blank line, then the template block
+      The contents of file "${DECKRD_LOCAL_DATA}/.gitignore" should equal "$(
+        _old_local_gitignore
+        echo
+        _workspaces_rule_block
+      )"
+    End
+  End
+
+  Describe "Given: CRLF local gitignore that already has the workspaces rule"
+    Before "setup_update_env"
+    After "teardown_update_env"
+    Before "make_ruled_crlf_local_gitignore"
+
+    It "[Edge] T-CLI-UPDA-10: Should: exit 0, print up to date, and leave the CRLF gitignore unchanged"
+      When run bash "$SCRIPT" --update
+      The status should equal 0
+      The output should equal "Rules are up to date."
+      # no migration needed, so the file keeps its CRLF line endings
+      The contents of file "${DECKRD_LOCAL_DATA}/.gitignore" should equal "$(_ruled_local_gitignore | _to_crlf)"
+    End
+  End
+
+  Describe "Given: old local gitignore that cannot be read"
+    # chmod 000 does not stop root from reading, so the case cannot be set up as root
+    Skip if "running as root" [ "$(id -u)" -eq 0 ]
+    Before "setup_update_env"
+    After "teardown_update_env"
+    Before "make_unreadable_local_gitignore"
+    After "restore_local_gitignore_mode"
+
+    It "[Error] T-CLI-UPDA-11: Should: exit 1, stderr reports the read error, and print no Updated: line"
+      When run bash "$SCRIPT" --update
+      The status should equal 1
+      The output should not include "Updated:"
+      The stderr should include "Error: cannot read: ${DECKRD_LOCAL_DATA}/.gitignore"
+    End
+  End
+
+  Describe "Given: old local gitignore and a template without the workspaces rule marker"
+    Before "setup_update_env"
+    After "teardown_update_env"
+    Before "make_markerless_template_local_gitignore"
+
+    It "[Error] T-CLI-UPDA-12: Should: exit 1, stderr reports the missing block, and leave the gitignore unchanged"
+      When run bash "$SCRIPT" --update
+      The status should equal 1
+      The output should not include "Updated:"
+      The stderr should include "Error: workspaces rule block not found"
+      The contents of file "${DECKRD_LOCAL_DATA}/.gitignore" should equal "$(_old_local_gitignore)"
+    End
+  End
+
+  Describe "Given: old local gitignore that can be read but not written"
+    # chmod 444 does not stop root from writing, so the case cannot be set up as root
+    Skip if "running as root" [ "$(id -u)" -eq 0 ]
+    Before "setup_update_env"
+    After "teardown_update_env"
+    Before "make_readonly_local_gitignore"
+    After "restore_local_gitignore_mode"
+
+    It "[Error] T-CLI-UPDA-13: Should: exit 1, stderr reports the failed update, and leave the gitignore unchanged"
+      When run bash "$SCRIPT" --update
+      The status should equal 1
+      The output should not include "Updated:"
+      The stderr should include "Error: failed to update: ${DECKRD_LOCAL_DATA}/.gitignore"
+      The contents of file "${DECKRD_LOCAL_DATA}/.gitignore" should equal "$(_old_local_gitignore)"
+    End
+  End
+
+  Describe "Given: old local gitignore whose last line has no trailing newline"
+    Before "setup_update_env"
+    After "teardown_update_env"
+    Before "make_unterminated_local_gitignore"
+
+    It "[Edge] T-CLI-UPDA-14: Should: exit 0, print Updated: with the workspaces rule label, and append the block after one blank line"
+      When run bash "$SCRIPT" --update
+      The status should equal 0
+      The output should equal "Updated: [local-deckrd] .gitignore (workspaces rule)"
+      # the unterminated last line is completed, then exactly one blank line, then the block
+      The contents of file "${DECKRD_LOCAL_DATA}/.gitignore" should equal "$(
+        _old_local_gitignore
+        echo
+        _workspaces_rule_block
+      )"
     End
   End
 

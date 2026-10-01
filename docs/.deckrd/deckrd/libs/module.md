@@ -35,6 +35,7 @@ deckrd プラグインの共有ライブラリ。bootstrap・kv-store・session�
 | `BLOAD`   | bootstrap.lib.sh の読み込み                                         |
 | `BLOCD`   | `DECKRD_LOCAL_DATA` の決定                                          |
 | `BLOCDF`  | DECKRD_LOCAL_DATA / DECKRD_DOCS_DIR: PROJECT_ROOT 連鎖 (functional) |
+| `BLOCT`   | `DECKRD_LOCAL_TEMP` の決定                                          |
 | `BLOCW`   | `DECKRD_LOCAL_WORKSPACES` の決定                                    |
 | `BPRF`    | `PROJECT_ROOT`: 事前設定の維持 (functional)                         |
 | `BPRFI`   | PROJECT_ROOT: BASH_SOURCE fallback (integration)                    |
@@ -84,6 +85,8 @@ deckrd プラグインの共有ライブラリ。bootstrap・kv-store・session�
 | `RASI`    | `run_ai` の stdin ガード (unit)                                     |
 | `RATW`    | `run_ai` のタイムアウト解決の配線 (unit)                            |
 | `SGS`     | `session_get` / `session_set`                                       |
+| `SHCT`    | `setup_coder_tmpscript` (spec_helper.sh)                            |
+| `SHNC`    | `setup_naming_cache` (spec_helper.sh)                               |
 | `SINI`    | `session_init`                                                      |
 | `SLD`     | session.sh の読み込み                                               |
 | `SLOAD`   | `session_load`                                                      |
