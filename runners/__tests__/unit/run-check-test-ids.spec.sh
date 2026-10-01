@@ -16,6 +16,9 @@ Include "${SHELLSPEC_PROJECT_ROOT}/runners/run-check-test-ids.sh"
 # 擬似リポジトリのモジュール宣言を置くディレクトリ (走査ルートからの相対パス)
 _FIXTURE_DOCS_SUBDIR="docs/.deckrd"
 
+# モジュール参照 (<ns>/<mod>) のディレクトリから見たモジュール宣言の位置
+_FIXTURE_MODULE_FILE="workspaces/module/module.md"
+
 # find_unidentified_cases が使うフィールド区切り。期待値の中で TAB を明示するために使う
 _TAB=$'\t'
 
@@ -43,7 +46,7 @@ _teardown_fixture_repo() {
 }
 
 #
-# @description 擬似リポジトリに module.md を書き出す
+# @description 擬似リポジトリの <ns>/<mod>/workspaces/module/module.md に宣言を書き出す
 # @arg $1 string モジュール参照 (<ns>/<mod>)
 # @arg $2 string 宣言する test_scope
 # @arg $@ string owns の glob (1 個以上)
@@ -52,8 +55,8 @@ _teardown_fixture_repo() {
 _add_module() {
   local ref="$1" scope="$2"
   shift 2
-  local dir="${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/${ref}"
-  mkdir -p "$dir"
+  local path="${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/${ref}/${_FIXTURE_MODULE_FILE}"
+  mkdir -p "$(dirname "$path")"
   {
     printf -- '---\n'
     printf 'title: %s\n' "${ref##*/}"
@@ -62,7 +65,7 @@ _add_module() {
     printf -- '  - %s\n' "$@"
     printf -- '---\n'
     printf '\n## %s\n' "${ref##*/}"
-  } >"${dir}/module.md"
+  } >"$path"
 }
 
 #
@@ -133,7 +136,7 @@ _add_targets_table() {
       # shellcheck disable=SC2016
       printf '| `%s` | `sample_%s` |\n' "$target" "$target"
     done
-  } >>"${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/${ref}/module.md"
+  } >>"${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/${ref}/${_FIXTURE_MODULE_FILE}"
 }
 
 # --- テスト本体 ---
@@ -605,26 +608,26 @@ Describe 'T-RUN-FMR: module.md frontmatter reader'
   Describe 'When: 正常系'
     It 'Then: [Normal] T-RUN-FMR-01: read_module_scalar が宣言された test_scope を返す'
       _add_module 'ns/alpha' 'ALP' 'src/alpha/**'
-      When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md" 'test_scope'
+      When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/workspaces/module/module.md" 'test_scope'
       The output should equal 'ALP'
     End
 
     It 'Then: [Normal] T-RUN-FMR-02: read_module_owns が owns の glob をすべて返す'
       _add_module 'ns/alpha' 'ALP' 'src/alpha/**' 'src/shared/*.sh'
-      When call read_module_owns "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md"
+      When call read_module_owns "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/workspaces/module/module.md"
       The line 1 of output should equal 'src/alpha/**'
       The line 2 of output should equal 'src/shared/*.sh'
     End
 
     It 'Then: [Normal] T-RUN-FMR-04: 対になったダブルクォートを剥がす'
       _add_module 'ns/alpha' '"DQT"' 'src/alpha/**'
-      When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md" 'test_scope'
+      When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/workspaces/module/module.md" 'test_scope'
       The output should equal 'DQT'
     End
 
     It 'Then: [Normal] T-RUN-FMR-05: 対になったシングルクォートを剥がす'
       _add_module 'ns/alpha' "'SQT'" 'src/alpha/**'
-      When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md" 'test_scope'
+      When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/workspaces/module/module.md" 'test_scope'
       The output should equal 'SQT'
     End
   End
@@ -632,25 +635,25 @@ Describe 'T-RUN-FMR: module.md frontmatter reader'
   Describe 'When: 異常系'
     It 'Then: [Error] T-RUN-FMR-03: 宣言されていないフィールドには空を返す'
       _add_module 'ns/alpha' 'ALP' 'src/alpha/**'
-      When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md" 'nonexistent'
+      When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/workspaces/module/module.md" 'nonexistent'
       The output should equal ''
     End
 
     It 'Then: [Error] T-RUN-FMR-06: 末尾だけの引用符は剥がさない'
       _add_module 'ns/alpha' 'TRL"' 'src/alpha/**'
-      When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md" 'test_scope'
+      When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/workspaces/module/module.md" 'test_scope'
       The output should equal 'TRL"'
     End
 
     It 'Then: [Error] T-RUN-FMR-07: 先頭だけの引用符は剥がさない'
       _add_module 'ns/alpha' '"LED' 'src/alpha/**'
-      When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md" 'test_scope'
+      When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/workspaces/module/module.md" 'test_scope'
       The output should equal '"LED'
     End
 
     It 'Then: [Error] T-RUN-FMR-08: 種類の違う引用符の組は剥がさない'
       _add_module 'ns/alpha' "'MIX\"" 'src/alpha/**'
-      When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md" 'test_scope'
+      When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/workspaces/module/module.md" 'test_scope'
       The output should equal "'MIX\""
     End
   End
@@ -658,13 +661,13 @@ Describe 'T-RUN-FMR: module.md frontmatter reader'
   Describe 'When: エッジケース'
     It 'Then: [Edge] T-RUN-FMR-09: 空のダブルクォートペアは剥がさずそのまま返す'
       _add_module 'ns/alpha' '""' 'src/alpha/**'
-      When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md" 'test_scope'
+      When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/workspaces/module/module.md" 'test_scope'
       The output should equal '""'
     End
 
     It 'Then: [Edge] T-RUN-FMR-11: 空のシングルクォートペアは剥がさずそのまま返す'
       _add_module 'ns/alpha' "''" 'src/alpha/**'
-      When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md" 'test_scope'
+      When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/workspaces/module/module.md" 'test_scope'
       The output should equal "''"
     End
 
@@ -672,13 +675,13 @@ Describe 'T-RUN-FMR: module.md frontmatter reader'
       # T-CLI-CDS-15 と対になるケース。CR を行末に置くと Windows の gawk が落とすため、
       # CR の後ろに半角スペースを 1 つ置いて行末を避ける。
       _add_module 'ns/alpha' "$(printf '"ALP"\r ')" 'src/alpha/**'
-      When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md" 'test_scope'
+      When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/workspaces/module/module.md" 'test_scope'
       The output should equal 'ALP'
     End
 
     It 'Then: [Edge] T-RUN-FMR-10: 引用符 1 文字はペアではないので剥がさない'
       _add_module 'ns/alpha' '"' 'src/alpha/**'
-      When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md" 'test_scope'
+      When call read_module_scalar "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/workspaces/module/module.md" 'test_scope'
       The output should equal '"'
     End
   End
@@ -696,7 +699,7 @@ Describe 'T-RUN-RMT: read_module_targets()'
     It 'Then: [Normal] T-RUN-RMT-01: 略語表の各行から略語を宣言順に取り出す'
       _add_module 'ns/alpha' 'ALP' 'alpha/**'
       _add_targets_table 'ns/alpha' 'AA' 'BB'
-      When call read_module_targets "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md"
+      When call read_module_targets "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/workspaces/module/module.md"
       The line 1 of output should equal 'AA'
       The line 2 of output should equal 'BB'
     End
@@ -704,7 +707,7 @@ Describe 'T-RUN-RMT: read_module_targets()'
     It 'Then: [Normal] T-RUN-RMT-02: 見出し行と区切り行は略語として扱わない'
       _add_module 'ns/alpha' 'ALP' 'alpha/**'
       _add_targets_table 'ns/alpha' 'AA'
-      When call read_module_targets "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md"
+      When call read_module_targets "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/workspaces/module/module.md"
       The lines of output should equal 1
     End
   End
@@ -712,7 +715,7 @@ Describe 'T-RUN-RMT: read_module_targets()'
   Describe 'When: エッジケース'
     It 'Then: [Edge] T-RUN-RMT-03: 略語表の見出しが無ければ何も読み出さない'
       _add_module 'ns/alpha' 'ALP' 'alpha/**'
-      When call read_module_targets "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md"
+      When call read_module_targets "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/workspaces/module/module.md"
       The status should be success
       The output should equal ''
     End
@@ -720,11 +723,11 @@ Describe 'T-RUN-RMT: read_module_targets()'
     It 'Then: [Edge] T-RUN-RMT-04: 別の見出しの下に置かれた表は読み出さない'
       _add_module 'ns/alpha' 'ALP' 'alpha/**'
       _add_targets_table 'ns/alpha' 'AA'
-      _append_line "${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md" '## 別の見出し'
-      _append_line "${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md" '| 略語 | 対象 |'
+      _append_line "${_FIXTURE_DOCS_SUBDIR}/ns/alpha/workspaces/module/module.md" '## 別の見出し'
+      _append_line "${_FIXTURE_DOCS_SUBDIR}/ns/alpha/workspaces/module/module.md" '| 略語 | 対象 |'
       # shellcheck disable=SC2016
-      _append_line "${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md" '| `ZZ` | `other` |'
-      When call read_module_targets "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md"
+      _append_line "${_FIXTURE_DOCS_SUBDIR}/ns/alpha/workspaces/module/module.md" '| `ZZ` | `other` |'
+      When call read_module_targets "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/workspaces/module/module.md"
       The output should equal 'AA'
     End
   End
@@ -851,6 +854,56 @@ Describe 'T-RUN-RCC: reset_check_caches()'
 End
 
 #
+# docs ルート配下のモジュール宣言を列挙する。宣言は <ns>/<mod>/workspaces/module/module.md に
+# 置かれ、旧配置 <ns>/<mod>/module.md は宣言として扱わない
+#
+Describe 'T-RUN-LMF: list_module_files()'
+  BeforeEach '_setup_fixture_repo'
+  AfterEach '_teardown_fixture_repo'
+
+  Describe 'When: 正常系'
+    It 'Then: [Normal] T-RUN-LMF-01: workspaces/module 配下の宣言をソートして出力する'
+      _add_module 'ns/beta' 'BET' 'beta/**'
+      _add_module 'ns/alpha' 'ALP' 'alpha/**'
+      When call list_module_files
+      The status should be success
+      The lines of output should equal 2
+      The line 1 of output should equal "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/workspaces/module/module.md"
+      The line 2 of output should equal "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/beta/workspaces/module/module.md"
+    End
+  End
+
+  Describe 'When: エッジケース'
+    # 旧配置へのフォールバックはしない。旧配置のファイルを拾うと、その参照から
+    # 戻した新配置のパスに宣言が無く、検査が「宣言が無い」と誤報する
+    It 'Then: [Edge] T-RUN-LMF-02: 旧配置 <ns>/<mod>/module.md だけのモジュールは出力しない'
+      _add_module 'ns/alpha' 'ALP' 'alpha/**'
+      mkdir -p "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/legacy"
+      printf -- '---\ntest_scope: LEG\n---\n' >"${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/legacy/module.md"
+      When call list_module_files
+      The status should be success
+      The output should equal "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/workspaces/module/module.md"
+    End
+  End
+End
+
+#
+# モジュール宣言ファイルのパスから <ns>/<mod> 参照を導く。module_file_of の逆
+#
+Describe 'T-RUN-MRO: module_ref_of()'
+  BeforeEach '_setup_fixture_repo'
+  AfterEach '_teardown_fixture_repo'
+
+  Describe 'When: 正常系'
+    It 'Then: [Normal] T-RUN-MRO-01: workspaces/module/module.md のパスから <ns>/<mod> を返す'
+      When call module_ref_of "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/workspaces/module/module.md"
+      The status should be success
+      The variable _MODULE_REF should equal 'ns/alpha'
+    End
+  End
+End
+
+#
 # spec ファイルを所有するモジュール宣言を subshell なしで _OWNERS に積む (§6.2)
 #
 Describe 'T-RUN-LOO: load_owners_of()'
@@ -862,11 +915,11 @@ Describe 'T-RUN-LOO: load_owners_of()'
       _add_module 'ns/alpha' 'ALP' 'alpha/**'
       _add_module 'ns/beta' 'BET' 'beta/**'
       When call load_owners_of 'alpha/a.spec.sh' \
-        "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md" \
-        "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/beta/module.md"
+        "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/workspaces/module/module.md" \
+        "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/beta/workspaces/module/module.md"
       The status should be success
       The value "${#_OWNERS[@]}" should equal 1
-      The variable '_OWNERS[0]' should equal "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md"
+      The variable '_OWNERS[0]' should equal "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/workspaces/module/module.md"
     End
   End
 
@@ -876,7 +929,7 @@ Describe 'T-RUN-LOO: load_owners_of()'
       # 前回の呼び出しの結果が残った状態を再現する
       _OWNERS=('stale/module.md')
       When call load_owners_of 'gamma/c.spec.sh' \
-        "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/module.md"
+        "${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/alpha/workspaces/module/module.md"
       The status should be success
       The value "${#_OWNERS[@]}" should equal 0
     End
@@ -1114,8 +1167,8 @@ Describe 'T-RUN-CS: check_scopes()'
       When call check_scopes
       The status should be failure
       The stderr should include 'DUP'
-      The stderr should include 'ns/alpha/module.md'
-      The stderr should include 'ns/beta/module.md'
+      The stderr should include 'ns/alpha/workspaces/module/module.md'
+      The stderr should include 'ns/beta/workspaces/module/module.md'
       The output should equal ''
     End
 
@@ -1135,8 +1188,8 @@ Describe 'T-RUN-CS: check_scopes()'
       When call check_scopes
       The status should be failure
       The stderr should include 'shared/a.spec.sh'
-      The stderr should include 'ns/alpha/module.md'
-      The stderr should include 'ns/beta/module.md'
+      The stderr should include 'ns/alpha/workspaces/module/module.md'
+      The stderr should include 'ns/beta/workspaces/module/module.md'
       The output should equal ''
     End
 
@@ -1145,7 +1198,7 @@ Describe 'T-RUN-CS: check_scopes()'
       _add_spec_file 'alpha/a.spec.sh' 'T-ALP-AA' 'T-ALP-AA-01'
       When call check_scopes
       The status should be failure
-      The stderr should include 'ns/alpha/module.md'
+      The stderr should include 'ns/alpha/workspaces/module/module.md'
       The stderr should include 'TOOLONG'
       The output should equal ''
     End
@@ -1156,7 +1209,7 @@ Describe 'T-RUN-CS: check_scopes()'
       _add_spec_file 'alpha/a.spec.sh' 'T-ALP-AA' 'T-ALP-AA-01'
       When call check_scopes
       The status should be failure
-      The stderr should include 'ns/alpha/module.md'
+      The stderr should include 'ns/alpha/workspaces/module/module.md'
       The stderr should include "test_scope 'A'"
       The output should equal ''
     End
@@ -1167,7 +1220,7 @@ Describe 'T-RUN-CS: check_scopes()'
       _add_spec_file 'alpha/a.spec.sh' 'T-ALP-AA' 'T-ALP-AA-01'
       When call check_scopes
       The status should be failure
-      The stderr should include 'ns/alpha/module.md'
+      The stderr should include 'ns/alpha/workspaces/module/module.md'
       The stderr should include 'test_scope'
       The output should equal ''
     End
@@ -1179,8 +1232,8 @@ Describe 'T-RUN-CS: check_scopes()'
       _add_spec_file 'beta/b.spec.sh' 'T-BET-BB' 'T-BET-BB-01'
       When call check_scopes
       The status should be failure
-      The stderr should include 'ns/alpha/module.md'
-      The stderr should include 'ns/beta/module.md'
+      The stderr should include 'ns/alpha/workspaces/module/module.md'
+      The stderr should include 'ns/beta/workspaces/module/module.md'
       The stderr should not include 'more than one module'
       The output should equal ''
     End
@@ -1263,7 +1316,7 @@ Describe 'T-RUN-CM: check_module()'
       _add_module 'ns/alpha' 'ALP' 'alpha/**'
       When call check_module 'ns/missing'
       The status should be failure
-      The stderr should equal "Error: module 'ns/missing': declaration not found at ${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/missing/module.md"
+      The stderr should equal "Error: module 'ns/missing': declaration not found at ${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/missing/workspaces/module/module.md"
     End
 
     # T-RUN-CT-10 が見るのは略語の集合が呼び出しをまたいで残らないこと。
@@ -1276,7 +1329,7 @@ Describe 'T-RUN-CM: check_module()'
       check_module 'ns/alpha' >/dev/null 2>&1 || true
       When call check_module 'ns/missing'
       The status should be failure
-      The stderr should include 'ns/missing/module.md'
+      The stderr should include 'ns/missing/workspaces/module/module.md'
       The stderr should not include 'ns/alpha'
     End
 
@@ -1657,7 +1710,7 @@ Describe 'T-RUN-CT: check_targets()'
       When call check_targets 'ns/missing'
       The status should be failure
       The lines of entire stderr should equal 1
-      The stderr should equal "Error: module 'ns/missing': declaration not found at ${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/missing/module.md"
+      The stderr should equal "Error: module 'ns/missing': declaration not found at ${TEST_ID_CHECK_ROOT}/${_FIXTURE_DOCS_SUBDIR}/ns/missing/workspaces/module/module.md"
       The output should equal ''
     End
   End
@@ -1722,7 +1775,7 @@ Describe 'T-RUN-MN: main()'
     End
 
     # 名前空間がスラッシュを含む宣言。module_ref_of は docs ルートを前から、
-    # module.md を後ろから剥がすだけなので、間が何段でも参照は復元できる。
+    # workspaces/module/module.md を後ろから剥がすだけなので、間が何段でも参照は復元できる。
     # 末尾 2 段を <ns>/<mod> とみなす実装だと参照が 'sub/alpha' になり、
     # その参照から戻したパスに宣言が無くなって落ちる
     It 'Then: [Normal] T-RUN-MN-10: --all は多階層の名前空間を持つモジュールも検査する'

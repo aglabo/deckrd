@@ -22,6 +22,13 @@ TEST_ID_CHECK_ROOT="${TEST_ID_CHECK_ROOT:-${PROJECT_ROOT}}"
 # Directory holding module declarations, relative to the scan root
 MODULE_DOCS_SUBDIR="${MODULE_DOCS_SUBDIR:-docs/.deckrd}"
 
+# Where a module declaration sits inside its `<ns>/<mod>` directory. The one spelling
+# shared by list_module_files, module_ref_of and module_file_of, which must agree on it
+# for a reference derived from a listed file to resolve back to that same file. A
+# `module.md` anywhere else, the legacy `<ns>/<mod>/module.md` included, is not a
+# declaration
+readonly MODULE_FILE_SUFFIX='workspaces/module/module.md'
+
 # The four constants below are the whole grammar the scanner knows, declared together
 # because they only make sense as two pairs: one declaration pattern and one ID pattern
 # per layer. §6.1 forbids extracting both layers with one pattern, and keeping the
@@ -493,13 +500,14 @@ path_matches_glob() {
 
 #
 # @description List module declaration files under the scan root
-# @stdout One module.md path per line, sorted; empty when the docs root is absent
+# @stdout One declaration path (`<ns>/<mod>/` + MODULE_FILE_SUFFIX) per line, sorted;
+#   empty when the docs root is absent
 # @exitcode 0 always
 #
 list_module_files() {
   local docs_root="${TEST_ID_CHECK_ROOT}/${MODULE_DOCS_SUBDIR}"
   [[ -d "$docs_root" ]] || return 0
-  find "$docs_root" -type f -name 'module.md' | sort
+  find "$docs_root" -type f -path "*/${MODULE_FILE_SUFFIX}" | sort
 }
 
 #
@@ -511,11 +519,11 @@ list_module_files() {
 # @exitcode 0 always
 #
 module_ref_of() {
-  # The docs root comes off the front and the file name off the back, in that order:
+  # The docs root comes off the front and MODULE_FILE_SUFFIX off the back, in that order:
   # a namespace may carry slashes of its own, so only the two ends are known. No
   # trailing newline is appended, for the reason given on module_file_of
   local ref="${1#"${TEST_ID_CHECK_ROOT}/${MODULE_DOCS_SUBDIR}/"}"
-  _MODULE_REF="${ref%/module.md}"
+  _MODULE_REF="${ref%/"${MODULE_FILE_SUFFIX}"}"
   return 0
 }
 
@@ -536,7 +544,7 @@ module_file_of() {
   # now gone used to strip it, and a path still carrying it would split the
   # "declaration not found" report over two lines. Assigned unconditionally, so a
   # reference resolved earlier is never reported in place of this one.
-  _MODULE_FILE="${TEST_ID_CHECK_ROOT}/${MODULE_DOCS_SUBDIR}/${1}/module.md"
+  _MODULE_FILE="${TEST_ID_CHECK_ROOT}/${MODULE_DOCS_SUBDIR}/${1}/${MODULE_FILE_SUFFIX}"
   return 0
 }
 
@@ -850,7 +858,7 @@ check_scopes() {
   local -a modules=()
   mapfile -t modules < <(list_module_files)
   if [[ ${#modules[@]} -eq 0 ]]; then
-    echo "Error: no module.md found under ${TEST_ID_CHECK_ROOT}/${MODULE_DOCS_SUBDIR}" >&2
+    echo "Error: no module.md found under ${TEST_ID_CHECK_ROOT}/${MODULE_DOCS_SUBDIR} (expected <ns>/<mod>/${MODULE_FILE_SUFFIX})" >&2
     return 1
   fi
 
