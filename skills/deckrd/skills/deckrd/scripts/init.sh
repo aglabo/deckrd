@@ -58,7 +58,8 @@ validate_env || exit 1
 
 ##
 # @description Initialize script configuration variables
-# @description All variables use ${VAR:-default} to allow external override (mock)
+# @description Path variables use ${VAR:-default} to allow external override (mock)
+# @description OPTIONS is declared here and filled by parse_args
 init_vars() {
   INITS_DIR="${INITS_DIR:-${DECKRD_ROOT}/assets/inits}"
   RULES_SRC_DIR="${RULES_SRC_DIR:-${INITS_DIR}/deckrd-rules}"
@@ -74,10 +75,7 @@ init_vars() {
   SESSION_FILE="${SESSION_FILE:-${DECKRD_LOCAL_DATA}/session.json}"
   BASE_SUBDIRS=("notes" "temp")
   SUPPORTED_LANGUAGES=(typescript go python rust shell)
-  PROJECT_NAME="${PROJECT_NAME:-}"
-  PROJECT_TYPE="${PROJECT_TYPE:-}"
-  LANGUAGE="${LANGUAGE:-typescript}"
-  AI_MODEL="${AI_MODEL:-sonnet}"
+  declare -gA OPTIONS=()
 }
 
 ##
@@ -127,30 +125,32 @@ validate_language() {
 
 ##
 # @description Parse command-line arguments and options
-# @return 0 on success, 1 on error (no output; caller handles error message)
+# @return 0 on success or help request, 1 on error (no output; caller handles usage and error message)
 # @var PARSE_ARGS_ERROR set to error description on failure
+# @var OPTIONS reset to defaults, then filled from args (keys: project, project_type, language, ai_model, help)
 parse_args() {
   local positional=()
   PARSE_ARGS_ERROR=""
+  OPTIONS=([project]="" [project_type]="" [language]=typescript [ai_model]=sonnet [help]=false)
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
     -h | --help)
-      show_usage
-      exit 0
+      OPTIONS[help]=true
+      return 0
       ;;
     --language | --lang)
       if [[ -z "${2:-}" ]]; then
         PARSE_ARGS_ERROR="${1} requires a value"
         return 1
       fi
-      LANGUAGE="$2"
-      [[ "$LANGUAGE" == "bash" ]] && LANGUAGE="shell"
+      OPTIONS[language]="$2"
+      [[ "${OPTIONS[language]}" == "bash" ]] && OPTIONS[language]="shell"
       shift 2
       ;;
     --language=* | --lang=*)
-      LANGUAGE="${1#*=}"
-      [[ "$LANGUAGE" == "bash" ]] && LANGUAGE="shell"
+      OPTIONS[language]="${1#*=}"
+      [[ "${OPTIONS[language]}" == "bash" ]] && OPTIONS[language]="shell"
       shift
       ;;
     --ai-model)
@@ -158,11 +158,11 @@ parse_args() {
         PARSE_ARGS_ERROR="--ai-model requires a value"
         return 1
       fi
-      AI_MODEL="$2"
+      OPTIONS[ai_model]="$2"
       shift 2
       ;;
     --ai-model=*)
-      AI_MODEL="${1#*=}"
+      OPTIONS[ai_model]="${1#*=}"
       shift
       ;;
     -*)
@@ -176,8 +176,8 @@ parse_args() {
     esac
   done
 
-  PROJECT_NAME="${positional[0]:-}"
-  PROJECT_TYPE="${positional[1]:-}"
+  OPTIONS[project]="${positional[0]:-}"
+  OPTIONS[project_type]="${positional[1]:-}"
 }
 
 ##
@@ -187,20 +187,20 @@ parse_args() {
 validate_args() {
   VALIDATE_ARGS_ERROR=""
 
-  if [[ -z "$PROJECT_NAME" ]]; then
+  if [[ -z "${OPTIONS[project]}" ]]; then
     VALIDATE_ARGS_ERROR="<project> is required"
     return 1
   fi
-  if [[ -z "$PROJECT_TYPE" ]]; then
+  if [[ -z "${OPTIONS[project_type]}" ]]; then
     VALIDATE_ARGS_ERROR="<project-type> is required"
     return 1
   fi
-  if [[ ! "$PROJECT_NAME" =~ ^${SYMBOL}$ ]]; then
-    VALIDATE_ARGS_ERROR="project name '${PROJECT_NAME}' contains invalid characters. Allowed: a-z, hyphen (-), underscore (_)"
+  if [[ ! "${OPTIONS[project]}" =~ ^${SYMBOL}$ ]]; then
+    VALIDATE_ARGS_ERROR="project name '${OPTIONS[project]}' contains invalid characters. Allowed: a-z, hyphen (-), underscore (_)"
     return 1
   fi
-  if [[ ! "$PROJECT_TYPE" =~ ^${SYMBOL}$ ]]; then
-    VALIDATE_ARGS_ERROR="project type '${PROJECT_TYPE}' contains invalid characters. Allowed: a-z, hyphen (-), underscore (_)"
+  if [[ ! "${OPTIONS[project_type]}" =~ ^${SYMBOL}$ ]]; then
+    VALIDATE_ARGS_ERROR="project type '${OPTIONS[project_type]}' contains invalid characters. Allowed: a-z, hyphen (-), underscore (_)"
     return 1
   fi
 }
@@ -295,10 +295,10 @@ write_project() {
 
   # shellcheck disable=SC2016
   jq_read -n \
-    --arg project "$PROJECT_NAME" \
-    --arg project_type "$PROJECT_TYPE" \
-    --arg language "$LANGUAGE" \
-    --arg ai_model "$AI_MODEL" \
+    --arg project "${OPTIONS[project]}" \
+    --arg project_type "${OPTIONS[project_type]}" \
+    --arg language "${OPTIONS[language]}" \
+    --arg ai_model "${OPTIONS[ai_model]}" \
     --arg created_at "$created_at" \
     --arg updated_at "$timestamp" \
     '{
@@ -312,10 +312,10 @@ write_project() {
 
   echo "" >&2
   echo "Project written: ${PROJECT_FILE}" >&2
-  echo "  project:      ${PROJECT_NAME}" >&2
-  echo "  project_type: ${PROJECT_TYPE}" >&2
-  echo "  language:     ${LANGUAGE}" >&2
-  echo "  ai_model:     ${AI_MODEL}" >&2
+  echo "  project:      ${OPTIONS[project]}" >&2
+  echo "  project_type: ${OPTIONS[project_type]}" >&2
+  echo "  language:     ${OPTIONS[language]}" >&2
+  echo "  ai_model:     ${OPTIONS[ai_model]}" >&2
 }
 
 ##
@@ -334,8 +334,8 @@ init_session() {
 
   # shellcheck disable=SC2016
   jq_read -n \
-    --arg lang "$LANGUAGE" \
-    --arg ai_model "$AI_MODEL" \
+    --arg lang "${OPTIONS[language]}" \
+    --arg ai_model "${OPTIONS[ai_model]}" \
     --arg timestamp "$timestamp" \
     '{
       active:     null,
@@ -365,6 +365,11 @@ main() {
     exit 1
   }
 
+  if [[ "${OPTIONS[help]}" == true ]]; then
+    show_usage
+    exit 0
+  fi
+
   validate_args || {
     echo "Error: ${VALIDATE_ARGS_ERROR}" >&2
     if [[ "$VALIDATE_ARGS_ERROR" == *"is required" ]]; then
@@ -373,12 +378,12 @@ main() {
     exit 1
   }
 
-  validate_language "$LANGUAGE" || {
-    echo "Error: Unsupported language: ${LANGUAGE}. Supported: ${SUPPORTED_LANGUAGES[*]}" >&2
+  validate_language "${OPTIONS[language]}" || {
+    echo "Error: Unsupported language: ${OPTIONS[language]}. Supported: ${SUPPORTED_LANGUAGES[*]}" >&2
     exit 1
   }
 
-  _ai_model_errmsg=$(validate_ai_model "$AI_MODEL") || {
+  _ai_model_errmsg=$(validate_ai_model "${OPTIONS[ai_model]}") || {
     echo "$_ai_model_errmsg" >&2
     exit 1
   }
