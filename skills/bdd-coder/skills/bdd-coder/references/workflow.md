@@ -270,7 +270,8 @@ Changed files 列は bdd-coder の Status Report の `CHANGED_FILES` 行をそ�
 - [ ] 型チェック: 合格
 - [ ] テスト実行: すべてグリーン (カバレッジ付き)
 - [ ] **code-reviewer** 起動: 全変更ファイルを対象に CRAP 算出、および、コードをレビュー
-- [ ] CRAP 判定: スコア > 30 の関数がないこと (16–30 は DONE_WITH_CONCERNS)
+- [ ] CRAP 判定: スコア > 30 の関数がないこと (16–30 は DONE_WITH_CONCERNS)。
+      カバレッジを取れない関数 (`cov=N/A`) は CC で判定する: CC ≥ 11 がないこと (6–10 は DONE_WITH_CONCERNS)
 - [ ] コードレビュー判定: `PASS` または `PASS_WITH_WARNINGS` であること
 
 **CRAP 計算式:** `CC² × (1 - coverage/100)³ + CC`
@@ -292,7 +293,7 @@ Agent definition: [../../../../agents/code-reviewer.md](../../../../agents/code-
 
 - 失敗回数 1–2: 分析・修正・再実行
 - 失敗回数 3+: ユーザーに相談 (先へ進まない)
-- CRAP > 30 または code-reviewer `BLOCKED`: リファクタリング (CC 削減) またはテスト追加後に再実行
+- CRAP > 30、`cov=N/A` で CC ≥ 11、または code-reviewer `BLOCKED`: リファクタリング (CC 削減) またはテスト追加後に再実行
 
 ### セッションスコープの解決
 

@@ -196,17 +196,21 @@ Do NOT check the `-CF` item — same reason as `-TF` in Phase 5. The caller owns
 4. VERIFY — criterion met?
 5. ONLY THEN — mark gate passed
 
-| Gate       | Must pass                                         |
-| ---------- | ------------------------------------------------- |
-| Tests      | All PASS (with coverage)                          |
-| Coverage   | Report generated; CRAP scores computed            |
-| CRAP       | No function with score > 30; warn if 16–30 exists |
-| Type check | 0 errors                                          |
-| Lint       | 0 errors                                          |
+| Gate       | Must pass                                                                                  |
+| ---------- | ------------------------------------------------------------------------------------------ |
+| Tests      | All PASS (with coverage)                                                                   |
+| Coverage   | Report generated; CRAP scores computed, or `cov=N/A` recorded when coverage is unavailable |
+| CRAP       | No function with score > 30; warn if 16–30 exists                                          |
+| Type check | 0 errors                                                                                   |
+| Lint       | 0 errors                                                                                   |
 
 **CRAP score formula:** `CC² × (1 - coverage/100)³ + CC`
 Score > 30 → `BLOCKED`. Score 16–30 → `DONE_WITH_CONCERNS`.
 See: [skills/bdd-coder/assets/test-quality.md](../skills/bdd-coder/assets/test-quality.md) — CRAP Score section.
+
+**Coverage unavailable** (`cov=N/A`): do NOT substitute `coverage = 0`. Judge the function by CC alone:
+CC ≥ 11 → `BLOCKED`. CC 6–10 → `DONE_WITH_CONCERNS`. CC 1–5 → pass.
+Same bands as [code-reviewer.md](code-reviewer.md) — Phase 1.3 (CRITICAL / WARN / PASS).
 
 If any gate fails: fix and re-run. 3+ failures → report `BLOCKED` to caller.
 
@@ -255,7 +259,7 @@ root, and include newly created files even though they are still untracked.
 - [ ] Tests: ALL PASS
 - [ ] Type check: 0 errors
 - [ ] Lint: 0 errors
-- [ ] CRAP scores recorded in report
+- [ ] CRAP scores (or `cov=N/A` with the CC verdict) recorded in report
 
 ### Task Complete
 
