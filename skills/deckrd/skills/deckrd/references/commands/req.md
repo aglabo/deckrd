@@ -43,7 +43,7 @@ Before collecting user input, delegate codebase investigation to explore-agent:
 
 <!-- textlint-disable ja-technical-writing/sentence-length -->
 
-1. Read `docs/.deckrd/.session.json` to confirm the active module
+1. Read `.local/deckrd/session.json` to confirm the active module
 2. Check for existing `requirements.md` under the active module path
    - If found: treat this session as a **revision** of existing requirements.
      Before Phase 3 overwrites the file, copy its frontmatter `version` and its
@@ -54,6 +54,7 @@ Before collecting user input, delegate codebase investigation to explore-agent:
 3. Spawn **explore-agent** with:
    - `scope`: `codebase-survey`
    - `directory`: project root
+   - `module`: active module (`active` in `.local/deckrd/session.json`)
    - `focus`: module name and feature keywords from user input (if available)
    - Agent definition: [`plugins/deckrd/agents/explore-agent.md`](../../../../agents/explore-agent.md)
 4. The agent writes findings to `.local/deckrd/temp/deckrd-work/codebase-context.md`
@@ -144,7 +145,7 @@ USER INPUT:       <Phase 1 initial text>
 Then execute:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh @requirements \
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/subcommands/generate-doc.sh @requirements \
   "<USER_INPUT>" \
   [--lang <lang>] \
   --output "requirements/requirements.md"
@@ -300,15 +301,15 @@ deckrd/assets/
 
 ## Script
 
-Execute: [generate-doc.sh](../../scripts/generate-doc.sh)
+Execute: [generate-doc.sh](../../scripts/subcommands/generate-doc.sh)
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh @requirements <user_input> [--lang <lang>] --output "requirements/requirements.md"
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/subcommands/generate-doc.sh @requirements <user_input> [--lang <lang>] --output "requirements/requirements.md"
 ```
 
 ## Session Update
 
-After Phase 5 (or Phase 4 if Phase 5 is skipped), update `.session.json`:
+After Phase 5 (or Phase 4 if Phase 5 is skipped), update `.local/deckrd/session.json`:
 
 ```json
 {

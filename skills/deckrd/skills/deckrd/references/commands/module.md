@@ -25,10 +25,10 @@ Initialize a DECKRD module directory structure and set it as the active module.
 
 ## Arguments
 
-| Argument               | Required | Description                                                    |
-| ---------------------- | -------- | -------------------------------------------------------------- |
-| `<namespace>/<module>` | Yes*     | Module path (e.g. `agt-kind/is-collection`)                    |
-| `<module>`             | Yes*     | Module name only; namespace auto-resolved from git remote name |
+| Argument               | Required | Description                                             |
+| ---------------------- | -------- | ------------------------------------------------------- |
+| `<namespace>/<module>` | Yes*     | Module path (e.g. `agt-kind/is-collection`)             |
+| `<module>`             | Yes*     | Module name only; namespace auto-resolved (see Actions) |
 
 \* One of the two forms is required.
 
@@ -60,12 +60,12 @@ Initialize a DECKRD module directory structure and set it as the active module.
 ## AI Pre-resolution (when `<module>` only is given)
 
 When the user provides only `<module>` (no `/` separator), YOU (the AI) MUST infer the namespace.
-**before** calling the script. Do NOT let the script fall back to `get_repo_name`.
+**before** calling the script. Do NOT let the script fall back to its default namespace silently.
 
 ### Inference procedure
 
 1. List existing modules: `ls docs/.deckrd/` → collect all `<namespace>/` directories
-2. Read `project.json` → check `namespace` field if present
+2. Read `.local/deckrd/.project.json` → check the `project` field if present
 3. Apply semantic matching rules (see table below)
 4. Confirm with user — present the inferred path and ask for approval before executing
 
@@ -75,9 +75,9 @@ When the user provides only `<module>` (no `/` separator), YOU (the AI) MUST inf
 | ----------------------------------------------------- | ------------------------------------------- |
 | Module name matches domain of an existing namespace   | Use that namespace                          |
 | Only one namespace exists in `docs/.deckrd/`          | Use it                                      |
-| `project.json` has a `namespace` field                | Use that value                              |
+| `.project.json` has a `project` field                 | Use that value                              |
 | Module name contains a keyword hinting at a subdomain | Infer from keyword (e.g. `auth-*` → `auth`) |
-| No signal found                                       | Fall back to `get_repo_name` (git remote)   |
+| No signal found                                       | Fall back to the git repository root name   |
 
 ### Example
 
@@ -97,7 +97,8 @@ AI runs: bash module.sh auth/user-login
 1. If `<module>` only: AI infers namespace (see AI Pre-resolution above), confirms with user
 2. Validate module path:
    - `<namespace>/<module>` form: validate both parts
-   - `<module>` form: auto-resolve namespace from `git remote get-url origin`
+   - `<module>` form: auto-resolve namespace from `.local/deckrd/.project.json` (`project`).
+     If unavailable, use the git repository root directory name.
 3. Normalize to lowercase
 4. Create module directory structure under `docs/.deckrd/`
 5. Update `.local/deckrd/session.json`

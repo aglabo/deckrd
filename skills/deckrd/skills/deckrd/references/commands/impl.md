@@ -67,6 +67,7 @@ Spawn **explore-agent** (non-blocking) with:
 
 - `scope`: `codebase-survey`
 - `directory`: project root
+- `module`: active module (`active` in `.local/deckrd/session.json`)
 - `focus`: feature keywords from SPEC SUMMARY
 - Agent definition: [`plugins/deckrd/agents/explore-agent.md`](../../../../agents/explore-agent.md)
 
@@ -314,7 +315,7 @@ replace the `{{SPEC_VERSION}}` placeholder. Never leave it literal.
 Execute:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh @impl \
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/subcommands/generate-doc.sh @impl \
   @specifications/specifications.md \
   [--lang <lang>] \
   --output "implementation/implementation.md"
@@ -400,10 +401,10 @@ deckrd/assets/
 
 ## Script
 
-Execute: [generate-doc.sh](../../scripts/generate-doc.sh)
+Execute: [generate-doc.sh](../../scripts/subcommands/generate-doc.sh)
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh @impl @specifications/specifications.md [--lang <lang>] --output "implementation/implementation.md"
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/subcommands/generate-doc.sh @impl @specifications/specifications.md [--lang <lang>] --output "implementation/implementation.md"
 ```
 
 > **Note**: The `@` prefix resolves to the active module's document path:
@@ -411,7 +412,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh @impl @specifications/specifi
 
 ## Session Update
 
-After completion, update `.session.json`:
+After completion, update `.local/deckrd/session.json`:
 
 ```json
 {

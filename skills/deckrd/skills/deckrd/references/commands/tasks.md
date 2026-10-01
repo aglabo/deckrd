@@ -33,6 +33,7 @@ Before generating tasks, delegate document reading to explore-agent:
 1. Spawn **explore-agent** with:
    - `scope`: `codebase-survey`
    - `directory`: project root
+   - `module`: active module (`active` in `.local/deckrd/session.json`)
    - `focus`: `specifications,implementation`
    - Agent definition: [`plugins/deckrd/agents/explore-agent.md`](../../../../agents/explore-agent.md)
 2. The agent reads `specifications/specifications.md` and `implementation/implementation.md`.
@@ -193,7 +194,7 @@ ONLY after all checks pass: proceed to Session Update.
 
 ## Session Update
 
-After completion, update `.session.json`:
+After completion, update `.local/deckrd/session.json`:
 
 ```json
 {
@@ -210,10 +211,10 @@ After completion, update `.session.json`:
 
 ## Script
 
-Execute: [generate-doc.sh](../../scripts/generate-doc.sh)
+Execute: [generate-doc.sh](../../scripts/subcommands/generate-doc.sh)
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh @tasks [--lang <lang>] --output "tasks/tasks.md"
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/subcommands/generate-doc.sh @tasks [--lang <lang>] --output "tasks/tasks.md"
 ```
 
 ## Next Step

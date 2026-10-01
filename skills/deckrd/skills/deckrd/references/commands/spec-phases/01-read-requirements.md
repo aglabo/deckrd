@@ -44,6 +44,7 @@ Spawn **explore-agent** (non-blocking) with:
 
 - `scope`: `codebase-survey`
 - `directory`: project root
+- `module`: active module (`active` in `.local/deckrd/session.json`)
 - `focus`: feature keywords from REQ SUMMARY
 - Agent definition: [`plugins/deckrd/agents/explore-agent.md`](../../../../../agents/explore-agent.md)
 
