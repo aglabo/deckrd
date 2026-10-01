@@ -214,6 +214,8 @@ meta:
         │   ├── tasks.md
         │   └── implementation-checklist.md
         ├── workspaces/            ← モジュールの作業用ファイル
+        │   └── module/
+        │       └── module.md      ← モジュールメタデータ (test_scope / owns)
         └── decision-records.md   (任意)
 ```
 
