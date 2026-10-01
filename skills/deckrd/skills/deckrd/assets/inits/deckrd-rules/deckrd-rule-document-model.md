@@ -1,7 +1,7 @@
 ---
 title: "Deckrd Rule: ドキュメントモデル"
 description: "設計チェーン・ID 採番・ドキュメント命名・ディレクトリ配置を定める統一モデル"
-version: 1.5.0
+version: 1.5.1
 ---
 
 <!-- textlint-disable
@@ -156,9 +156,10 @@ docs/.deckrd/
 旧配置（モジュールディレクトリ直下の `module.md`）は読まれない。旧配置のまま残っている
 場合は `workspaces/module/module.md` へ移す。
 
-`workspaces/` はそのモジュールに関する作業用ファイルを置く場所とする。チェックリスト・
+`workspaces/` はそのモジュールに関する、次のセッションに残すメモを置く場所とする。
 作業メモ・下書き・調査結果・設計メモはここに入れる。`requirements/` などと同列の
-ディレクトリとする。
+ディレクトリとする。チェックリストやフェーズ中間生成物のように再生成できるものは
+ここに置かず、`.local/deckrd/temp/` に置く（[作業用ファイルの 3 層](#作業用ファイルの-3-層) 参照）。
 
 `workspaces/` の中身は設計チェーンの一部ではない。ID を採番せず、下流ドキュメントから
 参照もしない。
@@ -188,7 +189,7 @@ docs/.deckrd/chatlog/normalize/
   implementation/implementation.md
   tasks/tasks.md
   workspaces/module/module.md
-  workspaces/rename-lib-sh-checklist.md
+  workspaces/rename-lib-sh-notes.md
   decision-records.md
 ```
 
