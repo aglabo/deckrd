@@ -1,6 +1,6 @@
 ---
 title: update Command
-description: List or refresh deployed rules assets that are older than the bundled source
+description: List or refresh deployed deckrd assets that are older than the bundled source
 ---
 
 <!-- cspell:words undeployed -->
@@ -10,7 +10,7 @@ description: List or refresh deployed rules assets that are older than the bundl
 List deployed deckrd assets that are older than the plugin's bundled source.
 With `--update`, overwrite them.
 
-`init` only copies files that do not exist yet. Use `update` to pick up rule changes
+`init` only copies files that do not exist yet. Use `update` to pick up asset changes
 shipped by a newer plugin version, without re-running `init`.
 
 ## Usage
@@ -21,16 +21,16 @@ shipped by a newer plugin version, without re-running `init`.
 
 ## Options
 
-| Option         | Description                                                   |
-| -------------- | ------------------------------------------------------------- |
-| (none)         | List outdated deployed files. No file is modified             |
-| `--update`     | Overwrite the listed files with the bundled source and report |
-| `-h`, `--help` | Show usage information                                        |
+| Option         | Description                                                 |
+| -------------- | ----------------------------------------------------------- |
+| (none)         | List outdated deployed files. No file is modified           |
+| `--update`     | Apply the listed changes from the bundled source and report |
+| `-h`, `--help` | Show usage information                                      |
 
 ## Targets
 
 The same source / destination pairs as `init` Phase 0, checked in this order.
-They are defined by `init_asset_dirs` in `scripts/libs/asset-diff.lib.sh`.
+Both `init` and `update` read them from `init_asset_dirs` in `scripts/libs/asset-diff.lib.sh`.
 
 | Label                | Source (`assets/inits/`) | Destination                   |
 | -------------------- | ------------------------ | ----------------------------- |
@@ -39,6 +39,7 @@ They are defined by `init_asset_dirs` in `scripts/libs/asset-diff.lib.sh`.
 | `deckrd-rules-index` | `deckrd-rules-index/`    | `.claude/rules/deckrd-rules/` |
 | `docs`               | `docs/`                  | `docs/.deckrd/`               |
 | `local-deckrd`       | `local-deckrd/`          | `.local/deckrd/`              |
+| `local-workspaces`   | `local-workspaces/`      | `.local/deckrd/workspaces/`   |
 
 ## Detection Rule
 
@@ -55,6 +56,10 @@ Deployed rules are managed by the plugin and are not meant to be edited. Put pro
 customizations in separate files. `--update` may overwrite a deployed rule edited before
 a plugin upgrade.
 
+`.local/deckrd/workspaces/README.md` is also managed by the plugin. It explains the shared
+notes layer and is not meant to be edited. `--update` overwrites it like a rule. Put your own
+notes in separate files under `workspaces/`.
+
 `.gitignore` (shipped as `.gitignore.org`) is copied by `init` only. `update` never
 overwrites it, because users are expected to edit it.
 
@@ -63,6 +68,12 @@ workspaces rule (`!/workspaces/`). `update` reports such a file as
 `[local-deckrd] .gitignore (workspaces rule)`. `--update` appends the workspaces rule
 block of the template to it. The existing lines are kept.
 
+A project initialized before the workspaces directory existed has no
+`.local/deckrd/workspaces/README.md`. `update` reports it as
+`[local-workspaces] README.md (missing)`. `--update` creates the directory and copies the
+README. Any existing entry at that path, even a directory, counts as deployed and is left
+untouched.
+
 ## Output Example
 
 ```bash
@@ -70,22 +81,25 @@ $ /deckrd update
 [deckrd-rules] deckrd-rule-workflow.md
 [deckrd-rules-index] deckrd-rules-index.md
 [local-deckrd] .gitignore (workspaces rule)
+[local-workspaces] README.md (missing)
 
 $ /deckrd update --update
 Updated: [deckrd-rules] deckrd-rule-workflow.md
 Updated: [deckrd-rules-index] deckrd-rules-index.md
 Updated: [local-deckrd] .gitignore (workspaces rule)
+Updated: [local-workspaces] README.md (missing)
 
 $ /deckrd update
-Rules are up to date.
+Assets are up to date.
 ```
 
 ## Error Messages
 
-| Error             | Cause                     | Solution                                   |
-| ----------------- | ------------------------- | ------------------------------------------ |
-| session not found | `init` has not been run   | Run `deckrd init <project> <project-type>` |
-| Unknown option    | Unsupported option passed | Run `deckrd update --help`                 |
+| Error             | Cause                                | Solution                                   |
+| ----------------- | ------------------------------------ | ------------------------------------------ |
+| session not found | `init` has not been run              | Run `deckrd init <project> <project-type>` |
+| Unknown option    | Unsupported option passed            | Run `deckrd update --help`                 |
+| failed to update  | A destination path cannot be written | Fix the path or its permissions and rerun  |
 
 ## Script
 
