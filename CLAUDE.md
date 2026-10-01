@@ -27,18 +27,18 @@ deckrd/
 
 ## Plugins
 
-| Plugin                   | Commands                                                          | Session                      |
-| ------------------------ | ----------------------------------------------------------------- | ---------------------------- |
-| `skills/deckrd/`         | `/deckrd` (init, module, req, dr, spec, impl, tasks, status, rev) | `.local/deckrd/session.json` |
-| `skills/bdd-coder/`      | `/bdd-coder:bdd-coder` — BDD implementation for any coding task   | —                            |
-| IDD Framework (external) | `/idd/issue:*`, `/idd-pr`, `/idd-commit-message`                  | `temp/idd/`                  |
+| Plugin                   | Commands                                                                  | Session                      |
+| ------------------------ | ------------------------------------------------------------------------- | ---------------------------- |
+| `skills/deckrd/`         | `/deckrd` (init, module, req, dr, spec, impl, tasks, status, rev, update) | `.local/deckrd/session.json` |
+| `skills/bdd-coder/`      | `/bdd-coder:bdd-coder` — BDD implementation for any coding task           | —                            |
+| IDD Framework (external) | `/idd/issue:*`, `/idd-pr`, `/idd-commit-message`                          | `temp/idd/`                  |
 
 IDD Framework location: `~/.claude/plugins/marketplaces/claude-idd-framework-marketplace/plugins/claude-idd-framework`
 
 ## Workflow
 
 **Planning (deckrd)**:
-`/deckrd init <project> <type>` → `module <ns>/<mod>` → `req` → `dr` (opt) → `spec` → `impl` → `tasks`
+`/deckrd init <project> <type>` → `module <ns>/<mod>` (or `<mod>`) → `req` → `dr` (opt) → `spec` → `impl` → `tasks`
 
 **Execution (IDD)**:
 `/idd/issue:new` → branch → implement → `/idd-commit-message` → `/idd-pr`
