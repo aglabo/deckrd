@@ -100,7 +100,7 @@ Each step derives the next document from the previous one.
 
 deckrd stores workflow state and generated documents separately:
 
-- Session state: `docs/.deckrd/.session.json`
+- Session state: `.local/deckrd/session.json`
 - Generated documents: `docs/.deckrd/<namespace>/<module>/`
   - `requirements/` — requirement documents
   - `specifications/` — specification documents
