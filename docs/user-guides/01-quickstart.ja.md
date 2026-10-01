@@ -66,6 +66,12 @@ deckrd は **Goals → Requirements → Specifications → Implementation → Ta
 - `docs/.deckrd/rules/` — deckrd ルール本体（必要なときだけ読み込む）
 - `.claude/rules/deckrd-rules/deckrd-rules-index.md` — ルールの目次（毎セッション読み込まれる）
 
+> **既存プロジェクトの注意:** 旧バージョンで初期化したプロジェクトでは、`.local/deckrd/.gitignore` が
+> 既に存在するため `init` は上書きせず、`/deckrd update --update` も `.gitignore` を更新しません。
+> このままでは旧ルールの `*` により `workspaces/` が git に無視されます。
+> `skills/deckrd/skills/deckrd/assets/inits/local-deckrd/.gitignore.org` を参考に、
+> `!/workspaces/` と `!/workspaces/**` を手作業で追加してください。
+
 ---
 
 ## Step 2: モジュール作成
