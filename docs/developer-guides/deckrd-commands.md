@@ -58,12 +58,16 @@ The session file tracks:
 **Usage**: `/deckrd init <project> <project-type>`
 
 **Purpose**: Bootstrap the project once. Writes `.local/deckrd/.project.json`, initializes the session,
-and deploys bundled rules and templates. Existing files are never overwritten (use `/deckrd update`)
+and deploys bundled rules and templates
+
+**Re-running**: Deployed assets that already exist are kept (use `/deckrd update` to refresh them).
+`.local/deckrd/.project.json` is rewritten on every run: `project`, `project_type`, `language`,
+and `ai_model` take the new values; only `created_at` is kept
 
 **Example**:
 
 ```bash
-/deckrd init myProject shell
+/deckrd init myproject shell
 ```
 
 ### /deckrd module
@@ -82,14 +86,14 @@ falling back to the git repository root directory name
 **Example**:
 
 ```bash
-/deckrd module myProject/authentication
-/deckrd module authentication   # same, when project = myProject
+/deckrd module myproject/authentication
+/deckrd module authentication   # same, when project = myproject
 ```
 
 Creates:
 
 ```bash
-docs/.deckrd/myProject/authentication/
+docs/.deckrd/myproject/authentication/
 ├── requirements/
 ├── specifications/
 ├── implementation/
@@ -176,7 +180,7 @@ docs/.deckrd/myProject/authentication/
 **Example Output**:
 
 ```bash
-Module: myProject/authentication
+Module: myproject/authentication
 Status:
   ✓ Requirements
   ✓ Specifications

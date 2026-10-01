@@ -79,8 +79,8 @@ claude plugin install bdd-coder@deckrd
 /idd/issue:new
 
 # フェーズ 2: deckrd で設計・計画
-/deckrd init myProject shell
-/deckrd module myProject/feature
+/deckrd init myproject shell
+/deckrd module myproject/feature
 /deckrd req
 /deckrd spec
 /deckrd impl
@@ -163,8 +163,8 @@ claude plugin install bdd-coder@deckrd
 
 ```bash
 # Step 1: deckrd で計画・ドキュメント化
-/deckrd init myProject shell
-/deckrd module myProject/feature
+/deckrd init myproject shell
+/deckrd module myproject/feature
 /deckrd req
 /deckrd spec
 /deckrd impl
