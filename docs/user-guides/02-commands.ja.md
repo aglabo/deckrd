@@ -646,7 +646,7 @@ docs/.deckrd/<ns>/<mod>/decision-records.md (追記形式)
 ### 対象と判定条件
 
 `init` が配置するディレクトリ（`docs/.deckrd/rules/`、`.claude/rules/claude-rules/`、
-`.claude/rules/deckrd-rules/`、`docs/.deckrd/`、`.local/deckrd/`）が対象です。
+`.claude/rules/deckrd-rules/`、`docs/.deckrd/`、`.local/deckrd/`、`.local/deckrd/workspaces/`）が対象です。
 次の条件をすべて満たすファイルだけを一覧に出します。
 
 - 配置先に既に存在する（未配置のファイルはコピーしない）
@@ -655,17 +655,25 @@ docs/.deckrd/<ns>/<mod>/decision-records.md (追記形式)
 
 配置先の方が新しいファイルは、利用者が手元で編集したものとみなし、`--update` の対象にもなりません。
 
+`.local/deckrd/workspaces/README.md` もプラグインが管理するファイルです。`--update` で上書きされることがあるため、
+メモは `workspaces/` 配下の別ファイルに書きます。
+
+workspaces ディレクトリ導入前に `init` したプロジェクトでは、この README がありません。
+`update` は `[local-workspaces] README.md (missing)` と表示し、`--update` でディレクトリを作って README をコピーします。
+
 ### 表示例
 
 ```text
 $ /deckrd update
 [deckrd-rules] deckrd-rule-workflow.md
+[local-workspaces] README.md (missing)
 
 $ /deckrd update --update
 Updated: [deckrd-rules] deckrd-rule-workflow.md
+Updated: [local-workspaces] README.md (missing)
 
 $ /deckrd update
-Rules are up to date.
+Assets are up to date.
 ```
 
 ---
