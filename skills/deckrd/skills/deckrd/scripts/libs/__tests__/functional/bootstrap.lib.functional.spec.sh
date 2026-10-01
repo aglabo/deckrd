@@ -20,7 +20,7 @@ SCRIPT="${_RUNTIME_LIBS_DIR}/bootstrap.lib.sh"
 Describe "bootstrap.lib.sh"
 
   # ------------------------------------------------------------------ #
-  #  PROJECT_ROOT: 事前設定の維持                                        #
+  #  PROJECT_ROOT: preserve preset value                               #
   # ------------------------------------------------------------------ #
   Describe "T-LIB-BPRF: PROJECT_ROOT: 事前設定維持"
 
@@ -44,7 +44,7 @@ Describe "bootstrap.lib.sh"
   End
 
   # ------------------------------------------------------------------ #
-  #  DECKRD_ROOT ← BASH_SOURCE 基点                                    #
+  #  DECKRD_ROOT <- resolved from BASH_SOURCE                          #
   # ------------------------------------------------------------------ #
   Describe "T-LIB-BROOTF: DECKRD_ROOT: BASH_SOURCE 基点"
 
@@ -70,7 +70,7 @@ Describe "bootstrap.lib.sh"
   End
 
   # ------------------------------------------------------------------ #
-  #  DECKRD_ROOT 起点の連鎖 (SCRIPTS/LIB)                              #
+  #  Chain rooted at DECKRD_ROOT (SCRIPTS/LIB)                         #
   # ------------------------------------------------------------------ #
   Describe "T-LIB-BSCRF: DECKRD_SCRIPTS_DIR / DECKRD_LIB_DIR: DECKRD_ROOT 連鎖"
 
@@ -101,7 +101,7 @@ Describe "bootstrap.lib.sh"
   End
 
   # ------------------------------------------------------------------ #
-  #  DECKRD_ASSETS_DIR: 事前設定の維持と実アセットツリー                 #
+  #  DECKRD_ASSETS_DIR: preserve preset value and real asset tree      #
   # ------------------------------------------------------------------ #
   Describe "T-LIB-BASSETF: DECKRD_ASSETS_DIR: 事前設定維持と実アセットツリー"
 
@@ -119,7 +119,7 @@ Describe "bootstrap.lib.sh"
   End
 
   # ------------------------------------------------------------------ #
-  #  PROJECT_ROOT 起点の連鎖 (LOCAL_DATA/DOCS)                         #
+  #  Chain rooted at PROJECT_ROOT (LOCAL_DATA/DOCS)                    #
   # ------------------------------------------------------------------ #
   Describe "T-LIB-BLOCDF: DECKRD_LOCAL_DATA / DECKRD_DOCS_DIR: PROJECT_ROOT 連鎖"
 
@@ -149,7 +149,7 @@ Describe "bootstrap.lib.sh"
   End
 
   # ------------------------------------------------------------------ #
-  #  bdd-coder パス検出                                                #
+  #  bdd-coder path detection                                          #
   # ------------------------------------------------------------------ #
   Describe "T-LIB-BSRCF: bdd-coder パス検出"
     Before setup_coder_tmpscript
@@ -193,7 +193,7 @@ Describe "bootstrap.lib.sh"
   End
 
   # ------------------------------------------------------------------ #
-  #  副作用: 内部変数                                                   #
+  #  Side effects: internal variables                                  #
   # ------------------------------------------------------------------ #
   Describe "T-LIB-BINTF: 副作用: 内部変数"
 
@@ -237,7 +237,7 @@ Describe "bootstrap.lib.sh"
   End
 
   # ------------------------------------------------------------------ #
-  #  副作用: シェル環境変数                                             #
+  #  Side effects: shell environment variables                         #
   # ------------------------------------------------------------------ #
   Describe "T-LIB-BENVF: 副作用: シェル環境変数"
 

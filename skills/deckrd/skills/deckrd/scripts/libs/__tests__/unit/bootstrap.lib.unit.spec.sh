@@ -41,7 +41,7 @@ SCRIPT="${_RUNTIME_LIBS_DIR}/bootstrap.lib.sh"
 Describe "bootstrap.lib.sh"
 
   # ------------------------------------------------------------------ #
-  #  loading — source/init/finalize を分離して検証                     #
+  #  loading - verify source/init/finalize separately                  #
   # ------------------------------------------------------------------ #
   Describe "T-LIB-BLOAD: loading"
 
@@ -65,7 +65,7 @@ Describe "bootstrap.lib.sh"
   End
 
   # ------------------------------------------------------------------ #
-  #  export 検証 — export -p で実際に export されているか確認           #
+  #  export check - confirm actual export via export -p                #
   # ------------------------------------------------------------------ #
   Describe "T-LIB-BEXP: export 検証"
 
@@ -130,7 +130,7 @@ Describe "bootstrap.lib.sh"
   End
 
   # ------------------------------------------------------------------ #
-  #  副作用: 他変数への影響なし                                         #
+  #  Side effects: no impact on other variables                        #
   # ------------------------------------------------------------------ #
   Describe "T-LIB-BSIDE: 副作用: 他変数"
 
@@ -160,7 +160,7 @@ Describe "bootstrap.lib.sh"
   End
 
   # ------------------------------------------------------------------ #
-  #  bootstrap_finalize — readonly 化の保証と冪等性                    #
+  #  bootstrap_finalize - readonly guarantee and idempotency           #
   # ------------------------------------------------------------------ #
   Describe "T-LIB-BFIN: bootstrap_finalize"
 
@@ -244,7 +244,7 @@ Describe "bootstrap.lib.sh"
   End
 
   # ------------------------------------------------------------------ #
-  #  冪等性: bootstrap_init 2回呼び出し                                 #
+  #  Idempotency: calling bootstrap_init twice                         #
   # ------------------------------------------------------------------ #
   Describe "T-LIB-BIDEM: 冪等性: bootstrap_init 2回"
 
@@ -274,9 +274,9 @@ Describe "bootstrap.lib.sh"
   End
 
   # ------------------------------------------------------------------ #
-  #  BASH_SOURCE 依存: bdd-coder パス検出                              #
-  #  bootstrap.lib.sh の物理位置 (deckrd スキル) を基点とするため      #
-  #  呼び出し元が bdd-coder パスでも DECKRD_ROOT は常に deckrd になる  #
+  #  BASH_SOURCE dependency: bdd-coder path detection                  #
+  #  Resolved from where bootstrap.lib.sh lives (deckrd skill), so     #
+  #  DECKRD_ROOT is always deckrd even if called from a bdd-coder path #
   # ------------------------------------------------------------------ #
   Describe "T-LIB-BSRC: BASH_SOURCE 依存: bdd-coder パス検出"
     Before setup_coder_tmpscript
@@ -309,7 +309,7 @@ Describe "bootstrap.lib.sh"
 
   # ------------------------------------------------------------------ #
   #  DECKRD_ROOT                                                        #
-  #  依存: PROJECT_ROOT (未設定時の自動計算はソースパス依存)            #
+  #  Depends on: PROJECT_ROOT (derived from source path when unset)    #
   # ------------------------------------------------------------------ #
   Describe "T-LIB-BROOT: DECKRD_ROOT"
 
@@ -365,7 +365,7 @@ Describe "bootstrap.lib.sh"
 
   # ------------------------------------------------------------------ #
   #  DECKRD_SCRIPTS_DIR                                                 #
-  #  依存: DECKRD_ROOT のみ                                            #
+  #  Depends on: DECKRD_ROOT only                                      #
   # ------------------------------------------------------------------ #
   Describe "T-LIB-BSCR: DECKRD_SCRIPTS_DIR"
 
@@ -418,7 +418,7 @@ Describe "bootstrap.lib.sh"
 
   # ------------------------------------------------------------------ #
   #  DECKRD_ASSETS_DIR                                                  #
-  #  依存: DECKRD_ROOT のみ                                            #
+  #  Depends on: DECKRD_ROOT only                                      #
   # ------------------------------------------------------------------ #
   Describe "T-LIB-BASSET: DECKRD_ASSETS_DIR"
 
@@ -457,7 +457,7 @@ Describe "bootstrap.lib.sh"
 
   # ------------------------------------------------------------------ #
   #  DECKRD_LIB_DIR                                                     #
-  #  依存: DECKRD_ROOT のみ                                            #
+  #  Depends on: DECKRD_ROOT only                                      #
   # ------------------------------------------------------------------ #
   Describe "T-LIB-BLIBD: DECKRD_LIB_DIR"
 
@@ -510,7 +510,7 @@ Describe "bootstrap.lib.sh"
 
   # ------------------------------------------------------------------ #
   #  DECKRD_DATA_DIR                                                    #
-  #  依存: XDG_DATA_HOME または HOME のみ (PROJECT_ROOT/DECKRD_ROOT 非依存) #
+  #  Depends on: XDG_DATA_HOME or HOME (not PROJECT_ROOT/DECKRD_ROOT)  #
   # ------------------------------------------------------------------ #
   Describe "T-LIB-BDATA: DECKRD_DATA_DIR"
 
@@ -601,7 +601,7 @@ Describe "bootstrap.lib.sh"
 
   # ------------------------------------------------------------------ #
   #  DECKRD_LOCAL_DATA                                                  #
-  #  依存: PROJECT_ROOT のみ (DECKRD_ROOT 非依存)                      #
+  #  Depends on: PROJECT_ROOT only (not DECKRD_ROOT)                   #
   # ------------------------------------------------------------------ #
   Describe "T-LIB-BLOCD: DECKRD_LOCAL_DATA"
 
@@ -654,7 +654,7 @@ Describe "bootstrap.lib.sh"
 
   # ------------------------------------------------------------------ #
   #  DECKRD_LOCAL_WORKSPACES                                           #
-  #  依存: DECKRD_LOCAL_DATA のみ (DECKRD_ROOT 非依存)                 #
+  #  Depends on: DECKRD_LOCAL_DATA only (not DECKRD_ROOT)              #
   # ------------------------------------------------------------------ #
   Describe "T-LIB-BLOCW: DECKRD_LOCAL_WORKSPACES"
 
@@ -716,7 +716,7 @@ Describe "bootstrap.lib.sh"
 
   # ------------------------------------------------------------------ #
   #  DECKRD_LOCAL_TEMP                                                 #
-  #  依存: DECKRD_LOCAL_DATA のみ (DECKRD_ROOT 非依存)                 #
+  #  Depends on: DECKRD_LOCAL_DATA only (not DECKRD_ROOT)              #
   # ------------------------------------------------------------------ #
   Describe "T-LIB-BLOCT: DECKRD_LOCAL_TEMP"
 
@@ -778,7 +778,7 @@ Describe "bootstrap.lib.sh"
 
   # ------------------------------------------------------------------ #
   #  DECKRD_DOCS_DIR                                                    #
-  #  依存: PROJECT_ROOT のみ (DECKRD_ROOT 非依存)                      #
+  #  Depends on: PROJECT_ROOT only (not DECKRD_ROOT)                   #
   # ------------------------------------------------------------------ #
   Describe "T-LIB-BDOCS: DECKRD_DOCS_DIR"
 
@@ -830,7 +830,7 @@ Describe "bootstrap.lib.sh"
   End
 
   # ------------------------------------------------------------------ #
-  #  SYMBOL — 仕様: ^[a-z][a-z_-]*$ (先頭は小文字のみ)                 #
+  #  SYMBOL - spec: ^[a-z][a-z_-]*$ (lowercase first character)        #
   # ------------------------------------------------------------------ #
   Describe "T-LIB-BSYM: SYMBOL"
 

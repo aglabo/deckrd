@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # src: ./skills/deckrd/scripts/init.sh
-# @(#) : deckrd プロジェクト初期化スクリプト
+# @(#) : deckrd project initialization script
 #
 # Copyright (c) 2025 atsushifx <https://github.com/atsushifx>
 #

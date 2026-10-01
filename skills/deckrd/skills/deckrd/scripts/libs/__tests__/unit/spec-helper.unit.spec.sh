@@ -3,15 +3,15 @@
 # @(#) : ShellSpec unit tests for spec_helper.sh - setup_coder_tmpscript / setup_naming_cache
 #
 # Unit test design:
-#   - 対象はテストハーネスそのものなので、観測できるのは公開契約である
-#     `_CODER_TMPSCRIPT` のパスと、ファイルシステムに残る痕跡だけである。
-#     内部変数 (`_CODER_TMPROOT` 等) は読まない。
-#   - 「固定パスでない」「teardown 後に残っていない」は否定の判定になる。
-#     ShellSpec の条件式へ否定を直接書かず、内部ヘルパー関数へ閉じ込める。
-#   - teardown を挟まずに setup を 2 回呼ぶとテスト自身が親ディレクトリをリークする。
-#     2 回目の setup を呼ぶケースは、必ず先に teardown を呼ぶ。
-#   - export したかどうかは子プロセスから確かめる。bash の export 属性は素の代入を
-#     またいで残るので、同じシェルで変数の値を読むだけでは判定できない。
+#   - The target is the test harness itself, so the only observable surface is its public
+#     contract: the `_CODER_TMPSCRIPT` path and the traces left on the file system.
+#     Internal variables (`_CODER_TMPROOT`, etc.) are never read.
+#   - "Not a fixed path" and "Nothing left after teardown" are negative checks.
+#     Keep the negation inside internal helper functions, not in ShellSpec conditions.
+#   - Calling setup twice without teardown in between makes the test leak a parent directory.
+#     Cases that call setup a second time always call teardown first.
+#   - Verify exports from a child process. Bash keeps the export attribute across plain
+#     reassignment, so reading the value in the same shell cannot tell whether it was exported.
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #
@@ -19,64 +19,64 @@
 # https://opensource.org/licenses/MIT
 
 # ============================================================================
-# テスト対象
+# Target under test
 # ============================================================================
 
 Include ../spec_helper.sh
 
 # ============================================================================
-# 内部ヘルパー
+# Internal helpers
 # ============================================================================
 
-# 定数
+# Constants
 
-# _CODER_PATH_SEGMENT - bdd-coder パス検出が依存するパスの並び。
-# setup_coder_tmpscript はこれを 1 セグメントとして保たなければならない
+# _CODER_PATH_SEGMENT - Path sequence that bdd-coder path detection depends on.
+# setup_coder_tmpscript must keep it intact as a single segment
 _CODER_PATH_SEGMENT='/plugins/bdd-coder/'
 
-# _FIXED_PLUGINS_DIR - 使ってはならない固定の一時ディレクトリの親。
-# `--jobs 4` の並列実行で全ジョブが共有し、共有ホストでは他ユーザーとも衝突する
+# _FIXED_PLUGINS_DIR - Parent of the fixed temp directory that must not be used.
+# All jobs share it under `--jobs 4`, and it collides with other users on shared hosts
 _FIXED_PLUGINS_DIR='/tmp/plugins'
 
-# _FIXED_CODER_DIR - 使ってはならない固定の一時ディレクトリ
+# _FIXED_CODER_DIR - Fixed temp directory that must not be used
 _FIXED_CODER_DIR="${_FIXED_PLUGINS_DIR}/bdd-coder"
 
-# _INLINE_TMP_WRITE_COMMANDS - 固定の一時ディレクトリを自前で作るコマンド。
-# 検査の正規表現はこれと _FIXED_PLUGINS_DIR を実行時に連結して組む。
-# 連結済みの文字列をソースに置くと、この spec 自身が違反として数えられてしまう
+# _INLINE_TMP_WRITE_COMMANDS - Commands that create the fixed temp directory by hand.
+# The check regex is built at runtime by joining these with _FIXED_PLUGINS_DIR.
+# Putting the joined string in the source would make this spec count itself as a violation
 _INLINE_TMP_WRITE_COMMANDS=('mkdir -p' 'mktemp')
 
-# _LIBS_SPEC_DIR - 静的検査の対象。libs モジュールの spec を収めたディレクトリ
+# _LIBS_SPEC_DIR - Static check target: the directory holding the libs module specs
 _LIBS_SPEC_DIR="${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/skills/deckrd/scripts/libs/__tests__"
 
-# _SPEC_FILE_GLOB - 静的検査が拾う spec ファイルの glob。
-# 違反件数を数える側と走査件数を数える側で共有する。別々に書くと片方だけ直され、
-# 対照としての意味が失われる
+# _SPEC_FILE_GLOB - Glob of spec files picked up by the static check.
+# Shared by the violation counter and the scan counter. Writing it twice invites fixing
+# only one copy, which defeats the purpose of the control
 _SPEC_FILE_GLOB='*.spec.sh'
 
-# _REAL_LOCAL_DATA_DIR - 実行時に bootstrap.lib.sh が導く実リポジトリ側の DECKRD_LOCAL_DATA。
-# 差し替え前の初期状態をエッジケースで自前に作るために使う
+# _REAL_LOCAL_DATA_DIR - Real-repository DECKRD_LOCAL_DATA that bootstrap.lib.sh derives at runtime.
+# Used by the edge case to recreate the pre-override initial state by hand
 _REAL_LOCAL_DATA_DIR="${SHELLSPEC_PROJECT_ROOT}/.local/deckrd"
 
-# 関数
+# Functions
 
-# _coder_tmpscript_dir - setup_coder_tmpscript が一時スクリプトを置いたディレクトリを返す
+# _coder_tmpscript_dir - Print the directory where setup_coder_tmpscript placed the temp script
 #
-# 作成先は公開契約である _CODER_TMPSCRIPT からしか辿れない。teardown は
-# _CODER_TMPSCRIPT を unset するので、teardown を呼ぶケースは必ず先にこれを呼ぶ。
-# 未設定なら `:?` で即座に落とす。空文字列から dirname を求めても意味がない。
+# The location is reachable only through the public contract _CODER_TMPSCRIPT. Teardown
+# unsets _CODER_TMPSCRIPT, so cases that call teardown must call this first.
+# Fails immediately via `:?` when unset; taking dirname of an empty string is meaningless.
 #
-# @stdout 一時スクリプトを収めたディレクトリの絶対パス
+# @stdout Absolute path of the directory holding the temp script
 # shellcheck disable=SC2329
 _coder_tmpscript_dir() {
   dirname "${_CODER_TMPSCRIPT:?}"
 }
 
-# _tmpscript_keeps_coder_segment - _CODER_TMPSCRIPT のパスが
-#     plugins/bdd-coder を 1 セグメントとして含むかを報告する
+# _tmpscript_keeps_coder_segment - Report whether the _CODER_TMPSCRIPT path
+#     contains plugins/bdd-coder as a single segment
 #
-# サフィックス付きのディレクトリ名 (`bdd-coder-XXXXXX` 等) はセグメントを崩すので
-# 一致しない。T-LIB-BSRC / T-LIB-BSRCF の意図はこのパス名に表れている。
+# Suffixed directory names (`bdd-coder-XXXXXX`, etc.) break the segment and do not
+# match. The intent of T-LIB-BSRC / T-LIB-BSRCF is encoded in this path name.
 #
 # @return 0 if the path contains the segment, 1 otherwise
 # shellcheck disable=SC2329
@@ -84,7 +84,7 @@ _tmpscript_keeps_coder_segment() {
   [[ "${_CODER_TMPSCRIPT:-}" == *"${_CODER_PATH_SEGMENT}"* ]]
 }
 
-# _tmpscript_outside_fixed_dir - _CODER_TMPSCRIPT が固定ディレクトリの外にあるかを報告する
+# _tmpscript_outside_fixed_dir - Report whether _CODER_TMPSCRIPT lies outside the fixed directory
 #
 # @return 0 if the path is outside _FIXED_CODER_DIR, 1 if inside
 # shellcheck disable=SC2329
@@ -92,16 +92,16 @@ _tmpscript_outside_fixed_dir() {
   [[ "${_CODER_TMPSCRIPT:-}" != "${_FIXED_CODER_DIR}"/* ]]
 }
 
-# _teardown_leaves_no_dir - teardown_coder_tmpscript が作成先ディレクトリを
-#     残さないかを報告する
+# _teardown_leaves_no_dir - Report whether teardown_coder_tmpscript leaves
+#     none of the created directories behind
 #
-# teardown を呼ぶ前に作成先パスを控える。teardown は _CODER_TMPSCRIPT を unset するので、
-# 呼んだ後では何を確かめるべきか分からなくなる。
+# Record the created paths before calling teardown. Teardown unsets _CODER_TMPSCRIPT,
+# so afterwards there is no way to know what to check.
 #
-# 3 階層すべてを見る。setup が作るのは mktemp -d が取った root・その下の `plugins`・
-# さらに下の `bdd-coder` であり、どれ 1 つ残っても example ごとに 1 個ずつ
-# /tmp にディレクトリが溜まる。root は `bdd-coder` から 2 つ上に当たり、
-# 公開契約である _CODER_TMPSCRIPT から辿れる。内部変数は読まない。
+# Check all three levels. Setup creates the root from mktemp -d, `plugins` under it,
+# and `bdd-coder` below that; if any one remains, one directory per example
+# accumulates in /tmp. The root is two levels above `bdd-coder` and is reachable
+# from the public contract _CODER_TMPSCRIPT. Internal variables are not read.
 #
 # @return 0 if none of the three created directories remains, 1 otherwise
 # shellcheck disable=SC2329
@@ -116,11 +116,11 @@ _teardown_leaves_no_dir() {
   [[ ! -d "$coder_dir" && ! -d "$plugins_dir" && ! -d "$root_dir" ]]
 }
 
-# _second_setup_uses_new_dir - teardown を挟んだ 2 回目の setup が
-#     1 回目と異なるディレクトリを作るかを報告する
+# _second_setup_uses_new_dir - Report whether a second setup after teardown
+#     creates a directory different from the first
 #
-# 1 回目は呼び出し側の Before が済ませている。2 回目を呼ぶ前に teardown を呼ぶので、
-# このヘルパーが親ディレクトリを追跡不能にすることはない。
+# The caller's Before already ran the first setup. Teardown runs before the second,
+# so this helper never leaves a parent directory untracked.
 #
 # @return 0 if the two setups created different directories, 1 if they shared one
 # shellcheck disable=SC2329
@@ -136,16 +136,16 @@ _second_setup_uses_new_dir() {
   [[ "$first_dir" != "$second_dir" ]]
 }
 
-# _count_inline_tmp_writes - libs モジュールの spec が固定の一時ディレクトリへ
-#     直接書き込んでいる箇所の件数を報告する
+# _count_inline_tmp_writes - Report how many places in the libs module specs
+#     write directly to the fixed temp directory
 #
-# ヘルパー (setup_coder_tmpscript / run_coder_tmpscript) を使わずに固定パスを
-# 直書きすると、後始末がファイル単位になりディレクトリが /tmp に残り続ける。
+# Hard-coding the fixed path instead of using the helpers (setup_coder_tmpscript /
+# run_coder_tmpscript) limits cleanup to files, leaving directories in /tmp.
 #
-# grep の終了コードをそのまま合否にしない。ヒット 0 件で 1 を返すので、
-# 「違反なし」と「検査そのものの失敗」が区別できなくなる。件数を数えて呼び出し側で比べる。
+# Do not use grep's exit code as the verdict. It returns 1 on zero hits, so
+# "no violations" and "the check itself failed" become indistinguishable. Count and compare in the caller.
 #
-# @stdout 違反箇所の件数
+# @stdout Number of violations
 # @return 0 always
 # shellcheck disable=SC2329
 _count_inline_tmp_writes() {
@@ -155,14 +155,14 @@ _count_inline_tmp_writes() {
   grep -rhoE "${patterns[*]}" --include="$_SPEC_FILE_GLOB" "$_LIBS_SPEC_DIR" | wc -l
 }
 
-# _scans_at_least_one_spec_file - 静的検査が spec ファイルを 1 件以上走査するかを報告する
+# _scans_at_least_one_spec_file - Report whether the static check scans at least one spec file
 #
-# _count_inline_tmp_writes の正の対照である。grep は --include のパターンが
-# 1 件も一致しないとき、標準エラー出力に何も書かずに 0 件を返す。走査が空振りしても
-# 「違反なし」として通るので、違反件数の判定だけでは検査が生きていることを示せない。
+# Positive control for _count_inline_tmp_writes. When no file matches the --include
+# pattern, grep returns zero hits without writing anything to stderr. An empty scan
+# passes as "no violations", so the violation count alone cannot prove the check is alive.
 #
-# 走査の範囲を決める _LIBS_SPEC_DIR と _SPEC_FILE_GLOB を対照側と共有する。
-# `^` はどの行にも一致するので、grep が拾ったファイルがそのまま走査対象の件数になる。
+# Shares _LIBS_SPEC_DIR and _SPEC_FILE_GLOB, which define the scan scope, with the control.
+# `^` matches every line, so the number of files grep lists equals the number scanned.
 #
 # @return 0 if the scan covers one or more spec files, 1 if it covers none
 # shellcheck disable=SC2329
@@ -173,15 +173,15 @@ _scans_at_least_one_spec_file() {
   ((scanned >= 1))
 }
 
-# _naming_local_dirs_exported - setup_naming_cache が DECKRD_LOCAL_TEMP と
-#     DECKRD_LOCAL_WORKSPACES を子プロセスへ export するかを報告する
+# _naming_local_dirs_exported - Report whether setup_naming_cache exports
+#     DECKRD_LOCAL_TEMP and DECKRD_LOCAL_WORKSPACES to child processes
 #
-# 判定の前に teardown_naming_cache を呼び、2 変数を属性ごと消してから setup をやり直す。
-# この作り直しを省くと、先に走った example が付けた export 属性を setup の手柄として
-# 数えてしまい、setup から export を落とした実装が通ってしまう。
+# Call teardown_naming_cache first to remove both variables along with their attributes, then rerun setup.
+# Skipping this reset would credit setup with export attributes left by an earlier example,
+# letting an implementation that dropped the export from setup pass.
 #
-# 子 bash の `export -p` は export された変数だけを挙げる。子プロセスとして起動される
-# スクリプトが読むのはこの一覧なので、代入だけで export を忘れた実装はこの形でしか捕まらない。
+# `export -p` in a child bash lists only exported variables. Scripts started as child processes
+# read exactly this list, so an implementation that assigns without exporting is caught only this way.
 #
 # @return 0 if both variables are exported, 1 otherwise
 # shellcheck disable=SC2329
@@ -193,19 +193,19 @@ _naming_local_dirs_exported() {
     export -p | grep -q "^declare -x DECKRD_LOCAL_WORKSPACES="'
 }
 
-# _naming_overrides_real_local_dirs - 実リポジトリのパスが先に export されていても
-#     setup_naming_cache が DECKRD_LOCAL_TEMP / DECKRD_LOCAL_WORKSPACES を
-#     sandbox 側へ差し替えるかを報告する
+# _naming_overrides_real_local_dirs - Report whether setup_naming_cache redirects
+#     DECKRD_LOCAL_TEMP / DECKRD_LOCAL_WORKSPACES to the sandbox even when
+#     real-repository paths were exported beforehand
 #
-# この spec は bootstrap.lib.sh を source しない。実行時の初期状態 (bootstrap が
-# 実リポジトリのパスを export した状態) はこの関数の中で自前に作る。
+# This spec does not source bootstrap.lib.sh. The runtime initial state (bootstrap having
+# exported real-repository paths) is recreated by hand inside this function.
 #
-# 初期状態を仕込む前に teardown_naming_cache を呼び、呼び出し側の Before が作った
-# 一時ディレクトリを畳んでから setup をやり直す。
+# Before seeding the initial state, call teardown_naming_cache to remove the temp
+# directory created by the caller's Before, then rerun setup.
 #
-# bootstrap.lib.sh の `${VAR:-default}` は値のある変数を導出し直さない。setup が
-# DECKRD_LOCAL_DATA だけを差し替える実装では、この 2 変数は実リポジトリを指したまま
-# 残り、読んだスクリプトが実リポジトリへ書き込む。
+# `${VAR:-default}` in bootstrap.lib.sh does not re-derive variables that already have values.
+# If setup overrides only DECKRD_LOCAL_DATA, these two variables keep pointing at the real
+# repository, and scripts reading them write into it.
 #
 # @return 0 if both variables point outside the repository tree, 1 otherwise
 # shellcheck disable=SC2329
@@ -221,24 +221,24 @@ _naming_overrides_real_local_dirs() {
 }
 
 # ============================================================================
-# テスト本体
+# Test body
 # ============================================================================
 
-# libs モジュールの spec が共有するテストハーネス。
+# Shared test harness for the libs module specs.
 #
-# spec ごとの一時ディレクトリを用意し、その中だけで実行が完結する状態を作るのが
-# 責務である。固定パスを使ったり、環境変数を実リポジトリのまま残したりすると、
-# spec が sandbox の外へ書き込む。
+# Its job is to provide a per-spec temp directory and keep execution confined to it.
+# Using fixed paths or leaving environment variables pointing at the real repository
+# lets specs write outside the sandbox.
 Describe "spec_helper.sh"
 
-  # setup_coder_tmpscript / teardown_coder_tmpscript の対。
+  # Pair of setup_coder_tmpscript / teardown_coder_tmpscript.
   #
-  # bootstrap.lib.sh を bdd-coder のパスから source する状況を作るのが役目であり、
-  # パスに plugins/bdd-coder を含めることがその契約である。
+  # Their role is to simulate sourcing bootstrap.lib.sh from a bdd-coder path;
+  # including plugins/bdd-coder in the path is the contract.
   #
-  # setup は example ごとに専用の一時ディレクトリを作り、teardown はそれを跡形なく消す。
-  # 固定パスを使うと `--jobs 4` の並列実行でジョブ同士が同じディレクトリを共有し、
-  # 後始末がファイルだけなら空のディレクトリが /tmp に溜まり続ける。
+  # Setup creates a dedicated temp directory per example, and teardown removes it without a trace.
+  # With a fixed path, jobs under `--jobs 4` share the same directory, and if cleanup
+  # removes only files, empty directories keep piling up in /tmp.
   Describe "T-LIB-SHCT: setup_coder_tmpscript"
     Before "setup_coder_tmpscript"
     After "teardown_coder_tmpscript"
@@ -255,7 +255,7 @@ Describe "spec_helper.sh"
         The status should be success
       End
 
-      # After の 2 度目の teardown は teardown 側のガードにより無害である
+      # The second teardown in After is harmless thanks to the teardown guard
       It '[Normal] T-LIB-SHCT-03: teardown 後に作成先ディレクトリを残さない'
         When call _teardown_leaves_no_dir
         The status should be success
@@ -264,8 +264,8 @@ Describe "spec_helper.sh"
       It '[Normal] T-LIB-SHCT-05: libs モジュールの spec は固定の一時ディレクトリへ直接書き込まない'
         When call _count_inline_tmp_writes
         The output should equal "0"
-        # 検査対象のディレクトリを読めないと grep は 0 件を返す。
-        # パスの壊れた検査が「違反なし」として通るのを防ぐ
+        # grep returns zero hits when it cannot read the target directory.
+        # Prevents a check with a broken path from passing as "no violations"
         The stderr should be blank
       End
 
@@ -284,11 +284,11 @@ Describe "spec_helper.sh"
     End
   End
 
-  # setup_naming_cache / teardown_naming_cache の対。
+  # Pair of setup_naming_cache / teardown_naming_cache.
   #
-  # naming キャッシュのテストのために DECKRD_LOCAL_* を sandbox 側へ差し替え、
-  # teardown でそれを元へ戻す。1 変数でも実リポジトリを指したまま残ると、
-  # その変数を読むスクリプトが実リポジトリへ書き込む。
+  # Redirects DECKRD_LOCAL_* to the sandbox for naming cache tests and restores them
+  # on teardown. If even one variable keeps pointing at the real repository,
+  # scripts reading it write into the real repository.
   Describe "T-LIB-SHNC: setup_naming_cache"
     Before "setup_naming_cache"
     After "teardown_naming_cache"
@@ -318,7 +318,7 @@ Describe "spec_helper.sh"
         The status should be success
       End
 
-      # After の 2 度目の teardown は teardown 側のガードにより無害である
+      # The second teardown in After is harmless thanks to the teardown guard
       It '[Normal] T-LIB-SHNC-06: teardown で 3 変数すべてを undefined にする'
         When call teardown_naming_cache
         The variable DECKRD_LOCAL_DATA should be undefined
