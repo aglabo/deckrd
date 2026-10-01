@@ -58,7 +58,7 @@ _resolve_deckrd_root() {
 #       DECKRD_LIB_DIR, DECKRD_DATA_DIR, DECKRD_LOCAL_DATA,
 #       DECKRD_LOCAL_WORKSPACES, DECKRD_LOCAL_TEMP, DECKRD_DOCS_DIR, SYMBOL
 # All variables respect pre-existing values (env var > computed default).
-# Does NOT call readonly — call bootstrap_finalize() after to lock variables.
+# Does NOT call readonly; call bootstrap_finalize() after to lock variables.
 #
 # @arg $1 string caller_path  Path of the script that sourced bootstrap.lib.sh.
 #                             Captured at the call site (top-level BASH_SOURCE[1])
@@ -72,7 +72,7 @@ bootstrap_init() {
   fi
   export PROJECT_ROOT
 
-  # DECKRD_ROOT: root of the plugin skill — detected from caller path
+  # DECKRD_ROOT: root of the plugin skill - detected from caller path
   # _caller_path was captured at the top-level call site (BASH_SOURCE[1] there
   # correctly points to the script that sourced bootstrap.lib.sh).
   if [[ -z "${DECKRD_ROOT:-}" ]]; then
@@ -149,8 +149,8 @@ bootstrap_finalize() {
 # bootstrap_finalize to lock all variables.
 #
 # Pass "no-finalize" as an argument to skip finalize:
-#   . bootstrap.lib.sh no-finalize   # init only — variables remain writable
-#   . bootstrap.lib.sh               # init + finalize — variables locked
+#   . bootstrap.lib.sh no-finalize   # init only - variables remain writable
+#   . bootstrap.lib.sh               # init + finalize - variables locked
 #
 # BASH_SOURCE[1] is captured here at the top level of bootstrap.lib.sh, where
 # it correctly points to the script that sourced this file.

@@ -56,7 +56,12 @@ customizations in separate files. `--update` may overwrite a deployed rule edite
 a plugin upgrade.
 
 `.gitignore` (shipped as `.gitignore.org`) is copied by `init` only. `update` never
-reports or overwrites it, because users are expected to edit it.
+overwrites it, because users are expected to edit it.
+
+An older deckrd version may have left a `.local/deckrd/.gitignore` without the
+workspaces rule (`!/workspaces/`). `update` reports such a file as
+`[local-deckrd] .gitignore (workspaces rule)`. `--update` appends the workspaces rule
+block of the template to it. The existing lines are kept.
 
 ## Output Example
 
@@ -64,10 +69,12 @@ reports or overwrites it, because users are expected to edit it.
 $ /deckrd update
 [deckrd-rules] deckrd-rule-workflow.md
 [deckrd-rules-index] deckrd-rules-index.md
+[local-deckrd] .gitignore (workspaces rule)
 
 $ /deckrd update --update
 Updated: [deckrd-rules] deckrd-rule-workflow.md
 Updated: [deckrd-rules-index] deckrd-rules-index.md
+Updated: [local-deckrd] .gitignore (workspaces rule)
 
 $ /deckrd update
 Rules are up to date.

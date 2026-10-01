@@ -60,9 +60,16 @@ deckrd は **Goals → Requirements → Specifications → Implementation → Ta
 
 - `.local/deckrd/project.json` — プロジェクト設定
 - `.local/deckrd/session.json` — セッション状態
+- `.local/deckrd/temp/` — 一時作業ファイル置き場（git 追跡外）
+- `.local/deckrd/workspaces/` — モジュールに属さない共通メモ置き場（git 追跡）
 - `docs/.deckrd/` — ドキュメント格納ディレクトリ
 - `docs/.deckrd/rules/` — deckrd ルール本体（必要なときだけ読み込む）
 - `.claude/rules/deckrd-rules/deckrd-rules-index.md` — ルールの目次（毎セッション読み込まれる）
+
+> **既存プロジェクトの注意:** 旧バージョンで初期化したプロジェクトでは、`.local/deckrd/.gitignore` が
+> 既に存在するため `init` は上書きしません。このままでは旧ルールの `*` により `workspaces/` が
+> git に無視されます。`/deckrd update` で `[local-deckrd] .gitignore (workspaces rule)` と表示された場合は、
+> `/deckrd update --update` を実行して workspaces ルールを `.gitignore` の末尾に追記してください。
 
 ---
 

@@ -13,23 +13,23 @@
 #   Include spec_helper.sh   (shellspec DSL)
 # ============================================================================
 
-# export_sandbox_local_dirs - DECKRD_LOCAL_* を sandbox 配下へ一括で export する
+# export_sandbox_local_dirs - Export all DECKRD_LOCAL_* variables under the sandbox at once
 #
-# bootstrap.lib.sh が export する DECKRD_LOCAL_* は全部差し替える。
-# 1 つ漏らすと、その変数を読むスクリプトが実リポジトリへ書く。
-# 差し替えの定義をここ 1 箇所に置き、隔離ヘルパーはこれを呼ぶ。
+# Override every DECKRD_LOCAL_* exported by bootstrap.lib.sh.
+# Missing one lets scripts reading that variable write into the real repository.
+# The override is defined only here, and isolation helpers call it.
 #
-# 呼び出し元は bootstrap.lib.sh を `--no-finalize` で source した spec に限る。
-# finalize 済みでは readonly により代入が失敗する。
+# Callers must be specs that sourced bootstrap.lib.sh with `--no-finalize`.
+# Once finalized, readonly makes the assignments fail.
 #
-# @arg $1 string sandbox 側の DECKRD_LOCAL_DATA に据えるディレクトリ
+# @arg $1 string Directory to use as the sandbox DECKRD_LOCAL_DATA
 export_sandbox_local_dirs() {
   export DECKRD_LOCAL_DATA="$1"
   export DECKRD_LOCAL_TEMP="${1}/temp"
   export DECKRD_LOCAL_WORKSPACES="${1}/workspaces"
 }
 
-# unset_sandbox_local_dirs - export_sandbox_local_dirs が差し替えた変数を全部 unset する
+# unset_sandbox_local_dirs - Unset every variable overridden by export_sandbox_local_dirs
 unset_sandbox_local_dirs() {
   unset DECKRD_LOCAL_DATA DECKRD_LOCAL_TEMP DECKRD_LOCAL_WORKSPACES
 }
@@ -38,11 +38,11 @@ unset_sandbox_local_dirs() {
 #         DECKRD_LOCAL_DATA / DECKRD_LOCAL_TEMP / DECKRD_LOCAL_WORKSPACES / DECKRD_RULES_DIR /
 #         CLAUDE_RULES_DIR / CLAUDE_RULES_INDEX_DIR
 #
-# bootstrap.lib.sh が export する DECKRD_LOCAL_* は全部差し替える。
-# 1 つ漏らすと、その変数を読むスクリプトが実リポジトリへ書く。
+# Override every DECKRD_LOCAL_* exported by bootstrap.lib.sh.
+# Missing one lets scripts reading that variable write into the real repository.
 #
-# このヘルパーは bootstrap.lib.sh を `--no-finalize` で source した spec から呼ぶこと。
-# finalize 済みでは readonly により代入が失敗する。
+# Call this helper only from specs that sourced bootstrap.lib.sh with `--no-finalize`.
+# Once finalized, readonly makes the assignments fail.
 setup_deckrd_tmpdir() {
   DECKRD_TMPDIR="$(mktemp -d)"
   export DECKRD_DOCS_DIR="${DECKRD_TMPDIR}/docs/.deckrd"
@@ -56,7 +56,7 @@ setup_deckrd_tmpdir() {
 
 # Helper: clean up temp directory
 #
-# setup_deckrd_tmpdir が差し替えた変数と対を成す。差し替えた変数は全部 unset する。
+# Pairs with setup_deckrd_tmpdir. Unsets every variable it overrode.
 teardown_deckrd_tmpdir() {
   [[ -n "${DECKRD_TMPDIR:-}" && -d "$DECKRD_TMPDIR" ]] && rm -rf "$DECKRD_TMPDIR"
   unset_sandbox_local_dirs
@@ -66,26 +66,26 @@ teardown_deckrd_tmpdir() {
 
 # Helper: report whether a command is absent from PATH
 #
-# `Skip if` の条件に `! command -v foo >/dev/null 2>&1` と直接書いてはならない。
-# ShellSpec は先頭の `!` を条件の否定として扱わず、ガードが一度も発火しない。
-# 実機テストが skip されずに走り、CLI 不在を「失敗」として報告してしまう。
-# 否定はこの関数の内側に閉じ込め、`Skip if "..." command_missing foo` と書く。
+# Do NOT write `! command -v foo >/dev/null 2>&1` directly in a `Skip if` condition.
+# ShellSpec does not treat a leading `!` as negation, so the guard never fires.
+# Live tests then run instead of skipping and report a missing CLI as a failure.
+# Keep the negation inside this function and write `Skip if "..." command_missing foo`.
 #
-# @arg $1 string コマンド名
+# @arg $1 string Command name
 # @return 0 if the command is not on PATH, 1 if it is
 command_missing() {
   ! command -v "$1" >/dev/null 2>&1
 }
 
-# path_outside_repo - 与えたパスがリポジトリツリーの外を指すかを報告する
+# path_outside_repo - Report whether the given path points outside the repository tree
 #
-# `Skip if` と同じ理由で、否定を ShellSpec の条件式へ直接書かずこの関数へ閉じ込める。
+# For the same reason as `Skip if`, keep the negation in this function, not in the ShellSpec condition.
 #
-# 空文字列と相対パスは偽とする。素朴に `!= "$ROOT"/*` だけを見ると、
-# 未設定の変数（`${VAR:-}` が空になる）と相対パスがどちらも「外」として通り、
-# 変数を差し替え忘れた実装をアサーションが見逃す。
+# Empty strings and relative paths are false. Checking only `!= "$ROOT"/*` would let both
+# unset variables (`${VAR:-}` becomes empty) and relative paths pass as "outside",
+# so assertions would miss an implementation that forgot to override a variable.
 #
-# @arg $1 string 検査するパス
+# @arg $1 string Path to check
 # @return 0 if the path is absolute and outside SHELLSPEC_PROJECT_ROOT, 1 otherwise
 path_outside_repo() {
   [[ "$1" == /* && "$1" != "${SHELLSPEC_PROJECT_ROOT}"/* ]]
@@ -101,22 +101,22 @@ asset_path() { echo "${ASSETS_DIR}/${1}"; }
 # Helper: return the contents of an asset file
 load_asset() { cat "${ASSETS_DIR}/${1}"; }
 
-# ---- 実機テスト用モデル名 ----
+# ---- Model names for live tests ----
 
-# SPEC_CODEX_MODEL - 実機テストで codex に渡す OpenAI 系モデル名
+# SPEC_CODEX_MODEL - OpenAI model name passed to codex in live tests
 #
-# OpenAI 系のモデル名は世代交代で使えなくなる（`gpt-5` は現時点で既に不可）。
-# spec ファイルにリテラルで散らすと、更新漏れのぶんだけ実機テストが
-# 「CLI が壊れた」ではなく「モデル名が古い」ことで落ちる。
-# モデルが変わったらここだけを書き換える。
+# OpenAI model names become unusable as generations change (`gpt-5` is already unavailable).
+# Scattering literals across spec files means every missed update makes live tests fail
+# because the model name is stale, not because the CLI is broken.
+# Update only this line when the model changes.
 SPEC_CODEX_MODEL='gpt-5.6-luna'
 export SPEC_CODEX_MODEL
 
-# SPEC_OPENCODE_MODEL - 実機テストで opencode に渡すモデル名
+# SPEC_OPENCODE_MODEL - Model name passed to opencode in live tests
 #
-# opencode が引けるモデルは独自の一覧であり、OpenAI 系の名前をそのまま流用できない。
-# SPEC_CODEX_MODEL を共用すると opencode の実機テストが「CLI が壊れた」ではなく
-# 「opencode にそのモデルがない」ことで落ちるため、codex とは別に持つ。
-# `opencode/` プレフィックスは呼び出し側で付ける。
+# opencode resolves models from its own list, so OpenAI names cannot be reused as-is.
+# Sharing SPEC_CODEX_MODEL would make opencode live tests fail because opencode lacks
+# that model, not because the CLI is broken, so it is kept separate from codex.
+# Callers add the `opencode/` prefix.
 SPEC_OPENCODE_MODEL='big-pickle'
 export SPEC_OPENCODE_MODEL

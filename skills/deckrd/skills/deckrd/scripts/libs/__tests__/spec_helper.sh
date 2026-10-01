@@ -31,11 +31,11 @@ teardown_tmpdir() {
 
 # Helper: create isolated cache directory for naming cache tests
 #
-# DECKRD_LOCAL_* の差し替えは export_sandbox_local_dirs に任せる。ここで 1 変数ずつ
-# 並べ直すと、変数が増えたときに片方のヘルパーだけが取り残される。
+# Delegates the DECKRD_LOCAL_* overrides to export_sandbox_local_dirs. Listing the
+# variables one by one here would leave one helper behind when a variable is added.
 #
-# DECKRD_LOCAL_DATA は NAMING_TMPDIR そのものを指す。naming.lib.sh はここから
-# _FILENAME_CACHE_DIR を導くので、間に階層を挟んではならない。
+# DECKRD_LOCAL_DATA points at NAMING_TMPDIR itself. naming.lib.sh derives
+# _FILENAME_CACHE_DIR from it, so no intermediate level may be inserted.
 setup_naming_cache() {
   NAMING_TMPDIR="$(mktemp -d)"
   export NAMING_TMPDIR
@@ -45,7 +45,7 @@ setup_naming_cache() {
 
 # Helper: clean up naming cache temp directory
 #
-# setup_naming_cache が差し替えた変数と対を成す。差し替えた変数は全部 unset する。
+# Mirrors the variables overridden by setup_naming_cache and unsets all of them.
 teardown_naming_cache() {
   [[ -n "${NAMING_TMPDIR:-}" && -d "$NAMING_TMPDIR" ]] && rm -rf "$NAMING_TMPDIR"
   unset_sandbox_local_dirs
@@ -54,7 +54,7 @@ teardown_naming_cache() {
 
 # ---- integration test helpers ----
 
-# Helper: PATH から git を除外する
+# Helper: remove git from PATH
 setup_no_git_path() {
   _SAVED_PATH="$PATH"
   local git_dir
@@ -71,7 +71,7 @@ teardown_no_git_path() {
   unset _SAVED_PATH
 }
 
-# Helper: git リポジトリ外の一時ディレクトリを作成
+# Helper: create a temp directory outside any git repository
 setup_nongit_tmpdir() {
   _NONGIT_TMPDIR="$(mktemp -d)"
   export _NONGIT_TMPDIR
@@ -86,13 +86,13 @@ teardown_nongit_tmpdir() {
 
 # Before: create a temp script file under a bdd-coder path
 #
-# 親は example ごとに mktemp -d で取る。固定パスを共有しないので、`--jobs 4` の
-# 並列実行でジョブ同士が衝突せず、共有ホストで他ユーザーとも衝突しない。
+# The parent is created per example with mktemp -d. No fixed path is shared, so jobs
+# under `--jobs 4` do not collide with each other or with other users on shared hosts.
 #
-# `plugins/bdd-coder` はパスの 1 セグメントとして保つ。bdd-coder のパスから
-# bootstrap を source する状況を作るのがこのヘルパーの役目であり、
-# T-LIB-BSRC-02 / T-LIB-BSRCF-02 の意図がパス名に表れている。
-# `bdd-coder-XXXXXX` のようにサフィックスを付けてセグメントを崩してはならない。
+# Keeps `plugins/bdd-coder` as a single path segment. This helper simulates sourcing
+# bootstrap from a bdd-coder path, and the intent of
+# T-LIB-BSRC-02 / T-LIB-BSRCF-02 is encoded in the path name.
+# Do not break the segment with a suffix such as `bdd-coder-XXXXXX`.
 setup_coder_tmpscript() {
   _CODER_TMPROOT="$(mktemp -d)"
   _CODER_TMPDIR="${_CODER_TMPROOT}/plugins/bdd-coder"
@@ -103,7 +103,7 @@ setup_coder_tmpscript() {
 
 # After: remove the temp script file along with the directory tree that held it
 #
-# 後始末は親ごと消す。ファイルだけ消すと作ったディレクトリが残り続ける。
+# Removes the whole parent tree. Removing only the file leaves the created directories behind.
 teardown_coder_tmpscript() {
   [[ -n "${_CODER_TMPROOT:-}" && -d "$_CODER_TMPROOT" ]] && rm -rf "$_CODER_TMPROOT"
   unset _CODER_TMPSCRIPT _CODER_TMPDIR _CODER_TMPROOT
@@ -128,15 +128,15 @@ run_coder_tmpscript() {
 
 # ---- ai-runner helpers ----
 
-# _SPEC_AI_PROMPT - run_ai の stdin ガードを通すためのダミープロンプト。内容は検証しない
+# _SPEC_AI_PROMPT - Dummy prompt that passes the run_ai stdin guard; its content is not verified
 _SPEC_AI_PROMPT='spec prompt'
 
-# run_ai_piped - 固定プロンプトを stdin で与えて run_ai を呼ぶ
+# run_ai_piped - Call run_ai with a fixed prompt on stdin
 #
-# stdin の内容自体を検証しないケース（タイムアウト・argv・stderr 分離）から、
-# ガードを通すためだけの stdin 供給を消す。
+# Spares cases that do not verify stdin content (timeout, argv, stderr separation)
+# from supplying stdin just to pass the guard.
 #
-# @arg $@  run_ai へそのまま渡す引数
+# @arg $@  Arguments passed through to run_ai
 run_ai_piped() {
   run_ai "$@" <<<"$_SPEC_AI_PROMPT"
 }

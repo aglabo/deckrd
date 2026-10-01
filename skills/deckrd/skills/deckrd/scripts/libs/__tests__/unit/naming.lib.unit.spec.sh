@@ -183,10 +183,10 @@ Describe "naming.lib.sh"
       Before "PROJECT_ROOT=${SHELLSPEC_PROJECT_ROOT}"
       After "teardown_naming_cache"
 
-      # Mock: _generate_filename を固定値シーケンスで上書きする
-      # generate_filename を1回呼ぶと "myfile-fixed-...-doc" がキャッシュ登録される
-      # 2回目の generate_filename 呼び出しでは同じ固定値が1回目候補になり衝突 →
-      # 2回目候補 "myfile-other-...-doc" が返る
+      # Mock: override _generate_filename with a fixed-value sequence
+      # One generate_filename call caches "myfile-fixed-...-doc"
+      # On the second generate_filename call the same fixed value is the first candidate and collides ->
+      # the second candidate "myfile-other-...-doc" is returned
       setup_collision_mock() {
         _MOCK_SEQ_FILE="${_FILENAME_CACHE_DIR}/.mock_seq"
         mkdir -p "${_FILENAME_CACHE_DIR}"
@@ -204,7 +204,7 @@ Describe "naming.lib.sh"
         }
       }
 
-      # generate_filename を1回呼んで "myfile-fixed-...-doc" をキャッシュに登録する
+      # Call generate_filename once to cache "myfile-fixed-...-doc"
       register_first_filename() {
         generate_filename "myfile" "doc" >/dev/null
       }
@@ -235,9 +235,9 @@ Describe "naming.lib.sh"
       Before "setup_naming_cache"
       After "teardown_naming_cache"
 
-      # Mock: _generate_filename が常に同じ固定値を返す
-      # generate_filename を1回呼ぶと "myfile-fixed-...-doc" がキャッシュ登録される
-      # 以降の呼び出しはすべて同じ値が衝突し、max_retries に達してエラーになる
+      # Mock: _generate_filename always returns the same fixed value
+      # One generate_filename call caches "myfile-fixed-...-doc"
+      # Every later call collides on the same value and fails once max_retries is reached
       setup_always_same_mock() {
         mkdir -p "${_FILENAME_CACHE_DIR}"
         # shellcheck disable=SC2329
@@ -286,13 +286,13 @@ Describe "naming.lib.sh"
     Before "PROJECT_ROOT=${SHELLSPEC_PROJECT_ROOT}"
     After "teardown_naming_cache"
 
-    # Mock: token と timestamp だけを固定する。$(date +%N) は実時刻のまま通す。
-    # slug/token/timestamp が固定されるので $base は 2 回とも同一になり、
-    # 出力を分けられるのは hash に混ぜた $RANDOM と $(date +%N) だけになる。
-    # +%N まで凍らせると差が $RANDOM の 1 源だけになり、同じ値を 2 回引いた時に
-    # 出力が一致して間欠失敗する。bash のサブシェル再シード挙動にも依存しなくなる。
-    # 残る不確実性は hash を 16 進 4 桁に畳むことによる 1/65536 の一致だけで、
-    # これは名前の形式が仕様で固定されている以上テスト側では消せない。
+    # Mock: fix only token and timestamp; $(date +%N) still uses the real clock.
+    # With slug/token/timestamp fixed, $base is identical on both calls,
+    # so only $RANDOM and $(date +%N) mixed into the hash can make the outputs differ.
+    # Freezing +%N as well would leave $RANDOM as the only source of difference, so drawing
+    # the same value twice would make the outputs match and fail intermittently. It also avoids relying on bash subshell reseeding.
+    # The only remaining uncertainty is a 1/65536 match from folding the hash into 4 hex digits,
+    # which the test cannot eliminate because the name format is fixed by the spec.
     setup_fixed_entropy_mock() {
       # shellcheck disable=SC2329
       hacker_random() { printf '%s' 'knuth'; }
@@ -305,18 +305,18 @@ Describe "naming.lib.sh"
       }
     }
 
-    # generate_filename を並列に走らせ、生成された名前を 1 件 1 行で結果ファイルに書き出す。
-    # 実装側の printf '%s' は改行を出さないため、改行はワーカー側で付ける。
-    # ワーカーは generate_filename が失敗したら即 exit 1 し、xargs に失敗を伝える。
+    # Run generate_filename in parallel and write each generated name to the result file, one per line.
+    # The implementation's printf '%s' emits no newline, so the worker appends it.
+    # A worker exits 1 immediately when generate_filename fails, reporting the failure to xargs.
     #
-    # @arg $1 int    並列度 (xargs -P)
-    # @arg $2 int    実行件数
-    # @arg $3 int    (任意) ワーカーに渡す NAMING_MAX_RETRIES。省略時はライブラリ既定値
-    # @set _PARALLEL_RESULTS string 結果ファイルのパス (キャッシュ外に置く)
-    # @set _PARALLEL_STATUS  int    xargs の終了コード (ワーカーが 1 件でも失敗すると 123)
-    # @set _PARALLEL_STDERR  string ワーカーの stderr を集めたファイルのパス。
-    #                           捨てずに残すのは、終了コードだけでは失敗の原因を
-    #                           区別できない (パス誤り・コマンド不在でも 123 になる) ため
+    # @arg $1 int    Parallelism (xargs -P)
+    # @arg $2 int    Number of runs
+    # @arg $3 int    (optional) NAMING_MAX_RETRIES passed to workers; defaults to the library value
+    # @set _PARALLEL_RESULTS string Path of the result file (kept outside the cache)
+    # @set _PARALLEL_STATUS  int    Exit code of xargs (123 if any worker fails)
+    # @set _PARALLEL_STDERR  string Path of the file collecting worker stderr.
+    #                           Kept because the exit code alone cannot tell failure causes
+    #                           apart (a wrong path or missing command also yields 123)
     run_parallel_generate() {
       local jobs="${1}"
       local count="${2}"
@@ -342,7 +342,7 @@ Describe "naming.lib.sh"
       Before "setup_fixed_entropy_mock"
 
       It "Then: [Normal] T-LIB-NGFR-03: 同一 token/timestamp でも呼び出しごとに異なる候補名を返す"
-        # $() は副シェルになり $RANDOM の進み方が読みにくいため、出力はファイルで受ける
+        # $() runs in a subshell, making $RANDOM progression hard to follow, so capture output via a file
         _generate_filename 'parallel' 'doc' >"${NAMING_TMPDIR}/ngfr03-first"
         _generate_filename 'parallel' 'doc' >"${NAMING_TMPDIR}/ngfr03-second"
         first=$(cat "${NAMING_TMPDIR}/ngfr03-first")
@@ -355,11 +355,11 @@ Describe "naming.lib.sh"
     Describe "When: 10並列 × 20回 generate_filename を同時実行する"
       Before "run_parallel_generate 10 20"
 
-      # T-LIB-NGFR-04 / -05 は症状カナリアであり、レースの guard ではない。
-      # 並列衝突の再現は確率的で、hash からエントロピー項を外しても両者は PASS しうる。
-      # この欠陥を決定論的に守るのは T-LIB-NGFR-03 だけ。
-      # ここで押さえるのは「ワーカーが非 0 で落ちる」という唯一のユーザー可視症状で、
-      # 追加コストは既存の並列実行 1 回分しかない。
+      # T-LIB-NGFR-04 / -05 are symptom canaries, not guards against the race.
+      # Reproducing parallel collisions is probabilistic; both may PASS even with the entropy terms removed from the hash.
+      # Only T-LIB-NGFR-03 guards this defect deterministically.
+      # This covers the only user-visible symptom, a worker exiting non-zero,
+      # at the cost of just one extra parallel run.
       It "Then: [Normal] T-LIB-NGFR-04: 全ワーカーが成功し xargs の終了コードが 0 になる"
         When call test "$_PARALLEL_STATUS" -eq 0
         The status should equal 0
@@ -386,8 +386,8 @@ Describe "naming.lib.sh"
         The status should equal 0
       End
 
-      # 重複検査が vacuous pass でないことの裏付け。実装の printf '%s' は改行を出さないので、
-      # ワーカーが改行を付けないと 20 件が 1 行に連結され、uniq -d が常に空になっていた
+      # Proves the duplicate check is not a vacuous pass. The implementation's printf '%s' emits no newline,
+      # so without the worker's newline all 20 names were joined into one line and uniq -d was always empty
       It "Then: [Normal] T-LIB-NGFR-08: 結果ファイルが 1 件 1 行の 20 行になる"
         lines=$(wc -l <"${_PARALLEL_RESULTS}" | tr -d ' ')
         When call test "$lines" -eq 20
@@ -395,13 +395,13 @@ Describe "naming.lib.sh"
       End
     End
 
-    # ワーカーにだけ NAMING_MAX_RETRIES=0 を渡す。ライブラリ既定値 5 は変更しない
+    # Pass NAMING_MAX_RETRIES=0 to the workers only. The library default of 5 is left unchanged
     Describe "When: リトライ上限 0 のワーカーで 10並列 × 20回 実行する"
       Before "run_parallel_generate 10 20 0"
 
-      # T-LIB-NGFR-04 のステータス検査が vacuous でないことを示す example。
-      # 終了コードだけを見ると source のパス誤りやコマンド不在でも 123 になるので、
-      # 原因がリトライ枯渇であることを stderr のメッセージまで確かめる
+      # Example showing the T-LIB-NGFR-04 status check is not vacuous.
+      # The exit code alone is 123 even for a wrong source path or a missing command,
+      # so check the stderr message to confirm the cause is retry exhaustion
       It "Then: [Error] T-LIB-NGFR-06: リトライ枯渇が xargs の終了コード 123 と stderr に現れる"
         When call test "$_PARALLEL_STATUS" -eq 123
         The status should equal 0

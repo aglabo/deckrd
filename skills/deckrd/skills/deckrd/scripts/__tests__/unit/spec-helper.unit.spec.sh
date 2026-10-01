@@ -11,86 +11,86 @@
 # cspell:words SHTD
 
 # ============================================================================
-# テスト基盤
+# Test infrastructure
 # ============================================================================
 
-# bootstrap.lib.sh を `--no-finalize` で source する。
+# Source bootstrap.lib.sh with `--no-finalize`.
 #
-# 実行時と同じ初期状態を再現するために要る。bootstrap は DECKRD_LOCAL_* を
-# 「実リポジトリの」 .local/deckrd/ 配下として export するので、この source を
-# 省くと「実リポジトリのパスが残る」状態そのものを検証できない。
-# `--no-finalize` は readonly 化を抑える。finalize 済みでは setup_deckrd_tmpdir の
-# 代入が失敗する。
+# This reproduces the runtime initial state. bootstrap exports DECKRD_LOCAL_* as
+# paths under the real repository's .local/deckrd/, so skipping this source makes
+# it impossible to test the very state where real-repository paths remain.
+# `--no-finalize` suppresses readonly. Once finalized, the assignments in
+# setup_deckrd_tmpdir fail.
 #
-# ここで DECKRD_LOCAL_TEMP / DECKRD_LOCAL_WORKSPACES を unset してはならない。
-# 隔離はテスト対象である setup_deckrd_tmpdir の責務であり、
-# spec 側で先に消すと欠陥が隠れる。
+# Do NOT unset DECKRD_LOCAL_TEMP / DECKRD_LOCAL_WORKSPACES here.
+# Isolation is the responsibility of setup_deckrd_tmpdir, the code under test;
+# clearing them in the spec first would hide defects.
 # shellcheck disable=SC1090
 _RUNTIME_BOOTSTRAP="${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/skills/deckrd/scripts/libs/bootstrap.lib.sh"
 . "$_RUNTIME_BOOTSTRAP" --no-finalize
 unset _RUNTIME_BOOTSTRAP
 
 # ============================================================================
-# テスト対象
+# Code under test
 # ============================================================================
 
 Include ../spec_helper.sh
 
 # ============================================================================
-# 内部ヘルパー
+# Internal helpers
 # ============================================================================
 
-# 定数
+# Constants
 
-# _SPEC_HELPER_SCAN_DIR - sandbox 隔離不変条件の静的検査が走査するルート。
-# cli / libs / subcommands の __tests__/spec_helper.sh がこの下に入る。
-# deckrd の scripts/ ツリーに限るのは意図的である。runners/__tests__/spec_helper.sh
-# などは DECKRD_LOCAL_* に触れないため、不変条件の対象ではない
+# _SPEC_HELPER_SCAN_DIR - Root scanned by the static check of the sandbox isolation invariant.
+# The __tests__/spec_helper.sh files of cli / libs / subcommands live under it.
+# Limiting it to deckrd's scripts/ tree is intentional. runners/__tests__/spec_helper.sh
+# and the like never touch DECKRD_LOCAL_*, so the invariant does not apply to them
 _SPEC_HELPER_SCAN_DIR="${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/skills/deckrd/scripts"
 
-# _SPEC_HELPER_GLOB - 静的検査が拾うファイル名。テストハーネス本体だけを見る。
-# 違反件数を数える側と走査件数を数える側で共有する。別々に書くと片方だけ直され、
-# 対照としての意味が失われる
+# _SPEC_HELPER_GLOB - File names picked up by the static check. Only test harnesses are examined.
+# Shared by the violation counter and the scan counter. Writing them separately lets one
+# get fixed alone, which defeats their purpose as a control
 _SPEC_HELPER_GLOB='spec_helper.sh'
 
-# _KNOWN_SPEC_HELPERS - 走査が必ず覆っていなければならないハーネスのパス末尾。
-# 各要素は _SPEC_HELPER_SCAN_DIR の最終セグメント（`scripts`）から始まる相対パスであり、
-# 走査ルートの下に実在するハーネスを全件挙げる。モジュールを足したらこの一覧にも足す
+# _KNOWN_SPEC_HELPERS - Harness path suffixes that the scan must always cover.
+# Each entry is a relative path starting at the last segment of _SPEC_HELPER_SCAN_DIR (`scripts`),
+# listing every harness that exists under the scan root. Add to this list when adding a module
 _KNOWN_SPEC_HELPERS=(
   'scripts/__tests__/spec_helper.sh'
   'scripts/libs/__tests__/spec_helper.sh'
   'scripts/subcommands/__tests__/spec_helper.sh'
 )
 
-# _RELATIVE_LOCAL_PATH - リポジトリ外と断言できない相対パス。
-# cwd 次第でリポジトリ内を指すので、path_outside_repo は偽を返さなければならない
+# _RELATIVE_LOCAL_PATH - A relative path that cannot be asserted to be outside the repository.
+# Depending on cwd it points inside the repository, so path_outside_repo must return false
 _RELATIVE_LOCAL_PATH='.local/deckrd/temp'
 
-# _SANDBOX_ANCHOR_VAR - 不変条件の起点となる変数名。これを差し替えるファイルは
-# 対の変数も差し替えていなければならない
+# _SANDBOX_ANCHOR_VAR - Variable name that anchors the invariant. A file that overrides it
+# must also override its paired variables
 _SANDBOX_ANCHOR_VAR='DECKRD_LOCAL_DATA'
 
-# _SANDBOX_TEMP_VAR - 起点と対で差し替えられていなければならない変数名（temp 側）
+# _SANDBOX_TEMP_VAR - Variable that must be overridden together with the anchor (temp side)
 _SANDBOX_TEMP_VAR='DECKRD_LOCAL_TEMP'
 
-# _SANDBOX_WORKSPACES_VAR - 起点と対で差し替えられていなければならない変数名（workspaces 側）
+# _SANDBOX_WORKSPACES_VAR - Variable that must be overridden together with the anchor (workspaces side)
 _SANDBOX_WORKSPACES_VAR='DECKRD_LOCAL_WORKSPACES'
 
-# 関数
+# Functions
 
-# _both_local_dirs_exported - setup_deckrd_tmpdir が DECKRD_LOCAL_TEMP と
-#                             DECKRD_LOCAL_WORKSPACES を子プロセスへ export するかを報告する
+# _both_local_dirs_exported - Report whether setup_deckrd_tmpdir exports DECKRD_LOCAL_TEMP and
+#                             DECKRD_LOCAL_WORKSPACES to child processes
 #
-# 判定の前に teardown_deckrd_tmpdir を呼び、2 変数を属性ごと消してから setup をやり直す。
-# bash の export 属性は後続の素の代入をまたいで残るため、この作り直しを省くと
-# spec 冒頭で source した bootstrap.lib.sh が付けた属性を setup の手柄として数えてしまい、
-# setup から export を落とした実装が通ってしまう。
+# Before checking, call teardown_deckrd_tmpdir to remove both variables with their attributes, then redo setup.
+# Bash's export attribute survives later plain assignments, so without this rebuild the attribute
+# set by bootstrap.lib.sh (sourced at the top of the spec) would be credited to setup,
+# and an implementation whose setup drops the export would pass.
 #
-# 先に teardown を呼ぶので、呼び出し側の Before が作った一時ディレクトリはここで片付く。
-# 順序を入れ替えると一時ディレクトリが追跡不能になりリークする。
+# Because teardown runs first, the temp directory created by the caller's Before is cleaned up here.
+# Reversing the order leaves that temp directory untracked and leaks it.
 #
-# 子 bash の `export -p` は export された変数だけを挙げる。子プロセスとして起動される
-# スクリプトが読むのはこの一覧なので、代入だけで export を忘れた実装はこの形でしか捕まらない。
+# `export -p` in a child bash lists only exported variables. Scripts launched as child processes
+# read exactly this list, so an implementation that assigns without exporting is caught only this way.
 #
 # @return 0 if both variables are exported, 1 otherwise
 # shellcheck disable=SC2329
@@ -102,101 +102,101 @@ _both_local_dirs_exported() {
     export -p | grep -q "^declare -x DECKRD_LOCAL_WORKSPACES="'
 }
 
-# _count_nul_records - NUL 区切りで与えたレコードの件数を報告する
+# _count_nul_records - Report the number of NUL-delimited records
 #
-# パス列は NUL 区切りで受け渡す。改行区切りのまま xargs へ渡すとパスが空白で
-# 単語分割され、SHELLSPEC_PROJECT_ROOT に空白が含まれる環境（Windows では珍しくない）で
-# grep が断片ごとにエラーを出し、違反件数が 0 件へ戻る。
+# Paths are passed NUL-delimited. Passing newline-delimited paths to xargs splits them on whitespace,
+# so in environments where SHELLSPEC_PROJECT_ROOT contains spaces (common on Windows)
+# grep errors on each fragment and the violation count falls back to 0.
 #
-# `wc -l` は改行を数えるので NUL 区切りの入力には使えない。NUL の個数がレコード数になる。
+# `wc -l` counts newlines and cannot handle NUL-delimited input. The NUL count is the record count.
 #
-# @stdin NUL 区切りのレコード列
-# @stdout レコードの件数
+# @stdin NUL-delimited records
+# @stdout Number of records
 # @return 0 always
 # shellcheck disable=SC2329
 _count_nul_records() {
   tr -cd '\0' | wc -c
 }
 
-# _list_sandbox_anchor_files - _SANDBOX_ANCHOR_VAR を差し替えている spec_helper.sh を挙げる
+# _list_sandbox_anchor_files - List spec_helper.sh files that override _SANDBOX_ANCHOR_VAR
 #
-# 代入の行だけを見る。行頭からその変数名までに `#` が現れない形に限ることで、
-# コメント中の言及を差し替えと誤認しない。`\b` は変数名の前に別の識別子が
-# 付いた形（`MY_DECKRD_LOCAL_DATA=`）を除く。
+# Only assignment lines are matched. Requiring no `#` between line start and the variable name
+# keeps mentions in comments from being mistaken for overrides. `\b` excludes forms where
+# another identifier is prefixed to the variable name (`MY_DECKRD_LOCAL_DATA=`).
 #
-# 代入行の総数を数える _count_sandbox_anchor_assignments と同じ定数・同じ正規表現を
-# 見る。こちらはファイル単位、あちらは行単位であり、対の検査と総数の検査が
-# 同じ「代入」の定義を共有する。
+# Uses the same constants and regex as _count_sandbox_anchor_assignments, which counts
+# all assignment lines. This one works per file, that one per line, so the pairing check and
+# the total-count check share the same definition of an assignment.
 #
-# @stdout 差し替えているファイルのパス（NUL 区切り）
-# @return grep の終了コード。呼び出し側はこれを合否に使わない
+# @stdout Paths of overriding files (NUL-delimited)
+# @return grep exit status; callers do not use it for pass/fail
 # shellcheck disable=SC2329
 _list_sandbox_anchor_files() {
   grep -rlZE "^[^#]*\b${_SANDBOX_ANCHOR_VAR}=" --include="$_SPEC_HELPER_GLOB" "$_SPEC_HELPER_SCAN_DIR"
 }
 
-# _count_sandbox_anchor_assignments - ハーネス全体にある _SANDBOX_ANCHOR_VAR の
-#     代入行の総数を報告する
+# _count_sandbox_anchor_assignments - Report the total number of _SANDBOX_ANCHOR_VAR
+#     assignment lines across all harnesses
 #
-# 走査範囲・ファイル名 glob・変数名は _list_sandbox_anchor_files と同じ定数
-# （_SPEC_HELPER_SCAN_DIR / _SPEC_HELPER_GLOB / _SANDBOX_ANCHOR_VAR）から引く。
-# 違うのは抽出の単位だけで、あちらは `-l` でファイルを挙げ、こちらは `-h` で行を挙げる。
+# Scan scope, file name glob, and variable name come from the same constants as _list_sandbox_anchor_files
+# (_SPEC_HELPER_SCAN_DIR / _SPEC_HELPER_GLOB / _SANDBOX_ANCHOR_VAR).
+# Only the extraction unit differs: that one lists files with `-l`, this one lists lines with `-h`.
 #
-# ファイル単位の判定では足りない。_count_partial_sandbox_overrides は「起点を
-# 差し替えたファイルが対の変数も差し替えているか」をファイル単位で見るので、
-# 起点だけを差し替える新しいヘルパーを export_sandbox_local_dirs と同じファイルへ
-# 足すと、同じファイルにある対の代入が条件を満たし、違反件数は 0 件のまま通る。
-# 代入が export_sandbox_local_dirs の中だけにあるのが正しい姿であり、
-# 総数が 1 件であるなら部分差し替えはハーネスのどこにも書けない。
+# A per-file check is not enough. _count_partial_sandbox_overrides checks per file whether
+# a file overriding the anchor also overrides the paired variables, so adding a new helper
+# that overrides only the anchor to the same file as export_sandbox_local_dirs
+# is satisfied by the paired assignments in that file, and the violation count stays at 0.
+# The correct state is that the assignment exists only inside export_sandbox_local_dirs;
+# if the total is 1, no partial override can be written anywhere in the harnesses.
 #
-# grep の終了コードを合否にしない。ヒット 0 件で 1 を返すので、
-# 「代入なし」と「検査そのものの失敗」が区別できなくなる。件数を数えて呼び出し側で比べる。
+# Do not use grep's exit status for pass/fail. It returns 1 on zero hits, making
+# "no assignments" indistinguishable from "the check itself failed". Count and compare in the caller.
 #
-# @stdout 代入行の総数
+# @stdout Total number of assignment lines
 # @return 0 always
 # shellcheck disable=SC2329
 _count_sandbox_anchor_assignments() {
   grep -rhE "^[^#]*\b${_SANDBOX_ANCHOR_VAR}=" --include="$_SPEC_HELPER_GLOB" "$_SPEC_HELPER_SCAN_DIR" | wc -l
 }
 
-# _count_partial_sandbox_overrides - 起点の変数だけを差し替えて対の変数を差し替え忘れた
-#     spec_helper.sh の件数を報告する
+# _count_partial_sandbox_overrides - Report the number of spec_helper.sh files that override
+#     only the anchor variable and forget the paired variable
 #
-# export_sandbox_local_dirs を使わず自前で 1 変数だけ差し替えると、残りの変数は
-# 実リポジトリを指したまま残り、それを読むスクリプトが実リポジトリへ書き込む。
-# ガードを spec 側に置くと新しい spec を書くたび同じ穴が開くので、
-# ハーネス全体を 1 箇所で数える。
+# Overriding a single variable by hand instead of using export_sandbox_local_dirs leaves the rest
+# pointing at the real repository, and scripts reading them write into it.
+# Guards placed in each spec reopen the same hole with every new spec,
+# so the whole harness set is counted in one place.
 #
-# grep の終了コードをそのまま合否にしない。ヒット 0 件で 1 を返すので、
-# 「違反なし」と「検査そのものの失敗」が区別できなくなる。件数を数えて呼び出し側で比べる。
+# Do not use grep's exit status directly for pass/fail. It returns 1 on zero hits, making
+# "no violations" indistinguishable from "the check itself failed". Count and compare in the caller.
 #
-# @arg $1 string 起点と対で差し替えられていなければならない変数名
-# @stdout 違反しているファイルの件数
+# @arg $1 string Variable name that must be overridden together with the anchor
+# @stdout Number of violating files
 # @return 0 always
 # shellcheck disable=SC2329
 _count_partial_sandbox_overrides() {
   _list_sandbox_anchor_files | xargs -0 -r grep -LZE "^[^#]*\b${1}=" | _count_nul_records
 }
 
-# _list_scanned_spec_helpers - 静的検査が走査するハーネスのパスを挙げる
+# _list_scanned_spec_helpers - List harness paths scanned by the static check
 #
-# 走査の範囲を決める _SPEC_HELPER_SCAN_DIR と _SPEC_HELPER_GLOB を違反件数の判定と
-# 共有する。`^` はどの行にも一致するので、grep が拾ったファイルがそのまま走査対象になる。
+# Shares _SPEC_HELPER_SCAN_DIR and _SPEC_HELPER_GLOB, which define the scan scope, with the
+# violation count. `^` matches every line, so every file grep finds is a scan target.
 #
-# @stdout 走査対象のファイルのパス（NUL 区切り）
-# @return grep の終了コード。呼び出し側はこれを合否に使わない
+# @stdout Paths of scanned files (NUL-delimited)
+# @return grep exit status; callers do not use it for pass/fail
 # shellcheck disable=SC2329
 _list_scanned_spec_helpers() {
   grep -rlZE '^' --include="$_SPEC_HELPER_GLOB" "$_SPEC_HELPER_SCAN_DIR"
 }
 
-# _suffix_matches_any - 与えたパス列のいずれかが指定の末尾で終わるかを報告する
+# _suffix_matches_any - Report whether any of the given paths ends with the given suffix
 #
-# 末尾はディレクトリ境界で照合する。`/` を前置しないと `own-spec_helper.sh` のような
-# 別のファイルを一致とみなす。
+# The suffix is matched at a directory boundary. Without a leading `/`, a different file
+# such as `own-spec_helper.sh` would match.
 #
-# @arg $1 string 照合する末尾（先頭の `/` は付けずに渡す）
-# @arg $@ string 照合されるパス列
+# @arg $1 string Suffix to match (pass it without a leading `/`)
+# @arg $@ string Paths to match against
 # @return 0 if one of the paths ends with the suffix, 1 if none does
 # shellcheck disable=SC2329
 _suffix_matches_any() {
@@ -211,20 +211,20 @@ _suffix_matches_any() {
   return 1
 }
 
-# _scan_covers_known_spec_helpers - 静的検査が _KNOWN_SPEC_HELPERS のすべてを
-#     走査に含めているかを報告する
+# _scan_covers_known_spec_helpers - Report whether the static check scans every entry
+#     of _KNOWN_SPEC_HELPERS
 #
-# _count_partial_sandbox_overrides の正の対照である。grep は --include のパターンが
-# 1 件も一致しないとき、標準エラー出力に何も書かずに 0 件を返す。走査が空振りしても
-# 「違反なし」として通るので、違反件数の判定だけでは検査が生きていることを示せない。
+# Positive control for _count_partial_sandbox_overrides. When no file matches the --include
+# pattern, grep writes nothing to stderr and returns zero hits. An empty scan still passes
+# as "no violations", so the violation count alone cannot prove the check is alive.
 #
-# 「1 件以上」では足りない。走査ルートを既に適合しているディレクトリ 1 つへ狭めると、
-# 違反件数は 0 件、走査件数は 1 件のままなので全ケースが通るのに、
-# libs と subcommands のハーネスが検査の範囲から静かに落ちる。
-# 件数ではなくどのハーネスを覆ったかを見るので、範囲が縮んだこと自体が失敗になる。
+# "At least one" is not enough. Narrowing the scan root to a single already-compliant directory
+# keeps the violation count at 0 and the scan count at 1, so every case passes while
+# the libs and subcommands harnesses silently drop out of the check.
+# Checking which harnesses are covered, not how many, makes a shrunken scope itself a failure.
 #
-# 件数を定数で持たない。件数だけを見ると、モジュールが増えたときに
-# どのハーネスが落ちたのかが分からない。
+# The count is not kept as a constant. A bare count does not tell which harness
+# dropped out when modules are added.
 #
 # @return 0 if the scan covers every known helper, 1 if any of them is missing
 # shellcheck disable=SC2329
@@ -238,15 +238,15 @@ _scan_covers_known_spec_helpers() {
   done
 }
 
-# _has_sandbox_anchor_file - 起点の変数を差し替えている spec_helper.sh が
-#     1 件以上あるかを報告する
+# _has_sandbox_anchor_file - Report whether at least one spec_helper.sh
+#     overrides the anchor variable
 #
-# _count_partial_sandbox_overrides のもう 1 つの正の対照である。違反件数の判定は
-# 判定の入力（起点を差し替えているファイルの集合）が空でも 0 件を返して合格する。
-# 変数名の綴りを間違えた検査が「違反なし」として通るのを防ぐ。
+# Another positive control for _count_partial_sandbox_overrides. The violation count
+# returns 0 and passes even when its input (the set of files overriding the anchor) is empty.
+# This prevents a check with a misspelled variable name from passing as "no violations".
 #
-# 入力を作る _list_sandbox_anchor_files を違反件数の判定と共有するので、
-# 起点の綴りが崩れればこちらが必ず落ちる。
+# It shares _list_sandbox_anchor_files, which builds that input, with the violation count,
+# so a broken anchor spelling always fails here.
 #
 # @return 0 if one or more files override the anchor variable, 1 if none do
 # shellcheck disable=SC2329
@@ -258,15 +258,15 @@ _has_sandbox_anchor_file() {
 }
 
 # ============================================================================
-# テスト本体
+# Test body
 # ============================================================================
 
-# spec_helper.sh の一時ディレクトリハーネス。
+# Temp directory harness of spec_helper.sh.
 #
-# setup_deckrd_tmpdir は bootstrap.lib.sh が export する DECKRD_LOCAL_* を
-# sandbox 側へ差し替え、teardown_deckrd_tmpdir はそれを元へ戻す。
-# 1 変数でも実リポジトリを指したまま残ると、その変数を読むスクリプトが
-# 実リポジトリへ書き込む。
+# setup_deckrd_tmpdir redirects the DECKRD_LOCAL_* exported by bootstrap.lib.sh
+# into the sandbox, and teardown_deckrd_tmpdir restores them.
+# If even one variable still points at the real repository, scripts reading it
+# write into the real repository.
 Describe "T-CLI-SHTD: spec_helper.sh: setup_deckrd_tmpdir"
   Before "setup_deckrd_tmpdir"
   After "teardown_deckrd_tmpdir"
@@ -294,7 +294,7 @@ Describe "T-CLI-SHTD: spec_helper.sh: setup_deckrd_tmpdir"
     The status should be success
   End
 
-  # After の 2 度目の呼び出しは teardown 側のガードにより無害である
+  # The second call in After is harmless thanks to the guard in teardown
   It '[Normal] T-CLI-SHTD-06: Should: unset both variables on teardown'
     When call teardown_deckrd_tmpdir
     The variable DECKRD_LOCAL_TEMP should be undefined
@@ -302,27 +302,27 @@ Describe "T-CLI-SHTD: spec_helper.sh: setup_deckrd_tmpdir"
   End
 End
 
-# spec_helper.sh の sandbox 隔離不変条件。
+# Sandbox isolation invariant of spec_helper.sh.
 #
-# 隔離ヘルパーが DECKRD_LOCAL_DATA を差し替えるなら、対になる DECKRD_LOCAL_* も
-# 差し替えなければならない。1 変数でも実リポジトリを指したまま残ると、
-# その変数を読むスクリプトが実リポジトリへ書き込む。
+# If an isolation helper overrides DECKRD_LOCAL_DATA, it must also override the paired
+# DECKRD_LOCAL_* variables. If even one still points at the real repository,
+# scripts reading it write into the real repository.
 #
-# ガードを spec 側に置く限り、新しい spec を書くたびに同じ穴が開く。
-# ハーネス全体を静的に走査して不変条件そのものを検査する。
-# この検査は環境変数を読まないので、一時ディレクトリの Before / After は持たない。
+# As long as guards live in each spec, every new spec reopens the same hole.
+# Scan all harnesses statically and check the invariant itself.
+# This check reads no environment variables, so it has no temp directory Before / After.
 #
-# 対の変数ごとのケースは、_count_partial_sandbox_overrides へ渡す変数名だけを変えて
-# 同じ判定ロジックを呼ぶ。判定を変数ごとに書き分けると、片方だけが直されて
-# もう片方が静かに取り残される。
+# The per-variable cases call the same logic, changing only the variable name passed to
+# _count_partial_sandbox_overrides. Writing the logic per variable lets one get fixed
+# while the other is silently left behind.
 Describe "T-CLI-SHIV: spec_helper.sh: sandbox isolation invariant"
 
   It '[Normal] T-CLI-SHIV-01: Should: report no helper that overrides DECKRD_LOCAL_DATA without DECKRD_LOCAL_TEMP'
     When call _count_partial_sandbox_overrides "$_SANDBOX_TEMP_VAR"
     The output should equal "0"
-    # 走査パスが存在しないと grep は stderr へ `No such file or directory` を書き、
-    # 終了コード 2 を返す。件数が 0 件になるのと同時に stderr が空でなくなるので、
-    # パスの壊れた検査が「違反なし」として通るのを防ぐ
+    # If the scan path does not exist, grep writes `No such file or directory` to stderr
+    # and exits 2. The count drops to 0 while stderr becomes non-empty, so
+    # a check with a broken path cannot pass as "no violations"
     The stderr should be blank
   End
 
@@ -332,11 +332,11 @@ Describe "T-CLI-SHIV: spec_helper.sh: sandbox isolation invariant"
     The stderr should be blank
   End
 
-  # 次の 2 ケースは違反件数の判定に対する正の対照である。
-  # SHIV-03 は走査範囲を決める _SPEC_HELPER_SCAN_DIR / _SPEC_HELPER_GLOB を、
-  # SHIV-04 は起点の _SANDBOX_ANCHOR_VAR を、それぞれ違反件数の判定と共有する。
-  # 走査の範囲が縮んでも、起点の綴りが崩れても、
-  # 違反件数だけは 0 件を返して合格してしまう。
+  # The next two cases are positive controls for the violation count.
+  # SHIV-03 shares _SPEC_HELPER_SCAN_DIR / _SPEC_HELPER_GLOB (the scan scope), and
+  # SHIV-04 shares the anchor _SANDBOX_ANCHOR_VAR, with the violation count.
+  # Even if the scan scope shrinks or the anchor spelling breaks,
+  # the violation count alone still returns 0 and passes.
   It '[Normal] T-CLI-SHIV-03: Should: cover every known spec_helper.sh in the scan'
     When call _scan_covers_known_spec_helpers
     The status should be success
@@ -349,9 +349,9 @@ Describe "T-CLI-SHIV: spec_helper.sh: sandbox isolation invariant"
     The stderr should be blank
   End
 
-  # 対の有無ではなく代入の総数を見る。ファイル単位の判定では、
-  # export_sandbox_local_dirs と同じファイルへ足された部分差し替えが、
-  # そのファイルにある対の代入に隠れて通り抜ける。
+  # Check the total number of assignments, not just pairing. With a per-file check,
+  # a partial override added to the same file as export_sandbox_local_dirs
+  # slips through, hidden by the paired assignments in that file.
   It '[Normal] T-CLI-SHIV-05: Should: assign DECKRD_LOCAL_DATA at exactly one place in the harness'
     When call _count_sandbox_anchor_assignments
     The output should equal "1"
@@ -359,16 +359,16 @@ Describe "T-CLI-SHIV: spec_helper.sh: sandbox isolation invariant"
   End
 End
 
-# spec_helper.sh のリポジトリ外判定。
+# Out-of-repository check of spec_helper.sh.
 #
-# 隔離ヘルパーが差し替えた DECKRD_LOCAL_* が実リポジトリを指していないことを、
-# T-CLI-SHTD-04 / T-CLI-SHTD-05 と libs 側の T-LIB-SHNC-04 / T-LIB-SHNC-05 /
-# T-LIB-SHNC-07 はこの述語 1 本で判定している。述語の土台が緩いと、
-# それらのケースがまとめて盲目になる。
+# T-CLI-SHTD-04 / T-CLI-SHTD-05 and, on the libs side, T-LIB-SHNC-04 / T-LIB-SHNC-05 /
+# T-LIB-SHNC-07 all rely on this single predicate to verify that the DECKRD_LOCAL_*
+# overridden by the isolation helper do not point at the real repository. A loose predicate
+# blinds all of those cases at once.
 #
-# 緩さは 2 つの入力に現れる。絶対パスでない入力（未設定の変数が `${VAR:-}` で
-# 空文字列になった形と、cwd 次第でリポジトリ内を指す相対パス）を「外」と報告すると、
-# 変数を差し替え忘れた実装がそのまま通る。どちらも偽であることを要求する。
+# Looseness shows up in two inputs. Reporting non-absolute inputs (an unset variable that
+# `${VAR:-}` turns into an empty string, and a relative path that may point inside the
+# repository depending on cwd) as "outside" lets a missed override pass. Both must be false.
 Describe "T-CLI-SHPO: spec_helper.sh: path_outside_repo"
 
   It '[Normal] T-CLI-SHPO-01: Should: report an empty path as not outside the repository'
