@@ -270,7 +270,8 @@ Changed files 列は bdd-coder の Status Report の `CHANGED_FILES` 行をそ�
 - [ ] 型チェック: 合格
 - [ ] テスト実行: すべてグリーン (カバレッジ付き)
 - [ ] **code-reviewer** 起動: 全変更ファイルを対象に CRAP 算出、および、コードをレビュー
-- [ ] CRAP 判定: スコア > 30 の関数がないこと (16–30 は DONE_WITH_CONCERNS)
+- [ ] CRAP 判定: スコア > 30 の関数がないこと (16–30 は DONE_WITH_CONCERNS)。
+      カバレッジを取れない関数 (`cov=N/A`) は CC で判定する: CC ≥ 11 がないこと (6–10 は DONE_WITH_CONCERNS)
 - [ ] コードレビュー判定: `PASS` または `PASS_WITH_WARNINGS` であること
 
 **CRAP 計算式:** `CC² × (1 - coverage/100)³ + CC`
@@ -279,8 +280,8 @@ Changed files 列は bdd-coder の Status Report の `CHANGED_FILES` 行をそ�
 code-reviewer は **セッション全体で 1 回だけ** 起動する (タスクごとのループはしない)。起動パラメータ:
 
 - `task_id`: 単一タスク起動ならその ID。複数タスクにまたがる場合は `N/A`
-- `changed_files`: 作業ツリーの差分 (`git diff --name-only`、`--cached` 分も併合) のうち実装ファイル
-- `test_files`: 同じ差分のうちテストファイル (ENV PROFILE のテストファイル規約で振り分け)
+- `changed_files`: 下記「セッションスコープの解決」で求めたファイルのうち実装ファイル
+- `test_files`: 同じスコープのうちテストファイル (ENV PROFILE のテストファイル規約で振り分け)
 - `env_profile`: `.local/deckrd/temp/deckrd-work/env-profile.md`
 - `coverage_cmd`: ENV PROFILE のカバレッジコマンド
 
@@ -292,11 +293,17 @@ Agent definition: [../../../../agents/code-reviewer.md](../../../../agents/code-
 
 - 失敗回数 1–2: 分析・修正・再実行
 - 失敗回数 3+: ユーザーに相談 (先へ進まない)
-- CRAP > 30 または code-reviewer `BLOCKED`: リファクタリング (CC 削減) またはテスト追加後に再実行
+- CRAP > 30、`cov=N/A` で CC ≥ 11、または code-reviewer `BLOCKED`: リファクタリング (CC 削減) またはテスト追加後に再実行
 
 ### セッションスコープの解決
 
 <!-- textlint-disable ja-technical-writing/sentence-length -->
+
+Resolve the session scope in this order (same as [SKILL.md](../SKILL.md) — Phase 4):
+
+1. The union of the `CHANGED_FILES` lists that Phase 3 collected from each bdd-coder.
+2. If those lists are unavailable, every working-tree change minus the SESSION BASELINE
+   recorded in Phase 0 Step 0-3. This fallback is the only use of the baseline.
 
 Never send the raw working-tree diff. A user who started the session with unrelated
 staged or unstaged edits would otherwise get those files reviewed, and unrelated findings
