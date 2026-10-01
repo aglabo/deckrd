@@ -78,10 +78,12 @@ Rules:
 - `<random-adjective>`: one random adjective selected via `adjective_random()`
 - Output path: `.local/deckrd/temp/tasks/<content-slug>-<random-adjective>-checklist.md`
 
-Select the adjective using the Bash tool:
+Select the adjective using the Bash tool.
+Set `SKILL_ROOT` to the absolute path of `../skills/bdd-coder` (relative to this agent file)
+unless it is already set:
 
 ```bash
-. "${PROJECT_ROOT}/skills/deckrd/skills/deckrd/scripts/libs/naming.lib.sh"
+. "${SKILL_ROOT}/scripts/libs/naming.lib.sh"
 adjective=$(adjective_random)
 ```
 
