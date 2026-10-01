@@ -125,6 +125,28 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
       The path "${DECKRD_LOCAL_DATA}/workspaces" should be directory
     End
 
+    It "[Normal] T-CLI-MAINI-55: Should: create every ASSET_TARGETS destination directory"
+      # Runs init.sh, then checks each dest of the shared asset target list.
+      # Prints the first missing dest so a failure names it.
+      _init_and_check_asset_dests() {
+        bash "$SCRIPT" myapp webapp 2>/dev/null || return 1
+        # shellcheck disable=SC1091
+        . "${DECKRD_LIB_DIR}/asset-diff.lib.sh"
+        init_asset_dirs
+        local entry dest
+        for entry in "${ASSET_TARGETS[@]}"; do
+          IFS='|' read -r _ _ dest <<<"$entry"
+          [[ -d "$dest" ]] || {
+            echo "missing: ${dest}"
+            return 1
+          }
+        done
+      }
+      When call _init_and_check_asset_dests
+      The status should be success
+      The output should be blank
+    End
+
     It "[Normal] T-CLI-MAINI-48: Should: install README.md into the workspaces directory"
       When run bash "$SCRIPT" myapp webapp
       The status should equal 0

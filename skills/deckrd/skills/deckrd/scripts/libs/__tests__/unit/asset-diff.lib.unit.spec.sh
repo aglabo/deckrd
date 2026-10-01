@@ -290,21 +290,23 @@ Describe "T-LIB-ASDF: asset-diff.lib.sh"
     # Helper: clear asset variables so each case starts from an unset state
     unset_asset_vars() {
       unset INITS_DIR RULES_SRC_DIR RULES_INDEX_SRC_DIR CLAUDE_RULES_SRC_DIR DOCS_SRC_DIR \
-        LOCAL_SRC_DIR DECKRD_RULES_DIR CLAUDE_RULES_DIR CLAUDE_RULES_INDEX_DIR ASSET_TARGETS
+        LOCAL_SRC_DIR LOCAL_WORKSPACES_SRC_DIR DECKRD_RULES_DIR CLAUDE_RULES_DIR CLAUDE_RULES_INDEX_DIR \
+        ASSET_TARGETS
     }
     Before "unset_asset_vars"
 
     Describe "Given: asset 系変数が未設定"
       Describe "When: init_asset_dirs を呼ぶ"
-        It "Then: [Normal] T-LIB-ASDF-17: ASSET_TARGETS が 5 件で規定順に並ぶ"
+        It "Then: [Normal] T-LIB-ASDF-17: ASSET_TARGETS が 6 件で規定順に並ぶ"
           When call init_asset_dirs
           The status should equal 0
-          The value "${#ASSET_TARGETS[@]}" should equal 5
+          The value "${#ASSET_TARGETS[@]}" should equal 6
           The value "${ASSET_TARGETS[0]}" should equal "deckrd-rules|${RULES_SRC_DIR}|${DECKRD_RULES_DIR}"
           The value "${ASSET_TARGETS[1]}" should equal "claude-rules|${CLAUDE_RULES_SRC_DIR}|${CLAUDE_RULES_DIR}"
           The value "${ASSET_TARGETS[2]}" should equal "deckrd-rules-index|${RULES_INDEX_SRC_DIR}|${CLAUDE_RULES_INDEX_DIR}"
           The value "${ASSET_TARGETS[3]}" should equal "docs|${DOCS_SRC_DIR}|${DECKRD_DOCS_DIR}"
           The value "${ASSET_TARGETS[4]}" should equal "local-deckrd|${LOCAL_SRC_DIR}|${DECKRD_LOCAL_DATA}"
+          The value "${ASSET_TARGETS[5]}" should equal "local-workspaces|${LOCAL_WORKSPACES_SRC_DIR}|${DECKRD_LOCAL_WORKSPACES}"
         End
 
         It "Then: [Normal] T-LIB-ASDF-18: 既定値が設定される"
@@ -315,6 +317,8 @@ Describe "T-LIB-ASDF: asset-diff.lib.sh"
           The variable CLAUDE_RULES_DIR should equal "${PROJECT_ROOT}/.claude/rules/claude-rules"
           The variable CLAUDE_RULES_INDEX_DIR should equal "${PROJECT_ROOT}/.claude/rules/deckrd-rules"
           The value "${ASSET_TARGETS[0]}" should equal "deckrd-rules|${DECKRD_ROOT}/assets/inits/deckrd-rules|${DECKRD_DOCS_DIR}/rules"
+          The variable LOCAL_WORKSPACES_SRC_DIR should equal "${DECKRD_ROOT}/assets/inits/local-workspaces"
+          The value "${ASSET_TARGETS[5]}" should equal "local-workspaces|${DECKRD_ROOT}/assets/inits/local-workspaces|${DECKRD_LOCAL_WORKSPACES}"
         End
       End
     End
@@ -363,6 +367,7 @@ Describe "T-LIB-ASDF: asset-diff.lib.sh"
           The status should equal 0
           The value "${ASSET_TARGETS[3]}" should equal "docs|/tmp/inits/docs|${DECKRD_DOCS_DIR}"
           The variable LOCAL_SRC_DIR should equal "/tmp/inits/local-deckrd"
+          The variable LOCAL_WORKSPACES_SRC_DIR should equal "/tmp/inits/local-workspaces"
         End
       End
     End
@@ -371,10 +376,10 @@ Describe "T-LIB-ASDF: asset-diff.lib.sh"
       Before "init_asset_dirs"
 
       Describe "When: init_asset_dirs を再度呼ぶ"
-        It "Then: [Edge] T-LIB-ASDF-22: 再呼び出しでも ASSET_TARGETS は 5 件のまま"
+        It "Then: [Edge] T-LIB-ASDF-22: 再呼び出しでも ASSET_TARGETS は 6 件のまま"
           When call init_asset_dirs
           The status should equal 0
-          The value "${#ASSET_TARGETS[@]}" should equal 5
+          The value "${#ASSET_TARGETS[@]}" should equal 6
         End
       End
     End
