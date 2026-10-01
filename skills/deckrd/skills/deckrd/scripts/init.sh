@@ -210,13 +210,19 @@ validate_args() {
 # @arg $1 string Destination directory
 # @arg $2 string Source directory (optional; if omitted, only creates dest dir)
 # @arg $3 string Label for display (optional; defaults to basename of dest dir)
+# @exitcode 0 Directory created (and assets copied or skipped)
+# @exitcode 1 Directory could not be created or an asset could not be copied
 # @stderr Progress messages
+# @stderr Error message naming the directory or file that failed
 init_directory() {
   local dest_dir="$1"
   local src_dir="${2:-}"
   local label="${3:-$(basename "$dest_dir")}"
 
-  mkdir -p "$dest_dir"
+  mkdir -p "$dest_dir" || {
+    echo "Error: failed to create directory: ${dest_dir}" >&2
+    return 1
+  }
 
   if [[ -z "$src_dir" ]]; then
     return 0
@@ -238,7 +244,10 @@ init_directory() {
       echo "  [init/${label}] skip (exists): ${dest_filename}" >&2
       skipped=$((skipped + 1))
     else
-      cp "$src_file" "$dest_file"
+      cp "$src_file" "$dest_file" || {
+        echo "Error: failed to copy file: ${dest_file}" >&2
+        return 1
+      }
       echo "  [init/${label}] copied: ${dest_filename}" >&2
       copied=$((copied + 1))
     fi
@@ -249,18 +258,22 @@ init_directory() {
 
 ##
 # @description Initialize all project directories and install assets
+# @description Stops at the first init_directory failure without printing "Init complete."
+# @exitcode 0 All directories initialized
+# @exitcode 1 An init_directory call failed
 # @stderr Progress messages
+# @stderr Error message from the failing init_directory
 init_directories() {
   echo "Init: creating directories and installing assets..." >&2
-  init_directory "$DECKRD_RULES_DIR" "$RULES_SRC_DIR" "deckrd-rules"
-  init_directory "$CLAUDE_RULES_DIR" "$CLAUDE_RULES_SRC_DIR" "claude-rules"
-  init_directory "$CLAUDE_RULES_INDEX_DIR" "$RULES_INDEX_SRC_DIR" "deckrd-rules-index"
-  init_directory "$DECKRD_DOCS_DIR" "$DOCS_SRC_DIR" "docs"
-  init_directory "$DECKRD_LOCAL_DATA" "$LOCAL_SRC_DIR" "local-deckrd"
-  init_directory "$DECKRD_LOCAL_TEMP"
-  init_directory "$DECKRD_LOCAL_WORKSPACES" "$LOCAL_WORKSPACES_SRC_DIR" "local-workspaces"
+  init_directory "$DECKRD_RULES_DIR" "$RULES_SRC_DIR" "deckrd-rules" || return 1
+  init_directory "$CLAUDE_RULES_DIR" "$CLAUDE_RULES_SRC_DIR" "claude-rules" || return 1
+  init_directory "$CLAUDE_RULES_INDEX_DIR" "$RULES_INDEX_SRC_DIR" "deckrd-rules-index" || return 1
+  init_directory "$DECKRD_DOCS_DIR" "$DOCS_SRC_DIR" "docs" || return 1
+  init_directory "$DECKRD_LOCAL_DATA" "$LOCAL_SRC_DIR" "local-deckrd" || return 1
+  init_directory "$DECKRD_LOCAL_TEMP" || return 1
+  init_directory "$DECKRD_LOCAL_WORKSPACES" "$LOCAL_WORKSPACES_SRC_DIR" "local-workspaces" || return 1
   for subdir in "${BASE_SUBDIRS[@]}"; do
-    init_directory "${DECKRD_DOCS_DIR}/${subdir}"
+    init_directory "${DECKRD_DOCS_DIR}/${subdir}" || return 1
   done
   echo "Init complete." >&2
   echo "" >&2
@@ -371,7 +384,7 @@ main() {
   }
   unset _ai_model_errmsg
 
-  init_directories
+  init_directories || exit 1
   write_project
   init_session
 }

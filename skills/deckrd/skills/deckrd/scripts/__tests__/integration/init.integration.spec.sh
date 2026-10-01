@@ -495,4 +495,105 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
     End
   End
 
+  Describe "Given: a local directory path is overridden"
+    Before "setup_deckrd_tmpdir"
+    After "teardown_deckrd_tmpdir"
+
+    Describe "When: the path can be created"
+      It "[Normal] T-CLI-MAINI-49: Should: exit 0 and create the overridden DECKRD_LOCAL_TEMP directory"
+        export DECKRD_LOCAL_TEMP="${DECKRD_TMPDIR}/custom/temp"
+        When run bash "$SCRIPT" myapp webapp
+        The status should equal 0
+        # @note: --json モード追加時はこのアサーションを見直すこと
+        The output should be blank
+        The stderr should include "Init complete."
+        The stderr should not include "Error:"
+        The path "${DECKRD_TMPDIR}/custom/temp" should be directory
+      End
+    End
+
+    Describe "When: the path is under a regular file"
+      _create_blocker() { : >"${DECKRD_TMPDIR}/blocker"; }
+      Before "_create_blocker"
+
+      It "[Error] T-CLI-MAINI-50: Should: exit 1 and report DECKRD_LOCAL_TEMP when it cannot be created"
+        export DECKRD_LOCAL_TEMP="${DECKRD_TMPDIR}/blocker/temp"
+        When run bash "$SCRIPT" myapp webapp
+        The status should equal 1
+        # @note: --json モード追加時はこのアサーションを見直すこと
+        The output should be blank
+        The stderr should include "Error:"
+        The stderr should include "${DECKRD_TMPDIR}/blocker/temp"
+        The stderr should not include "Init complete"
+      End
+
+      It "[Error] T-CLI-MAINI-51: Should: exit 1 and report DECKRD_LOCAL_WORKSPACES when it cannot be created"
+        export DECKRD_LOCAL_WORKSPACES="${DECKRD_TMPDIR}/blocker/workspaces"
+        When run bash "$SCRIPT" myapp webapp
+        The status should equal 1
+        # @note: --json モード追加時はこのアサーションを見直すこと
+        The output should be blank
+        The stderr should include "Error:"
+        The stderr should include "${DECKRD_TMPDIR}/blocker/workspaces"
+        The stderr should not include "[init/local-workspaces] copied:"
+        The stderr should not include "Init complete"
+      End
+
+      It "[Error] T-CLI-MAINI-54: Should: not create workspaces, .project.json, or session.json after DECKRD_LOCAL_TEMP fails"
+        export DECKRD_LOCAL_TEMP="${DECKRD_TMPDIR}/blocker/temp"
+        When run bash "$SCRIPT" myapp webapp
+        The status should equal 1
+        # @note: --json モード追加時はこのアサーションを見直すこと
+        The output should be blank
+        The stderr should include "Error:"
+        The path "${DECKRD_LOCAL_WORKSPACES}" should not be exist
+        The path "${DECKRD_LOCAL_DATA}/.project.json" should not be exist
+        The path "${DECKRD_LOCAL_DATA}/session.json" should not be exist
+      End
+    End
+
+    Describe "When: the path itself is an existing regular file"
+      It "[Edge] T-CLI-MAINI-53: Should: exit 1 and report DECKRD_LOCAL_TEMP when it is a regular file"
+        : >"${DECKRD_TMPDIR}/tempfile"
+        export DECKRD_LOCAL_TEMP="${DECKRD_TMPDIR}/tempfile"
+        When run bash "$SCRIPT" myapp webapp
+        The status should equal 1
+        # @note: --json モード追加時はこのアサーションを見直すこと
+        The output should be blank
+        The stderr should include "Error:"
+        The stderr should include "${DECKRD_TMPDIR}/tempfile"
+        The stderr should not include "Init complete"
+      End
+    End
+
+    Describe "When: copying an asset into the path fails"
+      # Fake cp: fails only for workspaces/README.md, delegates everything else to the real cp
+      _create_fake_cp() {
+        local real_cp
+        real_cp="$(command -v cp)"
+        mkdir -p "${DECKRD_TMPDIR}/fakebin"
+        cat >"${DECKRD_TMPDIR}/fakebin/cp" <<EOF
+#!/usr/bin/env bash
+case "\${!#}" in
+*/workspaces/README.md) exit 1 ;;
+esac
+exec "${real_cp}" "\$@"
+EOF
+        chmod +x "${DECKRD_TMPDIR}/fakebin/cp"
+      }
+      Before "_create_fake_cp"
+
+      It "[Error] T-CLI-MAINI-52: Should: exit 1 and report the destination file when cp fails"
+        When run env PATH="${DECKRD_TMPDIR}/fakebin:${PATH}" bash "$SCRIPT" myapp webapp
+        The status should equal 1
+        # @note: --json モード追加時はこのアサーションを見直すこと
+        The output should be blank
+        The stderr should include "Error:"
+        The stderr should include "${DECKRD_LOCAL_WORKSPACES}/README.md"
+        The stderr should not include "[init/local-workspaces] copied: README.md"
+        The stderr should not include "Init complete"
+      End
+    End
+  End
+
 End
