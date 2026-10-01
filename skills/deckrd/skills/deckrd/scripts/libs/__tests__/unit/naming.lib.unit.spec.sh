@@ -15,6 +15,82 @@ Include "../spec_helper.sh"
 
 . "${_RUNTIME_LIBS_DIR}/naming.lib.sh"
 
+# --- 内部ヘルパー ---
+
+# 定数
+
+# _NHR_DECKRD_DIC - deckrd 本体の既定辞書。既定パス解決の Case で返値の所属を確かめる
+_NHR_DECKRD_DIC="${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/skills/deckrd/assets/dic/hackers.dic"
+
+# _NHR_SYMLINK_HINT_KEYWORD - 辞書を使えない異常系で stderr に含まれるべきヒントの語
+_NHR_SYMLINK_HINT_KEYWORD="symlink"
+
+# 関数
+
+# _nhr_fresh_hacker_random - 新しい bash プロセスで naming.lib.sh を source し hacker_random を呼ぶ
+#
+# 二重読み込みガード (_NAMING_LIB_LOADED) と source 時に解決される既定パスを
+# Case ごとに作り直すため、現在のシェルではなく子プロセスで読み込む。
+# PROJECT_ROOT は子プロセスで unset し、既定パスが PROJECT_ROOT に依存しないことを前提にする。
+#
+# @arg $1 string 前処理 (source の前に実行するコマンド。不要なら空文字)
+# @arg $2 string source する naming.lib.sh のパス (相対パス可)
+# @arg $3 string (optional) source 後・呼び出し前に実行するコマンド
+# @stdout hacker_random の出力
+# @stderr hacker_random のエラー出力
+# @return hacker_random の終了ステータス (source 失敗時は 1)
+_nhr_fresh_hacker_random() {
+  local pre="${1}"
+  local lib="${2}"
+  local post="${3:-:}"
+  bash -c "unset PROJECT_ROOT; ${pre:-:}; . '${lib}' || exit 1; ${post}; hacker_random"
+}
+
+# _nhr_symlink_unsupported - 実リンクを作れない環境かを調べる (Skip if の条件)
+#
+# Windows の Git Bash は MSYS=winsymlinks:nativestrict がないと ln -s がコピーになる。
+# 独立した一時ディレクトリでリンクを作り、[[ -L ]] で実リンクかを確かめる。
+#
+# @return 0 実リンクを作れない (Skip する), 1 作れる
+_nhr_symlink_unsupported() {
+  local probe_dir
+  probe_dir="$(mktemp -d)"
+  MSYS=winsymlinks:nativestrict ln -s "$probe_dir" "${probe_dir}/link" 2>/dev/null
+  local status=0
+  [[ -L "${probe_dir}/link" ]] && status=1
+  rm -rf "$probe_dir"
+  return "$status"
+}
+
+# _nhr_setup_linked_skill - naming.lib.sh へのリンクと専用辞書を持つ別スキルを作る
+#
+# 前提: NAMING_TMPDIR が作成済みであること (setup_tmpdir)
+#
+# @arg $1 string スキルのディレクトリ名 (NAMING_TMPDIR 直下)
+# @arg $2 string 辞書に書く唯一のエントリ
+# @stdout リンクとして置いた naming.lib.sh のパス
+_nhr_setup_linked_skill() {
+  local skill_dir="${NAMING_TMPDIR}/${1}"
+  mkdir -p "${skill_dir}/scripts/libs" "${skill_dir}/assets/dic"
+  printf '%s\n' "${2}" >"${skill_dir}/assets/dic/hackers.dic"
+  MSYS=winsymlinks:nativestrict ln -s "${_RUNTIME_LIBS_DIR}/naming.lib.sh" "${skill_dir}/scripts/libs/naming.lib.sh"
+  printf '%s' "${skill_dir}/scripts/libs/naming.lib.sh"
+}
+
+# _nhr_write_dic - 一時辞書を NAMING_TMPDIR 直下に作る
+#
+# 前提: NAMING_TMPDIR が作成済みであること (setup_tmpdir)
+#
+# @arg $1   string 辞書のファイル名
+# @arg $2.. string 辞書の各行 (コメント行・空行も 1 引数 1 行で渡す)
+# @stdout 作成した辞書のパス
+_nhr_write_dic() {
+  local dic="${NAMING_TMPDIR}/${1}"
+  shift
+  printf '%s\n' "$@" >"$dic"
+  printf '%s' "$dic"
+}
+
 Describe "naming.lib.sh"
 
   Describe "T-LIB-NLD: naming.lib.sh loading"
@@ -28,8 +104,8 @@ Describe "naming.lib.sh"
   End
 
   Describe "T-LIB-NHR: hacker_random"
-    Describe "Given: デフォルトの hackers.dic が存在する"
-      Before "PROJECT_ROOT=${SHELLSPEC_PROJECT_ROOT}"
+    Describe "Given: PROJECT_ROOT に依存せず既定の hackers.dic が存在する"
+      Before "unset PROJECT_ROOT"
 
       Describe "When: hacker_random を引数なしで呼ぶ"
         It "Then: [Normal] T-LIB-NHR-01: 空文字でない名前が返る"
@@ -40,7 +116,7 @@ Describe "naming.lib.sh"
 
         It "Then: [Normal] T-LIB-NHR-02: 返値が hackers.dic 内のエントリである"
           result=$(hacker_random)
-          When call grep -qx "$result" "${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/_generated/hackers.dic"
+          When call grep -qx "$result" "$_NHR_DECKRD_DIC"
           The status should equal 0
         End
       End
@@ -62,10 +138,133 @@ Describe "naming.lib.sh"
 
       Describe "When: hacker_random にカスタムファイルを渡す"
         It "Then: [Normal] T-LIB-NHR-04: ファイル内のエントリが返る"
-          custom_dic="${NAMING_TMPDIR}/custom.dic"
-          printf '# comment\nalice\nbob\n' >"$custom_dic"
+          custom_dic=$(_nhr_write_dic "custom.dic" "# comment" "alice" "bob")
           result=$(hacker_random "$custom_dic")
           When call grep -qx "$result" "$custom_dic"
+          The status should equal 0
+        End
+      End
+    End
+
+    Describe "Given: 環境変数・カレントディレクトリ・読み込み経路が異なる"
+      Before "setup_tmpdir"
+      After "teardown_tmpdir"
+
+      Describe "When: 存在しない PROJECT_ROOT を設定して引数なしで呼ぶ"
+        It "Then: [Normal] T-LIB-NHR-05: status=0 を返し空でない名前が返る"
+          export PROJECT_ROOT=/no/such/project
+          When call hacker_random
+          The status should equal 0
+          The output should not equal ""
+        End
+      End
+
+      Describe "When: 辞書のない別スキルの SKILL_ROOT を export してから source する"
+        It "Then: [Normal] T-LIB-NHR-06: deckrd の hackers.dic のエントリが返る"
+          mkdir -p "${NAMING_TMPDIR}/other-skill"
+          result=$(_nhr_fresh_hacker_random "export SKILL_ROOT='${NAMING_TMPDIR}/other-skill'" "${_RUNTIME_LIBS_DIR}/naming.lib.sh")
+          When call grep -qx "$result" "$_NHR_DECKRD_DIC"
+          The status should equal 0
+        End
+      End
+
+      Describe "When: 相対パスで source した後に別ディレクトリへ cd して呼ぶ"
+        It "Then: [Normal] T-LIB-NHR-07: deckrd の hackers.dic のエントリが返る"
+          result=$(_nhr_fresh_hacker_random "cd '${_RUNTIME_LIBS_DIR}'" "./naming.lib.sh" "cd '${NAMING_TMPDIR}'")
+          When call grep -qx "$result" "$_NHR_DECKRD_DIC"
+          The status should equal 0
+        End
+      End
+
+      Describe "When: 別スキルに置いたリンク経由で source する"
+        It "Then: [Normal] T-LIB-NHR-08: リンクを置いたスキルの辞書のエントリが返る"
+          Skip if "実リンクを作れない環境" _nhr_symlink_unsupported
+          linked_lib=$(_nhr_setup_linked_skill "skillB" "zeta")
+          When call _nhr_fresh_hacker_random "" "$linked_lib"
+          The status should equal 0
+          The output should equal "zeta"
+        End
+      End
+    End
+
+    Describe "Given: 辞書を名前の候補として使えない"
+      Before "setup_tmpdir"
+      After "teardown_tmpdir"
+
+      Describe "When: assets を持たない場所へコピーした naming.lib.sh を source して引数なしで呼ぶ"
+        It "Then: [Error] T-LIB-NHR-09: status=1 を返し stderr に解決パスと symlink ヒントが出力される"
+          mkdir -p "${NAMING_TMPDIR}/skillC/scripts/libs"
+          cp "${_RUNTIME_LIBS_DIR}/naming.lib.sh" "${NAMING_TMPDIR}/skillC/scripts/libs/naming.lib.sh"
+          When call _nhr_fresh_hacker_random "" "${NAMING_TMPDIR}/skillC/scripts/libs/naming.lib.sh"
+          The status should equal 1
+          The output should equal ""
+          The error should include "file not found"
+          The error should include "skillC/scripts/libs/../../assets/dic/hackers.dic"
+          The error should include "$_NHR_SYMLINK_HINT_KEYWORD"
+        End
+      End
+
+      Describe "When: リンク先パス 1 行だけのテキストになった辞書を渡す"
+        It "Then: [Error] T-LIB-NHR-10: status=1 を返し名前を出力せず stderr に symlink ヒントが出力される"
+          linktext_dic=$(_nhr_write_dic "linktext.dic" "../../../../deckrd/skills/deckrd/assets/dic/hackers.dic")
+          When call hacker_random "$linktext_dic"
+          The status should equal 1
+          The output should equal ""
+          The error should include "$_NHR_SYMLINK_HINT_KEYWORD"
+        End
+      End
+    End
+
+    Describe "Given: コメント・空行を除いた有効エントリが 1 件だけの辞書"
+      Before "setup_tmpdir"
+      After "teardown_tmpdir"
+
+      Describe "When: コメント・空行に続くパス 1 件だけの辞書を渡す"
+        It "Then: [Edge] T-LIB-NHR-11: status=1 を返し名前を出力せず stderr に symlink ヒントが出力される"
+          commented_dic=$(_nhr_write_dic "commented.dic" "# header" "" "../dic/hackers.dic")
+          When call hacker_random "$commented_dic"
+          The status should equal 1
+          The output should equal ""
+          The error should include "$_NHR_SYMLINK_HINT_KEYWORD"
+        End
+      End
+
+      Describe "When: / を含まないエントリ 1 件だけの辞書を渡す"
+        It "Then: [Edge] T-LIB-NHR-12: そのエントリが名前として返る"
+          solo_dic=$(_nhr_write_dic "solo.dic" "# c" "solo")
+          When call hacker_random "$solo_dic"
+          The status should equal 0
+          The output should equal "solo"
+        End
+      End
+
+      Describe "When: - で始まるエントリ 1 件だけの辞書を渡す"
+        It "Then: [Edge] T-LIB-NHR-13: shuf のオプションとして扱われず、そのエントリが名前として返る"
+          dash_dic=$(_nhr_write_dic "dash.dic" "--help")
+          When call hacker_random "$dash_dic"
+          The status should equal 0
+          The output should equal "--help"
+        End
+      End
+    End
+
+    Describe "Given: 名前の抽選または辞書パスの解決を妨げる環境"
+      Before "setup_tmpdir"
+      After "teardown_tmpdir"
+
+      Describe "When: shuf が失敗する状態で引数なしで呼ぶ"
+        It "Then: [Error] T-LIB-NHR-14: status=1 を返し名前を出力しない"
+          When call _nhr_fresh_hacker_random "" "${_RUNTIME_LIBS_DIR}/naming.lib.sh" "shuf() { return 1; }"
+          The status should equal 1
+          The output should equal ""
+        End
+      End
+
+      Describe "When: CDPATH を設定し相対パスで source して引数なしで呼ぶ"
+        It "Then: [Edge] T-LIB-NHR-15: deckrd の hackers.dic のエントリが返る"
+          skill_dir="${_RUNTIME_LIBS_DIR}/../.."
+          result=$(_nhr_fresh_hacker_random "cd '${skill_dir}'; export CDPATH='${skill_dir}'" "scripts/libs/naming.lib.sh")
+          When call grep -qx "$result" "$_NHR_DECKRD_DIC"
           The status should equal 0
         End
       End
@@ -146,8 +345,8 @@ Describe "naming.lib.sh"
       End
     End
 
-    Describe "Given: PROJECT_ROOT が未設定"
-      Before "unset PROJECT_ROOT"
+    Describe "Given: 既定の hackers.dic が見つからない"
+      Before "_NAMING_DIC_DEFAULT=/no/such/assets/dic/hackers.dic"
 
       Describe "When: generate_filename を呼ぶ"
         It "Then: [Error] T-LIB-NGF-05: status=1 を返す"

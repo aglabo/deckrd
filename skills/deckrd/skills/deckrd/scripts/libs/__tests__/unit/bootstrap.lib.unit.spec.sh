@@ -70,7 +70,7 @@ Describe "bootstrap.lib.sh"
   Describe "T-LIB-BEXP: export 検証"
 
     Describe "Given: PROJECT_ROOT=/tmp/proj で bootstrap_init を呼ぶ"
-      Before "export PROJECT_ROOT=/tmp/proj; unset DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_LIB_DIR DECKRD_DATA_DIR DECKRD_LOCAL_DATA DECKRD_LOCAL_WORKSPACES DECKRD_LOCAL_TEMP DECKRD_DOCS_DIR SYMBOL; bootstrap_init"
+      Before "export PROJECT_ROOT=/tmp/proj; unset SKILL_ROOT DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_LIB_DIR DECKRD_DATA_DIR DECKRD_LOCAL_DATA DECKRD_LOCAL_WORKSPACES DECKRD_LOCAL_TEMP DECKRD_DOCS_DIR SYMBOL; bootstrap_init"
 
       It "[Normal] T-LIB-BEXP-01: PROJECT_ROOT が export されている"
         When call bash -c 'export -p | grep -q "^declare -x PROJECT_ROOT=" && echo ok'
@@ -78,7 +78,7 @@ Describe "bootstrap.lib.sh"
       End
 
       It "[Normal] T-LIB-BEXP-02: RUNTIME_LIB_DIR が export されていない"
-        When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && export -p | grep -q 'RUNTIME_LIB_DIR' && echo found || echo not-found"
+        When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" || exit 1; export -p | grep -q 'RUNTIME_LIB_DIR' && echo found || echo not-found"
         The output should equal "not-found"
       End
 
@@ -126,6 +126,11 @@ Describe "bootstrap.lib.sh"
         When call bash -c 'export -p | grep -q "^declare -x DECKRD_LOCAL_TEMP=" && echo ok'
         The output should equal "ok"
       End
+
+      It "[Normal] T-LIB-BEXP-12: SKILL_ROOT が export されている"
+        When call bash -c 'export -p | grep -q "^declare -x SKILL_ROOT=" && echo ok'
+        The output should equal "ok"
+      End
     End
   End
 
@@ -141,7 +146,7 @@ Describe "bootstrap.lib.sh"
     End
 
     It "[Normal] T-LIB-BSIDE-02: 事前設定した任意変数 MY_VAR が bootstrap_finalize 後も維持される"
-      When run bash -c "export MY_VAR=hello; export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && bootstrap_finalize; [[ \"\$MY_VAR\" == \"hello\" ]] && echo ok"
+      When run bash -c "export MY_VAR=hello; export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" || exit 1; bootstrap_finalize; [[ \"\$MY_VAR\" == \"hello\" ]] && echo ok"
       The status should equal 0
       The output should equal "ok"
     End
@@ -165,79 +170,97 @@ Describe "bootstrap.lib.sh"
   Describe "T-LIB-BFIN: bootstrap_finalize"
 
     It "[Normal] T-LIB-BFIN-01: finalize 後は PROJECT_ROOT が readonly になっている"
-      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && ( PROJECT_ROOT=x ) 2>/dev/null && echo writable || echo readonly"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" || exit 1; ( PROJECT_ROOT=x ) 2>/dev/null && echo writable || echo readonly"
       The status should equal 0
       The output should equal "readonly"
     End
 
     It "[Normal] T-LIB-BFIN-02: finalize 後は RUNTIME_LIB_DIR が readonly になっていない"
-      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && ( RUNTIME_LIB_DIR=x ) 2>/dev/null && echo writable || echo readonly"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" || exit 1; ( RUNTIME_LIB_DIR=x ) 2>/dev/null && echo writable || echo readonly"
       The status should equal 0
       The output should equal "writable"
     End
 
     It "[Normal] T-LIB-BFIN-03: finalize 後は DECKRD_ROOT が readonly になっている"
-      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && ( DECKRD_ROOT=x ) 2>/dev/null && echo writable || echo readonly"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" || exit 1; ( DECKRD_ROOT=x ) 2>/dev/null && echo writable || echo readonly"
       The status should equal 0
       The output should equal "readonly"
     End
 
     It "[Normal] T-LIB-BFIN-04: finalize 後は DECKRD_SCRIPTS_DIR が readonly になっている"
-      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && ( DECKRD_SCRIPTS_DIR=x ) 2>/dev/null && echo writable || echo readonly"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" || exit 1; ( DECKRD_SCRIPTS_DIR=x ) 2>/dev/null && echo writable || echo readonly"
       The status should equal 0
       The output should equal "readonly"
     End
 
     It "[Normal] T-LIB-BFIN-12: finalize 後は DECKRD_ASSETS_DIR が readonly になっている"
-      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && ( DECKRD_ASSETS_DIR=x ) 2>/dev/null && echo writable || echo readonly"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" || exit 1; ( DECKRD_ASSETS_DIR=x ) 2>/dev/null && echo writable || echo readonly"
       The status should equal 0
       The output should equal "readonly"
     End
 
     It "[Normal] T-LIB-BFIN-05: finalize 後は DECKRD_LIB_DIR が readonly になっている"
-      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && ( DECKRD_LIB_DIR=x ) 2>/dev/null && echo writable || echo readonly"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" || exit 1; ( DECKRD_LIB_DIR=x ) 2>/dev/null && echo writable || echo readonly"
       The status should equal 0
       The output should equal "readonly"
     End
 
     It "[Normal] T-LIB-BFIN-06: finalize 後は DECKRD_DATA_DIR が readonly になっている"
-      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && ( DECKRD_DATA_DIR=x ) 2>/dev/null && echo writable || echo readonly"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" || exit 1; ( DECKRD_DATA_DIR=x ) 2>/dev/null && echo writable || echo readonly"
       The status should equal 0
       The output should equal "readonly"
     End
 
     It "[Normal] T-LIB-BFIN-07: finalize 後は DECKRD_LOCAL_DATA が readonly になっている"
-      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && ( DECKRD_LOCAL_DATA=x ) 2>/dev/null && echo writable || echo readonly"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" || exit 1; ( DECKRD_LOCAL_DATA=x ) 2>/dev/null && echo writable || echo readonly"
       The status should equal 0
       The output should equal "readonly"
     End
 
     It "[Normal] T-LIB-BFIN-11: finalize 後は DECKRD_LOCAL_WORKSPACES が readonly になっている"
-      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && ( DECKRD_LOCAL_WORKSPACES=x ) 2>/dev/null && echo writable || echo readonly"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" || exit 1; ( DECKRD_LOCAL_WORKSPACES=x ) 2>/dev/null && echo writable || echo readonly"
       The status should equal 0
       The output should equal "readonly"
     End
 
     It "[Normal] T-LIB-BFIN-13: finalize 後は DECKRD_LOCAL_TEMP が readonly になっている"
-      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && ( DECKRD_LOCAL_TEMP=x ) 2>/dev/null && echo writable || echo readonly"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" || exit 1; ( DECKRD_LOCAL_TEMP=x ) 2>/dev/null && echo writable || echo readonly"
       The status should equal 0
       The output should equal "readonly"
     End
 
     It "[Normal] T-LIB-BFIN-08: finalize 後は DECKRD_DOCS_DIR が readonly になっている"
-      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && ( DECKRD_DOCS_DIR=x ) 2>/dev/null && echo writable || echo readonly"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" || exit 1; ( DECKRD_DOCS_DIR=x ) 2>/dev/null && echo writable || echo readonly"
       The status should equal 0
       The output should equal "readonly"
     End
 
     It "[Normal] T-LIB-BFIN-09: finalize 後は SYMBOL が readonly になっている"
-      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && ( SYMBOL=x ) 2>/dev/null && echo writable || echo readonly"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" || exit 1; ( SYMBOL=x ) 2>/dev/null && echo writable || echo readonly"
       The status should equal 0
       The output should equal "readonly"
     End
 
+    It "[Normal] T-LIB-BFIN-14: finalize 後は SKILL_ROOT が readonly になっている"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj; unset SKILL_ROOT; . \"$SCRIPT\" || exit 1; ( SKILL_ROOT=x ) 2>/dev/null && echo writable || echo readonly"
+      The status should equal 0
+      The output should equal "readonly"
+    End
+
+    It "[Normal] T-LIB-BFIN-15: --no-finalize では SKILL_ROOT が書き換え可能なまま"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj; unset SKILL_ROOT; . \"$SCRIPT\" --no-finalize || exit 1; ( SKILL_ROOT=x ) 2>/dev/null && echo writable || echo readonly"
+      The status should equal 0
+      The output should equal "writable"
+    End
+
+    It "[Edge] T-LIB-BFIN-16: 事前設定した SKILL_ROOT は値を保ったまま readonly になる"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj SKILL_ROOT=/tmp/skill; . \"$SCRIPT\" || exit 1; printf '%s:' \"\$SKILL_ROOT\" && { ( SKILL_ROOT=x ) 2>/dev/null && echo writable || echo readonly; }"
+      The status should equal 0
+      The output should equal "/tmp/skill:readonly"
+    End
+
     It "[Edge] T-LIB-BFIN-10: bootstrap_finalize を 2 回呼んでもエラーにならない"
-      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" && bootstrap_finalize && echo ok"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" || exit 1; bootstrap_finalize && echo ok"
       The status should equal 0
       The output should equal "ok"
     End
@@ -268,6 +291,12 @@ Describe "bootstrap.lib.sh"
 
     It "[Normal] T-LIB-BIDEM-04: DECKRD_LIB_DIR が変化しない"
       When run bash -c "export PROJECT_ROOT=/tmp/proj; export DECKRD_ROOT=/tmp/deckrd; . \"$SCRIPT\" --no-finalize; FIRST=\"\$DECKRD_LIB_DIR\"; bootstrap_init; [[ \"\$DECKRD_LIB_DIR\" == \"\$FIRST\" ]] && echo ok"
+      The status should equal 0
+      The output should equal "ok"
+    End
+
+    It "[Normal] T-LIB-BIDEM-05: SKILL_ROOT が変化しない"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj; unset SKILL_ROOT; . \"$SCRIPT\" --no-finalize; FIRST=\"\$SKILL_ROOT\"; bootstrap_init; [[ -n \"\$FIRST\" && \"\$SKILL_ROOT\" == \"\$FIRST\" ]] && echo ok"
       The status should equal 0
       The output should equal "ok"
     End
@@ -304,6 +333,83 @@ Describe "bootstrap.lib.sh"
       When call run_coder_tmpscript DECKRD_ROOT "DECKRD_ROOT=/tmp/custom"
       The status should equal 0
       The output should equal "/tmp/custom"
+    End
+  End
+
+  # ------------------------------------------------------------------ #
+  #  SKILL_ROOT                                                         #
+  #  Depends on: BASH_SOURCE of bootstrap.lib.sh only (not PROJECT_ROOT)#
+  # ------------------------------------------------------------------ #
+  Describe "T-LIB-BSKR: SKILL_ROOT"
+
+    Describe "Given: PROJECT_ROOT=/tmp/proj、SKILL_ROOT 未設定"
+      Before "export PROJECT_ROOT=/tmp/proj; unset SKILL_ROOT; bootstrap_init"
+
+      It "[Normal] T-LIB-BSKR-01: SKILL_ROOT が /skills/deckrd/skills/deckrd で終わる"
+        When call echo "$SKILL_ROOT"
+        The output should end with "/skills/deckrd/skills/deckrd"
+      End
+
+      It "[Normal] T-LIB-BSKR-02: SKILL_ROOT/scripts/libs/bootstrap.lib.sh が存在する (配置規約)"
+        When call test -f "$SKILL_ROOT/scripts/libs/bootstrap.lib.sh"
+        The status should equal 0
+      End
+    End
+
+    Describe "Given: SKILL_ROOT=/tmp/skill を事前設定"
+      Before "export PROJECT_ROOT=/tmp/proj; export SKILL_ROOT=/tmp/skill; bootstrap_init"
+
+      It "[Normal] T-LIB-BSKR-03: 事前設定値が維持される"
+        When call echo "$SKILL_ROOT"
+        The output should equal "/tmp/skill"
+      End
+    End
+
+    Describe "Given: SKILL_ROOT='' (空文字) を事前設定"
+      Before "export PROJECT_ROOT=/tmp/proj; export SKILL_ROOT=''; bootstrap_init"
+
+      It "[Edge] T-LIB-BSKR-04: 空文字は計算値にフォールバックする"
+        When call echo "$SKILL_ROOT"
+        The output should end with "/skills/deckrd/skills/deckrd"
+      End
+    End
+
+    Describe "Given: PROJECT_ROOT=/tmp/bogus、SKILL_ROOT 未設定 (BASH_SOURCE 依存の確認)"
+      Before "export PROJECT_ROOT=/tmp/bogus; unset SKILL_ROOT; bootstrap_init"
+
+      It "[Edge] T-LIB-BSKR-05: SKILL_ROOT が /tmp/bogus を含まない"
+        When call echo "$SKILL_ROOT"
+        The output should not include "/tmp/bogus"
+        The output should end with "/skills/deckrd/skills/deckrd"
+      End
+    End
+
+    Describe "Given: SKILL_ROOT にスペースを含むパスを事前設定"
+      Before "export PROJECT_ROOT=/tmp/proj; export SKILL_ROOT='/tmp/my skill'; bootstrap_init"
+
+      It "[Edge] T-LIB-BSKR-06: スペースを含む値がそのまま維持される"
+        When call echo "$SKILL_ROOT"
+        The output should equal "/tmp/my skill"
+      End
+    End
+
+    Describe "Given: SKILL_ROOT 未設定、DECKRD_ROOT=/tmp/custom を事前設定"
+      Before "export PROJECT_ROOT=/tmp/proj; unset SKILL_ROOT; export DECKRD_ROOT=/tmp/custom; bootstrap_init"
+
+      It "[Normal] T-LIB-BSKR-07: SKILL_ROOT は DECKRD_ROOT から導出されず計算値のまま"
+        # shellcheck disable=SC2016
+        When call bash -c '[[ "$SKILL_ROOT" == */skills/deckrd/skills/deckrd ]] && echo ok'
+        The output should equal "ok"
+      End
+    End
+
+    Describe "Given: CDPATH を設定し、相対パスで source する"
+      It "[Edge] T-LIB-BSKR-08: SKILL_ROOT は cd の出力を含まない 1 行のパスになる"
+        When run bash -c "unset SKILL_ROOT DECKRD_ROOT; export PROJECT_ROOT=/tmp/proj; cd \"${_RUNTIME_LIBS_DIR}/../..\" || exit 1; export CDPATH=\"\$PWD\"; . scripts/libs/bootstrap.lib.sh || exit 1; printf '%s' \"\$SKILL_ROOT\""
+        The status should equal 0
+        The lines of output should equal 1
+        The output should end with "/skills/deckrd/skills/deckrd"
+      End
     End
   End
 
@@ -359,6 +465,52 @@ Describe "bootstrap.lib.sh"
         # shellcheck disable=SC2016
         When call bash -c '[[ "$DECKRD_ROOT" == */skills/deckrd/skills/deckrd ]] && echo ok'
         The output should equal "ok"
+      End
+    End
+
+    Describe "Given: PROJECT_ROOT=/tmp/proj、SKILL_ROOT / DECKRD_ROOT ともに未設定"
+      Before "export PROJECT_ROOT=/tmp/proj; unset SKILL_ROOT DECKRD_ROOT; bootstrap_init"
+
+      It "[Normal] T-LIB-BROOT-07: DECKRD_ROOT は SKILL_ROOT と同じ値になる"
+        # shellcheck disable=SC2016
+        When call bash -c '[[ "$DECKRD_ROOT" == "$SKILL_ROOT" ]] && echo ok'
+        The output should equal "ok"
+      End
+    End
+
+    Describe "Given: SKILL_ROOT=/tmp/skill を事前設定、DECKRD_ROOT 未設定"
+      Before "export PROJECT_ROOT=/tmp/proj; export SKILL_ROOT=/tmp/skill; unset DECKRD_ROOT; bootstrap_init"
+
+      It "[Normal] T-LIB-BROOT-08: DECKRD_ROOT は SKILL_ROOT の事前設定値になる"
+        When call echo "$DECKRD_ROOT"
+        The output should equal "/tmp/skill"
+      End
+    End
+
+    Describe "Given: SKILL_ROOT 未設定、DECKRD_ROOT=/tmp/custom を事前設定"
+      Before "export PROJECT_ROOT=/tmp/proj; unset SKILL_ROOT; export DECKRD_ROOT=/tmp/custom; bootstrap_init"
+
+      It "[Normal] T-LIB-BROOT-09: DECKRD_ROOT の事前設定値が維持される"
+        When call echo "$DECKRD_ROOT"
+        The output should equal "/tmp/custom"
+      End
+    End
+
+    Describe "Given: SKILL_ROOT=/tmp/skill を事前設定、DECKRD_ROOT='' (空文字)"
+      Before "export PROJECT_ROOT=/tmp/proj; export SKILL_ROOT=/tmp/skill; export DECKRD_ROOT=''; bootstrap_init"
+
+      It "[Error] T-LIB-BROOT-10: 空文字の DECKRD_ROOT は SKILL_ROOT にフォールバックする"
+        When call echo "$DECKRD_ROOT"
+        The output should equal "/tmp/skill"
+      End
+    End
+
+    Describe "Given: SKILL_ROOT=/tmp/skill を事前設定、DECKRD_ROOT / DECKRD_SCRIPTS_DIR 未設定"
+      Before "export PROJECT_ROOT=/tmp/proj; export SKILL_ROOT=/tmp/skill; unset DECKRD_ROOT DECKRD_SCRIPTS_DIR; bootstrap_init"
+
+      It "[Edge] T-LIB-BROOT-11: SKILL_ROOT の事前設定値が DECKRD_SCRIPTS_DIR まで波及する"
+        When call echo "$DECKRD_SCRIPTS_DIR"
+        The output should equal "/tmp/skill/scripts"
       End
     End
   End

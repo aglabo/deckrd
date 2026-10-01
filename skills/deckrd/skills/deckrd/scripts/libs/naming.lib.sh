@@ -24,6 +24,16 @@ _FILENAME_CACHE_DIR="${_FILENAME_CACHE_DIR:-${DECKRD_LOCAL_DATA:-$HOME/.local/sh
 # Override NAMING_MAX_RETRIES to change the limit
 NAMING_MAX_RETRIES="${NAMING_MAX_RETRIES:-5}"
 
+# Default dictionary for hacker_random, resolved once at source time.
+# BASH_SOURCE does not resolve symlinks, so a skill that links this library
+# uses its own <skill>/assets/dic/hackers.dic. PROJECT_ROOT and SKILL_ROOT
+# are intentionally not consulted. CDPATH is cleared so cd prints nothing.
+_NAMING_DIC_DEFAULT="$(CDPATH='' cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../../assets/dic/hackers.dic"
+
+# Hint shown when the dictionary is missing or holds only a link target path.
+# Both happen when a symlink is checked out as a plain text file.
+_NAMING_SYMLINK_HINT="Hint: a symlink may have been checked out as a text file (e.g. core.symlinks=false on Windows)"
+
 # _init_filename_cache - Ensure the filename cache directory exists
 #
 # @return 0 on success, 1 if _FILENAME_CACHE_DIR is unset or mkdir fails
@@ -67,25 +77,35 @@ _ADJECTIVES=(
 # hacker_random - Pick a random hacker name from hackers.dic
 #
 # @arg $1 string (optional) Path to .dic file
-#                           Default: ${PROJECT_ROOT}/skills/deckrd/_generated/hackers.dic
+#                           Default: <lib_dir>/../../assets/dic/hackers.dic
 # @stdout One hacker short name (e.g. "knuth")
-# @return 0 on success, 1 on error (file not found or empty)
+# @return 0 on success, 1 on error (file not found, empty, or only a link target path)
 hacker_random() {
-  local dic="${1:-${PROJECT_ROOT}/skills/deckrd/_generated/hackers.dic}"
+  local dic="${1:-${_NAMING_DIC_DEFAULT}}"
 
   if [[ ! -f "$dic" ]]; then
     echo "Error: hacker_random: file not found: ${dic}" >&2
+    echo "${_NAMING_SYMLINK_HINT}" >&2
     return 1
   fi
 
-  local name
-  name=$(grep -v '^\s*#' "$dic" | grep -v '^\s*$' | shuf -n 1)
+  local -a entries
+  mapfile -t entries < <(grep -Ev '^\s*(#|$)' "$dic")
 
-  if [[ -z "$name" ]]; then
+  if [[ ${#entries[@]} -eq 0 ]]; then
     echo "Error: hacker_random: no entries found in: ${dic}" >&2
     return 1
   fi
 
+  # A symlink checked out as text leaves the link target path as the only entry
+  if [[ ${#entries[@]} -eq 1 && "${entries[0]}" == */* ]]; then
+    echo "Error: hacker_random: dictionary holds only a path: ${dic}" >&2
+    echo "${_NAMING_SYMLINK_HINT}" >&2
+    return 1
+  fi
+
+  local name
+  name=$(shuf -n 1 -e -- "${entries[@]}") || return 1
   printf '%s' "$name"
 }
 
