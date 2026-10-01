@@ -46,10 +46,9 @@ _SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "${_SCRIPT_DIR}/libs/bootstrap.lib.sh"
 unset _SCRIPT_DIR
 
-# Validate environment (requires jq)
+# Load environment validation (validate_env runs in main; requires jq)
 . "${DECKRD_LIB_DIR}/validate-env.lib.sh"
 . "${DECKRD_LIB_DIR}/utils.lib.sh"
-validate_env || exit 1
 
 # ============================================================================
 # Script Configuration
@@ -59,35 +58,22 @@ validate_env || exit 1
 #   DECKRD_DOCS_DIR   - docs/.deckrd base directory
 #   DECKRD_LOCAL_DATA - .local/deckrd directory
 
-##
-# @description Session file path
-SESSION_FILE="${DECKRD_LOCAL_DATA}/session.json"
-readonly SESSION_FILE
-
-##
-# @description Module subdirectories to create
-SUBDIRS=("requirements" "specifications" "implementation" "tasks" "workspaces")
-readonly SUBDIRS
-
-##
-# @description Module path (namespace/module, raw input)
-MODULE_PATH=""
-
-##
-# @description Subcommand (e.g. "create")
-SUBCOMMAND=""
-
-##
-# @description Force re-initialization
-FORCE=false
-
-##
-# @description Explicit test scope given via --test-scope (empty means derive it)
-TEST_SCOPE=""
-
 # ============================================================================
 # Functions
 # ============================================================================
+
+##
+# @description Initialize script configuration variables
+# @description SESSION_FILE uses ${VAR:-default} to allow external override (mock)
+# @description OPTIONS is declared here and filled by parse_args
+# @description SUBCOMMAND is reset on every call
+init_vars() {
+  SESSION_FILE="${SESSION_FILE:-${DECKRD_LOCAL_DATA}/session.json}"
+  SUBDIRS=("requirements" "specifications" "implementation" "tasks" "workspaces")
+  MODULE_META_SUBPATH="workspaces/module/module.md"
+  declare -gA OPTIONS=()
+  SUBCOMMAND=""
+}
 
 ##
 # @description Show usage information
@@ -119,8 +105,9 @@ Created directories:
     ├── specifications/
     ├── implementation/
     ├── tasks/
-    ├── workspaces/
-    └── module.md
+    └── workspaces/
+        └── module/
+            └── module.md
 
 Session file:
   .local/deckrd/session.json
@@ -128,11 +115,21 @@ EOF
 }
 
 ##
-# @description Parse command-line arguments
+# @description Parse command-line arguments into OPTIONS / SUBCOMMAND
+# @description Never exits or prints usage; the caller reports errors and help
+# @arg $@ Command-line arguments
+# @var OPTIONS reset to defaults, then filled from args (keys: module_path, force, test_scope, help)
+# @var SUBCOMMAND "create" when the first argument is create, otherwise empty
+# @var PARSE_ARGS_ERROR set to the error description on failure
+# @return 0 on success (including -h/--help), 1 on invalid arguments
 parse_args() {
-  # Check for "create" subcommand as first positional argument
+  PARSE_ARGS_ERROR=""
+  OPTIONS=([module_path]="" [force]=false [test_scope]="" [help]=false)
+  SUBCOMMAND=""
+
+  # Only the first argument can be the "create" subcommand
   if [[ $# -gt 0 && "$1" == "create" ]]; then
-    # shellcheck disable=SC2034
+    # shellcheck disable=SC2034 # read by callers; "create" is an alias for the default action
     SUBCOMMAND="create"
     shift
   fi
@@ -140,34 +137,31 @@ parse_args() {
   while [[ $# -gt 0 ]]; do
     case "$1" in
     -h | --help)
-      show_usage
-      exit 0
+      OPTIONS[help]=true
+      return 0
       ;;
     --force)
-      FORCE=true
+      OPTIONS[force]=true
       shift
       ;;
     --test-scope)
       if [[ $# -lt 2 || -z "$2" ]]; then
-        echo "Error: --test-scope requires a value" >&2
-        show_usage
-        exit 1
+        PARSE_ARGS_ERROR="--test-scope requires a value"
+        return 1
       fi
-      TEST_SCOPE="$2"
+      OPTIONS[test_scope]="$2"
       shift 2
       ;;
     -*)
-      echo "Error: Unknown option: $1" >&2
-      show_usage
-      exit 1
+      PARSE_ARGS_ERROR="Unknown option: $1"
+      return 1
       ;;
     *)
-      if [[ -n "$MODULE_PATH" ]]; then
-        echo "Error: Multiple module paths specified" >&2
-        show_usage
-        exit 1
+      if [[ -n "${OPTIONS[module_path]}" ]]; then
+        PARSE_ARGS_ERROR="Multiple module paths specified"
+        return 1
       fi
-      MODULE_PATH="$1"
+      OPTIONS[module_path]="$1"
       shift
       ;;
     esac
@@ -178,7 +172,7 @@ parse_args() {
 # @description Validate and normalize module path
 # @arg $1 string Raw module path (namespace/module)
 # @stdout Normalized path (lowercase)
-# @return 0 on success, exits on error
+# @return 0 on success, 1 on error (message on stderr)
 validate_and_normalize() {
   local raw="$1"
 
@@ -186,7 +180,7 @@ validate_and_normalize() {
   if [[ "$raw" != */* ]]; then
     echo "Error: Path must be in format <namespace>/<module>" >&2
     echo "  Example: agt-kind/is-collection" >&2
-    exit 1
+    return 1
   fi
 
   local namespace="${raw%%/*}"
@@ -195,19 +189,19 @@ validate_and_normalize() {
   # Reject empty parts
   if [[ -z "$namespace" || -z "$module" ]]; then
     echo "Error: namespace and module must not be empty" >&2
-    exit 1
+    return 1
   fi
 
   # Validate characters using SYMBOL pattern (lowercase, hyphen, underscore only)
   if [[ ! "$namespace" =~ ^${SYMBOL}$ ]]; then
     echo "Error: namespace '${namespace}' contains invalid characters" >&2
     echo "  Allowed: a-z, hyphen (-), underscore (_)" >&2
-    exit 1
+    return 1
   fi
   if [[ ! "$module" =~ ^${SYMBOL}$ ]]; then
     echo "Error: module '${module}' contains invalid characters" >&2
     echo "  Allowed: a-z, hyphen (-), underscore (_)" >&2
-    exit 1
+    return 1
   fi
 
   echo "${namespace}/${module}"
@@ -252,7 +246,8 @@ _get_default_ns() {
 # @description Validate and normalize module path with namespace fallback
 # @arg $1 string Raw module path (<namespace>/<module> or <module>)
 # @stdout Normalized path (lowercase)
-# @return 0 on success, exits on error
+# @stderr Error message if the default namespace cannot be resolved or the path is invalid
+# @return 0 on success, 1 on error (namespace resolution or validation failure)
 validate_and_normalize_with_fallback() {
   local raw="$1"
   if [[ "$raw" == */* ]]; then
@@ -261,7 +256,7 @@ validate_and_normalize_with_fallback() {
   else
     # <module> form: auto-resolve namespace from project name or git remote
     local namespace
-    namespace=$(_get_default_ns) || exit 1
+    namespace=$(_get_default_ns) || return 1
     validate_and_normalize "${namespace}/${raw}"
   fi
 }
@@ -338,13 +333,13 @@ _read_frontmatter_scope() {
 
 ##
 # @description List the test scopes already declared by existing modules
-# @description Reads test_scope from the frontmatter of ${DECKRD_DOCS_DIR}/*/*/module.md
+# @description Reads test_scope from the frontmatter of ${DECKRD_DOCS_DIR}/*/*/workspaces/module/module.md
 # @stdout One line per declared scope: <test_scope><TAB><path relative to DECKRD_DOCS_DIR>
 # @exitcode 0 Always (no module.md means no output)
 collect_declared_scopes() {
   local module_file scope
 
-  for module_file in "${DECKRD_DOCS_DIR}"/*/*/module.md; do
+  for module_file in "${DECKRD_DOCS_DIR}"/*/*/"${MODULE_META_SUBPATH}"; do
     # nullglob is not set: an unmatched glob stays as a literal path
     [[ -f "$module_file" ]] || continue
     scope=$(_read_frontmatter_scope "$module_file")
@@ -361,7 +356,7 @@ collect_declared_scopes() {
 # @stdout The declared test scope, or nothing when module.md or its test_scope is absent
 # @exitcode 0 Always (an absent declaration is not an error)
 read_declared_scope() {
-  local module_file="${DECKRD_DOCS_DIR}/$1/module.md"
+  local module_file="${DECKRD_DOCS_DIR}/$1/${MODULE_META_SUBPATH}"
 
   [[ -f "$module_file" ]] || return 0
   _read_frontmatter_scope "$module_file"
@@ -404,7 +399,7 @@ resolve_test_scope() {
   declared=$(collect_declared_scopes)
   while IFS=$'\t' read -r scope owner; do
     # The module's own declaration is not a conflict (--force re-initialization)
-    [[ "$owner" != "${path}/module.md" ]] || continue
+    [[ "$owner" != "${path}/${MODULE_META_SUBPATH}" ]] || continue
     [[ "$scope" == "$candidate" ]] || continue
     echo "Error: test scope '${candidate}' conflicts with an existing module" >&2
     echo "  already declared in: ${owner}" >&2
@@ -418,22 +413,32 @@ resolve_test_scope() {
 ##
 # @description Create module directory structure
 # @arg $1 string Normalized module path (namespace/module)
+# @arg $2 string "true" to re-initialize an existing module directory (default: "false")
+# @stdout Progress messages and the module path
+# @stderr Error message when the directory exists and force is "false",
+#         or when a subdirectory cannot be created
+# @return 0 on success, 1 if the module directory already exists and force is "false",
+#         or if a subdirectory cannot be created
 create_module_dirs() {
   local path="$1"
+  local force="${2:-false}"
   local namespace="${path%%/*}"
   local module="${path#*/}"
   local base="${DECKRD_DOCS_DIR}/${namespace}/${module}"
 
-  # Check existing (without --force)
-  if [[ -d "$base" && "$FORCE" == false ]]; then
+  # An existing module is re-initialized only when force is requested
+  if [[ -d "$base" && "$force" == false ]]; then
     echo "Error: Module directory already exists: ${base}" >&2
     echo "  Use --force to re-initialize." >&2
-    exit 1
+    return 1
   fi
 
   echo "Initializing module: ${namespace}/${module}"
   for subdir in "${SUBDIRS[@]}"; do
-    mkdir -p "${base}/${subdir}"
+    mkdir -p "${base}/${subdir}" || {
+      echo "Error: failed to create directory: ${base}/${subdir}" >&2
+      return 1
+    }
     echo "  created: ${subdir}/"
   done
   echo ""
@@ -441,7 +446,7 @@ create_module_dirs() {
 }
 
 ##
-# @description Create the module metadata file (module.md)
+# @description Create the module metadata file (<module>/workspaces/module/module.md)
 # @description An existing module.md is left untouched so that --force re-initialization keeps its test_scope
 # @arg $1 string Normalized module path (namespace/module)
 # @arg $2 string Resolved test scope
@@ -452,14 +457,14 @@ create_module_meta() {
   local scope="$2"
   local module="${path#*/}"
   local base="${DECKRD_DOCS_DIR}/${path}"
-  local meta_file="${base}/module.md"
+  local meta_file="${base}/${MODULE_META_SUBPATH}"
 
   if [[ -f "$meta_file" ]]; then
     echo "Module meta: ${meta_file} (kept existing test_scope)"
     return 0
   fi
 
-  mkdir -p "$base"
+  mkdir -p "${meta_file%/*}"
   cat >"$meta_file" <<EOF
 ---
 title: ${module}
@@ -538,28 +543,55 @@ update_session() {
   echo "  active module: ${path}"
 }
 
-# ============================================================================
-# Main Execution
-# ============================================================================
+##
+# @description Main entry point: parse arguments, create the module, and update the session
+# @description Every exit of the script happens here; the other functions only return
+# @arg $@ Command-line arguments
+# @stdout Usage (on --help or argument errors), progress messages, and the session summary
+# @stderr Error message on failure
+# @exitcode 0 Success, or usage shown by --help
+# @exitcode 1 Missing jq/jaq, invalid arguments, or a module creation/scope resolution failure
+main() {
+  local normalized scope
 
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-  parse_args "$@"
+  validate_env || exit 1
+  init_vars
 
-  if [[ -z "$MODULE_PATH" ]]; then
+  parse_args "$@" || {
+    echo "Error: ${PARSE_ARGS_ERROR}" >&2
+    show_usage
+    exit 1
+  }
+
+  if [[ "${OPTIONS[help]}" == true ]]; then
+    show_usage
+    exit 0
+  fi
+
+  if [[ -z "${OPTIONS[module_path]}" ]]; then
     echo "Error: <namespace>/<module> is required" >&2
     show_usage
     exit 1
   fi
 
-  NORMALIZED=$(validate_and_normalize_with_fallback "$MODULE_PATH")
-  create_module_dirs "$NORMALIZED"
+  normalized=$(validate_and_normalize_with_fallback "${OPTIONS[module_path]}") || exit 1
+  create_module_dirs "$normalized" "${OPTIONS[force]}" || exit 1
 
   # The module's own module.md is the source of truth when no scope is given explicitly
-  if [[ -z "$TEST_SCOPE" ]]; then
-    TEST_SCOPE=$(read_declared_scope "$NORMALIZED")
+  scope="${OPTIONS[test_scope]}"
+  if [[ -z "$scope" ]]; then
+    scope=$(read_declared_scope "$normalized")
   fi
 
-  RESOLVED_SCOPE=$(resolve_test_scope "$NORMALIZED" "$TEST_SCOPE") || exit 1
-  create_module_meta "$NORMALIZED" "$RESOLVED_SCOPE"
-  update_session "$NORMALIZED" "$RESOLVED_SCOPE"
+  scope=$(resolve_test_scope "$normalized" "$scope") || exit 1
+  create_module_meta "$normalized" "$scope"
+  update_session "$normalized" "$scope"
+}
+
+# ============================================================================
+# Main Execution
+# ============================================================================
+
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  main "$@"
 fi
