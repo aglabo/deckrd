@@ -67,7 +67,7 @@ When the user provides only `<module>` (no `/` separator), YOU (the AI) MUST inf
 1. List existing modules: `ls docs/.deckrd/` → collect all `<namespace>/` directories
 2. Read `project.json` → check `namespace` field if present
 3. Apply semantic matching rules (see table below)
-4. **Confirm with user** — present the inferred path and ask for approval before executing
+4. Confirm with user — present the inferred path and ask for approval before executing
 
 ### Semantic matching rules
 
@@ -118,10 +118,13 @@ AI runs: bash module.sh auth/user-login
    ├── implementation/
    ├── tasks/
    └── workspaces/
+       └── module/
+           └── module.md   # test_scope / owns declaration
    ```
 
    - Without `--force`: exits with error if directory already exists
-   - With `--force`: recreates directories (existing files are preserved)
+   - With `--force`: recreates directories (existing files are preserved; an existing `module.md` keeps its `test_scope`)
+   - A legacy `<module>/module.md` directly under the module directory is not read; move it to `workspaces/module/module.md`
 
 5. Update `.local/deckrd/session.json`:
    - Set `active` to normalized module path

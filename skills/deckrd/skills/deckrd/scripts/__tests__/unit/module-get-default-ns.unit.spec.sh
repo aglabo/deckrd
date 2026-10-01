@@ -35,6 +35,7 @@ Describe "T-CLI-GDN: module.sh: _get_default_ns"
     . "$SCRIPT"
   }
   Before "load_script_with_mocks"
+  Before "init_vars"
 
   # --------------------------------------------------------------------------
   # Given: .project.json exists with valid project name

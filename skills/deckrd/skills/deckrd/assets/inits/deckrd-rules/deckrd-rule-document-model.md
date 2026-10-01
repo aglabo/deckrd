@@ -1,7 +1,7 @@
 ---
 title: "Deckrd Rule: ドキュメントモデル"
 description: "設計チェーン・ID 採番・ドキュメント命名・ディレクトリ配置を定める統一モデル"
-version: 1.4.0
+version: 1.5.0
 ---
 
 <!-- textlint-disable
@@ -93,7 +93,7 @@ grep -rl "REQ-<new-namespace>-" --include=*.md docs/.deckrd/
 
 ここで定めるのはドキュメントの ID に限る。テストコードのケースに割り当てる
 テストケース ID の第 1 セグメント (`test_scope`) は、本ルールの名前空間ではなく
-モジュール直下の `module.md` が宣言する
+モジュールの `workspaces/module/module.md` が宣言する
 （[Testing Guidelines](deckrd-rule-testing-guidelines.md) 参照）。
 
 ### 重複検出
@@ -134,21 +134,27 @@ Deckrd の成果物は、初期化されたドキュメントルート `docs/.de
 docs/.deckrd/
   <namespace>/
     <module>/
-      module.md
       requirements/
       specifications/
       implementation/
       tasks/
       workspaces/
+        module/
+          module.md
       decision-records.md
 ```
 
 セッション状態はドキュメントルート配下ではなく `.local/deckrd/session.json` にある
 （[Workflow](deckrd-rule-workflow.md) 参照）。
 
-`module.md` はモジュールのメタデータを持つ。テストケース ID のスコープ宣言
-(`test_scope` / `owns`) はここに置く
+`workspaces/module/module.md` はモジュールのメタデータを持つ。テストケース ID の
+スコープ宣言 (`test_scope` / `owns`) はここに置く
 （[Testing Guidelines](deckrd-rule-testing-guidelines.md) 参照）。
+`/deckrd module` が生成し、テスト ID 検査が読む。`workspaces/` 配下にあっても
+作業用ファイルではないので、削除・移動してはならない。
+
+旧配置（モジュールディレクトリ直下の `module.md`）は読まれない。旧配置のまま残っている
+場合は `workspaces/module/module.md` へ移す。
 
 `workspaces/` はそのモジュールに関する作業用ファイルを置く場所とする。チェックリスト・
 作業メモ・下書き・調査結果・設計メモはここに入れる。`requirements/` などと同列の
@@ -164,8 +170,9 @@ docs/.deckrd/
 
 | 場所                                                         | 置いてよいもの                                                                           |
 | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
-| モジュールディレクトリ直下                                   | `module.md`、`decision-records.md`、および上のツリーが示す 5 つのディレクトリ            |
+| モジュールディレクトリ直下                                   | `decision-records.md`、および上のツリーが示す 5 つのディレクトリ                         |
 | `requirements/` `specifications/` `tasks/` `implementation/` | [2. 種別の定義](#2-種別の定義) が定めるファイル名、集約ファイル、分割時の index ファイル |
+| `workspaces/module/`                                         | `module.md`（作業用ファイルを置かない）                                                  |
 
 規定のファイルだけが並んでいれば、一覧を見たときに消してよいものと消してはならないものが
 区別できる。作業用ファイルが混ざると、正規のドキュメントごと誤って削除・編集する危険がある。
@@ -176,11 +183,11 @@ docs/.deckrd/
 
 ```text
 docs/.deckrd/chatlog/normalize/
-  module.md
   requirements/requirements.md
   specifications/specifications.md
   implementation/implementation.md
   tasks/tasks.md
+  workspaces/module/module.md
   workspaces/rename-lib-sh-checklist.md
   decision-records.md
 ```

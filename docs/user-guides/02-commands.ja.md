@@ -252,7 +252,10 @@ docs/.deckrd/<ns>/<mod>/  (ディレクトリ作成)
 │  ├── requirements/                          │
 │  ├── specifications/                        │
 │  ├── implementation/                        │
-│  └── tasks/                                 │
+│  ├── tasks/                                 │
+│  └── workspaces/                            │
+│      └── module/                            │
+│          └── module.md                      │
 │                                             │
 │  session.json (active モジュール更新)         │
 └─────────────────────────────────────────────┘
@@ -295,6 +298,22 @@ bash module.sh auth/user-login
 | 使用可能文字   | `a-z`、ハイフン `-`、アンダースコア `_`    |
 | 大文字・小文字 | 小文字のみ（大文字は拒否）                 |
 | フォーマット   | `namespace/module` 形式（`/` が 1 つ必須） |
+
+### module.md の配置と移行
+
+モジュールのメタデータ `module.md`（`test_scope` / `owns` の宣言）は
+`docs/.deckrd/<namespace>/<module>/workspaces/module/module.md` に生成されます。
+`--force` で再初期化しても、既存の `module.md` は上書きされず `test_scope` が保持されます。
+
+旧バージョンはモジュールディレクトリ直下に `module.md` を生成していました。旧配置は
+読まれないため、`/deckrd module` のスコープ衝突検出と `check:test-ids` から見えなくなります。
+自動移行はないので、モジュールごとに手動で移してください。
+
+```bash
+mod=docs/.deckrd/<namespace>/<module>
+mkdir -p "$mod/workspaces/module"
+git mv "$mod/module.md" "$mod/workspaces/module/module.md"
+```
 
 ---
 

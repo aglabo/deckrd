@@ -42,8 +42,10 @@ owns:
 | `IWH`  | `is_windows_host`                           |
 | `LCI`  | `locate_case_id()`                          |
 | `LCR`  | `load_spec_records()`                       |
+| `LMF`  | `list_module_files`                         |
 | `LOO`  | `load_owners_of()`                          |
 | `MN`   | `main` (run-check-test-ids.sh)              |
+| `MRO`  | `module_ref_of`                             |
 | `MRS`  | `main` (exec/shellspec-exec.sh)             |
 | `MSL`  | `main` (run-shellspec.sh)                   |
 | `NP`   | `normalize_path`                            |
