@@ -58,13 +58,13 @@ title: TROUBLESHOOTING - フロー逸脱時の対応ガイド
 
 #### 症状
 
-- `.session.json` の `active` フィールドが未設定
+- `.local/deckrd/session.json` の `active` フィールドが未設定
 - タスク ID が不明確
 - テストケース一覧が取得できない
 
 #### 原因
 
-- `docs/.deckrd/.session.json` ファイルが存在しない
+- `.local/deckrd/session.json` ファイルが存在しない
 - Session JSON のフォーマットエラー
 - アクティブセッション情報が古い
 
@@ -74,10 +74,10 @@ title: TROUBLESHOOTING - フロー逸脱時の対応ガイド
 
    ```bash
    # ファイル存在確認
-   ls -la docs/.deckrd/.session.json
+   ls -la .local/deckrd/session.json
 
    # 内容確認
-   cat docs/.deckrd/.session.json | jq .
+   cat .local/deckrd/session.json | jq .
    ```
 
 2. **Session JSON が存在しない場合**
@@ -92,7 +92,7 @@ title: TROUBLESHOOTING - フロー逸脱時の対応ガイド
 
 3. Session JSON が存在するが形式が不正な場合
    - ファイルを削除して再初期化
-   - JSON バリデーター使用: `jq . docs/.deckrd/.session.json`
+   - JSON バリデーター使用: `jq . .local/deckrd/session.json`
 
 4. アクティブタスク情報が古い場合
    - セッション情報を最新化: `deckrd session refresh`
