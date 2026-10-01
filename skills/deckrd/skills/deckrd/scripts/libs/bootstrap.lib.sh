@@ -6,7 +6,7 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 #
-# @version 0.4.0
+# @version 0.5.0
 # USAGE: source this file, then call bootstrap_finalize to lock variables.
 #   . "$(dirname "${BASH_SOURCE[0]}")/bootstrap.lib.sh"
 #   bootstrap_finalize
@@ -31,52 +31,58 @@ _resolve_project_root() {
     return 0
   fi
   git rev-parse --show-toplevel 2>/dev/null ||
-    (cd "$(dirname "${BASH_SOURCE[0]}")/../../../../../.." && pwd)
+    (CDPATH='' cd -- "$(dirname "${BASH_SOURCE[0]}")/../../../../../.." && pwd)
 }
 
-# _resolve_deckrd_root - Resolve DECKRD_ROOT relative to this file's location
+# _resolve_deckrd_root - Resolve the deckrd skill root relative to this file's location
 #
 # Always resolves to the deckrd skill root, regardless of the caller's path.
 # Resolution is relative to BASH_SOURCE[0] (this file), independent of PROJECT_ROOT.
 #
 # BASH_SOURCE[0] path: .../skills/deckrd/skills/deckrd/scripts/libs/bootstrap.lib.sh
 # dirname -> .../skills/deckrd/skills/deckrd/scripts/libs/
-# ../..   -> .../skills/deckrd/skills/deckrd/ (= DECKRD_ROOT)
+# ../..   -> .../skills/deckrd/skills/deckrd/ (= SKILL_ROOT)
 #
-# @stdout Resolved DECKRD_ROOT path
+# @stdout Resolved skill root path (used for SKILL_ROOT and DECKRD_ROOT)
 # @return 0 always
 _resolve_deckrd_root() {
   local _skills_dir
-  _skills_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+  # CDPATH is cleared so cd prints nothing into the captured path
+  _skills_dir="$(CDPATH='' cd -- "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
   printf '%s' "${_skills_dir}"
 }
 
 # bootstrap_init - Set all runtime variables (no readonly yet)
 #
-# Sets: PROJECT_ROOT, DECKRD_ROOT, DECKRD_SCRIPTS_DIR, DECKRD_ASSETS_DIR,
-#       DECKRD_LIB_DIR, DECKRD_DATA_DIR, DECKRD_LOCAL_DATA,
+# Sets: PROJECT_ROOT, SKILL_ROOT, DECKRD_ROOT, DECKRD_SCRIPTS_DIR,
+#       DECKRD_ASSETS_DIR, DECKRD_LIB_DIR, DECKRD_DATA_DIR, DECKRD_LOCAL_DATA,
 #       DECKRD_LOCAL_WORKSPACES, DECKRD_LOCAL_TEMP, DECKRD_DOCS_DIR, SYMBOL
 # All variables respect pre-existing values (env var > computed default).
 # Does NOT call readonly; call bootstrap_finalize() after to lock variables.
 #
-# @arg $1 string caller_path  Path of the script that sourced bootstrap.lib.sh.
-#                             Captured at the call site (top-level BASH_SOURCE[1])
-#                             and passed explicitly so tests can inject any path.
 # @return 0 always
 bootstrap_init() {
-  local _caller_path="${1:-}"
   # PROJECT_ROOT: env var > git > BASH_SOURCE fallback
   if [[ -z "${PROJECT_ROOT:-}" ]]; then
     PROJECT_ROOT="$(_resolve_project_root)"
   fi
   export PROJECT_ROOT
 
-  # DECKRD_ROOT: root of the plugin skill - detected from caller path
-  # _caller_path was captured at the top-level call site (BASH_SOURCE[1] there
-  # correctly points to the script that sourced bootstrap.lib.sh).
+  # SKILL_ROOT: root of the deckrd skill - env var > computed
+  # Computed from BASH_SOURCE of this file (independent of PROJECT_ROOT and the
+  # caller path); relies on the layout <SKILL_ROOT>/scripts/libs/*.lib.sh.
+  # Resolved before DECKRD_ROOT.
+  if [[ -z "${SKILL_ROOT:-}" ]]; then
+    SKILL_ROOT="$(_resolve_deckrd_root)"
+  fi
+  export SKILL_ROOT
+
+  # DECKRD_ROOT: root of the deckrd skill - env var > SKILL_ROOT
+  # Kept for compatibility: when unset (or empty) it takes the same value as
+  # SKILL_ROOT, so a pre-set SKILL_ROOT flows into all DECKRD_* directories.
   if [[ -z "${DECKRD_ROOT:-}" ]]; then
-    DECKRD_ROOT="$(_resolve_deckrd_root "${_caller_path}")"
+    DECKRD_ROOT="${SKILL_ROOT}"
   fi
   export DECKRD_ROOT
 
@@ -133,6 +139,7 @@ bootstrap_init() {
 # @return 0 always
 bootstrap_finalize() {
   readonly PROJECT_ROOT
+  readonly SKILL_ROOT
   readonly DECKRD_ROOT
   readonly DECKRD_SCRIPTS_DIR
   readonly DECKRD_ASSETS_DIR
@@ -151,12 +158,7 @@ bootstrap_finalize() {
 # Pass "no-finalize" as an argument to skip finalize:
 #   . bootstrap.lib.sh no-finalize   # init only - variables remain writable
 #   . bootstrap.lib.sh               # init + finalize - variables locked
-#
-# BASH_SOURCE[1] is captured here at the top level of bootstrap.lib.sh, where
-# it correctly points to the script that sourced this file.
-_bootstrap_caller="${BASH_SOURCE[1]:-}"
-bootstrap_init "${_bootstrap_caller}"
+bootstrap_init
 if [[ "${1:-}" != "--no-finalize" ]]; then
   bootstrap_finalize
 fi
-unset _bootstrap_caller
