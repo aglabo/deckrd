@@ -379,4 +379,131 @@ Describe "T-LIB-ASDF: asset-diff.lib.sh"
       End
     End
   End
+
+  Describe "workspaces_rule_missing"
+    # Test data: gitignore contents passed as the argument (the function reads no file)
+    _GITIGNORE_NO_RULE=$'*\n!README*\n!.gitignore'
+    _GITIGNORE_NO_RULE_CRLF=$'*\r\n!README*\r\n!.gitignore\r\n'
+    _GITIGNORE_NEAR_MISS=$'!/workspaces/**\n# !/workspaces/\n !/workspaces/'
+    _GITIGNORE_RULE=$'*\n!/workspaces/'
+    _GITIGNORE_RULE_CRLF=$'*\r\n!/workspaces/\r\n'
+
+    Describe "Given: !/workspaces/ 行を持たない gitignore の内容"
+      Describe "When: 正常系"
+        It "Then: [Normal] T-LIB-ASDF-25: LF の内容は rule 欠落と判定し status 0 で終わる"
+          When call workspaces_rule_missing "$_GITIGNORE_NO_RULE"
+          The status should equal 0
+        End
+
+        It "Then: [Normal] T-LIB-ASDF-31: CRLF の内容も rule 欠落と判定し status 0 で終わる"
+          When call workspaces_rule_missing "$_GITIGNORE_NO_RULE_CRLF"
+          The status should equal 0
+        End
+      End
+    End
+
+    Describe "Given: !/workspaces/ に似ているが完全一致しない行だけを持つ内容"
+      Describe "When: 異常系"
+        It "Then: [Error] T-LIB-ASDF-34: 部分一致・コメント・先頭空白の行は rule とみなさず status 0 で終わる"
+          When call workspaces_rule_missing "$_GITIGNORE_NEAR_MISS"
+          The status should equal 0
+        End
+      End
+    End
+
+    Describe "Given: !/workspaces/ 行を持つ内容、または空の内容"
+      Describe "When: エッジケース"
+        It "Then: [Edge] T-LIB-ASDF-26: LF の rule 行があれば rule ありと判定し status 1 で終わる"
+          When call workspaces_rule_missing "$_GITIGNORE_RULE"
+          The status should equal 1
+        End
+
+        It "Then: [Edge] T-LIB-ASDF-30: 行末の CR を無視して rule ありと判定し、何も出力せず status 1 で終わる"
+          When call workspaces_rule_missing "$_GITIGNORE_RULE_CRLF"
+          The status should equal 1
+          The output should equal ""
+          The stderr should equal ""
+        End
+
+        It "Then: [Edge] T-LIB-ASDF-27: 空の内容は rule 欠落と判定し status 0 で終わる"
+          When call workspaces_rule_missing ""
+          The status should equal 0
+        End
+      End
+    End
+  End
+
+  Describe "workspaces_rule_block"
+    # Test data: template contents passed as the argument (the function reads no file)
+    _TEMPLATE_TWO_SECTIONS=$'*
+## ---- ##
+##  Unrelated section ##
+## ---- ##
+!README*
+## ---- ##
+##  Shared notes layer: track workspaces/ only ##
+## ---- ##
+!/workspaces/
+!/workspaces/**'
+    _BLOCK_OF_TWO_SECTIONS=$'## ---- ##
+##  Shared notes layer: track workspaces/ only ##
+## ---- ##
+!/workspaces/
+!/workspaces/**'
+    _TEMPLATE_MARKERLESS=$'*
+!README*'
+    _TEMPLATE_MARKER_NO_BANNER=$'*
+##  Shared notes layer: track workspaces/ only ##'
+
+    # Helper: print a template file from the line just above its first marker line through EOF
+    # Computed with grep/tail from the file, independently of the awk in workspaces_rule_block
+    _expected_rule_block() {
+      local marker_line
+      marker_line="$(grep -n -m 1 -F 'Shared notes layer' "$1" | cut -d: -f1)"
+      tail -n "+$((marker_line - 1))" "$1"
+    }
+
+    Describe "Given: marker 行と直上の banner 行を持つテンプレートの内容"
+      TEMPLATE="${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/skills/deckrd/assets/inits/local-deckrd/.gitignore.org"
+      read_bundled_template() {
+        TEMPLATE_CONTENT="$(cat -- "$TEMPLATE")"
+      }
+      Before "read_bundled_template"
+
+      Describe "When: 正常系"
+        It "Then: [Normal] T-LIB-ASDF-28: 同梱テンプレートの内容から marker 直上の banner 行から末尾までと完全に一致する block を出力する"
+          When call workspaces_rule_block "$TEMPLATE_CONTENT"
+          The status should equal 0
+          The output should equal "$(_expected_rule_block "$TEMPLATE")"
+        End
+
+        It "Then: [Normal] T-LIB-ASDF-33: 前の無関係なセクションを含めず marker 直上の banner 行から末尾までを出力する"
+          When call workspaces_rule_block "$_TEMPLATE_TWO_SECTIONS"
+          The status should equal 0
+          The output should equal "$_BLOCK_OF_TWO_SECTIONS"
+          The output should not include "Unrelated section"
+        End
+      End
+    End
+
+    Describe "Given: marker 行を持たないテンプレートの内容"
+      Describe "When: 異常系"
+        It "Then: [Error] T-LIB-ASDF-29: 何も出力せず status 1 で終わる"
+          When call workspaces_rule_block "$_TEMPLATE_MARKERLESS"
+          The status should equal 1
+          The output should equal ""
+        End
+      End
+    End
+
+    Describe "Given: marker 行はあるが、その上に banner 行がないテンプレートの内容"
+      Describe "When: エッジケース"
+        It "Then: [Edge] T-LIB-ASDF-35: block の開始位置がないため何も出力せず status 1 で終わる"
+          When call workspaces_rule_block "$_TEMPLATE_MARKER_NO_BANNER"
+          The status should equal 1
+          The output should equal ""
+        End
+      End
+    End
+  End
 End
