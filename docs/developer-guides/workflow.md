@@ -50,7 +50,7 @@ See [Deckrd Commands Reference](./deckrd-commands.md) for detailed command docum
 # Start a new deckrd module
 /deckrd init
 
-# Creates session file: docs/.deckrd/.session.json
+# Creates session file: .local/deckrd/session.json
 # Tracks: module name, active phase, completion status
 ```
 
@@ -105,7 +105,7 @@ See [Deckrd Commands Reference](./deckrd-commands.md) for detailed command docum
 
 ### Session Management
 
-**Session file**: `docs/.deckrd/.session.json`
+**Session file**: `.local/deckrd/session.json`
 
 ```json
 {
@@ -324,15 +324,17 @@ For complex features:
 ### deckrd Documents
 
 ```text
-docs/
-├── .deckrd/
-│   └── .session.json          # Active session state
-└── {module-name}/
-    ├── requirements.md        # Requirements document
-    ├── design-review.md       # Design review
-    ├── specifications.md      # Technical specifications
-    ├── implementation.md      # Implementation guide
-    └── tasks.md               # Actionable tasks
+.local/deckrd/
+└── session.json               # Active session state
+
+docs/.deckrd/
+└── {namespace}/{module}/
+    ├── requirements/requirements.md       # Requirements document
+    ├── decision-records.md                # Decision records
+    ├── specifications/specifications.md   # Technical specifications
+    ├── implementation/implementation.md   # Implementation guide
+    ├── tasks/tasks.md                     # Actionable tasks
+    └── workspaces/                        # Module working files
 ```
 
 ### IDD Framework Files
@@ -431,7 +433,7 @@ pnpm run test:sh
 
 ```bash
 # Check session file
-cat docs/.deckrd/.session.json
+cat .local/deckrd/session.json
 
 # Reinitialize if needed
 /deckrd init

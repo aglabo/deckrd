@@ -661,15 +661,22 @@ docs/.deckrd/<ns>/<mod>/decision-records.md (追記形式)
 workspaces ディレクトリ導入前に `init` したプロジェクトでは、この README がありません。
 `update` は `[local-workspaces] README.md (missing)` と表示し、`--update` でディレクトリを作って README をコピーします。
 
+`.local/deckrd/.gitignore` は利用者が編集する前提のため、`update` は上書きしません。
+ただし古い版で `init` したプロジェクトでは、`workspaces/` を git 追跡する許可ルール（`!/workspaces/`）がありません。
+`update` はこれを `[local-deckrd] .gitignore (workspaces rule)` と表示し、
+`--update` でテンプレートの workspaces ルールを末尾に追記します。既存の行はそのまま残ります。
+
 ### 表示例
 
 ```text
 $ /deckrd update
 [deckrd-rules] deckrd-rule-workflow.md
+[local-deckrd] .gitignore (workspaces rule)
 [local-workspaces] README.md (missing)
 
 $ /deckrd update --update
 Updated: [deckrd-rules] deckrd-rule-workflow.md
+Updated: [local-deckrd] .gitignore (workspaces rule)
 Updated: [local-workspaces] README.md (missing)
 
 $ /deckrd update

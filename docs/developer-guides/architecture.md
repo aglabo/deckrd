@@ -163,7 +163,7 @@ User Request
     ↓
 /deckrd init
     ↓
-Session State (.session.json)
+Session State (.local/deckrd/session.json)
     ↓
 /deckrd req → requirements.md
     ↓
@@ -238,7 +238,7 @@ See [MCP Servers Reference](../specs/mcp-servers.md) for detailed information ab
 
 ### Session State (deckrd)
 
-**Location**: `docs/.deckrd/.session.json`
+**Location**: `.local/deckrd/session.json`
 
 **Purpose**: Track document workflow progress
 

@@ -1,7 +1,7 @@
 ---
 title: "Deckrd Rule: ワークフロー"
 description: "コマンド順序ゲート、BDD ファースト原則、ブランチ・コミット規約"
-version: 2.1.0
+version: 2.1.1
 ---
 
 <!-- textlint-disable
@@ -20,7 +20,8 @@ init → module → req → [dr] → spec → impl → tasks
 ```
 
 - `init <project> <type>` — プロジェクトを 1 度だけ初期化する。`.project.json` とセッションを作る
-- `module <ns>/<mod>` — モジュールディレクトリを作り、アクティブにする。機能ごとに実行する
+- `module <ns>/<mod>` — モジュールディレクトリを作り、アクティブにする。機能ごとに実行する。
+  `module <mod>` と書くと、名前空間は `.project.json` の `project` を使う
 - `req` → `spec` → `impl` → `tasks` — ドキュメントを順に導出する
 
 ### セッション

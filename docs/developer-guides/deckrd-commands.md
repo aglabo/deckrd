@@ -42,7 +42,7 @@ Deckrd provides a document-driven workflow that transforms goals and ideas into 
 
 ## Session Management
 
-**Session File**: `docs/.deckrd/.session.json`
+**Session File**: `.local/deckrd/session.json`
 
 The session file tracks:
 
@@ -55,22 +55,45 @@ The session file tracks:
 
 ### /deckrd init
 
-**Usage**: `/deckrd init <namespace>/<module>`
+**Usage**: `/deckrd init <project> <project-type>`
 
-**Purpose**: Initialize a new module directory and session
+**Purpose**: Bootstrap the project once. Writes `.local/deckrd/.project.json`, initializes the session,
+and deploys bundled rules and templates
+
+**Re-running**: Deployed assets that already exist are kept (use `/deckrd update` to refresh them).
+`.local/deckrd/.project.json` is rewritten on every run: `project`, `project_type`, `language`,
+and `ai_model` take the new values; only `created_at` is kept
+
+**Example**:
+
+```bash
+/deckrd init myproject shell
+```
+
+### /deckrd module
+
+**Usage**: `/deckrd module <namespace>/<module>` or `/deckrd module <module>`
+
+**Purpose**: Create a module directory and set it as the active module
+
+**Prerequisites**: Project must be initialized with `/deckrd init`
+
+**Namespace resolution** (`<module>` form): the `project` field of `.local/deckrd/.project.json`,
+falling back to the git repository root directory name
 
 **Output**: Creates `docs/.deckrd/<namespace>/<module>/` directory structure
 
 **Example**:
 
 ```bash
-/deckrd init myProject/authentication
+/deckrd module myproject/authentication
+/deckrd module authentication   # same, when project = myproject
 ```
 
 Creates:
 
 ```bash
-docs/.deckrd/myProject/authentication/
+docs/.deckrd/myproject/authentication/
 ├── requirements/
 ├── specifications/
 ├── implementation/
@@ -86,7 +109,7 @@ docs/.deckrd/myProject/authentication/
 
 **Purpose**: Derive requirements from goals and ideas
 
-**Prerequisites**: Module must be initialized with `/deckrd init`
+**Prerequisites**: Module must be created with `/deckrd module`
 
 **Output**: `requirements/requirements.md`
 
@@ -157,7 +180,7 @@ docs/.deckrd/myProject/authentication/
 **Example Output**:
 
 ```bash
-Module: myProject/authentication
+Module: myproject/authentication
 Status:
   ✓ Requirements
   ✓ Specifications
@@ -178,12 +201,41 @@ Status:
 /deckrd review spec
 ```
 
+### /deckrd rev
+
+**Usage**: `/deckrd rev [--from code] [--to req|spec|impl|tasks]`
+
+**Purpose**: Reverse-engineer existing code into deckrd documents for the active module
+
+**Prerequisites**: `init` and `module` completed
+
+### /deckrd update
+
+**Usage**: `/deckrd update [--update]`
+
+**Purpose**: Detect deployed assets (rules, rule index, templates) that are older than the plugin's
+bundled source. With `--update`, overwrite them and report each updated file.
+Without `--update`, no file is modified
+
+**Notes**:
+
+- Only already-deployed files are compared. A deployed file newer than its source is treated
+  as user-edited and is never overwritten
+- `.local/deckrd/.gitignore` is not overwritten. When it lacks the workspaces rule
+  (`!/workspaces/`), `update` reports `[local-deckrd] .gitignore (workspaces rule)` and
+  `--update` appends the rule block, keeping existing lines
+
+Details: [update.md](../../skills/deckrd/skills/deckrd/references/commands/update.md)
+
 ## Workflow Details
 
 ### Complete Workflow
 
 ```bash
-1. /deckrd init <namespace>/<module>
+0. /deckrd init <project> <project-type>
+   → Creates .local/deckrd/.project.json and session
+
+1. /deckrd module <namespace>/<module>
    → Creates docs/.deckrd/<namespace>/<module>/
 
 2. /deckrd req

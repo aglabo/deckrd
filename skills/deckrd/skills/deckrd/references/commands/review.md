@@ -237,7 +237,7 @@ Why this option was chosen
 
 ## Preconditions (STRICT)
 
-- Session must exist at `docs/.deckrd/.session.json`
+- Session must exist at `.local/deckrd/session.json`
 - `session.active` must be set
 - Target document must exist
 - For `@path` syntax: `--phase` must be specified
@@ -309,10 +309,10 @@ Each review phase uses a dedicated template:
 Deckrd commands rely on an AI interaction engine to derive documents
 from user input and interaction logs.
 
-Execute: [generate-doc.sh](../../scripts/generate-doc.sh)
+Execute: [generate-doc.sh](../../scripts/subcommands/generate-doc.sh)
 
 For review mode:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh @review-<phase> @<document> [--lang <lang>] [--output <file>]
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/subcommands/generate-doc.sh @review-<phase> @<document> [--lang <lang>] [--output <file>]
 ```

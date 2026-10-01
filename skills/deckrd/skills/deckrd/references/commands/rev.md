@@ -64,10 +64,11 @@ Phase 3: Review Loop
 
 Delegate deep codebase extraction to explore-agent:
 
-1. Read `docs/.deckrd/.session.json` to confirm active module
+1. Read `.local/deckrd/session.json` to confirm active module
 2. Spawn **explore-agent** with:
    - `scope`: `codebase-extraction`
    - `directory`: project root
+   - `module`: active module (`active` in `.local/deckrd/session.json`)
    - `focus`: module name + target document type (e.g., `requirements`, `specifications`)
    - Agent definition: [`plugins/deckrd/agents/explore-agent.md`](../../../../agents/explore-agent.md)
 3. The agent writes findings to `.local/deckrd/temp/deckrd-work/codebase-extraction.md`
@@ -128,7 +129,7 @@ Execute based on `--to` value:
 **`--to req`**:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh rev \
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/subcommands/generate-doc.sh rev \
   --mode req \
   --output "requirements/requirements.md"
 ```
@@ -136,7 +137,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh rev \
 **`--to spec`**:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh rev \
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/subcommands/generate-doc.sh rev \
   --mode spec \
   --output "specifications/specifications.md"
 ```
@@ -144,7 +145,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh rev \
 **`--to impl`**:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh rev \
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/subcommands/generate-doc.sh rev \
   --mode impl \
   --output "implementation/implementation.md"
 ```
@@ -152,7 +153,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh rev \
 **`--to tasks`**:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-doc.sh rev \
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/subcommands/generate-doc.sh rev \
   --mode tasks \
   --output "tasks/tasks.md"
 ```
@@ -233,7 +234,7 @@ deckrd/assets/
 
 ## Session Update
 
-After Phase 3 approval, update `.session.json` to mark the target step as completed:
+After Phase 3 approval, update `.local/deckrd/session.json` to mark the target step as completed:
 
 **`--to req`**:
 

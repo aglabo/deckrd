@@ -68,7 +68,7 @@ Once enabled, initialize a new project and module:
 
 ```bash
 /deckrd init <project> <project-type>
-/deckrd module <namespace>/<module>
+/deckrd module <namespace>/<module>   # or: /deckrd module <module>
 ```
 
 Then work through the stepwise workflow:
@@ -82,31 +82,33 @@ Each step derives the next document from the previous one.
 
 ## Commands
 
-| Command                 | Description                              |
-| ----------------------- | ---------------------------------------- |
-| `init <project> <type>` | Initialize project (run once)            |
-| `module <ns>/<mod>`     | Create module and set as active          |
-| `req`                   | Derive requirements document             |
-| `dr`                    | Add decision record (optional)           |
-| `spec`                  | Derive specifications from requirements  |
-| `impl`                  | Derive implementation plan from specs    |
-| `tasks`                 | Generate executable tasks from impl plan |
-| `tasks update`          | Regenerate implementation-checklist.md   |
-| `status`                | Show current workflow progress           |
-| `review <doc>`          | Review document quality                  |
-| `rev`                   | Reverse-engineer existing code into docs |
+| Command                 | Description                               |
+| ----------------------- | ----------------------------------------- |
+| `init <project> <type>` | Initialize project (run once)             |
+| `module <ns>/<mod>`     | Create module and set as active           |
+| `module <mod>`          | Same; namespace defaults to the project   |
+| `req`                   | Derive requirements document              |
+| `dr`                    | Add decision record (optional)            |
+| `spec`                  | Derive specifications from requirements   |
+| `impl`                  | Derive implementation plan from specs     |
+| `tasks`                 | Generate executable tasks from impl plan  |
+| `tasks update`          | Regenerate implementation-checklist.md    |
+| `status`                | Show current workflow progress            |
+| `update [--update]`     | Detect / refresh outdated deployed assets |
+| `review <doc>`          | Review document quality                   |
+| `rev`                   | Reverse-engineer existing code into docs  |
 
 ## Where documents are stored
 
 deckrd stores workflow state and generated documents separately:
 
-- Session state: `docs/.deckrd/.session.json`
+- Session state: `.local/deckrd/session.json`
 - Generated documents: `docs/.deckrd/<namespace>/<module>/`
   - `requirements/` — requirement documents
   - `specifications/` — specification documents
   - `implementation/` — implementation plan
   - `tasks/` — executable task documents
-  - `workspaces/` — working files for the module (checklists, notes, drafts)
+  - `workspaces/` — notes and drafts to keep for the module (regenerable files such as checklists go to `.local/deckrd/temp/`)
 
 You can browse the derived requirements, specifications, and tasks at any time using your editor or file explorer.
 

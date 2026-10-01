@@ -209,7 +209,7 @@ validate_and_normalize() {
 
 ##
 # @description Resolve default namespace for module path fallback
-# @description Priority: .project.json project field > git remote origin repo name
+# @description Priority: .project.json project field > git repository root directory name
 # @stdout Namespace string (lowercase)
 # @stderr Error message if neither source is available
 # @return 0 on success, 1 on error
@@ -254,7 +254,7 @@ validate_and_normalize_with_fallback() {
     # <namespace>/<module> form: delegate to existing validator
     validate_and_normalize "$raw"
   else
-    # <module> form: auto-resolve namespace from project name or git remote
+    # <module> form: auto-resolve namespace from project name or git root directory name
     local namespace
     namespace=$(_get_default_ns) || return 1
     validate_and_normalize "${namespace}/${raw}"
