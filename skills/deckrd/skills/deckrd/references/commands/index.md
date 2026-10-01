@@ -13,9 +13,10 @@ description: Reference table of all deckrd commands
 | ------------------------------- | ------------------------------------------------------------------------------- |
 | `init <project> <project-type>` | Bootstrap project, write project.json, init session                             |
 | `module <ns>/<mod>`             | Create module directories, set active module                                    |
+| `module <mod>`                  | Short form; namespace from `.project.json` `project` (fallback: git root name)  |
 | `module <ns>/<mod> --force`     | Re-initialize module (existing files preserved)                                 |
 | `module create <ns>/<mod>`      | Create module dirs and update session, set active                               |
-| `module create <mod>`           | Same; subdomain auto-resolved from git remote name                              |
+| `module create <mod>`           | Same; namespace auto-resolved (`.project.json` `project` → git root dir name)   |
 | `req`                           | Derive requirements from goals                                                  |
 | `dr`                            | Manage Decision Records (any step)                                              |
 | `dr --add`                      | Append a new Decision Record                                                    |

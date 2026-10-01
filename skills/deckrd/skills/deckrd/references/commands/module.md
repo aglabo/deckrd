@@ -21,7 +21,7 @@ Initialize a DECKRD module directory structure and set it as the active module.
 | Subcommand | Description                                                                |
 | ---------- | -------------------------------------------------------------------------- |
 | (none)     | Create module dirs and update session (namespace auto-resolved if omitted) |
-| `create`   | Create module dirs and update session (subdomain auto-resolved if omitted) |
+| `create`   | Create module dirs and update session (namespace auto-resolved if omitted) |
 
 ## Arguments
 
@@ -107,8 +107,9 @@ AI runs: bash module.sh auth/user-login
 
 1. If `<module>` only: AI infers namespace (see AI Pre-resolution above), confirms with user
 2. Validate module path:
-   - `<subdomain>/<module>` form: validate both parts
-   - `<module>` form: auto-resolve subdomain from `git remote get-url origin`
+   - `<namespace>/<module>` form: validate both parts
+   - `<module>` form: auto-resolve namespace from `.local/deckrd/.project.json` (`project`).
+     If unavailable, use the git repository root directory name.
 3. Normalize to lowercase
 4. Create module directory structure under `docs/.deckrd/`:
 
@@ -154,12 +155,12 @@ AI runs: bash module.sh auth/user-login
 
 <!-- markdownlint-disable line-length -->
 
-| Error                                         | Cause                            | Solution                                   |
-| --------------------------------------------- | -------------------------------- | ------------------------------------------ |
-| `namespace '...' contains invalid characters` | Invalid chars in namespace       | Use only `a-z`, hyphen `-`, underscore `_` |
-| `Module directory already exists`             | Directory exists, no `--force`   | Add `--force` to re-initialize             |
-| `Cannot get git remote origin URL`            | No git remote origin configured  | Run inside a git repo with `origin`        |
-| `Cannot extract repository name`              | Remote URL has no parseable name | Set a valid `git remote origin` URL        |
+| Error                                         | Cause                                    | Solution                                   |
+| --------------------------------------------- | ---------------------------------------- | ------------------------------------------ |
+| `namespace '...' contains invalid characters` | Invalid chars in namespace               | Use only `a-z`, hyphen `-`, underscore `_` |
+| `Module directory already exists`             | Directory exists, no `--force`           | Add `--force` to re-initialize             |
+| `Cannot resolve default namespace`            | No `.project.json` and not in a git repo | Run `init`, or pass `<namespace>/<module>` |
+| `Cannot extract repository name`              | Git root directory name is empty         | Pass `<namespace>/<module>` explicitly     |
 
 <!-- markdownlint-enable -->
 
