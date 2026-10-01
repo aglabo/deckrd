@@ -28,6 +28,7 @@ deckrd プラグインのコマンドエントリポイント。init / module / 
 | `SHPO`  | `path_outside_repo` (spec_helper.sh)                    |
 | `SHTD`  | `setup_deckrd_tmpdir` (spec_helper.sh)                  |
 | `ST`    | status.sh のセッション表示                              |
+| `UPA`   | `parse_args` (update.sh)                                |
 | `UPDA`  | update.sh --update: apply outdated assets (integration) |
 | `UPDI`  | update.sh: list outdated assets (integration)           |
 | `VA`    | `validate_args` (init.sh)                               |
