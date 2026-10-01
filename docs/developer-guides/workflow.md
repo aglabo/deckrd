@@ -357,9 +357,14 @@ temp/idd/
 Working files used to live under `temp/deckrd-work/`, `temp/tasks/` and
 `temp/bdd-coder/`. They now live under `.local/deckrd/temp/`.
 
-No automatic migration is provided. Every file in the old locations is machine-generated
-and reproducible by re-running the command that wrote it, so the old directories can be
-deleted by hand at any time.
+No automatic migration is provided. Handle the old files as follows:
+
+- `temp/deckrd-work/` and `temp/tasks/`: machine-generated and reproducible by re-running
+  the command that wrote them, so they can be deleted by hand at any time.
+- `temp/bdd-coder/bdd-todo.md`: the only resume checkpoint of an unfinished bdd-coder task.
+  Re-running the command does not restore its RED/GREEN/done state. If a task is still in
+  progress, move the file to `.local/deckrd/temp/bdd-coder/bdd-todo.md`; otherwise delete
+  it only after the task is complete.
 
 ## Quality Assurance
 
