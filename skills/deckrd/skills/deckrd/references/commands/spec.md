@@ -56,7 +56,7 @@ Derive technically verifiable behavioral goals and constraints from requirements
 フェーズ間で受け渡す名前付きブロックは、次のファイルに記録する。
 
 ```bash
-temp/deckrd-work/<namespace>/<module>/spec-context.md
+.local/deckrd/temp/deckrd-work/<namespace>/<module>/spec-context.md
 ```
 
 各フェーズは自分の Output ブロックを、同名の `##` 見出しの下に追記または上書きする。

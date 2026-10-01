@@ -39,15 +39,15 @@ Phase 5: チェックリスト確認と完了判定
 Phase 6: ワークフロー終了
 ```
 
-| Phase   | 目的                 | Agent             | 出力                                         |
-| ------- | -------------------- | ----------------- | -------------------------------------------- |
-| Phase 0 | 開発言語・環境を把握 | explore-agent     | ENV PROFILE (env-profile.md)                 |
-| Phase 1 | チェックリストを生成 | checklist-builder | `temp/tasks/<slug>-<adjective>-checklist.md` |
-| Phase 2 | 依存関係を分析       | bdd-coder         | 実行グループ (直列 / 並列)                   |
-| Phase 3 | bdd-coder に委譲     | bdd-coder         | 各タスクのステータスレポート                 |
-| Phase 4 | 全体品質を検証       | bdd-coder         | 品質ゲート合格確認                           |
-| Phase 5 | 完了状態を確認       | bdd-coder         | セッション終了前の最終確認                   |
-| Phase 6 | セッション終了       | bdd-coder         | 開発ツール・状態をリセット                   |
+| Phase   | 目的                 | Agent             | 出力                                                       |
+| ------- | -------------------- | ----------------- | ---------------------------------------------------------- |
+| Phase 0 | 開発言語・環境を把握 | explore-agent     | ENV PROFILE (env-profile.md)                               |
+| Phase 1 | チェックリストを生成 | checklist-builder | `.local/deckrd/temp/tasks/<slug>-<adjective>-checklist.md` |
+| Phase 2 | 依存関係を分析       | bdd-coder         | 実行グループ (直列 / 並列)                                 |
+| Phase 3 | bdd-coder に委譲     | bdd-coder         | 各タスクのステータスレポート                               |
+| Phase 4 | 全体品質を検証       | bdd-coder         | 品質ゲート合格確認                                         |
+| Phase 5 | 完了状態を確認       | bdd-coder         | セッション終了前の最終確認                                 |
+| Phase 6 | セッション終了       | bdd-coder         | 開発ツール・状態をリセット                                 |
 
 ## Usage
 
@@ -66,7 +66,7 @@ Phase 6: ワークフロー終了
 **Natural-language instruction:**
 
 > "グリーティング関数を実装して"
-> → checklist-builder が `temp/tasks/add-greeting-function-calm-checklist.md` を生成 → bdd-coder で実装
+> → checklist-builder が `.local/deckrd/temp/tasks/add-greeting-function-calm-checklist.md` を生成 → bdd-coder で実装
 
 **Task ID from tasks.md:**
 
@@ -75,7 +75,7 @@ Phase 6: ワークフロー終了
 
 **Existing checklist (skip checklist-builder):**
 
-> `/bdd-coder:bdd-coder T01-02 --checklist temp/tasks/my-happy-checklist.md`
+> `/bdd-coder:bdd-coder T01-02 --checklist .local/deckrd/temp/tasks/my-happy-checklist.md`
 > → 既存チェックリストをそのまま使用 → bdd-coder で実装
 
 ## Before You Begin (MANDATORY — Phase 0 の前に実行)
@@ -115,14 +115,14 @@ The agent:
 
 4. Identifies tool commands (build, run, lint, type-check, test, formatter)
 
-5. Writes the environment profile to `temp/deckrd-work/env-profile.md`
+5. Writes the environment profile to `.local/deckrd/temp/deckrd-work/env-profile.md`
 
 ### Step 0-2: ENV PROFILE の取得
 
 Read the **Commands table** returned by the agent.
 Store as **ENV PROFILE** for use in Phase 3 (bdd-coder への渡し), Phase 4, Phase 5。
 
-出力: `temp/deckrd-work/env-profile.md`
+出力: `.local/deckrd/temp/deckrd-work/env-profile.md`
 
 ### Step 0-3: SESSION BASELINE の記録
 
@@ -162,7 +162,7 @@ Spawn **checklist-builder** with:
 The agent:
 
 1. 入力を解析してタスクを分解
-2. チェックリストを `temp/tasks/<slug>-<adjective>-checklist.md` に書き込む
+2. チェックリストを `.local/deckrd/temp/tasks/<slug>-<adjective>-checklist.md` に書き込む
 3. チェックリストのパスをメインセッションに返却 (複数入力の Case を検出した場合は `BLOCKED` を返却)
 
 ### Step 1-2: チェックリストの取得
@@ -176,7 +176,7 @@ checklist-builder の報告が `BLOCKED:` で始まる場合 (Task ID の Case �
 `CHECKLIST:` が返った場合、返却されたチェックリストパスを **CHECKLIST PATH** として保存。
 Phase 2 以降で使用する。
 
-出力: `temp/tasks/<slug>-<adjective>-checklist.md`
+出力: `.local/deckrd/temp/tasks/<slug>-<adjective>-checklist.md`
 
 ## Phase 2: タスク分析・依存関係マッピング
 
@@ -281,7 +281,7 @@ code-reviewer は **セッション全体で 1 回だけ** 起動する (タス�
 - `task_id`: 単一タスク起動ならその ID。複数タスクにまたがる場合は `N/A`
 - `changed_files`: 作業ツリーの差分 (`git diff --name-only`、`--cached` 分も併合) のうち実装ファイル
 - `test_files`: 同じ差分のうちテストファイル (ENV PROFILE のテストファイル規約で振り分け)
-- `env_profile`: `temp/deckrd-work/env-profile.md`
+- `env_profile`: `.local/deckrd/temp/deckrd-work/env-profile.md`
 - `coverage_cmd`: ENV PROFILE のカバレッジコマンド
 
 同じレビューは `/bdd-coder:bdd-coder-review` で任意のタイミングでも実行できる。

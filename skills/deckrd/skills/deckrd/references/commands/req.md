@@ -48,7 +48,7 @@ Before collecting user input, delegate codebase investigation to explore-agent:
    - If found: treat this session as a **revision** of existing requirements.
      Before Phase 3 overwrites the file, copy its frontmatter `version` and its
      entire `## Change History` table to
-     `temp/deckrd-work/requirements-baseline.md`.
+     `.local/deckrd/temp/deckrd-work/requirements-baseline.md`.
      Store them as **BASELINE VERSION** and **BASELINE HISTORY**
    - If not found: this is a first generation — leave BASELINE VERSION unset
 3. Spawn **explore-agent** with:
@@ -56,7 +56,7 @@ Before collecting user input, delegate codebase investigation to explore-agent:
    - `directory`: project root
    - `focus`: module name and feature keywords from user input (if available)
    - Agent definition: [`plugins/deckrd/agents/explore-agent.md`](../../../../agents/explore-agent.md)
-4. The agent writes findings to `temp/deckrd-work/codebase-context.md`
+4. The agent writes findings to `.local/deckrd/temp/deckrd-work/codebase-context.md`
 5. Read the **Summary** returned by the agent and store as **CODEBASE CONTEXT** for Phase 3
 6. Proceed to Phase 1 immediately — do NOT wait for the agent to complete Phase 0 before starting Phase 1
 

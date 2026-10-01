@@ -22,7 +22,7 @@ deckrd ワークフローと統合された BDD コーディングスキルで�
 "implement config file parser"
 
 # 既存チェックリストを使用
-/bdd-coder T01-02 --checklist temp/tasks/my-checklist.md
+/bdd-coder T01-02 --checklist .local/deckrd/temp/tasks/my-checklist.md
 ```
 
 ## 実行フェーズ
