@@ -109,7 +109,7 @@ docs/.deckrd/
         ├── tasks/
         │   ├── tasks.md
         │   └── implementation-checklist.md
-        └── workspaces/           # Working files for this module (checklists, notes)
+        └── workspaces/           # Notes to keep for this module (checklists go to .local/deckrd/temp/)
 ```
 
 ## Usage Example
