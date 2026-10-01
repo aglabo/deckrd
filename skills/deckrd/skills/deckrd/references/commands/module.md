@@ -99,7 +99,7 @@ AI runs: bash module.sh auth/user-login
    - `<namespace>/<module>` form: validate both parts
    - `<module>` form: auto-resolve namespace from `.local/deckrd/.project.json` (`project`).
      If unavailable, use the git repository root directory name.
-3. Normalize to lowercase
+3. Check characters: both parts must match `a-z`, `-`, `_` (starting with `a-z`). Uppercase is rejected, not converted
 4. Create module directory structure under `docs/.deckrd/`
 5. Update `.local/deckrd/session.json`
 
@@ -110,7 +110,7 @@ AI runs: bash module.sh auth/user-login
    - `<namespace>/<module>` form: validate both parts
    - `<module>` form: auto-resolve namespace from `.local/deckrd/.project.json` (`project`).
      If unavailable, use the git repository root directory name.
-3. Normalize to lowercase
+3. Check characters: both parts must match `a-z`, `-`, `_` (starting with `a-z`). Uppercase is rejected, not converted
 4. Create module directory structure under `docs/.deckrd/`:
 
    ```bash
@@ -129,7 +129,7 @@ AI runs: bash module.sh auth/user-login
    - A legacy `<module>/module.md` directly under the module directory is not read; move it to `workspaces/module/module.md`
 
 5. Update `.local/deckrd/session.json`:
-   - Set `active` to normalized module path
+   - Set `active` to the validated module path
    - Set `current_step` to `"module"`, `completed` to `["module"]`, `documents` to `{}`
 
 ## Session Schema (after module)
