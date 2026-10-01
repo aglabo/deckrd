@@ -138,6 +138,32 @@ setup_workspaces_missing() {
   printf '%s\n' '# workspaces' >"${INITS_DIR}/local-workspaces/README.md"
 }
 
+# Fixture: target path of the dangling README symlink (inside the test temp area, never created)
+dangling_readme_target() {
+  printf '%s\n' "${DECKRD_TMPDIR}/readme-target.md"
+}
+
+# Helper: occupy the workspaces README path with a symlink to a nonexistent target
+# MSYS=winsymlinks:nativestrict lets Git Bash create a native dangling symlink; harmless elsewhere.
+setup_workspaces_readme_dangling_symlink() {
+  mkdir -p "$DECKRD_LOCAL_WORKSPACES"
+  MSYS=winsymlinks:nativestrict ln -s "$(dangling_readme_target)" "${DECKRD_LOCAL_WORKSPACES}/README.md"
+}
+
+# Helper: report whether this host cannot create a dangling symlink
+#
+# Keeps the negation inside the function so that `Skip if` works (see command_missing in spec_helper.sh).
+#
+# @return 0 if a dangling symlink cannot be created, 1 if it can
+dangling_symlink_unsupported() {
+  local probe_dir rc=1
+  probe_dir="$(mktemp -d)" || return 0
+  { MSYS=winsymlinks:nativestrict ln -s "${probe_dir}/missing" "${probe_dir}/link" 2>/dev/null &&
+    [[ -L "${probe_dir}/link" ]]; } || rc=0
+  rm -rf "$probe_dir"
+  return "$rc"
+}
+
 # ============================================================================
 # update.sh: list outdated assets
 # ============================================================================
@@ -350,6 +376,21 @@ Describe "T-CLI-UPDI: update.sh: list outdated assets"
       The status should equal 0
       The output should equal "Assets are up to date."
       The path "$DECKRD_LOCAL_WORKSPACES" should not be exist
+    End
+  End
+
+  Describe "Given: workspaces README path occupied by a dangling symlink and a local-workspaces README source"
+    Skip if "dangling symlinks are not supported on this host" dangling_symlink_unsupported
+    Before "setup_update_env" "setup_workspaces_missing" "setup_workspaces_readme_dangling_symlink"
+    After "teardown_update_env"
+
+    # A dangling symlink at the README path counts as deployed
+    It "[Edge] T-CLI-UPDI-14: Should: exit 0, print up to date, and keep the symlink without creating its target"
+      When run bash "$SCRIPT"
+      The status should equal 0
+      The output should equal "Assets are up to date."
+      The path "${DECKRD_LOCAL_WORKSPACES}/README.md" should be symlink
+      The path "$(dangling_readme_target)" should not be exist
     End
   End
 
@@ -702,6 +743,21 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
       The output should equal "Updated: [local-workspaces] README.md (missing)"
       The contents of file "${DECKRD_LOCAL_WORKSPACES}/README.md" should equal "$(cat "${INITS_DIR}/local-workspaces/README.md")"
       The contents of file "${DECKRD_LOCAL_WORKSPACES}/notes.md" should equal "keep"
+    End
+  End
+
+  Describe "Given: workspaces README path occupied by a dangling symlink and a local-workspaces README source"
+    Skip if "dangling symlinks are not supported on this host" dangling_symlink_unsupported
+    Before "setup_update_env" "setup_workspaces_missing" "setup_workspaces_readme_dangling_symlink"
+    After "teardown_update_env"
+
+    # A dangling symlink at the README path counts as deployed, so nothing is copied over it
+    It "[Edge] T-CLI-UPDA-21: Should: exit 0, print up to date, and keep the symlink without creating its target"
+      When run bash "$SCRIPT" --update
+      The status should equal 0
+      The output should equal "Assets are up to date."
+      The path "${DECKRD_LOCAL_WORKSPACES}/README.md" should be symlink
+      The path "$(dangling_readme_target)" should not be exist
     End
   End
 

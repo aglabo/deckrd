@@ -169,7 +169,7 @@ print_workspaces_rule() {
 ##
 # @description Print (and in update mode, deploy) the workspaces README when its source exists
 #   but it is not deployed ("not deployed" means nothing exists at the README path; any existing
-#   entry, even a directory, counts as deployed and is left untouched)
+#   entry, even a directory or a dangling symlink, counts as deployed and is left untouched)
 #   A README missing from both sides is not reported and nothing is created. In list mode
 #   neither the workspaces directory nor the README is created; in update mode the directory
 #   is created if needed and the source README is copied into it.
@@ -179,7 +179,7 @@ print_workspaces_rule() {
 # @return 0 when the README was reported, 1 otherwise
 print_missing_workspaces_readme() {
   local update_mode="$1" readme="${DECKRD_LOCAL_WORKSPACES}/README.md"
-  [[ -f "${LOCAL_WORKSPACES_SRC_DIR}/README.md" && ! -e "$readme" ]] ||
+  [[ -f "${LOCAL_WORKSPACES_SRC_DIR}/README.md" && ! -e "$readme" && ! -L "$readme" ]] ||
     return 1
   if [[ "$update_mode" != true ]]; then
     printf '%s\n' "$WORKSPACES_README_LABEL"
