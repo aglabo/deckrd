@@ -45,6 +45,7 @@ deckrd プラグインの共有ライブラリ。bootstrap・kv-store・session�
 | `BSCR`    | `DECKRD_SCRIPTS_DIR` の決定                                         |
 | `BSCRF`   | DECKRD_SCRIPTS_DIR / DECKRD_LIB_DIR: DECKRD_ROOT 連鎖 (functional)  |
 | `BSIDE`   | 副作用: 他変数                                                      |
+| `BSKR`    | `SKILL_ROOT` の決定                                                 |
 | `BSRC`    | bdd-coder パス検出 (`BASH_SOURCE` 依存)                             |
 | `BSRCF`   | bdd-coder パス検出 (functional)                                     |
 | `BSYM`    | `SYMBOL` の決定                                                     |
