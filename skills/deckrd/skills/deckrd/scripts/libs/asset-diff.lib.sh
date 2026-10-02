@@ -42,16 +42,15 @@ _list_all_files() {
 
 # _asset_is_kept - Check whether a destination path matches a keep pattern (internal)
 #
+# The keep patterns are joined into one extglob alternation `@(p1|p2|...)`.
+#
 # @arg $1 Destination relative path
-# @arg $2+ Keep patterns (bash globs), optional
+# @arg $2+ Keep patterns (bash globs, without `|` or `)`), optional
 # @return 0 kept, 1 not kept
 _asset_is_kept() {
-  local dst_rel="$1" pat
-  for pat in "${@:2}"; do
-    # shellcheck disable=SC2053 # pat is a glob on purpose
-    [[ $dst_rel == $pat ]] && return 0
-  done
-  return 1
+  local IFS='|'
+  # shellcheck disable=SC2053 # the patterns are globs on purpose
+  [[ $1 == @(${*:2}) ]]
 }
 
 # _list_candidate_files - List source files not shielded by a keep pattern (internal)
