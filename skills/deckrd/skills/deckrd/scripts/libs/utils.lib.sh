@@ -39,3 +39,40 @@ jq_read() {
     "${jqexe:-jq}" "$@" | tr -d '\r'
   )
 }
+
+# normalize_dir_path - Normalize a directory path to `/` separators
+#
+# Replaces every `\` with `/`, collapses repeated `/` into one, then strips a
+# single trailing `/` (e.g. `C:\Users\x\` -> `C:/Users/x`, `/a//b/` -> `/a/b`).
+# The path is not resolved: it need not exist, and `.`/`..` are kept as-is.
+#
+# @note The root `/` is kept as `/`. A drive root such as `C:\` or `C:/` becomes
+#       `C:`; callers append `/<rel>`, so `C:` + `/x` gives `C:/x`.
+# @note Implemented as one sed call (one expression per rule, applied in order);
+#       the trailing-`/` rule needs a character before the `/`, which keeps the root.
+#       The path is treated as a single line: it must not contain a newline.
+# @arg $1 Directory path, optional (a missing argument is treated as empty)
+# @stdout Normalized path followed by a newline (an empty line for empty input)
+# @return 0 always
+normalize_dir_path() {
+  printf '%s\n' "${1:-}" | sed -E 's#\\#/#g; s#/+#/#g; s#(.)/$#\1#'
+}
+
+# strip_suffix - Remove one trailing occurrence of a literal suffix from a string
+#
+# Prints the string with the suffix removed once from its end
+# (e.g. `rules/.gitignore.org` `.org` -> `rules/.gitignore`, `a.org.org` -> `a.org`).
+# A string that does not end with the suffix is printed unchanged.
+#
+# @note Only a suffix of the whole string is removed, so a `.org` inside a
+#       directory name is kept (`rules.org/a.md` is unchanged).
+# @note The suffix is quoted in the expansion, so it is literal: glob characters
+#       such as `*` or `?` are not treated as patterns.
+# @note Pure parameter expansion; no external command is run.
+# @arg $1 String (typically a relative path)
+# @arg $2 Suffix to remove (an empty suffix removes nothing)
+# @stdout The resulting string followed by a newline (an empty line for empty input)
+# @return 0 always
+strip_suffix() {
+  printf '%s\n' "${1%"$2"}"
+}
