@@ -35,7 +35,7 @@ unset_sandbox_local_dirs() {
 }
 
 # Helper: create an isolated temp directory and set DECKRD_TMPDIR / DECKRD_DOCS_DIR / DECKRD_LOCAL /
-#         DECKRD_LOCAL_DATA / DECKRD_LOCAL_TEMP / DECKRD_LOCAL_WORKSPACES / DECKRD_RULES_DIR /
+#         DECKRD_LOCAL_DATA / DECKRD_LOCAL_TEMP / DECKRD_LOCAL_WORKSPACES /
 #         CLAUDE_RULES_DIR / CLAUDE_RULES_INDEX_DIR
 #
 # Override every DECKRD_LOCAL_* exported by bootstrap.lib.sh.
@@ -48,7 +48,6 @@ setup_deckrd_tmpdir() {
   export DECKRD_DOCS_DIR="${DECKRD_TMPDIR}/docs/.deckrd"
   export DECKRD_LOCAL="${DECKRD_TMPDIR}/.local/deckrd"
   export_sandbox_local_dirs "${DECKRD_TMPDIR}/.local/deckrd"
-  export DECKRD_RULES_DIR="${DECKRD_DOCS_DIR}/rules"
   export CLAUDE_RULES_DIR="${DECKRD_TMPDIR}/.claude/rules/claude-rules"
   export CLAUDE_RULES_INDEX_DIR="${DECKRD_TMPDIR}/.claude/rules/deckrd-rules"
   mkdir -p "$DECKRD_DOCS_DIR" "$DECKRD_LOCAL"
@@ -60,7 +59,7 @@ setup_deckrd_tmpdir() {
 teardown_deckrd_tmpdir() {
   [[ -n "${DECKRD_TMPDIR:-}" && -d "$DECKRD_TMPDIR" ]] && rm -rf "$DECKRD_TMPDIR"
   unset_sandbox_local_dirs
-  unset DECKRD_TMPDIR DECKRD_DOCS_DIR DECKRD_LOCAL DECKRD_RULES_DIR \
+  unset DECKRD_TMPDIR DECKRD_DOCS_DIR DECKRD_LOCAL \
     CLAUDE_RULES_DIR CLAUDE_RULES_INDEX_DIR
 }
 
