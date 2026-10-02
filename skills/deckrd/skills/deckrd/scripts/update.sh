@@ -14,12 +14,17 @@
 #   the assets that list_asset_files reports: files missing from the deployed
 #   directory, and deployed files that are older than and differ from the source,
 #   including files in subdirectories (e.g. rules/, workspaces/README.md).
-#   An existing deployed `.gitignore` is never listed or overwritten. Each is printed as `[label] dst_rel` (destination relative path, `.org` dropped).
+#   An existing deployed `.gitignore` is never listed or overwritten.
+#   Each is printed as `[label] dst_rel` (destination relative path,
+#   `.org` dropped).
 #   It also reports an existing `.local/deckrd/.gitignore` that lacks the
 #   `!/workspaces/` rule as `[local-deckrd] .gitignore (workspaces rule)`.
 #   Deployed files are not modified unless --update is given, in which case
 #   each listed file is copied from its source and the workspaces rule
 #   block of the template is appended to the old gitignore.
+#   With --update, a deployed file that has the same content as its source
+#   but is older also gets the source's mtime (copy_assets ->
+#   sync_asset_mtimes); it is not listed and its content is not changed.
 #
 # @usage
 #   update.sh [OPTIONS]
@@ -72,8 +77,10 @@ workspaces rule is listed instead.
 Deployed files are not modified unless --update is given.
 
 Options:
-  --update      Copy each listed file from its source and append the
-                workspaces rule block to the old .gitignore
+  --update      Copy each listed file from its source, append the
+                workspaces rule block to the old .gitignore, and set the
+                mtime of each deployed file that has the same content as
+                its source but is older to the source's mtime
   -h, --help    Show this help message
 EOF
 }
