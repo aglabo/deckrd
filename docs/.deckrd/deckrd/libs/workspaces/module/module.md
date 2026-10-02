@@ -19,6 +19,7 @@ deckrd プラグインの共有ライブラリ。bootstrap・kv-store・session�
 | `ARLD`    | ai-runner.sh の読み込み (`resolve_ai_cli` 側)                       |
 | `ARRC`    | `resolve_ai_cli` (ai-runner.sh)                                     |
 | `ARVM`    | `validate_ai_model` (ai-runner.sh)                                  |
+| `ASCP`    | asset-copy.lib.sh                                                   |
 | `ASDF`    | asset-diff.lib.sh                                                   |
 | `BASSET`  | `DECKRD_ASSETS_DIR` の決定                                          |
 | `BASSETF` | `DECKRD_ASSETS_DIR`: 事前設定の維持と実アセットツリー (functional)  |
@@ -71,6 +72,7 @@ deckrd プラグインの共有ライブラリ。bootstrap・kv-store・session�
 | `KSST`    | `kv_set`                                                            |
 | `KSSV`    | `kv_save` (unit)                                                    |
 | `NAR`     | `adjective_random` (naming.lib.sh)                                  |
+| `NDP`     | `normalize_dir_path` (utils.lib.sh)                                 |
 | `NDT`     | `normalize_doc_type`                                                |
 | `NGF`     | `generate_filename`                                                 |
 | `NGFR`    | generate_filename 並列実行 (race condition)                         |
@@ -92,6 +94,7 @@ deckrd プラグインの共有ライブラリ。bootstrap・kv-store・session�
 | `SLD`     | session.sh の読み込み                                               |
 | `SLOAD`   | `session_load`                                                      |
 | `SSAVE`   | `session_save`                                                      |
+| `SSF`     | `strip_suffix` (utils.lib.sh)                                       |
 | `UJR`     | `jq_read` (utils.lib.sh)                                            |
 | `VENV`    | `validate_env` (validate-env.sh)                                    |
 | `VLD`     | validate-env.sh の読み込み                                          |

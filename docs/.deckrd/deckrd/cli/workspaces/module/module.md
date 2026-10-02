@@ -16,6 +16,7 @@ deckrd プラグインのコマンドエントリポイント。init / module / 
 | ------- | ------------------------------------------------------- |
 | `CDS`   | `collect_declared_scopes` (module.sh)                   |
 | `CMD`   | `create_module_dirs` (module.sh)                        |
+| `DEPE`  | init.sh / update.sh asset deploy (e2e)                  |
 | `DTS`   | `derive_test_scope` (module.sh)                         |
 | `GDN`   | `_get_default_ns` (module.sh)                           |
 | `MAINI` | init.sh: main() integration (integration)               |
