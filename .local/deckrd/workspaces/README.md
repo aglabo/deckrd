@@ -12,6 +12,8 @@ Module-scoped notes go to `docs/.deckrd/<namespace>/<module>/workspaces/` instea
 
 - Contents are tracked by git.
 - Contents are not part of the design chain: no IDs, no references from documents.
+- This README is managed by deckrd. `/deckrd update --update` may overwrite it,
+  so keep your notes in other files.
 
 ## What does not belong here
 
