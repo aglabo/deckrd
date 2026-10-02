@@ -6,7 +6,7 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 #
-# @version 0.5.0
+# @version 0.5.1
 # USAGE: source this file, then call bootstrap_finalize to lock variables.
 #   . "$(dirname "${BASH_SOURCE[0]}")/bootstrap.lib.sh"
 #   bootstrap_finalize
@@ -65,7 +65,7 @@ _resolve_deckrd_root() {
 #   (project-dependent).
 # Not exported: SKILL_ROOT, and computed values of DECKRD_ROOT,
 #   DECKRD_SCRIPTS_DIR, DECKRD_ASSETS_DIR, DECKRD_LIB_DIR (skill-dependent);
-#   a value of these four exported by the caller keeps its export.
+#   a non-empty value of these four exported by the caller keeps its export.
 # Does NOT call readonly; call bootstrap_finalize() after to lock variables.
 #
 # @return 0 on success, 1 if a readonly SKILL_ROOT differs from the computed value
@@ -107,18 +107,29 @@ bootstrap_init() {
   # skill-dependent: computed values are not exported, so a child process that
   # sources another skill's linked copy of this library computes its own.
   # Explicit env overrides are honored and keep their export (no export -n).
+  # An empty value is not an override: it is replaced by the default and unexported.
   if [[ -z "${DECKRD_ROOT:-}" ]]; then
     DECKRD_ROOT="${SKILL_ROOT}"
+    export -n DECKRD_ROOT
   fi
 
   # DECKRD_SCRIPTS_DIR: deckrd scripts directory
-  DECKRD_SCRIPTS_DIR="${DECKRD_SCRIPTS_DIR:-${DECKRD_ROOT}/scripts}"
+  if [[ -z "${DECKRD_SCRIPTS_DIR:-}" ]]; then
+    DECKRD_SCRIPTS_DIR="${DECKRD_ROOT}/scripts"
+    export -n DECKRD_SCRIPTS_DIR
+  fi
 
   # DECKRD_ASSETS_DIR: deckrd assets directory
-  DECKRD_ASSETS_DIR="${DECKRD_ASSETS_DIR:-${DECKRD_ROOT}/assets}"
+  if [[ -z "${DECKRD_ASSETS_DIR:-}" ]]; then
+    DECKRD_ASSETS_DIR="${DECKRD_ROOT}/assets"
+    export -n DECKRD_ASSETS_DIR
+  fi
 
   # DECKRD_LIB_DIR: deckrd library directory
-  DECKRD_LIB_DIR="${DECKRD_LIB_DIR:-${DECKRD_ROOT}/scripts/libs}"
+  if [[ -z "${DECKRD_LIB_DIR:-}" ]]; then
+    DECKRD_LIB_DIR="${DECKRD_ROOT}/scripts/libs"
+    export -n DECKRD_LIB_DIR
+  fi
 
   # DECKRD_DATA_DIR: user-level deckrd data directory
   DECKRD_DATA_DIR="${DECKRD_DATA_DIR:-${XDG_DATA_HOME:-${HOME}/.local/share}/deckrd}"

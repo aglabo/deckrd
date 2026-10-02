@@ -164,11 +164,23 @@ Describe "bootstrap.lib.sh"
       The output should equal "unset:unset:unset:unset"
     End
 
+    It "[Error] T-LIB-BEXP-17: 親から空文字で export されたスキル依存 4 変数の計算値は子プロセスに渡らない"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj DECKRD_ROOT='' DECKRD_SCRIPTS_DIR='' DECKRD_ASSETS_DIR='' DECKRD_LIB_DIR=''; . \"$SCRIPT\" || exit 1; bash -c 'printf \"%s:%s:%s:%s\" \"\${DECKRD_ROOT-unset}\" \"\${DECKRD_SCRIPTS_DIR-unset}\" \"\${DECKRD_ASSETS_DIR-unset}\" \"\${DECKRD_LIB_DIR-unset}\"'"
+      The status should equal 0
+      The output should equal "unset:unset:unset:unset"
+    End
+
     Describe "Given: bdd-coder の scripts/libs が deckrd の scripts/libs への symlink"
       Skip if "scripts/libs が symlink でない (core.symlinks=false)" _bexp_coder_libs_not_linked
 
       It "[Edge] T-LIB-BEXP-16: deckrd で source した親の子が bdd-coder 側を source すると DECKRD_ROOT は bdd-coder になる"
         When run bash -c "unset DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_ASSETS_DIR DECKRD_LIB_DIR; export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" || exit 1; bash -c '. \"${_CODER_LINKED_SCRIPT}\" || exit 1; printf \"%s\" \"\$DECKRD_ROOT\"'"
+        The status should equal 0
+        The output should end with "/skills/bdd-coder/skills/bdd-coder"
+      End
+
+      It "[Edge] T-LIB-BEXP-18: 親が空文字の DECKRD_ROOT を export して deckrd 側を source しても、子が bdd-coder 側を source すると DECKRD_ROOT は bdd-coder になる"
+        When run bash -c "unset DECKRD_SCRIPTS_DIR DECKRD_ASSETS_DIR DECKRD_LIB_DIR; export PROJECT_ROOT=/tmp/proj DECKRD_ROOT=''; . \"$SCRIPT\" || exit 1; bash -c '. \"${_CODER_LINKED_SCRIPT}\" || exit 1; printf \"%s\" \"\$DECKRD_ROOT\"'"
         The status should equal 0
         The output should end with "/skills/bdd-coder/skills/bdd-coder"
       End
