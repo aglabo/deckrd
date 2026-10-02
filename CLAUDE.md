@@ -47,14 +47,14 @@ IDD Framework location: `~/.claude/plugins/marketplaces/claude-idd-framework-mar
 
 ## Quality Gates
 
-| Tool                  | Purpose          | Run via                       |
-| --------------------- | ---------------- | ----------------------------- |
-| dprint                | Formatting       | `dprint fmt` / `dprint check` |
-| markdownlint          | Markdown         | `pnpm run lint:markdown`      |
-| textlint              | Text quality     | `pnpm run lint:text`          |
-| shellcheck            | Bash scripts     | automatic                     |
-| gitleaks + secretlint | Secret detection | pre-commit hook               |
-| commitlint            | Commit message   | pre-commit hook               |
+| Tool                     | Purpose          | Run via                       |
+| ------------------------ | ---------------- | ----------------------------- |
+| dprint                   | Formatting       | `dprint fmt` / `dprint check` |
+| markdownlint             | Markdown         | `pnpm run lint:markdown`      |
+| textlint                 | Text quality     | `pnpm run lint:text`          |
+| shellcheck               | Bash scripts     | automatic                     |
+| betterleaks + secretlint | Secret detection | pre-commit hook               |
+| commitlint               | Commit message   | pre-commit hook               |
 
 **DO NOT** invoke `runners/run-*.sh` directly — always use `pnpm run` scripts.
 
