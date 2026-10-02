@@ -303,7 +303,7 @@ Describe "T-LIB-ASCP: asset-copy.lib.sh"
       BeforeEach "setup_copy_dest_symlink"
 
       Describe "When: copy_assets を呼ぶ"
-        # Characterization: passes since the -L guard in _asset_needs_copy (T-01);
+        # Characterization: passes since the -L guard in _asset_can_update (T-01);
         # without it a.md is listed and copy_asset_file replaces the link with a
         # regular file (dest/a.md is no longer a symlink).
         It "Then: [Normal] T-LIB-ASCP-48: リンクの配置先はコピーせず、リンク先の内容も更新時刻も変えない"
@@ -327,7 +327,7 @@ Describe "T-LIB-ASCP: asset-copy.lib.sh"
       BeforeEach "setup_copy_dest_dangling_symlink"
 
       Describe "When: copy_assets を呼ぶ"
-        # Characterization: passes since the -L guard in _asset_needs_copy (T-01);
+        # Characterization: passes since the -L guard in _asset_can_update (T-01);
         # without it the dangling link is listed and replaced by a regular file
         # (dest/a.md is no longer a symlink, output is "a.md").
         It "Then: [Error] T-LIB-ASCP-49: リンク切れの配置先はコピーせず、リンク先を作らない"
@@ -353,7 +353,7 @@ Describe "T-LIB-ASCP: asset-copy.lib.sh"
       BeforeEach "setup_copy_symlink_and_missing"
 
       Describe "When: copy_assets を呼ぶ"
-        # Characterization: passes since the -L guard in _asset_needs_copy (T-01);
+        # Characterization: passes since the -L guard in _asset_can_update (T-01);
         # without it a.md is listed too and the link is replaced by a regular file
         # (output becomes "a.md\nb.md").
         It "Then: [Edge] T-LIB-ASCP-50: リンクの配置先は飛ばし、未配置の b.md だけをコピーする"

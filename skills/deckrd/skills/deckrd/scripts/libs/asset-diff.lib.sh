@@ -28,21 +28,6 @@ readonly WORKSPACES_RULE_BANNER='^## ---'
 # shellcheck disable=SC2034 # consumed by callers
 ASSET_KEEP_PATTERNS=('.gitignore' '*/.gitignore')
 
-# asset_src_path - Resolve an asset source path from its deployed name
-#
-# @arg $1 Source asset directory
-# @arg $2 Deployed file name
-# @stdout `<src_dir>/<name>` if it exists, otherwise `<src_dir>/<name>.org`
-asset_src_path() {
-  local src_dir="$1" dest_name="$2"
-  if [[ -e "${src_dir}/${dest_name}" ]]; then
-    printf '%s\n' "${src_dir}/${dest_name}"
-  else
-    printf '%s\n' "${src_dir}/${dest_name}.org"
-  fi
-  return 0
-}
-
 # _list_all_files - List every file under a directory (internal)
 #
 # @arg $1 Directory
@@ -94,16 +79,20 @@ _list_candidate_files() {
   return 0
 }
 
-# _asset_needs_copy - Decide whether an asset must be copied (internal)
+# Asset checkers: decide whether a source file is listed by list_asset_files.
+# Every checker takes `<src_path> <dest_path>` and returns 0 to list, 1 to skip.
+
+# _asset_can_update - Default checker: dest is missing or outdated (internal)
 #
-# Copy when dest does not exist, or when dest is a regular file older than and
-# different from src. Never copy when dest is a symlink (valid, dangling, or
-# looping), so the link target is not overwritten.
+# List when dest does not exist, or when dest is a regular file older than and
+# different from src. Skip when dest is newer (user edited) or has the same
+# content. Never list when dest is a symlink (valid, dangling, or looping), so
+# the link target is not overwritten.
 #
 # @arg $1 Source file path
 # @arg $2 Destination file path
-# @return 0 copy, 1 no copy
-_asset_needs_copy() {
+# @return 0 list, 1 skip
+_asset_can_update() {
   local src="$1" dest="$2"
   # Check -L first: -e follows the link, so it is false for dangling or looping links
   [[ -L "$dest" ]] && return 1
@@ -111,14 +100,14 @@ _asset_needs_copy() {
   [[ -f "$dest" && "$src" -nt "$dest" ]] && ! cmp -s "$src" "$dest"
 }
 
-# _asset_is_missing - Decide whether an asset is missing from dest (internal)
+# _asset_is_missing - `--missing-only` checker: dest is missing (internal)
 #
-# Copy only when dest neither exists nor is a symlink (valid, dangling, or
-# looping). Never looks at mtime or content. Same signature as _asset_needs_copy.
+# List only when dest neither exists nor is a symlink (valid, dangling, or
+# looping). Never looks at mtime or content.
 #
 # @arg $1 Source file path (unused)
 # @arg $2 Destination file path
-# @return 0 missing, 1 deployed
+# @return 0 list (missing), 1 skip (deployed)
 _asset_is_missing() {
   [[ ! -e "$2" && ! -L "$2" ]]
 }
@@ -135,15 +124,20 @@ _asset_is_missing() {
 # keep patterns.
 # `--force` in any other position does not enable force mode.
 #
-# Usage: list_asset_files [--force] <src_dir> <dest_dir> [keep...]
+# With `--missing-only` as the first argument, list only the source files whose
+# destination does not exist; a destination that exists (file or symlink) is
+# excluded regardless of its mtime and content. Keep patterns still apply.
+#
+# Usage: list_asset_files [--force | --missing-only] <src_dir> <dest_dir> [keep...]
 #
 # @option --force Force mode, only as the first argument; the arguments below follow it
+# @option --missing-only Missing-only mode, only as the first argument; the arguments below follow it
 # @arg <src_dir> Source asset directory
 # @arg <dest_dir> Destination directory
 # @arg [keep...] Keep patterns (bash globs on the destination relative path), optional
 # @stdout Source relative paths to copy, byte-sorted, one per line
 list_asset_files() {
-  local src_dir dest_dir src_rel dst_rel needs_copy=_asset_needs_copy
+  local src_dir dest_dir src_rel dst_rel checker=_asset_can_update
   case "$1" in
     --force)
       shift
@@ -152,14 +146,14 @@ list_asset_files() {
       ;;
     --missing-only)
       shift
-      needs_copy=_asset_is_missing
+      checker=_asset_is_missing
       ;;
   esac
   src_dir="$(normalize_dir_path "$1")"
   dest_dir="$(normalize_dir_path "$2")"
   while IFS= read -r src_rel; do
     dst_rel="$(strip_suffix "$src_rel" .org)"
-    if "$needs_copy" "${src_dir}/${src_rel}" "${dest_dir}/${dst_rel}"; then
+    if "$checker" "${src_dir}/${src_rel}" "${dest_dir}/${dst_rel}"; then
       printf '%s\n' "$src_rel"
     fi
   done < <(_list_candidate_files "$src_dir" "$dest_dir" "${@:3}")
