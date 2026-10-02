@@ -152,6 +152,10 @@ docs/.deckrd/<ns>/<mod>/  (ディレクトリ作成)
 | -------------------- | ------------ | --------------------------------------------- |
 | `--language <lang>`  | `typescript` | `typescript`, `go`, `python`, `rust`, `shell` |
 | `--ai-model <model>` | `sonnet`     | 使用するAIモデル                              |
+| `--force`            | —            | 配置済みアセットをすべて同梱版で上書きする    |
+
+`--force` を付けると、`.gitignore` やユーザーが編集したファイルも含め、すべてのアセットを上書きします。
+既存の `session.json` は保持されます。
 
 ### 実行例
 
@@ -159,6 +163,7 @@ docs/.deckrd/<ns>/<mod>/  (ディレクトリ作成)
 /deckrd init myapp webapp                              # 最小構成
 /deckrd init myapp lib --language go                   # Go プロジェクト
 /deckrd init myapp webapp --language typescript --ai-model claude-sonnet-4-5
+/deckrd init myapp webapp --force                      # アセットを同梱版に戻す
 ```
 
 > 注意:
@@ -173,7 +178,7 @@ docs/.deckrd/<ns>/<mod>/  (ディレクトリ作成)
 ### 既存プロジェクトの移行
 
 旧構成（ルール本体が `.claude/rules/` にある）から移行する場合、**この手順を踏まないと
-コンテキスト削減の効果は出ません**。`init` は既存ファイルを上書きしないため、
+コンテキスト削減の効果は出ません**。`init` は同梱から削除されたファイルを消さないため、
 再実行しただけでは旧ファイルが残り、全文注入も続きます。
 
 **順序が重要です。** 逆順や削除を先に行うとルールを失います。
@@ -639,29 +644,34 @@ docs/.deckrd/<ns>/<mod>/decision-records.md (追記形式)
 /deckrd update --update   # 一覧に出たファイルを同梱ソースで置き換える
 ```
 
-`init` は存在しないファイルをコピーするだけで、既存ファイルには手を加えません。
-プラグイン更新で同梱ルールが変わったときは、`init` を再実行せず `update` で確認・反映します。
+`init` と `update` は同じコピー処理を使います。
+`--update` なしで実行すると、コピー対象の一覧を表示するだけでファイルは変更しません。
+プラグイン更新で同梱ルールが変わったときは、`update` で確認・反映します。
 `init` 実行後（`.local/deckrd/session.json` がある状態）ならいつでも実行できます。
 
 ### 対象と判定条件
 
 `init` が配置するディレクトリ（`docs/.deckrd/rules/`、`.claude/rules/claude-rules/`、
 `.claude/rules/deckrd-rules/`、`docs/.deckrd/`、`.local/deckrd/`、`.local/deckrd/workspaces/`）が対象です。
-次の条件をすべて満たすファイルだけを一覧に出します。
+ソースのファイル名末尾の `.org` は外して扱います（`.gitignore.org` → `.gitignore`）。
+次のどちらかに当てはまるファイルを一覧に出し、`--update` でコピーします。
 
-- 配置先に既に存在する（未配置のファイルはコピーしない）
-- 同梱ソースの方が新しい（更新日時）
-- 内容が異なる
+- 配置先に存在しない
+- 配置先に存在し、同梱ソースの方が新しく（更新日時）、内容が異なる
 
 配置先の方が新しいファイルは、利用者が手元で編集したものとみなし、`--update` の対象にもなりません。
+
+コピーしたファイルの更新日時は、同梱ソースの更新日時に揃えます。
+同梱ソースより古くても内容が同じファイルは、一覧に出さず内容も変えません。
+`--update` では更新日時だけを同梱ソースに揃えます。
 
 `.local/deckrd/workspaces/README.md` もプラグインが管理するファイルです。`--update` で上書きされることがあるため、
 メモは `workspaces/` 配下の別ファイルに書きます。
 
 workspaces ディレクトリ導入前に `init` したプロジェクトでは、この README がありません。
-`update` は `[local-workspaces] README.md (missing)` と表示し、`--update` でディレクトリを作って README をコピーします。
+ほかの未配置ファイルと同じく `[local-deckrd] workspaces/README.md` と表示し、`--update` でディレクトリを作ってコピーします。
 
-`.local/deckrd/.gitignore` は利用者が編集する前提のため、`update` は上書きしません。
+各階層の `.gitignore` は利用者が編集する前提のため、既存なら上書きしません（未配置なら配置します）。
 ただし古い版で `init` したプロジェクトでは、`workspaces/` を git 追跡する許可ルール（`!/workspaces/`）がありません。
 `update` はこれを `[local-deckrd] .gitignore (workspaces rule)` と表示し、
 `--update` でテンプレートの workspaces ルールを末尾に追記します。既存の行はそのまま残ります。
@@ -670,14 +680,14 @@ workspaces ディレクトリ導入前に `init` したプロジェクトでは�
 
 ```text
 $ /deckrd update
-[deckrd-rules] deckrd-rule-workflow.md
+[docs] rules/deckrd-rule-workflow.md
+[local-deckrd] workspaces/README.md
 [local-deckrd] .gitignore (workspaces rule)
-[local-workspaces] README.md (missing)
 
 $ /deckrd update --update
-Updated: [deckrd-rules] deckrd-rule-workflow.md
+Updated: [docs] rules/deckrd-rule-workflow.md
+Updated: [local-deckrd] workspaces/README.md
 Updated: [local-deckrd] .gitignore (workspaces rule)
-Updated: [local-workspaces] README.md (missing)
 
 $ /deckrd update
 Assets are up to date.
