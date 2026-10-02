@@ -13,9 +13,9 @@
 #   1. Bootstrap: create .local/deckrd/temp/ and .local/deckrd/workspaces/, then copy
 #      recursively claude-rules to .claude/rules/claude-rules/, the rules index to
 #      .claude/rules/deckrd-rules/, docs templates (incl. rules/) to docs/.deckrd/, and
-#      local-deckrd (incl. workspaces/README.md) to .local/deckrd/. Missing and outdated
-#      files are copied; .gitignore files and user edits (newer than the source) are kept.
-#      With --force, every asset is overwritten, .gitignore files and user edits
+#      local-deckrd (incl. workspaces/README.md) to .local/deckrd/. Only missing
+#      files are copied; existing files (outdated ones and user edits included) are never
+#      overwritten. With --force, every asset is overwritten, .gitignore files and user edits
 #      included (session.json is kept)
 #   2. Create docs/.deckrd/ base directory structure
 #   3. Write .local/deckrd/.project.json with project settings
@@ -230,9 +230,9 @@ make_directories() {
 
 ##
 # @description Install one asset target with copy_assets and report each copied file
-# @description Copies every asset under src that is missing from dest, overwrites a deployed file
-#   that is older than and differs from its source, and silently keeps a file matching
-#   ASSET_KEEP_PATTERNS (`.gitignore` at any depth) or edited by the user (dest newer than the source)
+# @description Copies only the assets under src that are missing from dest (copy_assets
+#   --missing-only); an existing file is never overwritten and is not reported, even when it is
+#   older than and differs from its source
 # @description When OPTIONS[force] is true, copy_assets --force overwrites every file under src
 #   regardless of ASSET_KEEP_PATTERNS and the dest state, and each one is reported as copied
 # @description A missing src is not an error: dest is still created, the source is reported, and
@@ -242,20 +242,20 @@ make_directories() {
 # @arg $3 string Destination dir
 # @exitcode 0 Assets installed, or src does not exist
 # @exitcode 1 dest could not be created or an asset could not be copied
-# @stderr `  [init/<label>] copied|updated: <rel>` per copied file (kept files are not reported), then
-#   `  [init/<label>] done: N copied, M updated`
+# @stderr `  [init/<label>] copied: <rel>` per copied file (kept files are not reported), then
+#   `  [init/<label>] done: N copied`
 # @stderr Error message naming the directory or file that failed
 install_assets() {
   local label="$1" src="$2" dest="$3"
   local out rel copied=0
-  local -a force_opt=()
+  local -a mode_opt=(--missing-only)
   if [[ ! -d "$src" ]]; then
     make_directories "$dest" || return 1
     echo "  [init/${label}] source not found, skipping: ${src}" >&2
     return 0
   fi
-  [[ "${OPTIONS[force]:-false}" == true ]] && force_opt=(--force)
-  out=$(copy_assets "${force_opt[@]}" "$src" "$dest" "${ASSET_KEEP_PATTERNS[@]}") || return 1
+  [[ "${OPTIONS[force]:-false}" == true ]] && mode_opt=(--force)
+  out=$(copy_assets "${mode_opt[@]}" "$src" "$dest" "${ASSET_KEEP_PATTERNS[@]}") || return 1
   while IFS= read -r rel; do
     [[ -n "$rel" ]] || continue
     echo "  [init/${label}] copied: ${rel}" >&2
@@ -269,9 +269,9 @@ install_assets() {
 # @description Order: DECKRD_LOCAL_TEMP and DECKRD_LOCAL_WORKSPACES (directories only), then each
 #   ASSET_TARGETS entry (`<label>|<src>|<dest>`, set by init_asset_dirs) copied recursively with
 #   install_assets (copy_assets + ASSET_KEEP_PATTERNS), then the BASE_SUBDIRS under DECKRD_DOCS_DIR
-# @description On re-run, a deployed file older than and different from its source is overwritten;
-#   `.gitignore` files are never overwritten, and a file edited by the user (newer than the source)
-#   is kept; with --force (OPTIONS[force]) every asset is overwritten, `.gitignore` and user edits included
+# @description On re-run, only missing files are copied; an existing file is never overwritten,
+#   even when it is older than and differs from its source (refresh it with `update --update`);
+#   with --force (OPTIONS[force]) every asset is overwritten, `.gitignore` and user edits included
 # @description workspaces/README.md always goes to ${DECKRD_LOCAL_DATA}/workspaces/ through the
 #   local-deckrd copy; an overridden DECKRD_LOCAL_WORKSPACES is only created, never filled
 # @description Stops at the first failure without printing "Init complete."

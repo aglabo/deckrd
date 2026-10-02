@@ -475,7 +475,8 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
     Before "setup_initialized"
 
     # Simulate an outdated install: upstream source updated after installation
-    # (installed content differs and is older than the source)
+    # (installed content differs and is older than the source).
+    # A normal re-run keeps such a file; only --force (or update --update) refreshes it.
     make_outdated_install() {
       local file
       for file in "$@"; do
@@ -494,20 +495,20 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
     }
 
     Describe "When: an installed asset is outdated"
-      It "[Normal] T-CLI-MAINI-57: Should: overwrite an outdated installed file and report it as copied"
+      It "[Normal] T-CLI-MAINI-57: Should: keep an outdated installed file and not report it as copied"
         make_outdated_install "${DECKRD_DOCS_DIR}/rules/deckrd-rule-workflow.md"
+        EXPECTED_WORKFLOW="$(cat "${DECKRD_DOCS_DIR}/rules/deckrd-rule-workflow.md")"
         When run bash "$SCRIPT" myapp webapp
         The status should equal 0
         # @note: revisit this assertion when --json mode is added
         The output should be blank
-        The stderr should include "[init/docs] copied: rules/deckrd-rule-workflow.md"
-        The stderr should include "[init/docs] done: 1 copied"
+        The stderr should not include "copied: rules/deckrd-rule-workflow.md"
+        The stderr should include "[init/docs] done: 0 copied"
         The stderr should not include "updated:"
-        The stderr should not include "[init/docs] done: 1 copied, "
+        The stderr should not include "[init/docs] done: 0 copied, "
         The stderr should not include "skipped"
         The stderr should not include "Rules update available"
-        The contents of file "${DECKRD_DOCS_DIR}/rules/deckrd-rule-workflow.md" \
-          should equal "$(load_asset "inits/docs/rules/deckrd-rule-workflow.md")"
+        The contents of file "${DECKRD_DOCS_DIR}/rules/deckrd-rule-workflow.md" should equal "$EXPECTED_WORKFLOW"
       End
     End
 
