@@ -87,6 +87,9 @@ list_updated_assets() {
 #
 # Sets each directory variable with `${VAR:-default}`, so values set beforehand
 # (non-empty) are kept. *_SRC_DIR defaults are derived from INITS_DIR.
+# Sources nested under another asset dir mirror their deployed layout:
+# RULES_SRC_DIR is `docs/rules` and LOCAL_WORKSPACES_SRC_DIR is
+# `local-deckrd/workspaces`, so their paths differ from their ASSET_TARGETS labels.
 # ASSET_TARGETS is overwritten (not appended) with `<name>|<src_dir>|<dest_dir>` entries.
 # Requires DECKRD_ROOT, PROJECT_ROOT, DECKRD_DOCS_DIR, DECKRD_LOCAL_DATA and
 # DECKRD_LOCAL_WORKSPACES (set by bootstrap).
@@ -98,12 +101,12 @@ list_updated_assets() {
 # @return 0 always
 init_asset_dirs() {
   INITS_DIR="${INITS_DIR:-${DECKRD_ROOT}/assets/inits}"
-  RULES_SRC_DIR="${RULES_SRC_DIR:-${INITS_DIR}/deckrd-rules}"
+  RULES_SRC_DIR="${RULES_SRC_DIR:-${INITS_DIR}/docs/rules}"
   RULES_INDEX_SRC_DIR="${RULES_INDEX_SRC_DIR:-${INITS_DIR}/deckrd-rules-index}"
   CLAUDE_RULES_SRC_DIR="${CLAUDE_RULES_SRC_DIR:-${INITS_DIR}/claude-rules}"
   DOCS_SRC_DIR="${DOCS_SRC_DIR:-${INITS_DIR}/docs}"
   LOCAL_SRC_DIR="${LOCAL_SRC_DIR:-${INITS_DIR}/local-deckrd}"
-  LOCAL_WORKSPACES_SRC_DIR="${LOCAL_WORKSPACES_SRC_DIR:-${INITS_DIR}/local-workspaces}"
+  LOCAL_WORKSPACES_SRC_DIR="${LOCAL_WORKSPACES_SRC_DIR:-${INITS_DIR}/local-deckrd/workspaces}"
   DECKRD_RULES_DIR="${DECKRD_RULES_DIR:-${DECKRD_DOCS_DIR}/rules}"
   CLAUDE_RULES_DIR="${CLAUDE_RULES_DIR:-${PROJECT_ROOT}/.claude/rules/claude-rules}"
   CLAUDE_RULES_INDEX_DIR="${CLAUDE_RULES_INDEX_DIR:-${PROJECT_ROOT}/.claude/rules/deckrd-rules}"

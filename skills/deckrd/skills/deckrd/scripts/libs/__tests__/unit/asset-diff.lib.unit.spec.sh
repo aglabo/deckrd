@@ -312,13 +312,13 @@ Describe "T-LIB-ASDF: asset-diff.lib.sh"
         It "Then: [Normal] T-LIB-ASDF-18: 既定値が設定される"
           When call init_asset_dirs
           The status should equal 0
-          The variable RULES_SRC_DIR should equal "${DECKRD_ROOT}/assets/inits/deckrd-rules"
+          The variable RULES_SRC_DIR should equal "${DECKRD_ROOT}/assets/inits/docs/rules"
           The variable DECKRD_RULES_DIR should equal "${DECKRD_DOCS_DIR}/rules"
           The variable CLAUDE_RULES_DIR should equal "${PROJECT_ROOT}/.claude/rules/claude-rules"
           The variable CLAUDE_RULES_INDEX_DIR should equal "${PROJECT_ROOT}/.claude/rules/deckrd-rules"
-          The value "${ASSET_TARGETS[0]}" should equal "deckrd-rules|${DECKRD_ROOT}/assets/inits/deckrd-rules|${DECKRD_DOCS_DIR}/rules"
-          The variable LOCAL_WORKSPACES_SRC_DIR should equal "${DECKRD_ROOT}/assets/inits/local-workspaces"
-          The value "${ASSET_TARGETS[5]}" should equal "local-workspaces|${DECKRD_ROOT}/assets/inits/local-workspaces|${DECKRD_LOCAL_WORKSPACES}"
+          The value "${ASSET_TARGETS[0]}" should equal "deckrd-rules|${DECKRD_ROOT}/assets/inits/docs/rules|${DECKRD_DOCS_DIR}/rules"
+          The variable LOCAL_WORKSPACES_SRC_DIR should equal "${DECKRD_ROOT}/assets/inits/local-deckrd/workspaces"
+          The value "${ASSET_TARGETS[5]}" should equal "local-workspaces|${DECKRD_ROOT}/assets/inits/local-deckrd/workspaces|${DECKRD_LOCAL_WORKSPACES}"
         End
       End
     End
@@ -349,7 +349,7 @@ Describe "T-LIB-ASDF: asset-diff.lib.sh"
         It "Then: [Error] T-LIB-ASDF-20: 空文字の変数は既定値になる"
           When call init_asset_dirs
           The status should equal 0
-          The variable RULES_SRC_DIR should equal "${DECKRD_ROOT}/assets/inits/deckrd-rules"
+          The variable RULES_SRC_DIR should equal "${DECKRD_ROOT}/assets/inits/docs/rules"
         End
       End
     End
@@ -367,7 +367,8 @@ Describe "T-LIB-ASDF: asset-diff.lib.sh"
           The status should equal 0
           The value "${ASSET_TARGETS[3]}" should equal "docs|/tmp/inits/docs|${DECKRD_DOCS_DIR}"
           The variable LOCAL_SRC_DIR should equal "/tmp/inits/local-deckrd"
-          The variable LOCAL_WORKSPACES_SRC_DIR should equal "/tmp/inits/local-workspaces"
+          The variable RULES_SRC_DIR should equal "/tmp/inits/docs/rules"
+          The variable LOCAL_WORKSPACES_SRC_DIR should equal "/tmp/inits/local-deckrd/workspaces"
         End
       End
     End
