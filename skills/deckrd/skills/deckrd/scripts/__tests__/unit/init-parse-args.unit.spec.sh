@@ -165,6 +165,45 @@ Describe "T-CLI-PA: init.sh: parse_args"
     End
   End
 
+  Describe "Given: --force option"
+    It "[Normal] T-CLI-PA-17: Should: default OPTIONS[force] to false"
+      When call parse_args myapp webapp
+      The status should equal 0
+      The value "${OPTIONS[force]}" should equal false
+    End
+
+    It "[Normal] T-CLI-PA-18: Should: set OPTIONS[force]=true for --force after positional arguments"
+      When call parse_args myapp webapp --force
+      The status should equal 0
+      The value "${OPTIONS[force]}" should equal true
+      The value "${OPTIONS[project]}" should equal "myapp"
+      The value "${OPTIONS[project_type]}" should equal "webapp"
+    End
+
+    It "[Normal] T-CLI-PA-19: Should: set OPTIONS[force]=true for --force before positional arguments"
+      When call parse_args --force myapp webapp
+      The status should equal 0
+      The value "${OPTIONS[force]}" should equal true
+      The value "${OPTIONS[project]}" should equal "myapp"
+      The value "${OPTIONS[project_type]}" should equal "webapp"
+    End
+
+    It "[Error] T-CLI-PA-20: Should: return 1 with Unknown option for --force=yes"
+      When call parse_args myapp webapp --force=yes
+      The status should equal 1
+      The variable PARSE_ARGS_ERROR should equal "Unknown option: --force=yes"
+      The value "${OPTIONS[force]}" should equal false
+    End
+
+    It "[Edge] T-CLI-PA-21: Should: set OPTIONS[force]=true for --force between positional arguments"
+      When call parse_args myapp --force webapp
+      The status should equal 0
+      The value "${OPTIONS[force]}" should equal true
+      The value "${OPTIONS[project]}" should equal "myapp"
+      The value "${OPTIONS[project_type]}" should equal "webapp"
+    End
+  End
+
   Describe "Given: repeated calls"
     # shellcheck disable=SC2329
     _parse_help_then_positional() {
@@ -172,10 +211,22 @@ Describe "T-CLI-PA: init.sh: parse_args"
       parse_args myapp webapp
     }
 
+    # shellcheck disable=SC2329
+    _parse_force_then_positional() {
+      parse_args --force myapp webapp
+      parse_args myapp webapp
+    }
+
     It "[Normal] T-CLI-PA-16: Should: reset OPTIONS[help] to false on next call"
       When call _parse_help_then_positional
       The status should equal 0
       The value "${OPTIONS[help]}" should equal false
+    End
+
+    It "[Normal] T-CLI-PA-22: Should: reset OPTIONS[force] to false on next call"
+      When call _parse_force_then_positional
+      The status should equal 0
+      The value "${OPTIONS[force]}" should equal false
     End
   End
 
