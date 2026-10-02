@@ -54,7 +54,7 @@ Copies deckrd assets into the project on first run. Existing files are never ove
 1. **deckrd-rules (bodies)** → `docs/.deckrd/rules/`
 
    ```bash
-   assets/inits/deckrd-rules/*  →  docs/.deckrd/rules/  (skip if exists)
+   assets/inits/docs/rules/*  →  docs/.deckrd/rules/  (skip if exists)
    ```
 
 2. **claude-rules** → `.claude/rules/claude-rules/`
