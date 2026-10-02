@@ -170,6 +170,18 @@ Describe "bootstrap.lib.sh"
       The output should equal "unset:unset:unset:unset"
     End
 
+    It "[Edge] T-LIB-BEXP-19: 親から空文字で export されたスキル依存 4 変数は親で既定値になる"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj DECKRD_ROOT='' DECKRD_SCRIPTS_DIR='' DECKRD_ASSETS_DIR='' DECKRD_LIB_DIR=''; . \"$SCRIPT\" || exit 1; [ -n \"\$SKILL_ROOT\" ] && [ \"\$DECKRD_ROOT\" = \"\$SKILL_ROOT\" ] && r=skill-root || r=\"\$DECKRD_ROOT\"; printf \"%s:%s:%s:%s\" \"\$r\" \"\${DECKRD_SCRIPTS_DIR#\"\$DECKRD_ROOT\"}\" \"\${DECKRD_ASSETS_DIR#\"\$DECKRD_ROOT\"}\" \"\${DECKRD_LIB_DIR#\"\$DECKRD_ROOT\"}\""
+      The status should equal 0
+      The output should equal "skill-root:/scripts:/assets:/scripts/libs"
+    End
+
+    It "[Edge] T-LIB-BEXP-20: 親から空文字で export されたスキル依存 4 変数は親で export 属性が外れる"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj DECKRD_ROOT='' DECKRD_SCRIPTS_DIR='' DECKRD_ASSETS_DIR='' DECKRD_LIB_DIR=''; . \"$SCRIPT\" || exit 1; o=''; for v in DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_ASSETS_DIR DECKRD_LIB_DIR; do a=\$(declare -p \"\$v\") || exit 1; a=\${a#declare -}; a=\${a%% *}; case \$a in *x*) a=x ;; *) a=no-x ;; esac; o=\${o:+\$o:}\$a; done; printf \"%s\" \"\$o\""
+      The status should equal 0
+      The output should equal "no-x:no-x:no-x:no-x"
+    End
+
     Describe "Given: bdd-coder の scripts/libs が deckrd の scripts/libs への symlink"
       Skip if "scripts/libs が symlink でない (core.symlinks=false)" _bexp_coder_libs_not_linked
 
