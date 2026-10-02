@@ -203,6 +203,8 @@ validate_args() {
 # @arg $1 string Destination directory
 # @arg $2 string Source directory (optional; if omitted, only creates dest dir)
 # @arg $3 string Label for display (optional; defaults to basename of dest dir)
+# @description Only regular files (including dotfiles) directly under the source are copied.
+#   Subdirectories are skipped and not counted; each is deployed by its own ASSET_TARGETS entry
 # @exitcode 0 Directory created (and assets copied or skipped)
 # @exitcode 1 Directory could not be created or an asset could not be copied
 # @stderr Progress messages
@@ -229,7 +231,8 @@ init_directory() {
   local copied=0 skipped=0
   for src_file in "$src_dir"/* "$src_dir"/.*; do
     [[ -e "$src_file" ]] || continue
-    [[ "$(basename "$src_file")" == "." || "$(basename "$src_file")" == ".." ]] && continue
+    # Skip directories (incl. . and ..): nested dirs are deployed by their own ASSET_TARGETS entries
+    [[ -d "$src_file" ]] && continue
     local dest_filename dest_file
     dest_filename="$(asset_dest_name "$src_file")"
     dest_file="${dest_dir}/${dest_filename}"

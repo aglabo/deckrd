@@ -202,6 +202,7 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
         The status should equal 0
         The stderr should include "[init/deckrd-rules] copied: .gitignore"
         The path "${DECKRD_RULES_DIR}/deckrd-rule-bdd-cycle.md" should be exist
+        The path "${DECKRD_RULES_DIR}/deckrd-rule-workflow.md" should be file
         The path "${DECKRD_RULES_DIR}/.gitignore" should be exist
         The path "${DECKRD_RULES_DIR}/.gitignore.org" should not be exist
       End
@@ -514,6 +515,31 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
         The stderr should include "Unsupported language"
         The stderr should not include "Rules update available"
       End
+    End
+  End
+
+  Describe "Given: an asset source directory contains a subdirectory"
+    # Fixture docs source: one regular file plus one nested directory (with a file inside)
+    _create_docs_src_with_subdir() {
+      export DOCS_SRC_DIR="${DECKRD_TMPDIR}/fixture-docs"
+      mkdir -p "${DOCS_SRC_DIR}/nested"
+      printf 'readme\n' >"${DOCS_SRC_DIR}/README.md"
+      printf 'inner\n' >"${DOCS_SRC_DIR}/nested/inner.md"
+    }
+    _unset_docs_src() { unset DOCS_SRC_DIR; }
+    Before "setup_deckrd_tmpdir" "_create_docs_src_with_subdir"
+    After "_unset_docs_src" "teardown_deckrd_tmpdir"
+
+    It "[Normal] T-CLI-MAINI-56: Should: copy the file, skip the subdirectory without counting it"
+      When run bash "$SCRIPT" myapp webapp
+      The status should equal 0
+      # @note: --json モード追加時はこのアサーションを見直すこと
+      The output should be blank
+      The stderr should include "[init/docs] copied: README.md"
+      The stderr should include "[init/docs] done: 1 copied, 0 skipped"
+      The stderr should include "Init complete."
+      The path "${DECKRD_DOCS_DIR}/README.md" should be file
+      The path "${DECKRD_DOCS_DIR}/nested" should not be exist
     End
   End
 

@@ -22,13 +22,25 @@ SCRIPT="${DECKRD_SCRIPTS_DIR}/update.sh"
 OLD_MTIME='2026-01-01 00:00:00'
 NEW_MTIME='2026-01-02 00:00:00'
 
+# Helper: print the source directory of an asset label under INITS_DIR
+# deckrd-rules and local-workspaces live in nested directories; other labels use their own name.
+# @arg $1 Asset label
+# @stdout Source directory
+asset_src_dir() {
+  case "$1" in
+  deckrd-rules) printf '%s\n' "${INITS_DIR}/docs/rules" ;;
+  local-workspaces) printf '%s\n' "${INITS_DIR}/local-deckrd/workspaces" ;;
+  *) printf '%s\n' "${INITS_DIR}/${1}" ;;
+  esac
+}
+
 # Helper: create an isolated asset source tree and deployment directories
 setup_update_env() {
   setup_deckrd_tmpdir
   export INITS_DIR="${DECKRD_TMPDIR}/inits"
   local label
   for label in deckrd-rules claude-rules deckrd-rules-index docs local-deckrd local-workspaces; do
-    mkdir -p "${INITS_DIR}/${label}"
+    mkdir -p "$(asset_src_dir "$label")"
   done
   mkdir -p "$DECKRD_RULES_DIR" "$CLAUDE_RULES_DIR" "$CLAUDE_RULES_INDEX_DIR" "$DECKRD_LOCAL_WORKSPACES"
   printf '{}\n' >"${DECKRD_LOCAL_DATA}/session.json"
@@ -42,7 +54,7 @@ teardown_update_env() {
 
 # Helper: place an asset source file and its deployed copy with fixed mtimes
 # Contents are written before touch so that the mtimes are not reset.
-# @arg $1 Asset label (subdirectory of INITS_DIR)
+# @arg $1 Asset label (mapped by asset_src_dir)
 # @arg $2 Destination directory
 # @arg $3 File name
 # @arg $4 Source content
@@ -50,7 +62,8 @@ teardown_update_env() {
 # @arg $6 Source mtime
 # @arg $7 Destination mtime
 make_asset() {
-  local src="${INITS_DIR}/${1}/${3}" dest="${2}/${3}"
+  local src dest="${2}/${3}"
+  src="$(asset_src_dir "$1")/${3}"
   printf '%s\n' "$4" >"$src"
   printf '%s\n' "$5" >"$dest"
   touch -d "$6" "$src"
@@ -75,7 +88,7 @@ _ruled_local_gitignore() {
 
 # Helper: place the local gitignore template and a local gitignore read from stdin
 _make_local_gitignore() {
-  { printf '%s\n' '*'; _workspaces_rule_block; } >"${INITS_DIR}/local-deckrd/.gitignore.org"
+  { printf '%s\n' '*'; _workspaces_rule_block; } >"$(asset_src_dir local-deckrd)/.gitignore.org"
   cat >"${DECKRD_LOCAL_DATA}/.gitignore"
 }
 
@@ -107,7 +120,7 @@ make_ruled_crlf_local_gitignore() {
 # Helper: place a template without the workspaces rule marker and an old local gitignore
 make_markerless_template_local_gitignore() {
   make_old_local_gitignore
-  printf '%s\n' '*' '!README*' >"${INITS_DIR}/local-deckrd/.gitignore.org"
+  printf '%s\n' '*' '!README*' >"$(asset_src_dir local-deckrd)/.gitignore.org"
 }
 
 # Helper: place the template and an old local gitignore whose last line has no trailing newline
@@ -135,7 +148,7 @@ restore_local_gitignore_mode() {
 # Helper: remove the workspaces directory and place a local-workspaces README source
 setup_workspaces_missing() {
   rm -rf "$DECKRD_LOCAL_WORKSPACES"
-  printf '%s\n' '# workspaces' >"${INITS_DIR}/local-workspaces/README.md"
+  printf '%s\n' '# workspaces' >"$(asset_src_dir local-workspaces)/README.md"
 }
 
 # Fixture: target path of the dangling README symlink (inside the test temp area, never created)
@@ -254,7 +267,7 @@ Describe "T-CLI-UPDI: update.sh: list outdated assets"
     After "teardown_update_env"
 
     setup_undeployed() {
-      printf '%s\n' new >"${INITS_DIR}/deckrd-rules/new-rule.md"
+      printf '%s\n' new >"$(asset_src_dir deckrd-rules)/new-rule.md"
     }
     Before "setup_undeployed"
 
@@ -424,9 +437,9 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
     After "teardown_update_env"
 
     setup_org_outdated() {
-      printf '%s\n' new >"${INITS_DIR}/deckrd-rules/.gitignore.org"
+      printf '%s\n' new >"$(asset_src_dir deckrd-rules)/.gitignore.org"
       printf '%s\n' old >"${DECKRD_RULES_DIR}/.gitignore"
-      touch -d "$NEW_MTIME" "${INITS_DIR}/deckrd-rules/.gitignore.org"
+      touch -d "$NEW_MTIME" "$(asset_src_dir deckrd-rules)/.gitignore.org"
       touch -d "$OLD_MTIME" "${DECKRD_RULES_DIR}/.gitignore"
     }
     Before "setup_org_outdated"
@@ -461,7 +474,7 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
     After "teardown_update_env"
 
     setup_undeployed_for_update() {
-      printf '%s\n' new >"${INITS_DIR}/deckrd-rules/new-rule.md"
+      printf '%s\n' new >"$(asset_src_dir deckrd-rules)/new-rule.md"
     }
     Before "setup_undeployed_for_update"
 
@@ -666,7 +679,7 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
       When run bash "$SCRIPT" --update
       The status should equal 0
       The output should equal "Updated: [local-workspaces] README.md (missing)"
-      The contents of file "${DECKRD_LOCAL_WORKSPACES}/README.md" should equal "$(cat "${INITS_DIR}/local-workspaces/README.md")"
+      The contents of file "${DECKRD_LOCAL_WORKSPACES}/README.md" should equal "$(cat "$(asset_src_dir local-workspaces)/README.md")"
     End
   End
 
@@ -684,7 +697,7 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
       When run bash "$SCRIPT" --update
       The status should equal 0
       The output should equal "Assets are up to date."
-      The contents of file "${DECKRD_LOCAL_WORKSPACES}/README.md" should equal "$(cat "${INITS_DIR}/local-workspaces/README.md")"
+      The contents of file "${DECKRD_LOCAL_WORKSPACES}/README.md" should equal "$(cat "$(asset_src_dir local-workspaces)/README.md")"
     End
   End
 
@@ -732,7 +745,7 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
 
     # Keeps the workspaces directory (unlike setup_workspaces_missing) so that only the README is missing
     setup_workspaces_readme_only_missing() {
-      printf '%s\n' '# workspaces' >"${INITS_DIR}/local-workspaces/README.md"
+      printf '%s\n' '# workspaces' >"$(asset_src_dir local-workspaces)/README.md"
       printf '%s\n' 'keep' >"${DECKRD_LOCAL_WORKSPACES}/notes.md"
     }
     Before "setup_workspaces_readme_only_missing"
@@ -741,7 +754,7 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
       When run bash "$SCRIPT" --update
       The status should equal 0
       The output should equal "Updated: [local-workspaces] README.md (missing)"
-      The contents of file "${DECKRD_LOCAL_WORKSPACES}/README.md" should equal "$(cat "${INITS_DIR}/local-workspaces/README.md")"
+      The contents of file "${DECKRD_LOCAL_WORKSPACES}/README.md" should equal "$(cat "$(asset_src_dir local-workspaces)/README.md")"
       The contents of file "${DECKRD_LOCAL_WORKSPACES}/notes.md" should equal "keep"
     End
   End
