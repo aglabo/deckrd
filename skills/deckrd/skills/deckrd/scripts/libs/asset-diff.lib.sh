@@ -199,7 +199,7 @@ _asset_is_missing() {
 
 # Marker text identifying the workspaces rule block in the local gitignore template
 readonly WORKSPACES_RULE_MARKER='Shared notes layer'
-# Regex (awk ERE) matching the banner lines that frame a gitignore template section
+# Regex (sed BRE) matching the banner lines that frame a gitignore template section
 readonly WORKSPACES_RULE_BANNER='^## ---'
 
 # workspaces_rule_missing - Check whether gitignore content lacks the `!/workspaces/` line
@@ -212,20 +212,13 @@ workspaces_rule_missing() {
 
 # workspaces_rule_block - Extract the workspaces rule block from the gitignore template
 #
-# The block runs from the `## ---` banner above the WORKSPACES_RULE_MARKER line
+# The block runs from the `## ---` banner directly above the WORKSPACES_RULE_MARKER line
 # to the end of the content.
 #
 # @arg $1 Gitignore template content
 # @stdout The block
 # @return 0 found, 1 not found
 workspaces_rule_block() {
-  awk -v marker="$WORKSPACES_RULE_MARKER" -v banner_re="$WORKSPACES_RULE_BANNER" '
-    $0 ~ banner_re { banner = NR }
-    !start && banner && index($0, marker) { start = banner }
-    { lines[NR] = $0 }
-    END {
-      if (!start) exit 1
-      for (i = start; i <= NR; i++) print lines[i]
-    }
-  ' <<<"$1"
+  # Slide a 2-line window; on a banner+marker pair print through EOF, else exit 1 at the last line
+  sed -n "\$!N; /${WORKSPACES_RULE_BANNER}[^\n]*\n[^\n]*${WORKSPACES_RULE_MARKER}/{:a;p;n;ba}; \$q1; D" <<<"$1"
 }

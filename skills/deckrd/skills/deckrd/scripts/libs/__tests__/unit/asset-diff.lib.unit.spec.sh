@@ -955,7 +955,7 @@ Describe "T-LIB-ASDF: asset-diff.lib.sh"
 ##  Shared notes layer: track workspaces/ only ##'
 
     # Helper: print a template file from the line just above its first marker line through EOF
-    # Computed with grep/tail from the file, independently of the awk in workspaces_rule_block
+    # Computed with grep/tail from the file, independently of the sed in workspaces_rule_block
     _expected_rule_block() {
       local marker_line
       marker_line="$(grep -n -m 1 -F 'Shared notes layer' "$1" | cut -d: -f1)"
