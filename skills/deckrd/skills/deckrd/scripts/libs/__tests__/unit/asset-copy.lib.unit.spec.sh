@@ -598,6 +598,51 @@ Describe "T-LIB-ASCP: asset-copy.lib.sh"
       End
     End
 
+    Describe "Given: ソースに a.md があり配置先に a.md がない"
+      setup_dest_missing() {
+        put_file "${NAMING_TMPDIR}/src" "a.md" "new"
+      }
+      BeforeEach "setup_dest_missing"
+
+      Describe "When: --missing-only を第 1 引数にして copy_assets を呼ぶ"
+        It "Then: [Normal] T-LIB-ASCP-57: 未配置の a.md をコピーし dst_rel を出力する"
+          When call copy_assets --missing-only "${NAMING_TMPDIR}/src" "${NAMING_TMPDIR}/dest"
+          The status should equal 0
+          The output should equal "a.md"
+          The contents of file "${NAMING_TMPDIR}/dest/a.md" should equal "new"
+        End
+      End
+    End
+
+    # Differs from T-LIB-ASCP-16 / 36: --missing-only, so the outdated dest is kept.
+    Describe "Given: 配置先に古く内容が違う同名ファイルが既存 (--missing-only)"
+      setup_dest_outdated_missing_only() {
+        put_file "${NAMING_TMPDIR}/src" "a.md" "new"
+        put_file "${NAMING_TMPDIR}/dest" "a.md" "old"
+        make_old "${NAMING_TMPDIR}/dest/a.md"
+      }
+      BeforeEach "setup_dest_outdated_missing_only"
+
+      Describe "When: --missing-only を第 1 引数にして copy_assets を呼ぶ"
+        It "Then: [Edge] T-LIB-ASCP-58: 既存の a.md を上書きせず何も出力しない"
+          When call copy_assets --missing-only "${NAMING_TMPDIR}/src" "${NAMING_TMPDIR}/dest"
+          The status should equal 0
+          The output should equal ""
+          The contents of file "${NAMING_TMPDIR}/dest/a.md" should equal "old"
+        End
+      End
+
+      # --missing-only is only recognized as $1; in any other position it does not enable missing-only mode
+      Describe "When: --missing-only を第 3 引数にして copy_assets を呼ぶ"
+        It "Then: [Edge] T-LIB-ASCP-59: 欠落補完モードにならず、通常どおり上書きして dst_rel を出力する"
+          When call copy_assets "${NAMING_TMPDIR}/src" "${NAMING_TMPDIR}/dest" --missing-only
+          The status should equal 0
+          The output should equal "a.md"
+          The contents of file "${NAMING_TMPDIR}/dest/a.md" should equal "new"
+        End
+      End
+    End
+
     Describe "Given: 配置先に保護対象の .gitignore が既存"
       setup_dest_protected() {
         put_file "${NAMING_TMPDIR}/src" ".gitignore.org" "upstream"

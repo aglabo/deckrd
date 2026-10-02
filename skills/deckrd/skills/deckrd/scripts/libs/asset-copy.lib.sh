@@ -102,9 +102,17 @@ sync_asset_mtimes() {
 # copy_asset_file); the link target is neither overwritten nor copied into.
 # `--force` in any other position does not enable force mode.
 #
-# Usage: copy_assets [--force] <src_dir> <dest_dir> [keep...]
+# With `--missing-only` as the first argument, list_asset_files runs in
+# missing-only mode, so only source files whose destination does not exist are
+# copied; an existing destination (file or symlink) is never overwritten, even
+# when it is older than and differs from the source. Keep patterns still apply,
+# and sync_asset_mtimes is still called without it.
+# `--missing-only` in any other position does not enable missing-only mode.
+#
+# Usage: copy_assets [--force | --missing-only] <src_dir> <dest_dir> [keep...]
 #
 # @option --force Force mode, only as the first argument; the arguments below follow it
+# @option --missing-only Missing-only mode, only as the first argument; the arguments below follow it
 # @arg <src_dir> Source asset directory
 # @arg <dest_dir> Destination directory (created if missing)
 # @arg [keep...] Keep patterns passed to list_asset_files and sync_asset_mtimes, optional
@@ -114,11 +122,13 @@ sync_asset_mtimes() {
 # @return 1 when dest_dir cannot be created or a copy fails
 copy_assets() {
   local src_dir dest_dir list src_rel dst_rel dest
-  local -a force_opt=()
-  if [[ "$1" == --force ]]; then
-    force_opt=(--force)
-    shift
-  fi
+  local -a mode_opt=()
+  case "$1" in
+    --force | --missing-only)
+      mode_opt=("$1")
+      shift
+      ;;
+  esac
   src_dir="$(normalize_dir_path "$1")"
   dest_dir="$(normalize_dir_path "$2")"
   if ! mkdir -p "$dest_dir"; then
@@ -126,7 +136,7 @@ copy_assets() {
     return 1
   fi
   [[ -d "$src_dir" ]] || return 0
-  list="$(list_asset_files "${force_opt[@]}" "$src_dir" "$dest_dir" "${@:3}")"
+  list="$(list_asset_files "${mode_opt[@]}" "$src_dir" "$dest_dir" "${@:3}")"
   while IFS= read -r src_rel; do
     # an empty list yields one empty line
     [[ -n "$src_rel" ]] || continue
