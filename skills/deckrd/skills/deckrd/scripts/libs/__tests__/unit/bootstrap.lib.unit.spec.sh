@@ -31,6 +31,20 @@ Include "../spec_helper.sh"
 
 SCRIPT="${_RUNTIME_LIBS_DIR}/bootstrap.lib.sh"
 
+# bootstrap.lib.sh as seen through bdd-coder's linked scripts/libs
+_CODER_LINKED_LIBS_DIR="${SHELLSPEC_PROJECT_ROOT}/skills/bdd-coder/skills/bdd-coder/scripts/libs"
+_CODER_LINKED_SCRIPT="${_CODER_LINKED_LIBS_DIR}/bootstrap.lib.sh"
+
+# _bexp_coder_libs_not_linked - bdd-coder の scripts/libs が実リンクでないかを調べる (Skip if の条件)
+#
+# core.symlinks=false の Windows checkout ではリンクがテキストファイルになり、
+# bdd-coder 側から bootstrap.lib.sh を source できない。
+#
+# @return 0 実リンクでない (Skip する), 1 実リンク
+_bexp_coder_libs_not_linked() {
+  [[ ! -L "$_CODER_LINKED_LIBS_DIR" ]]
+}
+
 # Source bootstrap with no-finalize so variables remain writable in this spec
 # process. Before blocks call bootstrap_init with fixed dependencies to re-set
 # variables under test. bootstrap_finalize is NOT called globally so that
@@ -71,6 +85,7 @@ Describe "bootstrap.lib.sh"
 
     Describe "Given: PROJECT_ROOT=/tmp/proj で bootstrap_init を呼ぶ"
       Before "export PROJECT_ROOT=/tmp/proj; unset SKILL_ROOT DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_LIB_DIR DECKRD_DATA_DIR DECKRD_LOCAL_DATA DECKRD_LOCAL_WORKSPACES DECKRD_LOCAL_TEMP DECKRD_DOCS_DIR SYMBOL; bootstrap_init"
+      Before "export PROJECT_ROOT=/tmp/proj; unset SKILL_ROOT DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_LIB_DIR DECKRD_DATA_DIR DECKRD_LOCAL_DATA DECKRD_LOCAL_WORKSPACES DECKRD_LOCAL_TEMP DECKRD_DOCS_DIR SYMBOL; bootstrap_init"
 
       It "[Normal] T-LIB-BEXP-01: PROJECT_ROOT が export されている"
         When call bash -c 'export -p | grep -q "^declare -x PROJECT_ROOT=" && echo ok'
@@ -82,19 +97,19 @@ Describe "bootstrap.lib.sh"
         The output should equal "not-found"
       End
 
-      It "[Normal] T-LIB-BEXP-03: DECKRD_ROOT が export されている"
-        When call bash -c 'export -p | grep -q "^declare -x DECKRD_ROOT=" && echo ok'
-        The output should equal "ok"
+      It "[Normal] T-LIB-BEXP-03: DECKRD_ROOT の計算値は export されない"
+        When call bash -c 'export -p | grep -q "^declare -x DECKRD_ROOT=" && echo found || echo not-found'
+        The output should equal "not-found"
       End
 
-      It "[Normal] T-LIB-BEXP-04: DECKRD_SCRIPTS_DIR が export されている"
-        When call bash -c 'export -p | grep -q "^declare -x DECKRD_SCRIPTS_DIR=" && echo ok'
-        The output should equal "ok"
+      It "[Normal] T-LIB-BEXP-04: DECKRD_SCRIPTS_DIR の計算値は export されない"
+        When call bash -c 'export -p | grep -q "^declare -x DECKRD_SCRIPTS_DIR=" && echo found || echo not-found'
+        The output should equal "not-found"
       End
 
-      It "[Normal] T-LIB-BEXP-05: DECKRD_LIB_DIR が export されている"
-        When call bash -c 'export -p | grep -q "^declare -x DECKRD_LIB_DIR=" && echo ok'
-        The output should equal "ok"
+      It "[Normal] T-LIB-BEXP-05: DECKRD_LIB_DIR の計算値は export されない"
+        When call bash -c 'export -p | grep -q "^declare -x DECKRD_LIB_DIR=" && echo found || echo not-found'
+        The output should equal "not-found"
       End
 
       It "[Normal] T-LIB-BEXP-06: DECKRD_DATA_DIR が export されている"
@@ -127,9 +142,59 @@ Describe "bootstrap.lib.sh"
         The output should equal "ok"
       End
 
-      It "[Normal] T-LIB-BEXP-12: SKILL_ROOT が export されている"
-        When call bash -c 'export -p | grep -q "^declare -x SKILL_ROOT=" && echo ok'
-        The output should equal "ok"
+      It "[Normal] T-LIB-BEXP-12: SKILL_ROOT が export されていない"
+        When call bash -c 'export -p | grep -q "^declare -x SKILL_ROOT=" && echo found || echo not-found'
+        The output should equal "not-found"
+      End
+    End
+
+    It "[Edge] T-LIB-BEXP-13: 親から export された SKILL_ROOT は子プロセスに渡らない"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj SKILL_ROOT=/tmp/other; . \"$SCRIPT\" || exit 1; bash -c 'printf \"%s\" \"\${SKILL_ROOT-unset}\"'"
+      The output should equal "unset"
+    End
+
+    It "[Error] T-LIB-BEXP-14: 親から export された空文字の SKILL_ROOT は子プロセスに渡らない"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj SKILL_ROOT=''; . \"$SCRIPT\" || exit 1; bash -c 'printf \"%s\" \"\${SKILL_ROOT-unset}\"'"
+      The output should equal "unset"
+    End
+
+    It "[Edge] T-LIB-BEXP-15: スキル依存 4 変数の計算値は子プロセスに渡らない"
+      When run bash -c "unset DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_ASSETS_DIR DECKRD_LIB_DIR; export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" || exit 1; bash -c 'printf \"%s:%s:%s:%s\" \"\${DECKRD_ROOT-unset}\" \"\${DECKRD_SCRIPTS_DIR-unset}\" \"\${DECKRD_ASSETS_DIR-unset}\" \"\${DECKRD_LIB_DIR-unset}\"'"
+      The status should equal 0
+      The output should equal "unset:unset:unset:unset"
+    End
+
+    It "[Error] T-LIB-BEXP-17: 親から空文字で export されたスキル依存 4 変数の計算値は子プロセスに渡らない"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj DECKRD_ROOT='' DECKRD_SCRIPTS_DIR='' DECKRD_ASSETS_DIR='' DECKRD_LIB_DIR=''; . \"$SCRIPT\" || exit 1; bash -c 'printf \"%s:%s:%s:%s\" \"\${DECKRD_ROOT-unset}\" \"\${DECKRD_SCRIPTS_DIR-unset}\" \"\${DECKRD_ASSETS_DIR-unset}\" \"\${DECKRD_LIB_DIR-unset}\"'"
+      The status should equal 0
+      The output should equal "unset:unset:unset:unset"
+    End
+
+    It "[Edge] T-LIB-BEXP-19: 親から空文字で export されたスキル依存 4 変数は親で既定値になる"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj DECKRD_ROOT='' DECKRD_SCRIPTS_DIR='' DECKRD_ASSETS_DIR='' DECKRD_LIB_DIR=''; . \"$SCRIPT\" || exit 1; [ -n \"\$SKILL_ROOT\" ] && [ \"\$DECKRD_ROOT\" = \"\$SKILL_ROOT\" ] && r=skill-root || r=\"\$DECKRD_ROOT\"; printf \"%s:%s:%s:%s\" \"\$r\" \"\${DECKRD_SCRIPTS_DIR#\"\$DECKRD_ROOT\"}\" \"\${DECKRD_ASSETS_DIR#\"\$DECKRD_ROOT\"}\" \"\${DECKRD_LIB_DIR#\"\$DECKRD_ROOT\"}\""
+      The status should equal 0
+      The output should equal "skill-root:/scripts:/assets:/scripts/libs"
+    End
+
+    It "[Edge] T-LIB-BEXP-20: 親から空文字で export されたスキル依存 4 変数は親で export 属性が外れる"
+      When run bash -c "export PROJECT_ROOT=/tmp/proj DECKRD_ROOT='' DECKRD_SCRIPTS_DIR='' DECKRD_ASSETS_DIR='' DECKRD_LIB_DIR=''; . \"$SCRIPT\" || exit 1; o=''; for v in DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_ASSETS_DIR DECKRD_LIB_DIR; do a=\$(declare -p \"\$v\") || exit 1; a=\${a#declare -}; a=\${a%% *}; case \$a in *x*) a=x ;; *) a=no-x ;; esac; o=\${o:+\$o:}\$a; done; printf \"%s\" \"\$o\""
+      The status should equal 0
+      The output should equal "no-x:no-x:no-x:no-x"
+    End
+
+    Describe "Given: bdd-coder の scripts/libs が deckrd の scripts/libs への symlink"
+      Skip if "scripts/libs が symlink でない (core.symlinks=false)" _bexp_coder_libs_not_linked
+
+      It "[Edge] T-LIB-BEXP-16: deckrd で source した親の子が bdd-coder 側を source すると DECKRD_ROOT は bdd-coder になる"
+        When run bash -c "unset DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_ASSETS_DIR DECKRD_LIB_DIR; export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" || exit 1; bash -c '. \"${_CODER_LINKED_SCRIPT}\" || exit 1; printf \"%s\" \"\$DECKRD_ROOT\"'"
+        The status should equal 0
+        The output should end with "/skills/bdd-coder/skills/bdd-coder"
+      End
+
+      It "[Edge] T-LIB-BEXP-18: 親が空文字の DECKRD_ROOT を export して deckrd 側を source しても、子が bdd-coder 側を source すると DECKRD_ROOT は bdd-coder になる"
+        When run bash -c "unset DECKRD_SCRIPTS_DIR DECKRD_ASSETS_DIR DECKRD_LIB_DIR; export PROJECT_ROOT=/tmp/proj DECKRD_ROOT=''; . \"$SCRIPT\" || exit 1; bash -c '. \"${_CODER_LINKED_SCRIPT}\" || exit 1; printf \"%s\" \"\$DECKRD_ROOT\"'"
+        The status should equal 0
+        The output should end with "/skills/bdd-coder/skills/bdd-coder"
       End
     End
   End
@@ -253,10 +318,10 @@ Describe "bootstrap.lib.sh"
       The output should equal "writable"
     End
 
-    It "[Edge] T-LIB-BFIN-16: 事前設定した SKILL_ROOT は値を保ったまま readonly になる"
+    It "[Edge] T-LIB-BFIN-16: 事前設定した SKILL_ROOT は無視され、計算値のまま readonly になる"
       When run bash -c "export PROJECT_ROOT=/tmp/proj SKILL_ROOT=/tmp/skill; . \"$SCRIPT\" || exit 1; printf '%s:' \"\$SKILL_ROOT\" && { ( SKILL_ROOT=x ) 2>/dev/null && echo writable || echo readonly; }"
       The status should equal 0
-      The output should equal "/tmp/skill:readonly"
+      The output should end with "/skills/deckrd/skills/deckrd:readonly"
     End
 
     It "[Edge] T-LIB-BFIN-10: bootstrap_finalize を 2 回呼んでもエラーにならない"
@@ -359,9 +424,10 @@ Describe "bootstrap.lib.sh"
     Describe "Given: SKILL_ROOT=/tmp/skill を事前設定"
       Before "export PROJECT_ROOT=/tmp/proj; export SKILL_ROOT=/tmp/skill; bootstrap_init"
 
-      It "[Normal] T-LIB-BSKR-03: 事前設定値が維持される"
+      It "[Normal] T-LIB-BSKR-03: 事前設定値を無視して計算値になる"
         When call echo "$SKILL_ROOT"
-        The output should equal "/tmp/skill"
+        The output should end with "/skills/deckrd/skills/deckrd"
+        The output should not equal "/tmp/skill"
       End
     End
 
@@ -387,9 +453,10 @@ Describe "bootstrap.lib.sh"
     Describe "Given: SKILL_ROOT にスペースを含むパスを事前設定"
       Before "export PROJECT_ROOT=/tmp/proj; export SKILL_ROOT='/tmp/my skill'; bootstrap_init"
 
-      It "[Edge] T-LIB-BSKR-06: スペースを含む値がそのまま維持される"
+      It "[Edge] T-LIB-BSKR-06: スペースを含む事前設定値も無視して計算値になる"
         When call echo "$SKILL_ROOT"
-        The output should equal "/tmp/my skill"
+        The output should end with "/skills/deckrd/skills/deckrd"
+        The output should not equal "/tmp/my skill"
       End
     End
 
@@ -397,9 +464,8 @@ Describe "bootstrap.lib.sh"
       Before "export PROJECT_ROOT=/tmp/proj; unset SKILL_ROOT; export DECKRD_ROOT=/tmp/custom; bootstrap_init"
 
       It "[Normal] T-LIB-BSKR-07: SKILL_ROOT は DECKRD_ROOT から導出されず計算値のまま"
-        # shellcheck disable=SC2016
-        When call bash -c '[[ "$SKILL_ROOT" == */skills/deckrd/skills/deckrd ]] && echo ok'
-        The output should equal "ok"
+        When call echo "$SKILL_ROOT"
+        The output should end with "/skills/deckrd/skills/deckrd"
       End
     End
 
@@ -409,6 +475,23 @@ Describe "bootstrap.lib.sh"
         The status should equal 0
         The lines of output should equal 1
         The output should end with "/skills/deckrd/skills/deckrd"
+      End
+    End
+
+    Describe "Given: 計算値と同じ SKILL_ROOT を readonly で事前設定"
+      It "[Edge] T-LIB-BSKR-09: source が成功し、SKILL_ROOT は変化せず子プロセスに渡らない"
+        When run bash -c "unset DECKRD_ROOT; export PROJECT_ROOT=/tmp/proj; readonly SKILL_ROOT=\"\$(cd \"${_RUNTIME_LIBS_DIR}/../..\" && pwd)\"; EXPECTED=\"\$SKILL_ROOT\"; . \"$SCRIPT\" || exit 1; [[ \"\$SKILL_ROOT\" == \"\$EXPECTED\" ]] || exit 2; bash -c 'printf \"%s\" \"\${SKILL_ROOT-unset}\"'"
+        The status should equal 0
+        The output should equal "unset"
+        The stderr should equal ""
+      End
+    End
+
+    Describe "Given: 計算値と異なる SKILL_ROOT=/tmp/other を readonly で事前設定"
+      It "[Error] T-LIB-BSKR-10: source が失敗し、stderr に readonly を含む"
+        When run bash -c "unset DECKRD_ROOT; export PROJECT_ROOT=/tmp/proj; readonly SKILL_ROOT=/tmp/other; . \"$SCRIPT\""
+        The status should not equal 0
+        The stderr should include "readonly"
       End
     End
   End
@@ -423,14 +506,13 @@ Describe "bootstrap.lib.sh"
       Before "export PROJECT_ROOT=/tmp/proj; unset DECKRD_ROOT; bootstrap_init"
 
       It "[Normal] T-LIB-BROOT-01: DECKRD_ROOT が /skills/deckrd/skills/deckrd で終わる"
-        # shellcheck disable=SC2016
-        When call bash -c '[[ "$DECKRD_ROOT" == */skills/deckrd/skills/deckrd ]] && echo ok'
-        The output should equal "ok"
+        When call echo "$DECKRD_ROOT"
+        The output should end with "/skills/deckrd/skills/deckrd"
       End
 
-      It "[Normal] T-LIB-BROOT-02: export -p で export されている"
-        When call bash -c 'export -p | grep -q "^declare -x DECKRD_ROOT=" && echo ok'
-        The output should equal "ok"
+      It "[Normal] T-LIB-BROOT-02: 計算値は export されない"
+        When call bash -c 'export -p | grep -q "^declare -x DECKRD_ROOT=" && echo found || echo not-found'
+        The output should equal "not-found"
       End
     End
 
@@ -456,15 +538,13 @@ Describe "bootstrap.lib.sh"
       Before "export PROJECT_ROOT=/tmp/bogus; unset DECKRD_ROOT; bootstrap_init"
 
       It "[Normal] T-LIB-BROOT-05: DECKRD_ROOT が /tmp/bogus を含まない"
-        # shellcheck disable=SC2016
-        When call bash -c '[[ "$DECKRD_ROOT" != */tmp/bogus* ]] && echo ok'
-        The output should equal "ok"
+        When call echo "$DECKRD_ROOT"
+        The output should not include "/tmp/bogus"
       End
 
       It "[Normal] T-LIB-BROOT-06: DECKRD_ROOT が /skills/deckrd/skills/deckrd で終わる"
-        # shellcheck disable=SC2016
-        When call bash -c '[[ "$DECKRD_ROOT" == */skills/deckrd/skills/deckrd ]] && echo ok'
-        The output should equal "ok"
+        When call echo "$DECKRD_ROOT"
+        The output should end with "/skills/deckrd/skills/deckrd"
       End
     End
 
@@ -472,18 +552,19 @@ Describe "bootstrap.lib.sh"
       Before "export PROJECT_ROOT=/tmp/proj; unset SKILL_ROOT DECKRD_ROOT; bootstrap_init"
 
       It "[Normal] T-LIB-BROOT-07: DECKRD_ROOT は SKILL_ROOT と同じ値になる"
-        # shellcheck disable=SC2016
-        When call bash -c '[[ "$DECKRD_ROOT" == "$SKILL_ROOT" ]] && echo ok'
-        The output should equal "ok"
+        When call test "$DECKRD_ROOT" = "$SKILL_ROOT"
+        The variable SKILL_ROOT should end with "/skills/deckrd/skills/deckrd"
+        The status should equal 0
       End
     End
 
     Describe "Given: SKILL_ROOT=/tmp/skill を事前設定、DECKRD_ROOT 未設定"
       Before "export PROJECT_ROOT=/tmp/proj; export SKILL_ROOT=/tmp/skill; unset DECKRD_ROOT; bootstrap_init"
 
-      It "[Normal] T-LIB-BROOT-08: DECKRD_ROOT は SKILL_ROOT の事前設定値になる"
+      It "[Normal] T-LIB-BROOT-08: DECKRD_ROOT は SKILL_ROOT の計算値になる"
         When call echo "$DECKRD_ROOT"
-        The output should equal "/tmp/skill"
+        The output should end with "/skills/deckrd/skills/deckrd"
+        The output should not equal "/tmp/skill"
       End
     End
 
@@ -499,18 +580,28 @@ Describe "bootstrap.lib.sh"
     Describe "Given: SKILL_ROOT=/tmp/skill を事前設定、DECKRD_ROOT='' (空文字)"
       Before "export PROJECT_ROOT=/tmp/proj; export SKILL_ROOT=/tmp/skill; export DECKRD_ROOT=''; bootstrap_init"
 
-      It "[Error] T-LIB-BROOT-10: 空文字の DECKRD_ROOT は SKILL_ROOT にフォールバックする"
+      It "[Error] T-LIB-BROOT-10: 空文字の DECKRD_ROOT は SKILL_ROOT の計算値にフォールバックする"
         When call echo "$DECKRD_ROOT"
-        The output should equal "/tmp/skill"
+        The output should end with "/skills/deckrd/skills/deckrd"
+        The output should not equal "/tmp/skill"
       End
     End
 
     Describe "Given: SKILL_ROOT=/tmp/skill を事前設定、DECKRD_ROOT / DECKRD_SCRIPTS_DIR 未設定"
       Before "export PROJECT_ROOT=/tmp/proj; export SKILL_ROOT=/tmp/skill; unset DECKRD_ROOT DECKRD_SCRIPTS_DIR; bootstrap_init"
 
-      It "[Edge] T-LIB-BROOT-11: SKILL_ROOT の事前設定値が DECKRD_SCRIPTS_DIR まで波及する"
+      It "[Edge] T-LIB-BROOT-11: DECKRD_SCRIPTS_DIR は SKILL_ROOT の計算値から導出される"
         When call echo "$DECKRD_SCRIPTS_DIR"
-        The output should equal "/tmp/skill/scripts"
+        The output should end with "/skills/deckrd/skills/deckrd/scripts"
+        The output should not equal "/tmp/skill/scripts"
+      End
+    End
+
+    Describe "Given: DECKRD_ROOT=/tmp/custom を export してから source"
+      It "[Normal] T-LIB-BROOT-12: 明示 export した DECKRD_ROOT は子プロセスに渡る"
+        When run bash -c "export PROJECT_ROOT=/tmp/proj DECKRD_ROOT=/tmp/custom; . \"$SCRIPT\" || exit 1; bash -c 'printf \"%s\" \"\${DECKRD_ROOT-unset}\"'"
+        The status should equal 0
+        The output should equal "/tmp/custom"
       End
     End
   End
@@ -534,9 +625,9 @@ Describe "bootstrap.lib.sh"
         The status should equal 0
       End
 
-      It "[Normal] T-LIB-BSCR-03: export -p で export されている"
-        When call bash -c 'export -p | grep -q "^declare -x DECKRD_SCRIPTS_DIR=" && echo ok'
-        The output should equal "ok"
+      It "[Normal] T-LIB-BSCR-03: 計算値は export されない"
+        When call bash -c 'export -p | grep -q "^declare -x DECKRD_SCRIPTS_DIR=" && echo found || echo not-found'
+        The output should equal "not-found"
       End
     End
 
@@ -582,9 +673,9 @@ Describe "bootstrap.lib.sh"
         The output should equal "/tmp/deckrd/assets"
       End
 
-      It "[Normal] T-LIB-BASSET-02: export -p で export されている"
-        When call bash -c 'export -p | grep -q "^declare -x DECKRD_ASSETS_DIR=" && echo ok'
-        The output should equal "ok"
+      It "[Normal] T-LIB-BASSET-02: 計算値は export されない"
+        When call bash -c 'export -p | grep -q "^declare -x DECKRD_ASSETS_DIR=" && echo found || echo not-found'
+        The output should equal "not-found"
       End
     End
 
@@ -626,9 +717,9 @@ Describe "bootstrap.lib.sh"
         The status should equal 0
       End
 
-      It "[Normal] T-LIB-BLIBD-03: export -p で export されている"
-        When call bash -c 'export -p | grep -q "^declare -x DECKRD_LIB_DIR=" && echo ok'
-        The output should equal "ok"
+      It "[Normal] T-LIB-BLIBD-03: 計算値は export されない"
+        When call bash -c 'export -p | grep -q "^declare -x DECKRD_LIB_DIR=" && echo found || echo not-found'
+        The output should equal "not-found"
       End
     End
 

@@ -209,7 +209,7 @@ Describe "bootstrap.lib.sh"
       The output should equal "ok"
     End
 
-    It "[Normal] T-LIB-BINTF-03: bootstrap_init が設定する公開変数 11 個が全て export されている"
+    It "[Normal] T-LIB-BINTF-03: bootstrap_init が設定する公開変数 11 個が全て設定されている"
       When run bash -c "
         . \"$SCRIPT\"
         expected='PROJECT_ROOT DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_ASSETS_DIR DECKRD_LIB_DIR DECKRD_DATA_DIR DECKRD_LOCAL_DATA DECKRD_LOCAL_WORKSPACES DECKRD_LOCAL_TEMP DECKRD_DOCS_DIR SYMBOL'
