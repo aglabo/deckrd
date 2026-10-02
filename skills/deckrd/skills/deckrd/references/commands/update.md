@@ -1,17 +1,16 @@
 ---
 title: update Command
-description: List or refresh deployed deckrd assets that are older than the bundled source
+description: List or refresh deployed deckrd assets that are missing or older than the bundled source
 ---
-
-<!-- cspell:words undeployed -->
 
 ## update Command
 
-List deployed deckrd assets that are older than the plugin's bundled source.
-With `--update`, overwrite them.
+List deckrd assets that are missing from the project or older than the plugin's bundled
+source. With `--update`, copy or overwrite them.
 
-`init` only copies files that do not exist yet. Use `update` to pick up asset changes
-shipped by a newer plugin version, without re-running `init`.
+`update` and `init` share the same routines. `list_asset_files` in `scripts/libs/asset-diff.lib.sh`
+picks the files to copy. `copy_assets` in `scripts/libs/asset-copy.lib.sh` copies them.
+Without `--update`, `update` prints that list and changes nothing.
 
 ## Usage
 
@@ -23,7 +22,7 @@ shipped by a newer plugin version, without re-running `init`.
 
 | Option         | Description                                                 |
 | -------------- | ----------------------------------------------------------- |
-| (none)         | List outdated deployed files. No file is modified           |
+| (none)         | List missing or outdated files. No file is modified         |
 | `--update`     | Apply the listed changes from the bundled source and report |
 | `-h`, `--help` | Show usage information                                      |
 
@@ -31,26 +30,32 @@ shipped by a newer plugin version, without re-running `init`.
 
 The same source / destination pairs as `init` Phase 0, checked in this order.
 Both `init` and `update` read them from `init_asset_dirs` in `scripts/libs/asset-diff.lib.sh`.
+Each source directory is checked recursively.
+A file in a subdirectory is reported by its relative path, e.g. `[docs] rules/a.md`.
 
 | Label                | Source (`assets/inits/`) | Destination                   |
 | -------------------- | ------------------------ | ----------------------------- |
-| `deckrd-rules`       | `deckrd-rules/`          | `docs/.deckrd/rules/`         |
 | `claude-rules`       | `claude-rules/`          | `.claude/rules/claude-rules/` |
 | `deckrd-rules-index` | `deckrd-rules-index/`    | `.claude/rules/deckrd-rules/` |
-| `docs`               | `docs/`                  | `docs/.deckrd/`               |
+| `docs`               | `docs/` (incl. `rules/`) | `docs/.deckrd/`               |
 | `local-deckrd`       | `local-deckrd/`          | `.local/deckrd/`              |
-| `local-workspaces`   | `local-workspaces/`      | `.local/deckrd/workspaces/`   |
+
+`local-deckrd/` includes `workspaces/README.md`.
 
 ## Detection Rule
 
-A deployed file is reported only when all of the following hold:
+A `.org` suffix is dropped from the source file name first (`.gitignore.org` → `.gitignore`).
+A file is reported (and copied with `--update`) when either of the following holds:
 
-- It already exists in the destination (undeployed files are never copied)
-- The source is newer than the deployed file (mtime)
-- The contents differ
+- It does not exist in the destination
+- It exists, the source is newer than the deployed file (mtime), and the contents differ
 
 A deployed file newer than its source is treated as edited by the user. It is neither
 reported nor overwritten, even with `--update`.
+
+A copied file keeps the mtime of its source. A deployed file older than its source with
+the same contents is not reported and its contents are kept. `--update` only sets its
+mtime to the source's.
 
 Deployed rules are managed by the plugin and are not meant to be edited. Put project
 customizations in separate files. `--update` may overwrite a deployed rule edited before
@@ -60,8 +65,10 @@ a plugin upgrade.
 notes layer and is not meant to be edited. `--update` overwrites it like a rule. Put your own
 notes in separate files under `workspaces/`.
 
-`.gitignore` (shipped as `.gitignore.org`) is copied by `init` only. `update` never
-overwrites it, because users are expected to edit it.
+An existing `.gitignore` at any depth is never overwritten. Users are expected to edit it.
+A missing one is deployed like any other file.
+An existing entry that is not a regular file (e.g. a directory or a dangling symlink) is
+left untouched.
 
 An older deckrd version may have left a `.local/deckrd/.gitignore` without the
 workspaces rule (`!/workspaces/`). `update` reports such a file as
@@ -69,25 +76,25 @@ workspaces rule (`!/workspaces/`). `update` reports such a file as
 block of the template to it. The existing lines are kept.
 
 A project initialized before the workspaces directory existed has no
-`.local/deckrd/workspaces/README.md`. `update` reports it as
-`[local-workspaces] README.md (missing)`. `--update` creates the directory and copies the
-README. Any existing entry at that path, even a directory, counts as deployed and is left
-untouched.
+`.local/deckrd/workspaces/README.md`. Like any missing file, `update` reports it as
+`[local-deckrd] workspaces/README.md`. `--update` creates the directory and copies it.
+This README path is fixed to where `init` deploys it.
+Overriding `DECKRD_LOCAL_WORKSPACES` does not move it.
 
 ## Output Example
 
 ```bash
 $ /deckrd update
-[deckrd-rules] deckrd-rule-workflow.md
 [deckrd-rules-index] deckrd-rules-index.md
+[docs] rules/deckrd-rule-workflow.md
+[local-deckrd] workspaces/README.md
 [local-deckrd] .gitignore (workspaces rule)
-[local-workspaces] README.md (missing)
 
 $ /deckrd update --update
-Updated: [deckrd-rules] deckrd-rule-workflow.md
 Updated: [deckrd-rules-index] deckrd-rules-index.md
+Updated: [docs] rules/deckrd-rule-workflow.md
+Updated: [local-deckrd] workspaces/README.md
 Updated: [local-deckrd] .gitignore (workspaces rule)
-Updated: [local-workspaces] README.md (missing)
 
 $ /deckrd update
 Assets are up to date.
@@ -95,11 +102,12 @@ Assets are up to date.
 
 ## Error Messages
 
-| Error             | Cause                                | Solution                                   |
-| ----------------- | ------------------------------------ | ------------------------------------------ |
-| session not found | `init` has not been run              | Run `deckrd init <project> <project-type>` |
-| Unknown option    | Unsupported option passed            | Run `deckrd update --help`                 |
-| failed to update  | A destination path cannot be written | Fix the path or its permissions and rerun  |
+| Error               | Cause                                        | Solution                                   |
+| ------------------- | -------------------------------------------- | ------------------------------------------ |
+| session not found   | `init` has not been run                      | Run `deckrd init <project> <project-type>` |
+| Unknown option      | Unsupported option passed                    | Run `deckrd update --help`                 |
+| failed to update    | A destination path cannot be written         | Fix the path or its permissions and rerun  |
+| failed to copy file | An asset cannot be copied to its destination | Fix the path or its permissions and rerun  |
 
 ## Script
 
