@@ -44,6 +44,38 @@ Describe "T-LIB-ASCP: asset-copy.lib.sh"
     [[ "$1" -nt "$2" ]]
   }
 
+  # Helper: create a symlink <link> pointing to <target>, creating the parent of <link>
+  # MSYS=winsymlinks:nativestrict makes Git Bash create a native link; harmless elsewhere.
+  put_symlink() {
+    mkdir -p "$(dirname "$2")"
+    MSYS=winsymlinks:nativestrict ln -s "$1" "$2"
+  }
+
+  # Helper: report whether this host cannot create a dangling symlink
+  # Keeps the negation inside the function so that `Skip if` works.
+  # @return 0 if a dangling symlink cannot be created, 1 if it can
+  dangling_symlink_unsupported() {
+    local probe_dir rc=1
+    probe_dir="$(mktemp -d)" || return 0
+    { MSYS=winsymlinks:nativestrict ln -s "${probe_dir}/missing" "${probe_dir}/link" 2>/dev/null &&
+      [[ -L "${probe_dir}/link" ]]; } || rc=0
+    rm -rf "$probe_dir"
+    return "$rc"
+  }
+
+  # Helper: report whether this host cannot create a symlink to a regular file
+  # Keeps the negation inside the function so that `Skip if` works.
+  # @return 0 if a symlink to a regular file cannot be created, 1 if it can
+  symlink_unsupported() {
+    local probe_dir rc=1
+    probe_dir="$(mktemp -d)" || return 0
+    { : >"${probe_dir}/target" &&
+      MSYS=winsymlinks:nativestrict ln -s "${probe_dir}/target" "${probe_dir}/link" 2>/dev/null &&
+      [[ -L "${probe_dir}/link" ]]; } || rc=0
+    rm -rf "$probe_dir"
+    return "$rc"
+  }
+
   Describe "copy_asset_file"
     BeforeEach "setup_tmpdir"
     AfterEach "teardown_tmpdir"
@@ -126,6 +158,77 @@ Describe "T-LIB-ASCP: asset-copy.lib.sh"
         End
       End
     End
+
+    # Differs from T-LIB-ASCP-04: dest is a symlink to a file outside dest, so the
+    # link itself is replaced instead of writing through it.
+    Describe "Given: 配置先がプロジェクト外ファイルへのシンボリックリンク"
+      Skip if "symlinks are not supported on this host" symlink_unsupported
+      setup_file_dest_symlink() {
+        put_file "${NAMING_TMPDIR}/src" "a.md" "NEW"
+        put_file "${NAMING_TMPDIR}/outside" "a.md" "OLD"
+        put_symlink "${NAMING_TMPDIR}/outside/a.md" "${NAMING_TMPDIR}/dest/a.md"
+      }
+      BeforeEach "setup_file_dest_symlink"
+
+      Describe "When: copy_asset_file を呼ぶ"
+        # Characterization: passes since the -L guard in copy_asset_file;
+        # without it `cp -p` writes through the link and overwrites outside/a.md.
+        It "Then: [Normal] T-LIB-ASCP-54: 配置先のリンクを外して通常ファイルとしてコピーし、リンク先を変えない"
+          When call copy_asset_file "${NAMING_TMPDIR}/src/a.md" "${NAMING_TMPDIR}/dest/a.md"
+          The status should equal 0
+          The output should equal ""
+          The path "${NAMING_TMPDIR}/dest/a.md" should not be symlink
+          The contents of file "${NAMING_TMPDIR}/dest/a.md" should equal "NEW"
+          The contents of file "${NAMING_TMPDIR}/outside/a.md" should equal "OLD"
+        End
+      End
+    End
+
+    # Same Given style as T-LIB-ASCP-03, but dest is a symlink to a file outside dest.
+    Describe "Given: ソースファイルが存在せず配置先がプロジェクト外ファイルへのシンボリックリンク"
+      Skip if "symlinks are not supported on this host" symlink_unsupported
+      setup_missing_src_dest_symlink() {
+        put_file "${NAMING_TMPDIR}/outside" "a.md" "OLD"
+        put_symlink "${NAMING_TMPDIR}/outside/a.md" "${NAMING_TMPDIR}/dest/a.md"
+      }
+      BeforeEach "setup_missing_src_dest_symlink"
+
+      Describe "When: copy_asset_file を呼ぶ"
+        # Characterization: `cp` fails on the missing source before writing anything,
+        # so the link target stays as is with or without the -L guard (verified by a
+        # mutation that truncates dest before `cp`: the test then fails).
+        # Whether dest/a.md is still a link is implementation-dependent and not checked.
+        It "Then: [Error] T-LIB-ASCP-55: ソースがなければ非 0 を返し、リンク先を変えない"
+          When call copy_asset_file "${NAMING_TMPDIR}/src/a.md" "${NAMING_TMPDIR}/dest/a.md"
+          The status should be failure
+          The output should equal ""
+          The stderr should be present
+          The contents of file "${NAMING_TMPDIR}/outside/a.md" should equal "OLD"
+        End
+      End
+    End
+
+    Describe "Given: 配置先がリンク切れのシンボリックリンク"
+      Skip if "dangling symlinks are not supported on this host" dangling_symlink_unsupported
+      setup_file_dest_dangling_symlink() {
+        put_file "${NAMING_TMPDIR}/src" "a.md" "NEW"
+        put_symlink "${NAMING_TMPDIR}/missing-target.md" "${NAMING_TMPDIR}/dest/a.md"
+      }
+      BeforeEach "setup_file_dest_dangling_symlink"
+
+      Describe "When: copy_asset_file を呼ぶ"
+        # Characterization: passes since the -L guard in copy_asset_file;
+        # without it `cp` follows the dangling link and creates missing-target.md.
+        It "Then: [Edge] T-LIB-ASCP-56: リンク切れの配置先も外して通常ファイルを作り、リンク先を作らない"
+          When call copy_asset_file "${NAMING_TMPDIR}/src/a.md" "${NAMING_TMPDIR}/dest/a.md"
+          The status should equal 0
+          The output should equal ""
+          The path "${NAMING_TMPDIR}/dest/a.md" should not be symlink
+          The contents of file "${NAMING_TMPDIR}/dest/a.md" should equal "NEW"
+          The path "${NAMING_TMPDIR}/missing-target.md" should not be exist
+        End
+      End
+    End
   End
 
   Describe "copy_assets"
@@ -184,6 +287,82 @@ Describe "T-LIB-ASCP: asset-copy.lib.sh"
           The status should equal 0
           The output should equal "a.md"
           The contents of file "${NAMING_TMPDIR}/dest/a.md" should equal "new"
+        End
+      End
+    End
+
+    # Differs from T-LIB-ASCP-16: dest is a symlink.
+    Describe "Given: 配置先が古く内容が違うプロジェクト外ファイルへのシンボリックリンク"
+      Skip if "symlinks are not supported on this host" symlink_unsupported
+      setup_copy_dest_symlink() {
+        put_file "${NAMING_TMPDIR}/src" "a.md" "NEW"
+        put_file "${NAMING_TMPDIR}/outside" "a.md" "OLD"
+        make_old "${NAMING_TMPDIR}/outside/a.md"
+        put_symlink "${NAMING_TMPDIR}/outside/a.md" "${NAMING_TMPDIR}/dest/a.md"
+      }
+      BeforeEach "setup_copy_dest_symlink"
+
+      Describe "When: copy_assets を呼ぶ"
+        # Characterization: passes since the -L guard in _asset_needs_copy (T-01);
+        # without it a.md is listed and copy_asset_file replaces the link with a
+        # regular file (dest/a.md is no longer a symlink).
+        It "Then: [Normal] T-LIB-ASCP-48: リンクの配置先はコピーせず、リンク先の内容も更新時刻も変えない"
+          When call copy_assets "${NAMING_TMPDIR}/src" "${NAMING_TMPDIR}/dest"
+          The status should equal 0
+          The output should equal ""
+          The stderr should equal ""
+          The path "${NAMING_TMPDIR}/dest/a.md" should be symlink
+          The contents of file "${NAMING_TMPDIR}/outside/a.md" should equal "OLD"
+          Assert is_old "${NAMING_TMPDIR}/outside/a.md"
+        End
+      End
+    End
+
+    Describe "Given: 配置先がリンク切れのシンボリックリンク"
+      Skip if "dangling symlinks are not supported on this host" dangling_symlink_unsupported
+      setup_copy_dest_dangling_symlink() {
+        put_file "${NAMING_TMPDIR}/src" "a.md" "NEW"
+        put_symlink "${NAMING_TMPDIR}/missing-target.md" "${NAMING_TMPDIR}/dest/a.md"
+      }
+      BeforeEach "setup_copy_dest_dangling_symlink"
+
+      Describe "When: copy_assets を呼ぶ"
+        # Characterization: passes since the -L guard in _asset_needs_copy (T-01);
+        # without it the dangling link is listed and replaced by a regular file
+        # (dest/a.md is no longer a symlink, output is "a.md").
+        It "Then: [Error] T-LIB-ASCP-49: リンク切れの配置先はコピーせず、リンク先を作らない"
+          When call copy_assets "${NAMING_TMPDIR}/src" "${NAMING_TMPDIR}/dest"
+          The status should equal 0
+          The output should equal ""
+          The stderr should equal ""
+          The path "${NAMING_TMPDIR}/dest/a.md" should be symlink
+          The path "${NAMING_TMPDIR}/missing-target.md" should not be exist
+        End
+      End
+    End
+
+    Describe "Given: 配置先に古く内容が違うファイルへのリンクがあり、別のファイルが未配置"
+      Skip if "symlinks are not supported on this host" symlink_unsupported
+      setup_copy_symlink_and_missing() {
+        put_file "${NAMING_TMPDIR}/src" "a.md" "NEW"
+        put_file "${NAMING_TMPDIR}/src" "b.md" "B"
+        put_file "${NAMING_TMPDIR}/outside" "a.md" "OLD"
+        make_old "${NAMING_TMPDIR}/outside/a.md"
+        put_symlink "${NAMING_TMPDIR}/outside/a.md" "${NAMING_TMPDIR}/dest/a.md"
+      }
+      BeforeEach "setup_copy_symlink_and_missing"
+
+      Describe "When: copy_assets を呼ぶ"
+        # Characterization: passes since the -L guard in _asset_needs_copy (T-01);
+        # without it a.md is listed too and the link is replaced by a regular file
+        # (output becomes "a.md\nb.md").
+        It "Then: [Edge] T-LIB-ASCP-50: リンクの配置先は飛ばし、未配置の b.md だけをコピーする"
+          When call copy_assets "${NAMING_TMPDIR}/src" "${NAMING_TMPDIR}/dest"
+          The status should equal 0
+          The output should equal "b.md"
+          The contents of file "${NAMING_TMPDIR}/dest/b.md" should equal "B"
+          The contents of file "${NAMING_TMPDIR}/outside/a.md" should equal "OLD"
+          The path "${NAMING_TMPDIR}/dest/a.md" should be symlink
         End
       End
     End
@@ -454,6 +633,78 @@ Describe "T-LIB-ASCP: asset-copy.lib.sh"
         End
       End
     End
+
+    # Differs from T-LIB-ASCP-40: dest is a symlink, so force mode must replace
+    # the link itself instead of writing through it to the link target.
+    Describe "Given: 配置先が古く内容が違うプロジェクト外ファイルへのシンボリックリンク (強制モード)"
+      Skip if "symlinks are not supported on this host" symlink_unsupported
+      setup_force_dest_symlink() {
+        put_file "${NAMING_TMPDIR}/src" "a.md" "NEW"
+        put_file "${NAMING_TMPDIR}/outside" "a.md" "OLD"
+        make_old "${NAMING_TMPDIR}/outside/a.md"
+        put_symlink "${NAMING_TMPDIR}/outside/a.md" "${NAMING_TMPDIR}/dest/a.md"
+      }
+      BeforeEach "setup_force_dest_symlink"
+
+      Describe "When: --force を第 1 引数にして copy_assets を呼ぶ"
+        It "Then: [Normal] T-LIB-ASCP-51: 強制モードではリンクを外し、通常ファイルとしてコピーする"
+          When call copy_assets --force "${NAMING_TMPDIR}/src" "${NAMING_TMPDIR}/dest"
+          The status should equal 0
+          The output should equal "a.md"
+          The path "${NAMING_TMPDIR}/dest/a.md" should not be symlink
+          The contents of file "${NAMING_TMPDIR}/dest/a.md" should equal "NEW"
+          The contents of file "${NAMING_TMPDIR}/outside/a.md" should equal "OLD"
+          Assert is_old "${NAMING_TMPDIR}/outside/a.md"
+        End
+      End
+    End
+
+    # Same checks as T-LIB-ASCP-51, but the link points to a directory: without the
+    # -L guard in copy_asset_file, `cp -p` copies into outside/dir and dest stays a link.
+    Describe "Given: 配置先がプロジェクト外ディレクトリへのシンボリックリンク (強制モード)"
+      Skip if "symlinks are not supported on this host" symlink_unsupported
+      setup_force_dest_dir_symlink() {
+        put_file "${NAMING_TMPDIR}/src" "a.md" "NEW"
+        mkdir -p "${NAMING_TMPDIR}/outside/dir"
+        put_symlink "${NAMING_TMPDIR}/outside/dir" "${NAMING_TMPDIR}/dest/a.md"
+      }
+      BeforeEach "setup_force_dest_dir_symlink"
+
+      Describe "When: --force を第 1 引数にして copy_assets を呼ぶ"
+        It "Then: [Error] T-LIB-ASCP-52: ディレクトリを指すリンクも外し、ディレクトリ内へコピーしない"
+          When call copy_assets --force "${NAMING_TMPDIR}/src" "${NAMING_TMPDIR}/dest"
+          The status should equal 0
+          The output should equal "a.md"
+          The path "${NAMING_TMPDIR}/dest/a.md" should not be symlink
+          The contents of file "${NAMING_TMPDIR}/dest/a.md" should equal "NEW"
+          The path "${NAMING_TMPDIR}/outside/dir/a.md" should not be exist
+        End
+      End
+    End
+
+    # Differs from T-LIB-ASCP-41: the protected .gitignore is a symlink. Force mode
+    # still ignores the keep patterns, and replaces the link instead of writing
+    # through it; without the -L guard in copy_asset_file outside/gitignore is overwritten.
+    Describe "Given: 配置先の保護対象 .gitignore がプロジェクト外ファイルへのシンボリックリンク (強制モード)"
+      Skip if "symlinks are not supported on this host" symlink_unsupported
+      setup_force_dest_keep_symlink() {
+        put_file "${NAMING_TMPDIR}/src" ".gitignore.org" "NEW"
+        put_file "${NAMING_TMPDIR}/outside" "gitignore" "OLD"
+        put_symlink "${NAMING_TMPDIR}/outside/gitignore" "${NAMING_TMPDIR}/dest/.gitignore"
+      }
+      BeforeEach "setup_force_dest_keep_symlink"
+
+      Describe "When: --force を第 1 引数にし ASSET_KEEP_PATTERNS を渡して copy_assets を呼ぶ"
+        It "Then: [Edge] T-LIB-ASCP-53: 強制モードでは keep 対象のリンクも外し、リンク先を変えない"
+          When call copy_assets --force "${NAMING_TMPDIR}/src" "${NAMING_TMPDIR}/dest" "${ASSET_KEEP_PATTERNS[@]}"
+          The status should equal 0
+          The output should equal ".gitignore"
+          The path "${NAMING_TMPDIR}/dest/.gitignore" should not be symlink
+          The contents of file "${NAMING_TMPDIR}/dest/.gitignore" should equal "NEW"
+          The contents of file "${NAMING_TMPDIR}/outside/gitignore" should equal "OLD"
+        End
+      End
+    End
   End
 
   Describe "sync_asset_mtimes"
@@ -509,6 +760,76 @@ Describe "T-LIB-ASCP: asset-copy.lib.sh"
           The stderr should equal ""
           Assert is_old "${NAMING_TMPDIR}/dest/.gitignore"
           Assert same_mtime "${NAMING_TMPDIR}/src/a.md" "${NAMING_TMPDIR}/dest/a.md"
+        End
+      End
+    End
+
+    Describe "Given: 配置先が古く内容が同じプロジェクト外ファイルへのシンボリックリンク"
+      Skip if "symlinks are not supported on this host" symlink_unsupported
+      setup_sync_dest_symlink() {
+        put_file "${NAMING_TMPDIR}/src" "a.md" "A"
+        put_file "${NAMING_TMPDIR}/outside" "a.md" "A"
+        make_old "${NAMING_TMPDIR}/outside/a.md"
+        put_symlink "${NAMING_TMPDIR}/outside/a.md" "${NAMING_TMPDIR}/dest/a.md"
+      }
+      BeforeEach "setup_sync_dest_symlink"
+
+      Describe "When: sync_asset_mtimes を呼ぶ"
+        It "Then: [Normal] T-LIB-ASCP-45: リンクの配置先はスキップし、リンク先の更新時刻を変えない"
+          When call sync_asset_mtimes "${NAMING_TMPDIR}/src" "${NAMING_TMPDIR}/dest"
+          The status should equal 0
+          The output should equal ""
+          The stderr should equal ""
+          Assert is_old "${NAMING_TMPDIR}/outside/a.md"
+          The path "${NAMING_TMPDIR}/dest/a.md" should be symlink
+        End
+      End
+    End
+
+    Describe "Given: 配置先がリンク切れのシンボリックリンク"
+      Skip if "dangling symlinks are not supported on this host" dangling_symlink_unsupported
+      setup_sync_dest_dangling_symlink() {
+        put_file "${NAMING_TMPDIR}/src" "a.md" "A"
+        put_symlink "${NAMING_TMPDIR}/missing-target.md" "${NAMING_TMPDIR}/dest/a.md"
+      }
+      BeforeEach "setup_sync_dest_dangling_symlink"
+
+      Describe "When: sync_asset_mtimes を呼ぶ"
+        # Characterization: passes without the -L guard too (`! -f` already skips a
+        # dangling link); without both guards `touch -r` would create the target.
+        It "Then: [Error] T-LIB-ASCP-46: リンク切れの配置先はスキップし、リンク先を作らない"
+          When call sync_asset_mtimes "${NAMING_TMPDIR}/src" "${NAMING_TMPDIR}/dest"
+          The status should equal 0
+          The output should equal ""
+          The stderr should equal ""
+          The path "${NAMING_TMPDIR}/dest/a.md" should be symlink
+          The path "${NAMING_TMPDIR}/missing-target.md" should not be exist
+        End
+      End
+    End
+
+    Describe "Given: 配置先にリンクと通常ファイルが混在し、どちらも古く内容が同じ"
+      Skip if "symlinks are not supported on this host" symlink_unsupported
+      setup_sync_symlink_and_plain() {
+        put_file "${NAMING_TMPDIR}/src" "a.md" "A"
+        put_file "${NAMING_TMPDIR}/src" "b.md" "B"
+        put_file "${NAMING_TMPDIR}/outside" "a.md" "A"
+        make_old "${NAMING_TMPDIR}/outside/a.md"
+        put_symlink "${NAMING_TMPDIR}/outside/a.md" "${NAMING_TMPDIR}/dest/a.md"
+        put_file "${NAMING_TMPDIR}/dest" "b.md" "B"
+        make_old "${NAMING_TMPDIR}/dest/b.md"
+      }
+      BeforeEach "setup_sync_symlink_and_plain"
+
+      Describe "When: sync_asset_mtimes を呼ぶ"
+        It "Then: [Edge] T-LIB-ASCP-47: リンクはスキップし、通常ファイルの更新時刻だけをソースに揃える"
+          When call sync_asset_mtimes "${NAMING_TMPDIR}/src" "${NAMING_TMPDIR}/dest"
+          The status should equal 0
+          The output should equal ""
+          The stderr should equal ""
+          Assert is_old "${NAMING_TMPDIR}/outside/a.md"
+          Assert same_mtime "${NAMING_TMPDIR}/src/b.md" "${NAMING_TMPDIR}/dest/b.md"
+          The path "${NAMING_TMPDIR}/dest/b.md" should not be symlink
         End
       End
     End

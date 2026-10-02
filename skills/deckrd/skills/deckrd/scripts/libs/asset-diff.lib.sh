@@ -97,25 +97,42 @@ _list_candidate_files() {
 # _asset_needs_copy - Decide whether an asset must be copied (internal)
 #
 # Copy when dest does not exist, or when dest is a regular file older than and
-# different from src.
+# different from src. Never copy when dest is a symlink (valid, dangling, or
+# looping), so the link target is not overwritten.
 #
 # @arg $1 Source file path
 # @arg $2 Destination file path
 # @return 0 copy, 1 no copy
 _asset_needs_copy() {
   local src="$1" dest="$2"
-  [[ ! -e "$dest" && ! -L "$dest" ]] && return 0
+  # Check -L first: -e follows the link, so it is false for dangling or looping links
+  [[ -L "$dest" ]] && return 1
+  [[ -e "$dest" ]] || return 0
   [[ -f "$dest" && "$src" -nt "$dest" ]] && ! cmp -s "$src" "$dest"
+}
+
+# _asset_is_missing - Decide whether an asset is missing from dest (internal)
+#
+# Copy only when dest neither exists nor is a symlink (valid, dangling, or
+# looping). Never looks at mtime or content. Same signature as _asset_needs_copy.
+#
+# @arg $1 Source file path (unused)
+# @arg $2 Destination file path
+# @return 0 missing, 1 deployed
+_asset_is_missing() {
+  [[ ! -e "$2" && ! -L "$2" ]]
 }
 
 # list_asset_files - List the assets that are missing from or outdated in dest_dir
 #
 # The destination of `<src_rel>` is `<dest_dir>/<src_rel without .org>`.
 # Protected files (matching a keep pattern) missing from dest are included;
-# protected files already present in dest are excluded. Read-only.
+# protected files already present in dest are excluded. A destination that is
+# a symlink is treated as deployed and is not listed. Read-only.
 #
 # With `--force` as the first argument, list every source file instead,
-# ignoring whether dest exists, its mtime and content, and the keep patterns.
+# ignoring whether dest exists or is a symlink, its mtime and content, and the
+# keep patterns.
 # `--force` in any other position does not enable force mode.
 #
 # Usage: list_asset_files [--force] <src_dir> <dest_dir> [keep...]
@@ -126,17 +143,23 @@ _asset_needs_copy() {
 # @arg [keep...] Keep patterns (bash globs on the destination relative path), optional
 # @stdout Source relative paths to copy, byte-sorted, one per line
 list_asset_files() {
-  local src_dir dest_dir src_rel dst_rel
-  if [[ "$1" == --force ]]; then
-    shift
-    _list_all_files "$1"
-    return 0
-  fi
+  local src_dir dest_dir src_rel dst_rel needs_copy=_asset_needs_copy
+  case "$1" in
+    --force)
+      shift
+      _list_all_files "$1"
+      return 0
+      ;;
+    --missing-only)
+      shift
+      needs_copy=_asset_is_missing
+      ;;
+  esac
   src_dir="$(normalize_dir_path "$1")"
   dest_dir="$(normalize_dir_path "$2")"
   while IFS= read -r src_rel; do
     dst_rel="$(strip_suffix "$src_rel" .org)"
-    if _asset_needs_copy "${src_dir}/${src_rel}" "${dest_dir}/${dst_rel}"; then
+    if "$needs_copy" "${src_dir}/${src_rel}" "${dest_dir}/${dst_rel}"; then
       printf '%s\n' "$src_rel"
     fi
   done < <(_list_candidate_files "$src_dir" "$dest_dir" "${@:3}")

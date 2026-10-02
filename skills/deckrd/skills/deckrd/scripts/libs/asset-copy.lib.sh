@@ -23,12 +23,30 @@ readonly _ASSET_COPY_LOADED=1
 #
 # The copy keeps the source file's mtime (`cp -p`), so the deployed file
 # carries the asset's own timestamp rather than the deployment time.
+# A destination that is a symbolic link (to a file or a directory, or
+# dangling) is removed first, so the link is replaced by a regular file and
+# its link target (which may live outside the destination tree) is untouched.
 #
 # @arg $1 Source file path
-# @arg $2 Destination file path (overwritten if it exists)
+# @arg $2 Destination file path (overwritten if it exists; a symlink is removed
+#   and replaced by a regular file, leaving its link target unchanged)
 # @return 0 on success, non-zero on failure (no message)
 copy_asset_file() {
-  mkdir -p "$(dirname "$2")" && cp -p "$1" "$2"
+  mkdir -p "$(dirname "$2")" || return
+  if [[ -L "$2" ]]; then
+    rm -f -- "$2" || return
+  fi
+  cp -p "$1" "$2"
+}
+
+# _asset_needs_mtime_sync - Report whether <dest> should get the mtime of <src>
+#
+# @arg $1 Source file path
+# @arg $2 Destination file path
+# @return 0 when dest is a regular file (not a symlink), older than src, and has
+#   the same content; 1 otherwise
+_asset_needs_mtime_sync() {
+  [[ ! -L "$2" && -f "$2" && "$1" -nt "$2" ]] && cmp -s "$1" "$2"
 }
 
 # sync_asset_mtimes - Align the mtime of deployed files that are older but identical
@@ -38,6 +56,8 @@ copy_asset_file() {
 # The destination of `<src_rel>` is `<dest_dir>/<src_rel without .org>`.
 # Its mtime is set to the source's (`touch -r`) only when it is an existing
 # regular file, is older than the source, and has the same content.
+# A destination that is a symbolic link is skipped, so the mtime of the link
+# target (which may live outside dest_dir) is never changed.
 # Content is never changed.
 #
 # @arg $1 Source asset directory
@@ -54,9 +74,7 @@ sync_asset_mtimes() {
     dst_rel="$(strip_suffix "$src_rel" .org)"
     src="${src_dir}/${src_rel}"
     dest="${dest_dir}/${dst_rel}"
-    if [[ ! -f "$dest" || ! "$src" -nt "$dest" ]] || ! cmp -s "$src" "$dest"; then
-      continue
-    fi
+    _asset_needs_mtime_sync "$src" "$dest" || continue
     if ! touch -r "$src" "$dest"; then
       printf 'Error: failed to update timestamp: %s\n' "$dest" >&2
       return 1
@@ -72,10 +90,16 @@ sync_asset_mtimes() {
 # aligns the mtime of deployed files that are older but identical to the source.
 # Keep patterns are only passed on: list_asset_files and sync_asset_mtimes drop
 # protected files when they build their lists, so copying never checks them.
+# In normal mode a destination that is a symbolic link (valid or dangling) is
+# not listed, so it is never copied over and its link target (which may live
+# outside dest_dir) is neither overwritten nor created. Other files are still
+# copied as usual.
 #
 # With `--force` as the first argument, list_asset_files runs in force mode, so
 # every source file is copied regardless of whether dest exists, its mtime and
 # content, and the keep patterns. sync_asset_mtimes is still called without it.
+# A destination that is a symbolic link is replaced by a regular file (see
+# copy_asset_file); the link target is neither overwritten nor copied into.
 # `--force` in any other position does not enable force mode.
 #
 # Usage: copy_assets [--force] <src_dir> <dest_dir> [keep...]
