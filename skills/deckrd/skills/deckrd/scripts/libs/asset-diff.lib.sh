@@ -16,35 +16,23 @@ if [[ -n "${_ASSET_DIFF_LOADED:-}" ]]; then
 fi
 readonly _ASSET_DIFF_LOADED=1
 
+# shellcheck disable=SC1091
+. "$(dirname "${BASH_SOURCE[0]}")/utils.lib.sh"
+
 # Marker text identifying the workspaces rule block in the local gitignore template
 readonly WORKSPACES_RULE_MARKER='Shared notes layer'
 # Regex (awk ERE) matching the banner lines that frame a gitignore template section
 readonly WORKSPACES_RULE_BANNER='^## ---'
 
-# asset_dest_name - Derive the deployed file name of an asset source file
-#
-# Takes the basename of the source path and removes a trailing `.org` suffix,
-# which marks assets whose real name cannot be shipped as-is (e.g. `.gitignore`).
-#
-# @arg $1 Source file path
-# @stdout Destination file name
-# @return 0 always
-asset_dest_name() {
-  local name
-  name="$(basename "$1")"
-  printf '%s\n' "${name%.org}"
-}
+# ASSET_KEEP_PATTERNS - Globs for deployed paths that are never overwritten (`.gitignore` at any depth)
+# shellcheck disable=SC2034 # consumed by callers
+ASSET_KEEP_PATTERNS=('.gitignore' '*/.gitignore')
 
-# asset_src_path - Resolve the source file path of an asset from its deployed name
-#
-# Inverse of asset_dest_name: prints `<src_dir>/<dest_name>` when that path exists,
-# otherwise the `.org`-suffixed path. The plain name wins when both exist.
-# The fallback path is printed without checking that it exists.
+# asset_src_path - Resolve an asset source path from its deployed name
 #
 # @arg $1 Source asset directory
-# @arg $2 Destination file name
-# @stdout Source file path
-# @return 0 always (including when src_dir does not exist)
+# @arg $2 Deployed file name
+# @stdout `<src_dir>/<name>` if it exists, otherwise `<src_dir>/<name>.org`
 asset_src_path() {
   local src_dir="$1" dest_name="$2"
   if [[ -e "${src_dir}/${dest_name}" ]]; then
@@ -55,94 +43,145 @@ asset_src_path() {
   return 0
 }
 
-# list_updated_assets - List deployed assets that are older than and differ from the source
+# _list_all_files - List every file under a directory (internal)
 #
-# For each regular file directly under src_dir (dotfiles included, subdirectories
-# excluded), resolves its destination name with asset_dest_name. The name is
-# printed only when that file exists in dest_dir, the source is newer than it
-# (`-nt`), and its content differs (compared with `cmp -s`).
-# Files missing from dest_dir, and deployed files newer than the source
-# (i.e. edited by the user), are not reported.
-# Assets whose destination name is `.gitignore` are always skipped: they are
-# deployed only by init and are meant to be edited by the user.
-#
-# @arg $1 Source asset directory
-# @arg $2 Destination directory
-# @stdout Destination file names that are outdated, one per line
-# @return 0 always (including when src_dir does not exist)
-list_updated_assets() {
-  local src_dir="$1" dest_dir="$2" src_file name dest_file
+# @arg $1 Directory
+# @stdout Relative paths with `/` separators, byte-sorted, one per line
+_list_all_files() {
+  local src_dir
+  src_dir="$(normalize_dir_path "$1")"
   [[ -d "$src_dir" ]] || return 0
-  while IFS= read -r src_file; do
-    name="$(asset_dest_name "$src_file")"
-    [[ "$name" != ".gitignore" ]] || continue
-    dest_file="${dest_dir}/${name}"
-    [[ -f "$dest_file" && "$src_file" -nt "$dest_file" ]] || continue
-    cmp -s "$src_file" "$dest_file" || printf '%s\n' "$name"
-  done < <(find "$src_dir" -maxdepth 1 -type f)
+  (cd -- "$src_dir" && find . -type f) | sed -e 's|^\./||' -e 's#\\#/#g' | LC_ALL=C sort
   return 0
 }
 
-# init_asset_dirs - Define the asset source/destination directories and ASSET_TARGETS
+# _asset_is_kept - Check whether a destination path matches a keep pattern (internal)
 #
-# Sets each directory variable with `${VAR:-default}`, so values set beforehand
-# (non-empty) are kept. *_SRC_DIR defaults are derived from INITS_DIR.
-# ASSET_TARGETS is overwritten (not appended) with `<name>|<src_dir>|<dest_dir>` entries.
-# Requires DECKRD_ROOT, PROJECT_ROOT, DECKRD_DOCS_DIR, DECKRD_LOCAL_DATA and
-# DECKRD_LOCAL_WORKSPACES (set by bootstrap).
+# @arg $1 Destination relative path
+# @arg $2+ Keep patterns (bash globs), optional
+# @return 0 kept, 1 not kept
+_asset_is_kept() {
+  local dst_rel="$1" pat
+  for pat in "${@:2}"; do
+    # shellcheck disable=SC2053 # pat is a glob on purpose
+    [[ $dst_rel == $pat ]] && return 0
+  done
+  return 1
+}
+
+# _list_candidate_files - List source files not shielded by a keep pattern (internal)
 #
-# @set INITS_DIR RULES_SRC_DIR RULES_INDEX_SRC_DIR CLAUDE_RULES_SRC_DIR DOCS_SRC_DIR
-# @set LOCAL_SRC_DIR LOCAL_WORKSPACES_SRC_DIR DECKRD_RULES_DIR CLAUDE_RULES_DIR
-# @set CLAUDE_RULES_INDEX_DIR
-# @set ASSET_TARGETS Array of `<name>|<src_dir>|<dest_dir>`
-# @return 0 always
+# Drop `<src_rel>` when its destination `<dest_dir>/<src_rel without .org>`
+# exists (file or symlink) and matches a keep pattern. Protected files missing
+# from dest are kept as candidates. This is the only place keep patterns apply.
+#
+# @arg $1 Source asset directory
+# @arg $2 Destination directory
+# @arg $3+ Keep patterns (bash globs on the destination relative path), optional
+# @stdout Source relative paths, byte-sorted, one per line
+_list_candidate_files() {
+  local src_dir dest_dir src_rel dst_rel
+  src_dir="$(normalize_dir_path "$1")"
+  dest_dir="$(normalize_dir_path "$2")"
+  while IFS= read -r src_rel; do
+    dst_rel="$(strip_suffix "$src_rel" .org)"
+    if [[ -e "${dest_dir}/${dst_rel}" || -L "${dest_dir}/${dst_rel}" ]] &&
+      _asset_is_kept "$dst_rel" "${@:3}"; then
+      continue
+    fi
+    printf '%s\n' "$src_rel"
+  done < <(_list_all_files "$src_dir")
+  return 0
+}
+
+# _asset_needs_copy - Decide whether an asset must be copied (internal)
+#
+# Copy when dest does not exist, or when dest is a regular file older than and
+# different from src.
+#
+# @arg $1 Source file path
+# @arg $2 Destination file path
+# @return 0 copy, 1 no copy
+_asset_needs_copy() {
+  local src="$1" dest="$2"
+  [[ ! -e "$dest" && ! -L "$dest" ]] && return 0
+  [[ -f "$dest" && "$src" -nt "$dest" ]] && ! cmp -s "$src" "$dest"
+}
+
+# list_asset_files - List the assets that are missing from or outdated in dest_dir
+#
+# The destination of `<src_rel>` is `<dest_dir>/<src_rel without .org>`.
+# Protected files (matching a keep pattern) missing from dest are included;
+# protected files already present in dest are excluded. Read-only.
+#
+# With `--force` as the first argument, list every source file instead,
+# ignoring whether dest exists, its mtime and content, and the keep patterns.
+# `--force` in any other position does not enable force mode.
+#
+# Usage: list_asset_files [--force] <src_dir> <dest_dir> [keep...]
+#
+# @option --force Force mode, only as the first argument; the arguments below follow it
+# @arg <src_dir> Source asset directory
+# @arg <dest_dir> Destination directory
+# @arg [keep...] Keep patterns (bash globs on the destination relative path), optional
+# @stdout Source relative paths to copy, byte-sorted, one per line
+list_asset_files() {
+  local src_dir dest_dir src_rel dst_rel
+  if [[ "$1" == --force ]]; then
+    shift
+    _list_all_files "$1"
+    return 0
+  fi
+  src_dir="$(normalize_dir_path "$1")"
+  dest_dir="$(normalize_dir_path "$2")"
+  while IFS= read -r src_rel; do
+    dst_rel="$(strip_suffix "$src_rel" .org)"
+    if _asset_needs_copy "${src_dir}/${src_rel}" "${dest_dir}/${dst_rel}"; then
+      printf '%s\n' "$src_rel"
+    fi
+  done < <(_list_candidate_files "$src_dir" "$dest_dir" "${@:3}")
+  return 0
+}
+
+# init_asset_dirs - Set the asset source/destination directories and ASSET_TARGETS
+#
+# Directory variables already set are kept.
+#
+# @set ASSET_TARGETS Array of `<label>|<src_dir>|<dest_dir>`
 init_asset_dirs() {
   INITS_DIR="${INITS_DIR:-${DECKRD_ROOT}/assets/inits}"
-  RULES_SRC_DIR="${RULES_SRC_DIR:-${INITS_DIR}/deckrd-rules}"
   RULES_INDEX_SRC_DIR="${RULES_INDEX_SRC_DIR:-${INITS_DIR}/deckrd-rules-index}"
   CLAUDE_RULES_SRC_DIR="${CLAUDE_RULES_SRC_DIR:-${INITS_DIR}/claude-rules}"
   DOCS_SRC_DIR="${DOCS_SRC_DIR:-${INITS_DIR}/docs}"
   LOCAL_SRC_DIR="${LOCAL_SRC_DIR:-${INITS_DIR}/local-deckrd}"
-  LOCAL_WORKSPACES_SRC_DIR="${LOCAL_WORKSPACES_SRC_DIR:-${INITS_DIR}/local-workspaces}"
-  DECKRD_RULES_DIR="${DECKRD_RULES_DIR:-${DECKRD_DOCS_DIR}/rules}"
   CLAUDE_RULES_DIR="${CLAUDE_RULES_DIR:-${PROJECT_ROOT}/.claude/rules/claude-rules}"
   CLAUDE_RULES_INDEX_DIR="${CLAUDE_RULES_INDEX_DIR:-${PROJECT_ROOT}/.claude/rules/deckrd-rules}"
   # shellcheck disable=SC2034 # consumed by callers
   ASSET_TARGETS=(
-    "deckrd-rules|${RULES_SRC_DIR}|${DECKRD_RULES_DIR}"
     "claude-rules|${CLAUDE_RULES_SRC_DIR}|${CLAUDE_RULES_DIR}"
     "deckrd-rules-index|${RULES_INDEX_SRC_DIR}|${CLAUDE_RULES_INDEX_DIR}"
     "docs|${DOCS_SRC_DIR}|${DECKRD_DOCS_DIR}"
     "local-deckrd|${LOCAL_SRC_DIR}|${DECKRD_LOCAL_DATA}"
-    "local-workspaces|${LOCAL_WORKSPACES_SRC_DIR}|${DECKRD_LOCAL_WORKSPACES}"
   )
   return 0
 }
 
-# workspaces_rule_missing - Report whether gitignore content lacks the workspaces rule
+# workspaces_rule_missing - Check whether gitignore content lacks the `!/workspaces/` line
 #
-# The rule counts as present only when a line is exactly `!/workspaces/`,
-# ignoring a trailing CR so that CRLF content is matched as well.
-# Pure function: it reads no file and prints nothing. Checking that the gitignore
-# exists and reading it are the caller's job.
-#
-# @arg $1 Content of a gitignore file (string)
-# @return 0 No line equals `!/workspaces/` (including empty content)
-# @return 1 A line equals `!/workspaces/`
+# @arg $1 Gitignore content (CRLF allowed)
+# @return 0 missing, 1 present
 workspaces_rule_missing() {
   ! grep -qxF '!/workspaces/' <<<"${1//$'\r'/}"
 }
 
-# workspaces_rule_block - Print the workspaces rule block of the local gitignore template content
+# workspaces_rule_block - Extract the workspaces rule block from the gitignore template
 #
-# The block starts at the `## ---` banner line immediately above the line
-# containing `Shared notes layer` and runs to the end of the content.
-# Pure function: it reads no file. Locating and reading the template are the caller's job.
+# The block runs from the `## ---` banner above the WORKSPACES_RULE_MARKER line
+# to the end of the content.
 #
-# @arg $1 Content of the local gitignore template (string)
-# @stdout The block lines (nothing on failure)
-# @return 0 The block was printed
-# @return 1 The content has no marker line below a banner line
+# @arg $1 Gitignore template content
+# @stdout The block
+# @return 0 found, 1 not found
 workspaces_rule_block() {
   awk -v marker="$WORKSPACES_RULE_MARKER" -v banner_re="$WORKSPACES_RULE_BANNER" '
     $0 ~ banner_re { banner = NR }
