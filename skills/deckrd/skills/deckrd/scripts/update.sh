@@ -133,7 +133,7 @@ parse_args() {
 #   written (exits 1)
 apply_workspaces_rule() {
   local gitignore="$1" content="${2//$'\r'/}" template template_content block
-  template="$(asset_src_path "$LOCAL_SRC_DIR" .gitignore)"
+  template="${LOCAL_SRC_DIR}/.gitignore.org"
   if ! template_content="$(cat -- "$template" 2>/dev/null)" ||
     ! block="$(workspaces_rule_block "$template_content")"; then
     echo "Error: workspaces rule block not found: ${template}" >&2
