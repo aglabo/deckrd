@@ -55,16 +55,18 @@ Bootstrap and initialize a DECKRD project.
 
 Copies deckrd assets into the project. Each source directory is copied recursively.
 `list_asset_files` in `scripts/libs/asset-diff.lib.sh` picks the files to copy.
-`copy_assets` in `scripts/libs/asset-copy.lib.sh` copies them. `update` uses the same routines.
-Each source file is handled as follows:
+`copy_assets` in `scripts/libs/asset-copy.lib.sh` copies them. `init` runs them in missing-only
+mode (`copy_assets --missing-only`). `update` uses the same routines but also refreshes outdated
+files. Each source file is handled as follows:
 
 - A `.org` suffix is dropped from the file name (`.gitignore.org` → `.gitignore`)
 - A file missing from the destination is copied (`copied:`)
-- A `.gitignore` at any depth that already exists is never overwritten (not reported)
-- A deployed file older than its source with different content is overwritten (`copied:`)
-- A deployed file older than its source with the same content only gets the source's mtime (not reported)
 - A copied file keeps the mtime of its source
-- Any other deployed file is left as is, including one edited by the user (newer than the source)
+- A file that already exists is never overwritten and is not reported. This holds even when the
+  file is older than its source, differs from it, was edited by the user, or is a `.gitignore`
+
+Re-running `init` does not refresh outdated files. To refresh them, run
+[`/deckrd update --update`](update.md) (outdated files only) or `/deckrd init --force` (every file).
 
 With `--force`, every source file is copied (`copied:`), whether or not it is deployed.
 This includes `.gitignore` files and files edited by the user.
@@ -87,7 +89,7 @@ A missing source directory is reported as `source not found, skipping` and is no
    Those live directly under `.claude/rules/`.
 
    ```bash
-   assets/inits/claude-rules/*  →  .claude/rules/claude-rules/  (missing or outdated)
+   assets/inits/claude-rules/*  →  .claude/rules/claude-rules/  (missing only)
    ```
 
 2. **deckrd-rules index** → `.claude/rules/deckrd-rules/`
@@ -98,7 +100,7 @@ A missing source directory is reported as `source not found, skipping` and is no
 
    ```bash
    assets/inits/deckrd-rules-index/deckrd-rules-index.md
-     →  .claude/rules/deckrd-rules/  (missing or outdated)
+     →  .claude/rules/deckrd-rules/  (missing only)
    ```
 
    This asset dir intentionally carries no `.gitignore.org`, unlike
@@ -109,7 +111,7 @@ A missing source directory is reported as `source not found, skipping` and is no
    The rule bodies live in `docs/rules/` and land in `docs/.deckrd/rules/`.
 
    ```bash
-   assets/inits/docs/**  →  docs/.deckrd/  (recursive, missing or outdated)
+   assets/inits/docs/**  →  docs/.deckrd/  (recursive, missing only)
    ```
 
 4. **local data and workspaces README** → `.local/deckrd/`
@@ -120,14 +122,15 @@ A missing source directory is reported as `source not found, skipping` and is no
    does not put the README there.
 
    ```bash
-   assets/inits/local-deckrd/**  →  .local/deckrd/  (recursive, missing or outdated)
+   assets/inits/local-deckrd/**  →  .local/deckrd/  (recursive, missing only)
    ```
 
 #### Migrating a project initialized before the rule consolidation
 
-Re-running `init` refreshes outdated files that still exist in the bundle.
-So does [`/deckrd update --update`](update.md). Files removed from the bundle are not handled by
-`update`. Delete these first, then re-run `/deckrd init`:
+Re-running `init` only adds missing files. To refresh outdated files that still exist in the
+bundle, run [`/deckrd update --update`](update.md). `/deckrd init --force` also works, but it
+overwrites user edits too. Files removed from the bundle are not handled by either. Delete these
+first, then re-run `/deckrd init`:
 
 - `docs/.deckrd/rules/deckrd-rule-traceability.md`
 - `docs/.deckrd/rules/deckrd-rule-id-system.md`
