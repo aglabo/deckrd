@@ -599,6 +599,35 @@ Describe 'T-RUN-RSF: resolve_spec_files()'
       The status should be failure
     End
   End
+
+  # 2 本目以降の対象が黙って捨てられる回帰を防ぐ
+  Describe 'multiple targets'
+    Describe 'When: 正常系'
+      It '[Normal] T-RUN-RSF-10: outputs every spec file when given two spec files'
+        When call resolve_spec_files 'a.spec.sh' 'b.spec.sh'
+        The output should equal "$(printf '%s\n' 'a.spec.sh' 'b.spec.sh')"
+        The status should be success
+      End
+
+      It '[Normal] T-RUN-RSF-11: outputs the spec file then the glob expansion'
+        When call resolve_spec_files 'a.spec.sh' 'runners/libs/__tests__/unit/*.spec.sh'
+        The line 1 of output should equal 'a.spec.sh'
+        The line 2 of output should include '.spec.sh'
+        # glob 文字列も *.spec.sh で終わる。未展開のまま素通りした場合をここで弾く
+        The output should not include '*'
+        The status should be success
+      End
+    End
+
+    Describe 'When: 異常系'
+      It '[Error] T-RUN-RSF-12: fails without partial output when a later argument is unknown'
+        When call resolve_spec_files 'a.spec.sh' 'unknownarg'
+        The stderr should include "Unknown argument 'unknownarg'"
+        The output should be blank
+        The status should be failure
+      End
+    End
+  End
 End
 
 # 引数列から実機テスト (integration) を有効化すべきかだけを判定する純粋関数。

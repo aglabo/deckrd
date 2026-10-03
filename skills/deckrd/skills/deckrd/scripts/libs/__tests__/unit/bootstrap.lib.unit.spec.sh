@@ -920,19 +920,19 @@ Describe "bootstrap.lib.sh"
       End
     End
 
-    Describe "Given: DECKRD_LOCAL_WORKSPACES=/tmp/myws を事前設定"
-      Before "export PROJECT_ROOT=/tmp/proj; export DECKRD_LOCAL_WORKSPACES=/tmp/myws; bootstrap_init"
+    Describe "Given: DECKRD_LOCAL_WORKSPACES=/tmp/myws を事前設定 (事前設定値は無視される)"
+      Before "export PROJECT_ROOT=/tmp/proj; unset DECKRD_LOCAL_DATA; export DECKRD_LOCAL_WORKSPACES=/tmp/myws; bootstrap_init"
 
-      It "[Normal] T-LIB-BLOCW-04: 事前設定値が維持される"
+      It "[Normal] T-LIB-BLOCW-04: 事前設定値は無視され DECKRD_LOCAL_DATA/workspaces になる"
         When call echo "$DECKRD_LOCAL_WORKSPACES"
-        The output should equal "/tmp/myws"
+        The output should equal "/tmp/proj/.local/deckrd/workspaces"
       End
     End
 
     Describe "Given: DECKRD_LOCAL_WORKSPACES='' (空文字) を事前設定"
       Before "export PROJECT_ROOT=/tmp/proj; unset DECKRD_LOCAL_DATA; export DECKRD_LOCAL_WORKSPACES=''; bootstrap_init"
 
-      It "[Edge] T-LIB-BLOCW-05: 空文字はデフォルト値にフォールバックする"
+      It "[Edge] T-LIB-BLOCW-05: 空文字の事前設定も無視され DECKRD_LOCAL_DATA/workspaces になる"
         When call echo "$DECKRD_LOCAL_WORKSPACES"
         The output should equal "/tmp/proj/.local/deckrd/workspaces"
       End

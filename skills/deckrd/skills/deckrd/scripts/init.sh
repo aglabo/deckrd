@@ -10,8 +10,13 @@
 # @file init.sh
 # @brief Bootstrap and initialize DECKRD project structure
 # @description
-#   1. Bootstrap: copy deckrd-rules to docs/.deckrd/rules/, the rules index
-#      to .claude/rules/deckrd-rules/, and docs templates to docs/.deckrd/ (no overwrite)
+#   1. Bootstrap: create .local/deckrd/temp/ and .local/deckrd/workspaces/, then copy
+#      recursively claude-rules to .claude/rules/claude-rules/, the rules index to
+#      .claude/rules/deckrd-rules/, docs templates (incl. rules/) to docs/.deckrd/, and
+#      local-deckrd (incl. workspaces/README.md) to .local/deckrd/. Only missing
+#      files are copied; existing files (outdated ones and user edits included) are never
+#      overwritten. With --force, every asset is overwritten, .gitignore files and user edits
+#      included (session.json is kept)
 #   2. Create docs/.deckrd/ base directory structure
 #   3. Write .local/deckrd/.project.json with project settings
 #   4. Initialize .local/deckrd/session.json
@@ -23,6 +28,7 @@
 #   init.sh myapp webapp
 #   init.sh myapp webapp --language go
 #   init.sh myapp lib --language typescript --ai-model claude-sonnet-4-5
+#   init.sh myapp webapp --force
 #
 # @exitcode 0 Success
 # @exitcode 1 Error during execution
@@ -48,6 +54,7 @@ unset _SCRIPT_DIR
 . "${DECKRD_LIB_DIR}/validate-env.lib.sh"
 . "${DECKRD_LIB_DIR}/utils.lib.sh"
 . "${DECKRD_LIB_DIR}/asset-diff.lib.sh"
+. "${DECKRD_LIB_DIR}/asset-copy.lib.sh"
 validate_env || exit 1
 
 . "${DECKRD_LIB_DIR}/ai-runner.lib.sh"
@@ -90,6 +97,7 @@ Options:
                               Alias: bash → shell
   --ai-model <model>          AI model (default: sonnet)
                               Supported: gpt-*, o1-*, claude-*, haiku, sonnet, opus
+  --force                     Overwrite all assets, including .gitignore files and user-edited files
   -h, --help                  Show this help message
 
 Project file:
@@ -99,6 +107,7 @@ Example:
   init.sh myapp webapp
   init.sh myapp lib --language go
   init.sh voift webapp --language typescript --ai-model claude-sonnet-4-5
+  init.sh myapp webapp --force
 EOF
 }
 
@@ -120,11 +129,11 @@ validate_language() {
 # @description Parse command-line arguments and options
 # @return 0 on success or help request, 1 on error (no output; caller handles usage and error message)
 # @var PARSE_ARGS_ERROR set to error description on failure
-# @var OPTIONS reset to defaults, then filled from args (keys: project, project_type, language, ai_model, help)
+# @var OPTIONS reset to defaults, then filled from args (keys: project, project_type, language, ai_model, help, force)
 parse_args() {
   local positional=()
   PARSE_ARGS_ERROR=""
-  OPTIONS=([project]="" [project_type]="" [language]=typescript [ai_model]=sonnet [help]=false)
+  OPTIONS=([project]="" [project_type]="" [language]=typescript [ai_model]=sonnet [help]=false [force]=false)
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -156,6 +165,10 @@ parse_args() {
       ;;
     --ai-model=*)
       OPTIONS[ai_model]="${1#*=}"
+      shift
+      ;;
+    --force)
+      OPTIONS[force]=true
       shift
       ;;
     -*)
@@ -199,76 +212,82 @@ validate_args() {
 }
 
 ##
-# @description Create directory and optionally copy assets without overwriting
-# @arg $1 string Destination directory
-# @arg $2 string Source directory (optional; if omitted, only creates dest dir)
-# @arg $3 string Label for display (optional; defaults to basename of dest dir)
-# @exitcode 0 Directory created (and assets copied or skipped)
-# @exitcode 1 Directory could not be created or an asset could not be copied
-# @stderr Progress messages
-# @stderr Error message naming the directory or file that failed
-init_directory() {
-  local dest_dir="$1"
-  local src_dir="${2:-}"
-  local label="${3:-$(basename "$dest_dir")}"
-
-  mkdir -p "$dest_dir" || {
-    echo "Error: failed to create directory: ${dest_dir}" >&2
-    return 1
-  }
-
-  if [[ -z "$src_dir" ]]; then
-    return 0
-  fi
-
-  if [[ ! -d "$src_dir" ]]; then
-    echo "  [init/${label}] source not found, skipping: ${src_dir}" >&2
-    return 0
-  fi
-
-  local copied=0 skipped=0
-  for src_file in "$src_dir"/* "$src_dir"/.*; do
-    [[ -e "$src_file" ]] || continue
-    [[ "$(basename "$src_file")" == "." || "$(basename "$src_file")" == ".." ]] && continue
-    local dest_filename dest_file
-    dest_filename="$(asset_dest_name "$src_file")"
-    dest_file="${dest_dir}/${dest_filename}"
-    if [[ -e "$dest_file" ]]; then
-      echo "  [init/${label}] skip (exists): ${dest_filename}" >&2
-      skipped=$((skipped + 1))
-    else
-      cp "$src_file" "$dest_file" || {
-        echo "Error: failed to copy file: ${dest_file}" >&2
-        return 1
-      }
-      echo "  [init/${label}] copied: ${dest_filename}" >&2
-      copied=$((copied + 1))
-    fi
+# @description Create directories (all missing levels) in order, without copying anything
+# @description Stops at the first directory that cannot be created
+# @arg $@ string Directories to create
+# @exitcode 0 Every directory exists or was created
+# @exitcode 1 A directory could not be created
+# @stderr Error message naming the directory on failure
+make_directories() {
+  local dir
+  for dir in "$@"; do
+    mkdir -p "$dir" || {
+      echo "Error: failed to create directory: ${dir}" >&2
+      return 1
+    }
   done
+}
 
-  echo "  [init/${label}] done: ${copied} copied, ${skipped} skipped" >&2
+##
+# @description Install one asset target with copy_assets and report each copied file
+# @description Copies only the assets under src that are missing from dest (copy_assets
+#   --missing-only); an existing file is never overwritten and is not reported, even when it is
+#   older than and differs from its source
+# @description When OPTIONS[force] is true, copy_assets --force overwrites every file under src
+#   regardless of ASSET_KEEP_PATTERNS and the dest state, and each one is reported as copied
+# @description A missing src is not an error: dest is still created, the source is reported, and
+#   no done line is printed
+# @arg $1 string Label shown in the progress messages (e.g. `docs`)
+# @arg $2 string Source dir
+# @arg $3 string Destination dir
+# @exitcode 0 Assets installed, or src does not exist
+# @exitcode 1 dest could not be created or an asset could not be copied
+# @stderr `  [init/<label>] copied: <rel>` per copied file (kept files are not reported), then
+#   `  [init/<label>] done: N copied`
+# @stderr Error message naming the directory or file that failed
+install_assets() {
+  local label="$1" src="$2" dest="$3"
+  local out rel copied=0
+  local -a mode_opt=(--missing-only)
+  if [[ ! -d "$src" ]]; then
+    make_directories "$dest" || return 1
+    echo "  [init/${label}] source not found, skipping: ${src}" >&2
+    return 0
+  fi
+  [[ "${OPTIONS[force]:-false}" == true ]] && mode_opt=(--force)
+  out=$(copy_assets "${mode_opt[@]}" "$src" "$dest" "${ASSET_KEEP_PATTERNS[@]}") || return 1
+  while IFS= read -r rel; do
+    [[ -n "$rel" ]] || continue
+    echo "  [init/${label}] copied: ${rel}" >&2
+    copied=$((copied + 1))
+  done <<<"$out"
+  printf '  [init/%s] done: %d copied\n' "$label" "$copied" >&2
 }
 
 ##
 # @description Initialize all project directories and install assets
-# @description Order: DECKRD_LOCAL_TEMP (no assets), then each ASSET_TARGETS entry
-#   (`<label>|<src>|<dest>`, set by init_asset_dirs), then the BASE_SUBDIRS under DECKRD_DOCS_DIR
-# @description Stops at the first init_directory failure without printing "Init complete."
+# @description Order: DECKRD_LOCAL_TEMP and DECKRD_LOCAL_WORKSPACES (directories only), then each
+#   ASSET_TARGETS entry (`<label>|<src>|<dest>`, set by init_asset_dirs) copied recursively with
+#   install_assets (copy_assets + ASSET_KEEP_PATTERNS), then the BASE_SUBDIRS under DECKRD_DOCS_DIR
+# @description On re-run, only missing files are copied; an existing file is never overwritten,
+#   even when it is older than and differs from its source (refresh it with `update --update`);
+#   with --force (OPTIONS[force]) every asset is overwritten, `.gitignore` and user edits included
+# @description workspaces/README.md goes to DECKRD_LOCAL_WORKSPACES through the local-deckrd copy;
+#   DECKRD_LOCAL_WORKSPACES is always ${DECKRD_LOCAL_DATA}/workspaces (bootstrap ignores an override)
+# @description Stops at the first failure without printing "Init complete."
 # @exitcode 0 All directories initialized
-# @exitcode 1 An init_directory call failed
+# @exitcode 1 A directory could not be created or an asset could not be copied
 # @stderr Progress messages
-# @stderr Error message from the failing init_directory
+# @stderr Error message naming the directory or file that failed
 init_directories() {
-  local entry label src dest subdir
+  local entry label src dest
   echo "Init: creating directories and installing assets..." >&2
-  init_directory "$DECKRD_LOCAL_TEMP" || return 1
+  make_directories "$DECKRD_LOCAL_TEMP" "$DECKRD_LOCAL_WORKSPACES" || return 1
   for entry in "${ASSET_TARGETS[@]}"; do
     IFS='|' read -r label src dest <<<"$entry"
-    init_directory "$dest" "$src" "$label" || return 1
+    install_assets "$label" "$src" "$dest" || return 1
   done
-  for subdir in "${BASE_SUBDIRS[@]}"; do
-    init_directory "${DECKRD_DOCS_DIR}/${subdir}" || return 1
-  done
+  make_directories "${BASE_SUBDIRS[@]/#/${DECKRD_DOCS_DIR}/}" || return 1
   echo "Init complete." >&2
   echo "" >&2
 }

@@ -11,14 +11,20 @@
 # @brief List or update deployed assets that are outdated
 # @description
 #   Compares each asset source directory with its deployed directory and lists
-#   deployed files that are older than and differ from the source.
+#   the assets that list_asset_files reports: files missing from the deployed
+#   directory, and deployed files that are older than and differ from the source,
+#   including files in subdirectories (e.g. rules/, workspaces/README.md).
+#   An existing deployed `.gitignore` is never listed or overwritten.
+#   Each is printed as `[label] dst_rel` (destination relative path,
+#   `.org` dropped).
 #   It also reports an existing `.local/deckrd/.gitignore` that lacks the
-#   `!/workspaces/` rule as `[local-deckrd] .gitignore (workspaces rule)`, and a
-#   workspaces README whose source exists but which is not deployed as
-#   `[local-workspaces] README.md (missing)`.
+#   `!/workspaces/` rule as `[local-deckrd] .gitignore (workspaces rule)`.
 #   Deployed files are not modified unless --update is given, in which case
-#   each outdated file is overwritten with its source and the workspaces rule
+#   each listed file is copied from its source and the workspaces rule
 #   block of the template is appended to the old gitignore.
+#   With --update, a deployed file that has the same content as its source
+#   but is older also gets the source's mtime (copy_assets ->
+#   sync_asset_mtimes); it is not listed and its content is not changed.
 #
 # @usage
 #   update.sh [OPTIONS]
@@ -26,7 +32,7 @@
 # @exitcode 0 Success
 # @exitcode 1 Error during execution
 #
-# @stdout Outdated assets as `[label] name` (or `Updated: [label] name` with --update), one per line
+# @stdout Assets as `[label] dst_rel` (or `Updated: [label] dst_rel` with --update), one per line
 # @stderr Usage and error messages
 #
 # @author atsushifx
@@ -46,13 +52,11 @@ unset _SCRIPT_DIR
 
 . "${DECKRD_LIB_DIR}/validate-env.lib.sh"
 . "${DECKRD_LIB_DIR}/utils.lib.sh"
-. "${DECKRD_LIB_DIR}/asset-diff.lib.sh"
+. "${DECKRD_LIB_DIR}/asset-copy.lib.sh"
 validate_env || exit 1
 
 # Label reported for an old local gitignore that lacks the workspaces rule
 readonly WORKSPACES_RULE_LABEL='[local-deckrd] .gitignore (workspaces rule)'
-# Label reported for a workspaces README that has a source but is not deployed
-readonly WORKSPACES_README_LABEL='[local-workspaces] README.md (missing)'
 
 # ============================================================================
 # Functions
@@ -65,15 +69,18 @@ show_usage() {
   cat >&2 <<EOF
 Usage: update.sh [OPTIONS]
 
-List deployed assets that are older than and differ from the source,
-and an existing .local/deckrd/.gitignore that lacks the workspaces rule.
-A missing .local/deckrd/workspaces/README.md is reported as well when its source exists.
+List asset files that are missing from each deployed directory, or are
+older than and differ from their source, including files in subdirectories
+such as rules/ and workspaces/README.md. An existing deployed .gitignore is
+never overwritten; an existing .local/deckrd/.gitignore that lacks the
+workspaces rule is listed instead.
 Deployed files are not modified unless --update is given.
 
 Options:
-  --update      Overwrite outdated deployed files with their source,
-                append the workspaces rule block to the old .gitignore,
-                and copy the missing workspaces README from its source
+  --update      Copy each listed file from its source, append the
+                workspaces rule block to the old .gitignore, and set the
+                mtime of each deployed file that has the same content as
+                its source but is older to the source's mtime
   -h, --help    Show this help message
 EOF
 }
@@ -126,7 +133,7 @@ parse_args() {
 #   written (exits 1)
 apply_workspaces_rule() {
   local gitignore="$1" content="${2//$'\r'/}" template template_content block
-  template="$(asset_src_path "$LOCAL_SRC_DIR" .gitignore)"
+  template="${LOCAL_SRC_DIR}/.gitignore.org"
   if ! template_content="$(cat -- "$template" 2>/dev/null)" ||
     ! block="$(workspaces_rule_block "$template_content")"; then
     echo "Error: workspaces rule block not found: ${template}" >&2
@@ -167,66 +174,68 @@ print_workspaces_rule() {
 }
 
 ##
-# @description Print (and in update mode, deploy) the workspaces README when its source exists
-#   but it is not deployed ("not deployed" means nothing exists at the README path; any existing
-#   entry, even a directory or a dangling symlink, counts as deployed and is left untouched)
-#   A README missing from both sides is not reported and nothing is created. In list mode
-#   neither the workspaces directory nor the README is created; in update mode the directory
-#   is created if needed and the source README is copied into it.
-# @arg $1 true to deploy the missing README, false to only list it
-# @stdout WORKSPACES_README_LABEL (`Updated: ` prefixed in update mode) when the README is missing
-# @stderr Error message when the directory cannot be created or the README cannot be copied (exits 1)
-# @return 0 when the README was reported, 1 otherwise
-print_missing_workspaces_readme() {
-  local update_mode="$1" readme="${DECKRD_LOCAL_WORKSPACES}/README.md"
-  [[ -f "${LOCAL_WORKSPACES_SRC_DIR}/README.md" && ! -e "$readme" && ! -L "$readme" ]] ||
-    return 1
-  if [[ "$update_mode" != true ]]; then
-    printf '%s\n' "$WORKSPACES_README_LABEL"
-    return 0
+# @description Print the destination relative paths of the assets of one ASSET_TARGETS entry
+#   List mode maps each path from list_asset_files to its destination by dropping `.org`.
+#   Update mode copies with copy_assets, which already prints destination relative paths.
+#   The caller captures the output, so a failed copy leaves no partial line on stdout.
+# @arg $1 true to copy the assets, false to only list them
+# @arg $2 Source directory
+# @arg $3 Destination directory
+# @stdout Destination relative path per asset, one per line
+# @stderr `Error:` line from copy_assets when a file cannot be copied
+# @return 0 on success, 1 when a copy fails
+target_asset_paths() {
+  local update_mode="$1" src="$2" dest="$3" src_rel
+  if [[ "$update_mode" == true ]]; then
+    copy_assets "$src" "$dest" "${ASSET_KEEP_PATTERNS[@]}"
+    return
   fi
-  { mkdir -p "$DECKRD_LOCAL_WORKSPACES" && cp "${LOCAL_WORKSPACES_SRC_DIR}/README.md" "$readme"; } || {
-    echo "Error: failed to update: ${readme}" >&2
-    exit 1
-  }
-  printf 'Updated: %s\n' "$WORKSPACES_README_LABEL"
+  while IFS= read -r src_rel; do
+    strip_suffix "$src_rel" .org
+  done < <(list_asset_files "$src" "$dest" "${ASSET_KEEP_PATTERNS[@]}")
 }
 
 ##
-# @description Print (and in update mode, overwrite) outdated deployed assets of every ASSET_TARGETS entry,
-#   then the local gitignore that lacks the workspaces rule (appended to in update mode),
-#   then the workspaces README that has a source but is not deployed.
-#   The last two are delegated to print_workspaces_rule and print_missing_workspaces_readme.
-# @arg $1 true to overwrite outdated assets, false to only list them
-# @stdout `[label] name` (`Updated: [label] name` in update mode) per outdated asset
-#   WORKSPACES_RULE_LABEL for the local gitignore, WORKSPACES_README_LABEL for a missing
-#   workspaces README, or `Assets are up to date.` when none
-# @stderr Error message when a file cannot be updated or the local gitignore cannot be read (exits 1)
+# @description Print (and in update mode, copy) the assets of one ASSET_TARGETS entry that
+#   list_asset_files reports (missing from or outdated in the destination)
+#   In update mode the lines are printed only after every copy of the entry has succeeded.
+# @arg $1 true to copy the listed assets, false to only list them
+# @arg $2 ASSET_TARGETS entry (`<label>|<src_dir>|<dest_dir>`)
+# @arg $3 Name of an integer variable to add the number of listed assets to (nameref)
+# @stdout `[label] dst_rel` (`Updated: [label] dst_rel` in update mode) per listed asset
+# @stderr Error message from copy_assets when a file cannot be copied (exits 1)
+print_target_assets() {
+  local update_mode="$1" label src dest paths dst_rel prefix=''
+  local -n _count_ref="$3"
+  IFS='|' read -r label src dest <<<"$2"
+  [[ "$update_mode" == true ]] && prefix='Updated: '
+
+  paths="$(target_asset_paths "$update_mode" "$src" "$dest")" ||
+    exit 1
+  while IFS= read -r dst_rel; do
+    # an empty list yields one empty line
+    [[ -n "$dst_rel" ]] || continue
+    printf '%s[%s] %s\n' "$prefix" "$label" "$dst_rel"
+    _count_ref=$((_count_ref + 1))
+  done <<<"$paths"
+}
+
+##
+# @description Print (and in update mode, copy) the assets of every ASSET_TARGETS entry,
+#   then the local gitignore that lacks the workspaces rule (appended to in update mode).
+#   The two parts are delegated to print_target_assets and print_workspaces_rule.
+# @arg $1 true to copy the listed assets, false to only list them
+# @stdout `[label] dst_rel` (`Updated: [label] dst_rel` in update mode) per listed asset,
+#   WORKSPACES_RULE_LABEL for the local gitignore, or `Assets are up to date.` when none
+# @stderr Error message when a file cannot be copied or the local gitignore cannot be read (exits 1)
 print_updated_assets() {
-  local update_mode="$1"
-  local entry label src dest name count=0
+  local update_mode="$1" entry count=0
 
   for entry in "${ASSET_TARGETS[@]}"; do
-    IFS='|' read -r label src dest <<<"$entry"
-    while IFS= read -r name; do
-      if [[ "$update_mode" == true ]]; then
-        cp "$(asset_src_path "$src" "$name")" "${dest}/${name}" || {
-          echo "Error: failed to update: ${dest}/${name}" >&2
-          exit 1
-        }
-        printf 'Updated: [%s] %s\n' "$label" "$name"
-      else
-        printf '[%s] %s\n' "$label" "$name"
-      fi
-      count=$((count + 1))
-    done < <(list_updated_assets "$src" "$dest")
+    print_target_assets "$update_mode" "$entry" count
   done
 
   if print_workspaces_rule "$update_mode"; then
-    count=$((count + 1))
-  fi
-
-  if print_missing_workspaces_readme "$update_mode"; then
     count=$((count + 1))
   fi
 
