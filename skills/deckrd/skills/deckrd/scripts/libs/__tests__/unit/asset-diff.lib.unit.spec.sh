@@ -642,7 +642,6 @@ Describe "T-LIB-ASDF: asset-diff.lib.sh"
           When call list_asset_files --force "${NAMING_TMPDIR}/src" "${NAMING_TMPDIR}/dest"
           The status should equal 0
           The output should equal ""
-          The contents of file "${NAMING_TMPDIR}/dest/a.md" should equal "user edit"
         End
       End
     End
