@@ -24,6 +24,9 @@ readonly _ASSET_DIFF_LOADED=1
 # shellcheck disable=SC1091
 . "$(dirname "${BASH_SOURCE[0]}")/utils.lib.sh"
 
+# shellcheck disable=SC1091
+. "$(dirname "${BASH_SOURCE[0]}")/utils.lib.sh"
+
 # ============================================================================
 # 1. Asset directories
 # ============================================================================
@@ -86,15 +89,15 @@ ASSET_KEEP_PATTERNS=('.gitignore' '*/.gitignore')
 list_asset_files() {
   local src_dir dest_dir src_rel dst_rel checker=_asset_can_update
   case "$1" in
-    --force)
-      shift
-      _list_all_files "$1"
-      return 0
-      ;;
-    --missing-only)
-      shift
-      checker=_asset_is_missing
-      ;;
+  --force)
+    shift
+    _list_all_files "$1"
+    return 0
+    ;;
+  --missing-only)
+    shift
+    checker=_asset_is_missing
+    ;;
   esac
   src_dir="$(normalize_dir_path "$1")"
   dest_dir="$(normalize_dir_path "$2")"

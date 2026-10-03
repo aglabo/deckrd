@@ -203,8 +203,8 @@ dangling_readme_target() {
 # Helper: occupy the workspaces README path with a symlink to a nonexistent target
 # MSYS=winsymlinks:nativestrict lets Git Bash create a native dangling symlink; harmless elsewhere.
 setup_workspaces_readme_dangling_symlink() {
-  mkdir -p "$DECKRD_LOCAL_WORKSPACES"
-  MSYS=winsymlinks:nativestrict ln -s "$(dangling_readme_target)" "${DECKRD_LOCAL_WORKSPACES}/README.md"
+  mkdir -p "${DECKRD_LOCAL_DATA}/workspaces"
+  MSYS=winsymlinks:nativestrict ln -s "$(dangling_readme_target)" "${DECKRD_LOCAL_DATA}/workspaces/README.md"
 }
 
 # Helper: report whether this host cannot create a dangling symlink
@@ -219,6 +219,16 @@ dangling_symlink_unsupported() {
     [[ -L "${probe_dir}/link" ]]; } || rc=0
   rm -rf "$probe_dir"
   return "$rc"
+}
+
+# Helper: print the mtime of a file as epoch seconds
+#
+# Used to compare the deployed file's mtime with its source after `--update`.
+#
+# @arg $1 File path
+# @stdout mtime in seconds since the epoch (`stat -c %Y`)
+_mtime_of() {
+  stat -c %Y "$1"
 }
 
 # ============================================================================
@@ -429,7 +439,7 @@ Describe "T-CLI-UPDI: update.sh: list outdated assets"
     After "teardown_update_env"
 
     setup_workspaces_missing_no_source() {
-      rm -rf "$DECKRD_LOCAL_WORKSPACES"
+      rm -rf "${DECKRD_LOCAL_DATA}/workspaces"
     }
     Before "setup_workspaces_missing_no_source"
 
@@ -437,7 +447,7 @@ Describe "T-CLI-UPDI: update.sh: list outdated assets"
       When run bash "$SCRIPT"
       The status should equal 0
       The output should equal "Assets are up to date."
-      The path "$DECKRD_LOCAL_WORKSPACES" should not be exist
+      The path "${DECKRD_LOCAL_DATA}/workspaces" should not be exist
     End
   End
 
@@ -451,7 +461,7 @@ Describe "T-CLI-UPDI: update.sh: list outdated assets"
       When run bash "$SCRIPT"
       The status should equal 0
       The output should equal "Assets are up to date."
-      The path "${DECKRD_LOCAL_WORKSPACES}/README.md" should be symlink
+      The path "${DECKRD_LOCAL_DATA}/workspaces/README.md" should be symlink
       The path "$(dangling_readme_target)" should not be exist
     End
   End
@@ -509,7 +519,7 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
     End
   End
 
-  Describe "Given: .org source newer than its differing deployed file"
+  Describe "Given: nested .gitignore.org source newer than its differing deployed .gitignore"
     Before "setup_update_env"
     After "teardown_update_env"
 
@@ -787,7 +797,7 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
 
     # Any existing entry at the README path counts as deployed
     setup_workspaces_readme_dir() {
-      mkdir -p "${DECKRD_LOCAL_WORKSPACES}/README.md"
+      mkdir -p "${DECKRD_LOCAL_DATA}/workspaces/README.md"
     }
     Before "setup_workspaces_readme_dir"
 
@@ -795,8 +805,8 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
       When run bash "$SCRIPT" --update
       The status should equal 0
       The output should equal "Assets are up to date."
-      The path "${DECKRD_LOCAL_WORKSPACES}/README.md" should be directory
-      The path "${DECKRD_LOCAL_WORKSPACES}/README.md/README.md" should not be exist
+      The path "${DECKRD_LOCAL_DATA}/workspaces/README.md" should be directory
+      The path "${DECKRD_LOCAL_DATA}/workspaces/README.md/README.md" should not be exist
     End
   End
 
@@ -818,7 +828,7 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
       The stderr should include "Error:"
       The stderr should include "${DECKRD_LOCAL_WORKSPACES}/README.md"
       The output should not include "Updated:"
-      The path "$DECKRD_LOCAL_WORKSPACES" should be file
+      The path "${DECKRD_LOCAL_DATA}/workspaces" should be file
     End
   End
 
@@ -853,7 +863,7 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
       When run bash "$SCRIPT" --update
       The status should equal 0
       The output should equal "Assets are up to date."
-      The path "${DECKRD_LOCAL_WORKSPACES}/README.md" should be symlink
+      The path "${DECKRD_LOCAL_DATA}/workspaces/README.md" should be symlink
       The path "$(dangling_readme_target)" should not be exist
     End
   End
