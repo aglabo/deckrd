@@ -124,10 +124,10 @@ copy_assets() {
   local src_dir dest_dir list src_rel dst_rel dest
   local -a mode_opt=()
   case "$1" in
-    --force | --missing-only)
-      mode_opt=("$1")
-      shift
-      ;;
+  --force | --missing-only)
+    mode_opt=("$1")
+    shift
+    ;;
   esac
   src_dir="$(normalize_dir_path "$1")"
   dest_dir="$(normalize_dir_path "$2")"
