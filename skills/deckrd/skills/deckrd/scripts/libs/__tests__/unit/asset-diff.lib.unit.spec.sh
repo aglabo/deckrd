@@ -29,6 +29,18 @@ Describe "T-LIB-ASDF: asset-diff.lib.sh"
     touch -d '2000-01-01 00:00:00' "$1"
   }
 
+  # Helper: create symlink <link> pointing at <target>, creating the parent of <link>
+  # MSYS=winsymlinks:nativestrict lets Git Bash create a native (even dangling) symlink; harmless elsewhere.
+  put_symlink() {
+    mkdir -p "$(dirname "$2")"
+    MSYS=winsymlinks:nativestrict ln -s "$1" "$2"
+  }
+
+  # Helper: succeed when <path> still has the past mtime set by make_old
+  is_old() {
+    [[ "$(stat -c %Y "$1")" == "$(date -d '2000-01-01 00:00:00' +%s)" ]]
+  }
+
   # Helper: report whether this host cannot create a dangling symlink
   # Keeps the negation inside the function so that `Skip if` works.
   # @return 0 if a dangling symlink cannot be created, 1 if it can
@@ -41,75 +53,18 @@ Describe "T-LIB-ASDF: asset-diff.lib.sh"
     return "$rc"
   }
 
-  Describe "asset_src_path"
-    Before "setup_tmpdir"
-    After "teardown_tmpdir"
-
-    Describe "Given: ソースディレクトリに通常名のファイルだけが存在する"
-      setup_plain() {
-        touch "${NAMING_TMPDIR}/foo.md"
-      }
-      Before "setup_plain"
-
-      Describe "When: asset_src_path を呼ぶ"
-        It "Then: [Normal] T-LIB-ASDF-12: 通常名のパスを出力する"
-          When call asset_src_path "$NAMING_TMPDIR" "foo.md"
-          The status should equal 0
-          The output should equal "${NAMING_TMPDIR}/foo.md"
-        End
-      End
-    End
-
-    Describe "Given: ソースディレクトリに .org 付きのファイルだけが存在する"
-      setup_org_only() {
-        touch "${NAMING_TMPDIR}/.gitignore.org"
-      }
-      Before "setup_org_only"
-
-      Describe "When: asset_src_path を呼ぶ"
-        It "Then: [Normal] T-LIB-ASDF-13: .org 付きパスを出力する"
-          When call asset_src_path "$NAMING_TMPDIR" ".gitignore"
-          The status should equal 0
-          The output should equal "${NAMING_TMPDIR}/.gitignore.org"
-        End
-      End
-    End
-
-    Describe "Given: ソースディレクトリが存在しない"
-      Describe "When: asset_src_path を呼ぶ"
-        It "Then: [Error] T-LIB-ASDF-14: .org 付きパスを出力し status 0 で終わる"
-          When call asset_src_path "${NAMING_TMPDIR}/no-such-src" "foo.md"
-          The status should equal 0
-          The output should equal "${NAMING_TMPDIR}/no-such-src/foo.md.org"
-        End
-      End
-    End
-
-    Describe "Given: ソースディレクトリに通常名と .org 付きの両方のファイルが存在する"
-      setup_both() {
-        touch "${NAMING_TMPDIR}/foo.md" "${NAMING_TMPDIR}/foo.md.org"
-      }
-      Before "setup_both"
-
-      Describe "When: asset_src_path を呼ぶ"
-        It "Then: [Edge] T-LIB-ASDF-15: 通常名のパスを優先して出力する"
-          When call asset_src_path "$NAMING_TMPDIR" "foo.md"
-          The status should equal 0
-          The output should equal "${NAMING_TMPDIR}/foo.md"
-        End
-      End
-    End
-
-    Describe "Given: ソースディレクトリが空"
-      Describe "When: asset_src_path を呼ぶ"
-        It "Then: [Edge] T-LIB-ASDF-16: .org 付きパスを出力する"
-          When call asset_src_path "$NAMING_TMPDIR" "bar.md"
-          The status should equal 0
-          The output should equal "${NAMING_TMPDIR}/bar.md.org"
-        End
-      End
-    End
-  End
+  # Helper: report whether this host cannot create a symlink to a regular file
+  # Keeps the negation inside the function so that `Skip if` works.
+  # @return 0 if a symlink to a regular file cannot be created, 1 if it can
+  symlink_unsupported() {
+    local probe_dir rc=1
+    probe_dir="$(mktemp -d)" || return 0
+    { : >"${probe_dir}/target" &&
+      MSYS=winsymlinks:nativestrict ln -s "${probe_dir}/target" "${probe_dir}/link" 2>/dev/null &&
+      [[ -L "${probe_dir}/link" ]]; } || rc=0
+    rm -rf "$probe_dir"
+    return "$rc"
+  }
 
   Describe "_list_all_files"
     Before "setup_tmpdir"
@@ -394,11 +349,9 @@ Describe "T-LIB-ASDF: asset-diff.lib.sh"
 
     Describe "Given: 配置先が存在しないターゲットを指すシンボリックリンク (dangling)"
       Skip if "dangling symlinks are not supported on this host" dangling_symlink_unsupported
-      # MSYS=winsymlinks:nativestrict lets Git Bash create a native dangling symlink; harmless elsewhere.
       setup_dest_dangling_symlink() {
         put_file "${NAMING_TMPDIR}/src" "a.md" "A"
-        mkdir -p "${NAMING_TMPDIR}/dest"
-        MSYS=winsymlinks:nativestrict ln -s "${NAMING_TMPDIR}/missing-target.md" "${NAMING_TMPDIR}/dest/a.md"
+        put_symlink "${NAMING_TMPDIR}/missing-target.md" "${NAMING_TMPDIR}/dest/a.md"
       }
       BeforeEach "setup_dest_dangling_symlink"
 
@@ -410,6 +363,49 @@ Describe "T-LIB-ASDF: asset-diff.lib.sh"
           The stderr should equal ""
           The path "${NAMING_TMPDIR}/dest/a.md" should be symlink
           The path "${NAMING_TMPDIR}/missing-target.md" should not be exist
+        End
+      End
+    End
+
+    Describe "Given: 配置先がプロジェクト外の古く内容が違うファイルを指すシンボリックリンク"
+      Skip if "symlinks are not supported on this host" symlink_unsupported
+      setup_dest_symlink_outdated() {
+        put_file "${NAMING_TMPDIR}/src" "a.md" "NEW"
+        put_file "${NAMING_TMPDIR}/outside" "a.md" "OLD"
+        make_old "${NAMING_TMPDIR}/outside/a.md"
+        put_symlink "${NAMING_TMPDIR}/outside/a.md" "${NAMING_TMPDIR}/dest/a.md"
+      }
+      BeforeEach "setup_dest_symlink_outdated"
+
+      Describe "When: list_asset_files を呼ぶ"
+        It "Then: [Normal] T-LIB-ASDF-80: リンク先が古く内容が違っても配置済みとみなし何も出力しない"
+          When call list_asset_files "${NAMING_TMPDIR}/src" "${NAMING_TMPDIR}/dest"
+          The status should equal 0
+          The output should equal ""
+          The stderr should equal ""
+          The path "${NAMING_TMPDIR}/dest/a.md" should be symlink
+          The contents of file "${NAMING_TMPDIR}/outside/a.md" should equal "OLD"
+          Assert is_old "${NAMING_TMPDIR}/outside/a.md"
+        End
+      End
+    End
+
+    Describe "Given: 配置先が自分自身を指すシンボリックリンク (ループ)"
+      Skip if "dangling symlinks are not supported on this host" dangling_symlink_unsupported
+      setup_dest_symlink_loop() {
+        put_file "${NAMING_TMPDIR}/src" "a.md" "NEW"
+        put_symlink "${NAMING_TMPDIR}/dest/a.md" "${NAMING_TMPDIR}/dest/a.md"
+      }
+      BeforeEach "setup_dest_symlink_loop"
+
+      Describe "When: list_asset_files を呼ぶ"
+        # Characterization: passes before the symlink guard; RED confirmed by dropping `! -L` from the existence check.
+        It "Then: [Error] T-LIB-ASDF-81: ループしたリンクも配置済みとみなし何も出力しない"
+          When call list_asset_files "${NAMING_TMPDIR}/src" "${NAMING_TMPDIR}/dest"
+          The status should equal 0
+          The output should equal ""
+          The stderr should equal ""
+          The path "${NAMING_TMPDIR}/dest/a.md" should be symlink
         End
       End
     End
@@ -562,6 +558,28 @@ Describe "T-LIB-ASDF: asset-diff.lib.sh"
       End
     End
 
+    Describe "Given: 配置先がプロジェクト外のファイルを指すシンボリックリンク (強制モード)"
+      Skip if "symlinks are not supported on this host" symlink_unsupported
+      setup_force_dest_symlink() {
+        put_file "${NAMING_TMPDIR}/src" "a.md" "NEW"
+        put_file "${NAMING_TMPDIR}/outside" "a.md" "OLD"
+        put_symlink "${NAMING_TMPDIR}/outside/a.md" "${NAMING_TMPDIR}/dest/a.md"
+      }
+      BeforeEach "setup_force_dest_symlink"
+
+      Describe "When: --force を付けて list_asset_files を呼ぶ"
+        # Differs from T-LIB-ASDF-80: --force ignores the symlink check.
+        # Characterization: passes before the symlink guard; RED confirmed by disabling the --force branch.
+        It "Then: [Edge] T-LIB-ASDF-82: 強制モードではリンクでも src_rel を出力し配置先を変えない"
+          When call list_asset_files --force "${NAMING_TMPDIR}/src" "${NAMING_TMPDIR}/dest"
+          The status should equal 0
+          The output should equal "a.md"
+          The path "${NAMING_TMPDIR}/dest/a.md" should be symlink
+          The contents of file "${NAMING_TMPDIR}/outside/a.md" should equal "OLD"
+        End
+      End
+    End
+
     Describe "Given: ソースディレクトリが存在しない (強制モード)"
       Describe "When: --force を付けて list_asset_files を呼ぶ"
         It "Then: [Error] T-LIB-ASDF-75: 何も出力せず status 0 で終わり配置先を作らない"
@@ -624,6 +642,138 @@ Describe "T-LIB-ASDF: asset-diff.lib.sh"
           When call list_asset_files --force "${NAMING_TMPDIR}/src" "${NAMING_TMPDIR}/dest"
           The status should equal 0
           The output should equal ""
+          The contents of file "${NAMING_TMPDIR}/dest/a.md" should equal "user edit"
+        End
+      End
+    End
+
+    Describe "Given: ソースにトップレベルと入れ子のファイルがあり配置先が未作成 (未配置モード)"
+      setup_missing_only_no_dest() {
+        put_file "${NAMING_TMPDIR}/src" "a.md" "A"
+        put_file "${NAMING_TMPDIR}/src/sub" "b.md" "B"
+      }
+      BeforeEach "setup_missing_only_no_dest"
+
+      Describe "When: --missing-only を付けて list_asset_files を呼ぶ"
+        It "Then: [Normal] T-LIB-ASDF-83: 全ファイルを src_rel として出力し配置先ディレクトリを作らない"
+          When call list_asset_files --missing-only "${NAMING_TMPDIR}/src" "${NAMING_TMPDIR}/dest"
+          The status should equal 0
+          The output should equal "$(printf '%s\n' a.md sub/b.md)"
+          The path "${NAMING_TMPDIR}/dest" should not be exist
+        End
+      End
+    End
+
+    Describe "Given: 配置先に古く内容が違う同名ファイルが既存 (未配置モード)"
+      setup_missing_only_dest_outdated() {
+        put_file "${NAMING_TMPDIR}/src" "a.md" "new"
+        put_file "${NAMING_TMPDIR}/dest" "a.md" "old"
+        make_old "${NAMING_TMPDIR}/dest/a.md"
+      }
+      BeforeEach "setup_missing_only_dest_outdated"
+
+      Describe "When: --missing-only を付けて list_asset_files を呼ぶ"
+        # Differs from T-LIB-ASDF-60: --missing-only ignores dest mtime and content.
+        It "Then: [Normal] T-LIB-ASDF-84: 配置済みなので何も出力せず配置先の内容と mtime を変えない"
+          When call list_asset_files --missing-only "${NAMING_TMPDIR}/src" "${NAMING_TMPDIR}/dest"
+          The status should equal 0
+          The output should equal ""
+          The contents of file "${NAMING_TMPDIR}/dest/a.md" should equal "old"
+          Assert is_old "${NAMING_TMPDIR}/dest/a.md"
+        End
+      End
+    End
+
+    Describe "Given: ソースディレクトリが存在しない (未配置モード)"
+      Describe "When: --missing-only を付けて list_asset_files を呼ぶ"
+        It "Then: [Error] T-LIB-ASDF-85: 何も出力せず status 0 で終わり配置先を作らない"
+          When call list_asset_files --missing-only "${NAMING_TMPDIR}/missing" "${NAMING_TMPDIR}/dest"
+          The status should equal 0
+          The output should equal ""
+          The stderr should equal ""
+          The path "${NAMING_TMPDIR}/dest" should not be exist
+        End
+      End
+    End
+
+    Describe "Given: 配置済みと未配置のファイルが入れ子・.org 付きで混在する (未配置モード)"
+      setup_missing_only_mixed() {
+        put_file "${NAMING_TMPDIR}/src" "a.md" "A"
+        put_file "${NAMING_TMPDIR}/src" "b.md" "B"
+        put_file "${NAMING_TMPDIR}/src/sub" "c.md" "C"
+        put_file "${NAMING_TMPDIR}/src/sub" "d.md.org" "D"
+        put_file "${NAMING_TMPDIR}/dest" "a.md" "old-a"
+        put_file "${NAMING_TMPDIR}/dest/sub" "d.md" "old-d"
+        make_old "${NAMING_TMPDIR}/dest/a.md"
+        make_old "${NAMING_TMPDIR}/dest/sub/d.md"
+      }
+      BeforeEach "setup_missing_only_mixed"
+
+      Describe "When: --missing-only を付けて list_asset_files を呼ぶ"
+        # Differs from the default mode: outdated a.md and sub/d.md are excluded because they exist.
+        It "Then: [Normal] T-LIB-ASDF-86: 配置先に存在するファイルを除き未配置分だけを出力する"
+          When call list_asset_files --missing-only "${NAMING_TMPDIR}/src" "${NAMING_TMPDIR}/dest"
+          The status should equal 0
+          The output should equal "$(printf '%s\n' b.md sub/c.md)"
+          The contents of file "${NAMING_TMPDIR}/dest/a.md" should equal "old-a"
+          The contents of file "${NAMING_TMPDIR}/dest/sub/d.md" should equal "old-d"
+        End
+      End
+    End
+
+    Describe "Given: 配置先にソースより新しく内容が違う同名ファイル (ユーザー編集) が既存 (未配置モード)"
+      setup_missing_only_dest_user_edited() {
+        put_file "${NAMING_TMPDIR}/src" "a.md" "upstream"
+        make_old "${NAMING_TMPDIR}/src/a.md"
+        put_file "${NAMING_TMPDIR}/dest" "a.md" "user"
+      }
+      BeforeEach "setup_missing_only_dest_user_edited"
+
+      Describe "When: --missing-only を付けて list_asset_files を呼ぶ"
+        It "Then: [Normal] T-LIB-ASDF-87: 配置済みなので何も出力せず配置先を変えない"
+          When call list_asset_files --missing-only "${NAMING_TMPDIR}/src" "${NAMING_TMPDIR}/dest"
+          The status should equal 0
+          The output should equal ""
+          The contents of file "${NAMING_TMPDIR}/dest/a.md" should equal "user"
+        End
+      End
+    End
+
+    Describe "Given: 配置先がプロジェクト外のファイルを指すシンボリックリンク (未配置モード)"
+      Skip if "symlinks are not supported on this host" symlink_unsupported
+      setup_missing_only_dest_symlink() {
+        put_file "${NAMING_TMPDIR}/src" "a.md" "NEW"
+        put_file "${NAMING_TMPDIR}/outside" "a.md" "OLD"
+        put_symlink "${NAMING_TMPDIR}/outside/a.md" "${NAMING_TMPDIR}/dest/a.md"
+      }
+      BeforeEach "setup_missing_only_dest_symlink"
+
+      Describe "When: --missing-only を付けて list_asset_files を呼ぶ"
+        It "Then: [Edge] T-LIB-ASDF-88: リンクも配置済みとみなし何も出力せずリンク先を変えない"
+          When call list_asset_files --missing-only "${NAMING_TMPDIR}/src" "${NAMING_TMPDIR}/dest"
+          The status should equal 0
+          The output should equal ""
+          The path "${NAMING_TMPDIR}/dest/a.md" should be symlink
+          The contents of file "${NAMING_TMPDIR}/outside/a.md" should equal "OLD"
+        End
+      End
+    End
+
+    Describe "Given: 配置先が存在しないターゲットを指すシンボリックリンク (dangling, 未配置モード)"
+      Skip if "dangling symlinks are not supported on this host" dangling_symlink_unsupported
+      setup_missing_only_dest_dangling() {
+        put_file "${NAMING_TMPDIR}/src" "a.md" "A"
+        put_symlink "${NAMING_TMPDIR}/missing-target.md" "${NAMING_TMPDIR}/dest/a.md"
+      }
+      BeforeEach "setup_missing_only_dest_dangling"
+
+      Describe "When: --missing-only を付けて list_asset_files を呼ぶ"
+        It "Then: [Edge] T-LIB-ASDF-89: dangling リンクも配置済みとみなし何も出力しない"
+          When call list_asset_files --missing-only "${NAMING_TMPDIR}/src" "${NAMING_TMPDIR}/dest"
+          The status should equal 0
+          The output should equal ""
+          The path "${NAMING_TMPDIR}/dest/a.md" should be symlink
+          The path "${NAMING_TMPDIR}/missing-target.md" should not be exist
         End
       End
     End
@@ -806,7 +956,7 @@ Describe "T-LIB-ASDF: asset-diff.lib.sh"
 ##  Shared notes layer: track workspaces/ only ##'
 
     # Helper: print a template file from the line just above its first marker line through EOF
-    # Computed with grep/tail from the file, independently of the awk in workspaces_rule_block
+    # Computed with grep/tail from the file, independently of the sed in workspaces_rule_block
     _expected_rule_block() {
       local marker_line
       marker_line="$(grep -n -m 1 -F 'Shared notes layer' "$1" | cut -d: -f1)"

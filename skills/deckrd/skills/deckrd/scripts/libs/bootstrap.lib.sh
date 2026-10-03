@@ -58,8 +58,9 @@ _resolve_deckrd_root() {
 # Sets: PROJECT_ROOT, SKILL_ROOT, DECKRD_ROOT, DECKRD_SCRIPTS_DIR,
 #       DECKRD_ASSETS_DIR, DECKRD_LIB_DIR, DECKRD_DATA_DIR, DECKRD_LOCAL_DATA,
 #       DECKRD_LOCAL_WORKSPACES, DECKRD_LOCAL_TEMP, DECKRD_DOCS_DIR, SYMBOL
-# All variables except SKILL_ROOT respect pre-existing values
-# (env var > computed default); SKILL_ROOT is always computed.
+# All variables except SKILL_ROOT and DECKRD_LOCAL_WORKSPACES respect pre-existing
+# values (env var > computed default); SKILL_ROOT is always computed, and
+# DECKRD_LOCAL_WORKSPACES is always ${DECKRD_LOCAL_DATA}/workspaces.
 # Exported: PROJECT_ROOT, DECKRD_DATA_DIR, DECKRD_LOCAL_DATA,
 #   DECKRD_LOCAL_WORKSPACES, DECKRD_LOCAL_TEMP, DECKRD_DOCS_DIR, SYMBOL
 #   (project-dependent).
@@ -140,7 +141,9 @@ bootstrap_init() {
   export DECKRD_LOCAL_DATA
 
   # DECKRD_LOCAL_WORKSPACES: project-local deckrd shared working directory
-  DECKRD_LOCAL_WORKSPACES="${DECKRD_LOCAL_WORKSPACES:-${DECKRD_LOCAL_DATA}/workspaces}"
+  # Always derived (no env override): it is git-tracked through the `!/workspaces/`
+  # allowlist in ${DECKRD_LOCAL_DATA}/.gitignore, so it cannot live elsewhere.
+  DECKRD_LOCAL_WORKSPACES="${DECKRD_LOCAL_DATA}/workspaces"
   export DECKRD_LOCAL_WORKSPACES
 
   # DECKRD_LOCAL_TEMP: project-local deckrd temporary working directory

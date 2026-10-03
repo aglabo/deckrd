@@ -233,9 +233,47 @@ parse_options() {
 }
 
 #
-# @description Resolve spec files from arguments (handles test types, globs, single files)
-# @arg $@ Command line arguments (test type, spec file, or glob pattern)
+# @description Validate that every argument is a spec file or a spec glob
+# @arg $@ Arguments to validate
+# @stderr Error message for the first unknown argument
+# @exitcode 0 if all arguments are valid, 1 otherwise
+#
+validate_spec_targets() {
+  local arg
+  for arg in "$@"; do
+    is_spec_glob "$arg" || is_spec_file "$arg" || {
+      printf "Error: Unknown argument '%s'. Expected a test type, spec file, or glob pattern.\n" "$arg" >&2
+      return 1
+    }
+  done
+}
+
+#
+# @description Print spec targets in argument order: spec files as given, globs
+#              expanded in place. Arguments must be validated beforehand
+# @arg $@ Spec file paths and/or spec glob patterns
 # @stdout List of spec file paths
+# @stderr Warning for a glob that matches nothing (from expand_spec_glob)
+# @exitcode 0 always
+#
+print_spec_targets() {
+  local arg
+  for arg in "$@"; do
+    # glob 文字列も *.spec.sh で終わるため、spec ファイルより先に判定する
+    if is_spec_glob "$arg"; then
+      expand_spec_glob "$arg"
+    else
+      printf '%s\n' "$arg"
+    fi
+  done
+}
+
+#
+# @description Resolve spec files from arguments. A leading test type is expanded
+#              to its spec files; otherwise every argument must be a spec file or
+#              a spec glob, and all of them are output in argument order
+# @arg $@ Command line arguments (test type, or one or more spec files / glob patterns)
+# @stdout List of spec file paths (nothing when any argument is invalid)
 # @stderr Error and warning messages
 # @exitcode 0 on success, 1 on error
 #
@@ -245,24 +283,11 @@ resolve_spec_files() {
     return 1
   }
 
-  local first_arg="$1"
-
-  # 単一 .spec.sh ファイルはそのまま出力
-  if is_spec_file "$first_arg"; then
-    printf '%s\n' "$first_arg"
+  # spec ファイル / glob の並びは全引数を先に検証してから出力する。部分出力を残さない
+  if ! is_test_type "$1"; then
+    validate_spec_targets "$@" || return 1
+    print_spec_targets "$@"
     return 0
-  fi
-
-  # glob パス（*.spec.sh を含む glob）は expand_spec_glob で展開
-  if is_spec_glob "$first_arg"; then
-    expand_spec_glob "$first_arg"
-    return 0
-  fi
-
-  # テスト種別以外 → エラー (stderr)
-  if ! is_test_type "$first_arg"; then
-    printf "Error: Unknown argument '%s'. Expected a test type, spec file, or glob pattern.\n" "$first_arg" >&2
-    return 1
   fi
 
   # テスト種別 → get_spec_files で展開

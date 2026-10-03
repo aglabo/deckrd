@@ -1,7 +1,7 @@
 ---
 title: "Deckrd Rule: ドキュメントモデル"
 description: "設計チェーン・ID 採番・ドキュメント命名・ディレクトリ配置を定める統一モデル"
-version: 1.5.1
+version: 1.5.2
 ---
 
 <!-- textlint-disable
@@ -227,7 +227,10 @@ docs/.deckrd/chatlog/normalize/
 追跡されないため、消えても復元されない。
 
 `.local/deckrd/` 配下の 2 つは、それぞれ `DECKRD_LOCAL_TEMP` と
-`DECKRD_LOCAL_WORKSPACES` が指す。環境変数で上書きされている場合は、その値に読み替える。
+`DECKRD_LOCAL_WORKSPACES` が指す。`DECKRD_LOCAL_TEMP` が環境変数で上書きされている場合は、
+その値に読み替える。`DECKRD_LOCAL_WORKSPACES` は常に `${DECKRD_LOCAL_DATA}/workspaces` であり、
+上書きできない。共通メモ層は `.local/deckrd/.gitignore` の許可リストで追跡されるため、
+`DECKRD_LOCAL_DATA` の外には置けない。
 
 ### 仕様書を分割する場合
 

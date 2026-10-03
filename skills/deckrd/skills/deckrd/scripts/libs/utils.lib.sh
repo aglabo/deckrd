@@ -42,12 +42,16 @@ jq_read() {
 
 # normalize_dir_path - Normalize a directory path to `/` separators
 #
-# Replaces every `\` with `/`, collapses repeated `/` into one, then strips a
-# single trailing `/` (e.g. `C:\Users\x\` -> `C:/Users/x`, `/a//b/` -> `/a/b`).
+# Replaces every `\` with `/`, collapses repeated `/` into one (except a leading
+# UNC `//`), then strips a single trailing `/` (e.g. `C:\Users\x\` -> `C:/Users/x`,
+# `/a//b/` -> `/a/b`).
 # The path is not resolved: it need not exist, and `.`/`..` are kept as-is.
 #
 # @note The root `/` is kept as `/`. A drive root such as `C:\` or `C:/` becomes
 #       `C:`; callers append `/<rel>`, so `C:` + `/x` gives `C:/x`.
+# @note A leading `//` (UNC, e.g. `\\server\share` or `//server/share`) is kept:
+#       collapsing it would name a different local path under Git Bash/MSYS.
+#       Three or more leading `/` collapse to one (POSIX), and a bare `//` gives `/`.
 # @note Implemented as one sed call (one expression per rule, applied in order);
 #       the trailing-`/` rule needs a character before the `/`, which keeps the root.
 #       The path is treated as a single line: it must not contain a newline.
@@ -55,7 +59,7 @@ jq_read() {
 # @stdout Normalized path followed by a newline (an empty line for empty input)
 # @return 0 always
 normalize_dir_path() {
-  printf '%s\n' "${1:-}" | sed -E 's#\\#/#g; s#/+#/#g; s#(.)/$#\1#'
+  printf '%s\n' "${1:-}" | sed -E 's#\\#/#g; s#^/{3,}#/#; s#([^/])/+#\1/#g; s#(.)/$#\1#'
 }
 
 # strip_suffix - Remove one trailing occurrence of a literal suffix from a string

@@ -26,11 +26,11 @@ NEW_MTIME='2026-01-02 00:00:00'
 setup_update_env() {
   setup_deckrd_tmpdir
   export INITS_DIR="${DECKRD_TMPDIR}/inits"
-  local dir
-  for dir in claude-rules deckrd-rules-index docs/rules local-deckrd/workspaces; do
-    mkdir -p "${INITS_DIR}/${dir}"
+  local label
+  for label in claude-rules deckrd-rules-index docs local-deckrd; do
+    mkdir -p "${INITS_DIR}/${label}"
   done
-  mkdir -p "${DECKRD_DOCS_DIR}/rules" "$CLAUDE_RULES_DIR" "$CLAUDE_RULES_INDEX_DIR" "${DECKRD_LOCAL_DATA}/workspaces"
+  mkdir -p "$CLAUDE_RULES_DIR" "$CLAUDE_RULES_INDEX_DIR" "$DECKRD_LOCAL_WORKSPACES"
   printf '{}\n' >"${DECKRD_LOCAL_DATA}/session.json"
 }
 
@@ -41,10 +41,11 @@ teardown_update_env() {
 }
 
 # Helper: place an asset source file and its deployed copy with fixed mtimes
+# Parent directories are created on both sides, so $3 may contain subdirectories.
 # Contents are written before touch so that the mtimes are not reset.
 # @arg $1 Asset label (subdirectory of INITS_DIR)
 # @arg $2 Destination directory
-# @arg $3 File path relative to both directories (e.g. `rules/a.md`); parent directories are created
+# @arg $3 Relative path of the file (e.g. a.md, rules/a.md, workspaces/README.md)
 # @arg $4 Source content
 # @arg $5 Destination content
 # @arg $6 Source mtime
@@ -58,32 +59,27 @@ make_asset() {
   touch -d "$7" "$dest"
 }
 
-# Helper: place a docs `.org` source newer than its differing deployed copy
-# Contents are written before touch so that the mtimes are not reset.
-# @arg $1 Deployed path relative to DECKRD_DOCS_DIR (e.g. `rules/.gitignore`); the source is `<path>.org`
-make_outdated_docs_org() {
-  local src="${INITS_DIR}/docs/${1}.org" dest="${DECKRD_DOCS_DIR}/${1}"
-  mkdir -p "$(dirname "$src")" "$(dirname "$dest")"
-  printf '%s\n' new >"$src"
-  printf '%s\n' old >"$dest"
-  touch -d "$NEW_MTIME" "$src"
-  touch -d "$OLD_MTIME" "$dest"
+# Helper: print the mtime of a file in epoch seconds (GNU stat, as on Git Bash / WSL / Linux)
+# @arg $1 Path to the file
+file_mtime() {
+  stat -c %Y "$1"
 }
 
-# Helper: outdated nested `rules/.gitignore` (keep pattern `*/.gitignore`)
-setup_rules_gitignore_outdated() {
-  make_outdated_docs_org rules/.gitignore
+# Helper: print a date string (e.g. OLD_MTIME) in epoch seconds, as touch -d interprets it
+# @arg $1 Date string
+epoch_of() {
+  date -d "$1" +%s
 }
 
-# Helper: outdated top-level docs `.gitignore` (keep pattern `.gitignore`)
-setup_docs_gitignore_outdated() {
-  make_outdated_docs_org .gitignore
+# Helper: remove session.json so that update.sh stops before touching any asset
+remove_session() {
+  rm "${DECKRD_LOCAL_DATA}/session.json"
 }
 
-# Helper: nested `rules/.gitignore.org` source whose deployed `rules/.gitignore` does not exist
-setup_rules_gitignore_undeployed() {
-  printf '%s\n' new >"${INITS_DIR}/docs/rules/.gitignore.org"
-  rm -f "${DECKRD_DOCS_DIR}/rules/.gitignore"
+# Helper: place a source rules/a.md and a deployed copy with the same content,
+# the deployed one older (OLD_MTIME) than the source (NEW_MTIME)
+make_same_content_older() {
+  make_asset docs "$DECKRD_DOCS_DIR" rules/a.md same same "$NEW_MTIME" "$OLD_MTIME"
 }
 
 # Fixture: workspaces rule block of the local gitignore template (banner to EOF)
@@ -102,10 +98,41 @@ _ruled_local_gitignore() {
   printf '%s\n' '*' '!/workspaces/'
 }
 
+# Fixture: local gitignore template content (`*` followed by the workspaces rule block)
+_local_gitignore_template() {
+  printf '%s\n' '*'
+  _workspaces_rule_block
+}
+
 # Helper: place the local gitignore template and a local gitignore read from stdin
 _make_local_gitignore() {
-  { printf '%s\n' '*'; _workspaces_rule_block; } >"${INITS_DIR}/local-deckrd/.gitignore.org"
+  _local_gitignore_template >"${INITS_DIR}/local-deckrd/.gitignore.org"
   cat >"${DECKRD_LOCAL_DATA}/.gitignore"
+}
+
+# Helper: place the local gitignore template only, with no deployed local gitignore
+make_gitignore_template_only() {
+  _local_gitignore_template >"${INITS_DIR}/local-deckrd/.gitignore.org"
+  rm -f "${DECKRD_LOCAL_DATA}/.gitignore"
+}
+
+# Helper: place a non-keep .org source (rules/x.md.org) newer than and differing from
+# its deployed file (rules/x.md)
+# Contents are written before touch so that the mtimes are not reset.
+make_org_outdated() {
+  mkdir -p "${INITS_DIR}/docs/rules" "${DECKRD_DOCS_DIR}/rules"
+  printf '%s\n' new >"${INITS_DIR}/docs/rules/x.md.org"
+  printf '%s\n' old >"${DECKRD_DOCS_DIR}/rules/x.md"
+  touch -d "$NEW_MTIME" "${INITS_DIR}/docs/rules/x.md.org"
+  touch -d "$OLD_MTIME" "${DECKRD_DOCS_DIR}/rules/x.md"
+}
+
+# Helper: place a .org source (rules/x.md.org) whose destination directory rules/ is
+# occupied by a regular file, so that creating the directory fails
+make_org_rules_path_file() {
+  mkdir -p "${INITS_DIR}/docs/rules" "$DECKRD_DOCS_DIR"
+  printf '%s\n' new >"${INITS_DIR}/docs/rules/x.md.org"
+  : >"${DECKRD_DOCS_DIR}/rules"
 }
 
 # Helper: place the template and an old local gitignore without the workspaces rule
@@ -161,26 +188,11 @@ restore_local_gitignore_mode() {
   [[ ! -f "${DECKRD_LOCAL_DATA:-}/.gitignore" ]] || chmod 644 "${DECKRD_LOCAL_DATA}/.gitignore"
 }
 
-# Helper: place the local-deckrd workspaces README source
-place_workspaces_readme_source() {
-  printf '%s\n' '# workspaces' >"${INITS_DIR}/local-deckrd/workspaces/README.md"
-}
-
-# Fixture: content of the local-deckrd workspaces README source
-workspaces_readme_source() {
-  cat "${INITS_DIR}/local-deckrd/workspaces/README.md"
-}
-
-# Helper: remove the workspaces directory and place a local-deckrd workspaces README source
+# Helper: remove the workspaces directory and place a workspaces README source in local-deckrd
 setup_workspaces_missing() {
-  rm -rf "${DECKRD_LOCAL_DATA}/workspaces"
-  place_workspaces_readme_source
-}
-
-# Helper: place the source `docs/rules/x.md` and remove the deployed rules directory
-setup_undeployed_subdir_missing() {
-  printf '%s\n' x >"${INITS_DIR}/docs/rules/x.md"
-  rm -rf "${DECKRD_DOCS_DIR}/rules"
+  rm -rf "$DECKRD_LOCAL_WORKSPACES"
+  mkdir -p "${INITS_DIR}/local-deckrd/workspaces"
+  printf '%s\n' '# workspaces' >"${INITS_DIR}/local-deckrd/workspaces/README.md"
 }
 
 # Fixture: target path of the dangling README symlink (inside the test temp area, never created)
@@ -234,7 +246,7 @@ Describe "T-CLI-UPDI: update.sh: list outdated assets"
     }
     Before "setup_one_outdated"
 
-    It "[Normal] T-CLI-UPDI-01: Should: exit 0 and print the file as [label] name"
+    It "[Normal] T-CLI-UPDI-01: Should: exit 0 and print the file as [label] dst_rel"
       When run bash "$SCRIPT"
       The status should equal 0
       The output should equal "[docs] rules/deckrd-rule-workflow.md"
@@ -254,7 +266,7 @@ Describe "T-CLI-UPDI: update.sh: list outdated assets"
 
     setup_multi_outdated() {
       make_asset claude-rules "$CLAUDE_RULES_DIR" a.md new old "$NEW_MTIME" "$OLD_MTIME"
-      make_asset docs "$DECKRD_DOCS_DIR" b.md new old "$NEW_MTIME" "$OLD_MTIME"
+      make_asset docs "$DECKRD_DOCS_DIR" rules/b.md new old "$NEW_MTIME" "$OLD_MTIME"
       make_asset local-deckrd "$DECKRD_LOCAL_DATA" c.md new old "$NEW_MTIME" "$OLD_MTIME"
       make_asset local-deckrd "$DECKRD_LOCAL_DATA" workspaces/README.md new old "$NEW_MTIME" "$OLD_MTIME"
     }
@@ -264,7 +276,7 @@ Describe "T-CLI-UPDI: update.sh: list outdated assets"
       When run bash "$SCRIPT"
       The status should equal 0
       The line 1 of output should equal "[claude-rules] a.md"
-      The line 2 of output should equal "[docs] b.md"
+      The line 2 of output should equal "[docs] rules/b.md"
       The line 3 of output should equal "[local-deckrd] c.md"
       The line 4 of output should equal "[local-deckrd] workspaces/README.md"
       The lines of output should equal 4
@@ -272,18 +284,21 @@ Describe "T-CLI-UPDI: update.sh: list outdated assets"
   End
 
   Describe "Given: source is newer but has the same content as the deployed file"
-    Before "setup_update_env"
+    Before "setup_update_env" "make_same_content_older"
     After "teardown_update_env"
-
-    setup_same_content() {
-      make_asset docs "$DECKRD_DOCS_DIR" rules/a.md same same "$NEW_MTIME" "$OLD_MTIME"
-    }
-    Before "setup_same_content"
 
     It "[Normal] T-CLI-UPDI-04: Should: exit 0 and print that assets are up to date"
       When run bash "$SCRIPT"
       The status should equal 0
       The output should equal "Assets are up to date."
+    End
+
+    # List mode never modifies deployed files, so the mtime is not synced either (see UPDA-25)
+    It "[Normal] T-CLI-UPDI-17: Should: exit 0, print up to date, and leave the mtime of the same-content older file unchanged"
+      When run bash "$SCRIPT"
+      The status should equal 0
+      The output should equal "Assets are up to date."
+      The value "$(file_mtime "${DECKRD_DOCS_DIR}/rules/a.md")" should equal "$(epoch_of "$OLD_MTIME")"
     End
   End
 
@@ -309,11 +324,12 @@ Describe "T-CLI-UPDI: update.sh: list outdated assets"
     After "teardown_update_env"
 
     setup_undeployed() {
+      mkdir -p "${INITS_DIR}/docs/rules"
       printf '%s\n' new >"${INITS_DIR}/docs/rules/new-rule.md"
     }
     Before "setup_undeployed"
 
-    It "[Normal] T-CLI-UPDI-06: Should: exit 0, print the missing file as [label] name, and not deploy it"
+    It "[Edge] T-CLI-UPDI-06: Should: exit 0, list the file as [label] dst_rel, and not deploy it"
       When run bash "$SCRIPT"
       The status should equal 0
       The output should equal "[docs] rules/new-rule.md"
@@ -326,7 +342,7 @@ Describe "T-CLI-UPDI: update.sh: list outdated assets"
     After "teardown_update_env"
 
     setup_no_session() {
-      rm "${DECKRD_LOCAL_DATA}/session.json"
+      remove_session
       make_asset docs "$DECKRD_DOCS_DIR" rules/a.md new old "$NEW_MTIME" "$OLD_MTIME"
     }
     Before "setup_no_session"
@@ -356,9 +372,6 @@ Describe "T-CLI-UPDI: update.sh: list outdated assets"
     Before "setup_update_env"
     After "teardown_update_env"
 
-    remove_session() {
-      rm "${DECKRD_LOCAL_DATA}/session.json"
-    }
     Before "remove_session"
 
     Parameters
@@ -366,12 +379,16 @@ Describe "T-CLI-UPDI: update.sh: list outdated assets"
       "--help"
     End
 
-    It "[Normal] T-CLI-UPDI-09: Should: exit 0, stderr includes Usage, stdout is blank ($1)"
+    It "[Normal] T-CLI-UPDI-09: Should: exit 0, stderr includes Usage and the mtime sync, stdout is blank ($1)"
       When run bash "$SCRIPT" "$1"
       The status should equal 0
       The output should be blank
       The stderr should include "Usage:"
       The stderr should include "workspaces/README.md"
+      The stderr should include "rules/"
+      The stderr should include "never overwritten"
+      The stderr should include "mtime"
+      The stderr should include "same content"
     End
   End
 
@@ -401,11 +418,11 @@ Describe "T-CLI-UPDI: update.sh: list outdated assets"
       When run bash "$SCRIPT"
       The status should equal 0
       The output should equal "[local-deckrd] workspaces/README.md"
-      The contents of file "${DECKRD_LOCAL_DATA}/workspaces/README.md" should equal "old"
+      The contents of file "${DECKRD_LOCAL_WORKSPACES}/README.md" should equal "old"
     End
   End
 
-  Describe "Given: workspaces directory missing and a local-deckrd workspaces README source"
+  Describe "Given: workspaces directory missing and a workspaces README source in local-deckrd"
     Before "setup_update_env" "setup_workspaces_missing"
     After "teardown_update_env"
 
@@ -413,11 +430,11 @@ Describe "T-CLI-UPDI: update.sh: list outdated assets"
       When run bash "$SCRIPT"
       The status should equal 0
       The output should equal "[local-deckrd] workspaces/README.md"
-      The path "${DECKRD_LOCAL_DATA}/workspaces" should not be exist
+      The path "$DECKRD_LOCAL_WORKSPACES" should not be exist
     End
   End
 
-  Describe "Given: workspaces directory missing and no local-deckrd workspaces README source"
+  Describe "Given: workspaces directory missing and no workspaces README source in local-deckrd"
     Before "setup_update_env"
     After "teardown_update_env"
 
@@ -434,12 +451,12 @@ Describe "T-CLI-UPDI: update.sh: list outdated assets"
     End
   End
 
-  Describe "Given: workspaces README path occupied by a dangling symlink and a local-deckrd workspaces README source"
+  Describe "Given: workspaces README path occupied by a dangling symlink and a workspaces README source in local-deckrd"
     Skip if "dangling symlinks are not supported on this host" dangling_symlink_unsupported
     Before "setup_update_env" "setup_workspaces_missing" "setup_workspaces_readme_dangling_symlink"
     After "teardown_update_env"
 
-    # A dangling symlink at the README path counts as deployed
+    # A dangling symlink at the README path counts as deployed, so list_asset_files skips it
     It "[Edge] T-CLI-UPDI-14: Should: exit 0, print up to date, and keep the symlink without creating its target"
       When run bash "$SCRIPT"
       The status should equal 0
@@ -449,40 +466,31 @@ Describe "T-CLI-UPDI: update.sh: list outdated assets"
     End
   End
 
-  Describe "Given: source file whose destination subdirectory does not exist"
-    Before "setup_update_env" "setup_undeployed_subdir_missing"
+  Describe "Given: non-keep .org source newer than its differing deployed file"
+    Before "setup_update_env" "make_org_outdated"
     After "teardown_update_env"
 
-    It "[Normal] T-CLI-UPDI-15: Should: exit 0, print the missing file as [label] name, and create neither the file nor its directory"
+    # rules/x.md matches no keep pattern, so it is listed by its destination path (.org dropped)
+    It "[Normal] T-CLI-UPDI-15: Should: exit 0, print [docs] rules/x.md without .org, and leave the deployed file unchanged"
       When run bash "$SCRIPT"
       The status should equal 0
       The output should equal "[docs] rules/x.md"
-      The path "${DECKRD_DOCS_DIR}/rules/x.md" should not be exist
-      The path "${DECKRD_DOCS_DIR}/rules" should not be exist
+      The contents of file "${DECKRD_DOCS_DIR}/rules/x.md" should equal "old"
+      The path "${DECKRD_DOCS_DIR}/rules/x.md.org" should not be exist
     End
   End
 
-  Describe "Given: nested .gitignore.org source newer than its differing deployed .gitignore"
-    Before "setup_update_env" "setup_rules_gitignore_outdated"
+  Describe "Given: no local gitignore and a .gitignore.org template with the workspaces rule"
+    Before "setup_update_env" "make_gitignore_template_only"
     After "teardown_update_env"
 
-    It "[Edge] T-CLI-UPDI-16: Should: exit 0, print up to date, and keep the deployed .gitignore"
+    # Keep patterns protect only an existing .gitignore, so a missing one is listed
+    It "[Edge] T-CLI-UPDI-16: Should: exit 0, print [local-deckrd] .gitignore without the workspaces rule label, and create no file"
       When run bash "$SCRIPT"
       The status should equal 0
-      The output should equal "Assets are up to date."
-      The contents of file "${DECKRD_DOCS_DIR}/rules/.gitignore" should equal "old"
-    End
-  End
-
-  Describe "Given: nested .gitignore.org source whose deployed .gitignore does not exist"
-    Before "setup_update_env" "setup_rules_gitignore_undeployed"
-    After "teardown_update_env"
-
-    It "[Edge] T-CLI-UPDI-17: Should: exit 0, print the missing .gitignore as [label] name without .org, and not deploy it"
-      When run bash "$SCRIPT"
-      The status should equal 0
-      The output should equal "[docs] rules/.gitignore"
-      The path "${DECKRD_DOCS_DIR}/rules/.gitignore" should not be exist
+      The output should equal "[local-deckrd] .gitignore"
+      The output should not include "(workspaces rule)"
+      The path "${DECKRD_LOCAL_DATA}/.gitignore" should not be exist
     End
   End
 
@@ -503,7 +511,7 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
     }
     Before "setup_one_outdated_for_update"
 
-    It "[Normal] T-CLI-UPDA-01: Should: exit 0, print Updated: [label] name, and overwrite with the source"
+    It "[Normal] T-CLI-UPDA-01: Should: exit 0, print Updated: [label] dst_rel, and overwrite with the source"
       When run bash "$SCRIPT" --update
       The status should equal 0
       The output should equal "Updated: [docs] rules/a.md"
@@ -514,6 +522,16 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
   Describe "Given: nested .gitignore.org source newer than its differing deployed .gitignore"
     Before "setup_update_env" "setup_rules_gitignore_outdated"
     After "teardown_update_env"
+
+    # rules/.gitignore matches the keep pattern */.gitignore, so it is never overwritten
+    setup_org_outdated() {
+      mkdir -p "${INITS_DIR}/docs/rules" "${DECKRD_DOCS_DIR}/rules"
+      printf '%s\n' new >"${INITS_DIR}/docs/rules/.gitignore.org"
+      printf '%s\n' old >"${DECKRD_DOCS_DIR}/rules/.gitignore"
+      touch -d "$NEW_MTIME" "${INITS_DIR}/docs/rules/.gitignore.org"
+      touch -d "$OLD_MTIME" "${DECKRD_DOCS_DIR}/rules/.gitignore"
+    }
+    Before "setup_org_outdated"
 
     It "[Edge] T-CLI-UPDA-02: Should: exit 0, print up to date, and keep the deployed .gitignore"
       When run bash "$SCRIPT" --update
@@ -545,11 +563,12 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
     After "teardown_update_env"
 
     setup_undeployed_for_update() {
+      mkdir -p "${INITS_DIR}/docs/rules"
       printf '%s\n' new >"${INITS_DIR}/docs/rules/new-rule.md"
     }
     Before "setup_undeployed_for_update"
 
-    It "[Normal] T-CLI-UPDA-04: Should: exit 0, print Updated: [label] name, and deploy the file"
+    It "[Edge] T-CLI-UPDA-04: Should: exit 0, print Updated: [label] dst_rel, and deploy the file"
       When run bash "$SCRIPT" --update
       The status should equal 0
       The output should equal "Updated: [docs] rules/new-rule.md"
@@ -562,7 +581,7 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
     After "teardown_update_env"
 
     setup_no_session_for_update() {
-      rm "${DECKRD_LOCAL_DATA}/session.json"
+      remove_session
       make_asset docs "$DECKRD_DOCS_DIR" rules/a.md new old "$NEW_MTIME" "$OLD_MTIME"
     }
     Before "setup_no_session_for_update"
@@ -738,19 +757,19 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
       When run bash "$SCRIPT" --update
       The status should equal 0
       The output should equal "Updated: [local-deckrd] workspaces/README.md"
-      The contents of file "${DECKRD_LOCAL_DATA}/workspaces/README.md" should equal "new"
+      The contents of file "${DECKRD_LOCAL_WORKSPACES}/README.md" should equal "new"
     End
   End
 
-  Describe "Given: workspaces directory missing and a local-deckrd workspaces README source"
+  Describe "Given: workspaces directory missing and a workspaces README source in local-deckrd"
     Before "setup_update_env" "setup_workspaces_missing"
     After "teardown_update_env"
 
-    It "[Normal] T-CLI-UPDA-16: Should: exit 0, print Updated: [local-deckrd] workspaces/README.md, and deploy the README with its directory"
+    It "[Normal] T-CLI-UPDA-16: Should: exit 0, print Updated: [local-deckrd] workspaces/README.md, and create the directory with the source copy"
       When run bash "$SCRIPT" --update
       The status should equal 0
       The output should equal "Updated: [local-deckrd] workspaces/README.md"
-      The contents of file "${DECKRD_LOCAL_DATA}/workspaces/README.md" should equal "$(workspaces_readme_source)"
+      The contents of file "${DECKRD_LOCAL_WORKSPACES}/README.md" should equal "$(cat "${INITS_DIR}/local-deckrd/workspaces/README.md")"
     End
   End
 
@@ -768,11 +787,11 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
       When run bash "$SCRIPT" --update
       The status should equal 0
       The output should equal "Assets are up to date."
-      The contents of file "${DECKRD_LOCAL_DATA}/workspaces/README.md" should equal "$(workspaces_readme_source)"
+      The contents of file "${DECKRD_LOCAL_WORKSPACES}/README.md" should equal "$(cat "${INITS_DIR}/local-deckrd/workspaces/README.md")"
     End
   End
 
-  Describe "Given: workspaces README path occupied by a directory and a local-deckrd workspaces README source"
+  Describe "Given: workspaces README path occupied by a directory and a workspaces README source in local-deckrd"
     Before "setup_update_env" "setup_workspaces_missing"
     After "teardown_update_env"
 
@@ -791,47 +810,50 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
     End
   End
 
-  Describe "Given: workspaces path occupied by a regular file and a local-deckrd workspaces README source"
+  Describe "Given: workspaces path occupied by a regular file, a workspaces README source, and another outdated local-deckrd file"
     Before "setup_update_env" "setup_workspaces_missing"
     After "teardown_update_env"
 
-    # A regular file at the workspaces path makes the directory creation in copy_asset_file
-    # (called by copy_assets) fail, so copy_assets reports the failed copy
+    # A regular file at the workspaces path makes mkdir -p fail. a.md sorts before
+    # workspaces/README.md, so it is copied first, yet its Updated: line must not be printed.
     setup_workspaces_path_file() {
-      : >"${DECKRD_LOCAL_DATA}/workspaces"
+      : >"$DECKRD_LOCAL_WORKSPACES"
+      make_asset local-deckrd "$DECKRD_LOCAL_DATA" a.md new old "$NEW_MTIME" "$OLD_MTIME"
     }
     Before "setup_workspaces_path_file"
 
-    It "[Error] T-CLI-UPDA-19: Should: exit 1, stderr reports the failed copy, and leave the workspaces path a regular file"
+    It "[Error] T-CLI-UPDA-19: Should: exit 1, stderr reports the failed copy, print no Updated: line, and leave the workspaces path a regular file"
       When run bash "$SCRIPT" --update
       The status should equal 1
-      The stderr should include "Error: failed to copy file: ${DECKRD_LOCAL_DATA}/workspaces/README.md"
+      The stderr should include "Error:"
+      The stderr should include "${DECKRD_LOCAL_WORKSPACES}/README.md"
       The output should not include "Updated:"
       The path "${DECKRD_LOCAL_DATA}/workspaces" should be file
     End
   End
 
-  Describe "Given: workspaces directory with another file but no README and a local-deckrd workspaces README source"
+  Describe "Given: workspaces directory with another file but no README and a workspaces README source in local-deckrd"
     Before "setup_update_env"
     After "teardown_update_env"
 
     # Keeps the workspaces directory (unlike setup_workspaces_missing) so that only the README is missing
     setup_workspaces_readme_only_missing() {
-      place_workspaces_readme_source
-      printf '%s\n' 'keep' >"${DECKRD_LOCAL_DATA}/workspaces/notes.md"
+      mkdir -p "${INITS_DIR}/local-deckrd/workspaces"
+      printf '%s\n' '# workspaces' >"${INITS_DIR}/local-deckrd/workspaces/README.md"
+      printf '%s\n' 'keep' >"${DECKRD_LOCAL_WORKSPACES}/notes.md"
     }
     Before "setup_workspaces_readme_only_missing"
 
-    It "[Edge] T-CLI-UPDA-20: Should: exit 0, print Updated: [local-deckrd] workspaces/README.md, deploy the README, and keep other files"
+    It "[Edge] T-CLI-UPDA-20: Should: exit 0, print Updated: [local-deckrd] workspaces/README.md, copy the source, and keep other files"
       When run bash "$SCRIPT" --update
       The status should equal 0
       The output should equal "Updated: [local-deckrd] workspaces/README.md"
-      The contents of file "${DECKRD_LOCAL_DATA}/workspaces/README.md" should equal "$(workspaces_readme_source)"
-      The contents of file "${DECKRD_LOCAL_DATA}/workspaces/notes.md" should equal "keep"
+      The contents of file "${DECKRD_LOCAL_WORKSPACES}/README.md" should equal "$(cat "${INITS_DIR}/local-deckrd/workspaces/README.md")"
+      The contents of file "${DECKRD_LOCAL_WORKSPACES}/notes.md" should equal "keep"
     End
   End
 
-  Describe "Given: workspaces README path occupied by a dangling symlink and a local-deckrd workspaces README source"
+  Describe "Given: workspaces README path occupied by a dangling symlink and a workspaces README source in local-deckrd"
     Skip if "dangling symlinks are not supported on this host" dangling_symlink_unsupported
     Before "setup_update_env" "setup_workspaces_missing" "setup_workspaces_readme_dangling_symlink"
     After "teardown_update_env"
@@ -846,81 +868,94 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
     End
   End
 
-  Describe "Given: workspaces directory missing, a local-deckrd workspaces README source, and DECKRD_LOCAL_WORKSPACES overridden"
-    Before "setup_update_env" "setup_workspaces_missing"
+  Describe "Given: non-keep .org source newer than its differing deployed file"
+    Before "setup_update_env" "make_org_outdated"
     After "teardown_update_env"
 
-    # The override is undone by teardown_deckrd_tmpdir (unset_sandbox_local_dirs)
-    override_local_workspaces() {
-      export DECKRD_LOCAL_WORKSPACES="${DECKRD_TMPDIR}/custom-workspaces"
-    }
-    Before "override_local_workspaces"
-
-    It "[Normal] T-CLI-UPDA-22: Should: exit 0 and deploy the missing README under DECKRD_LOCAL_DATA/workspaces even when DECKRD_LOCAL_WORKSPACES is overridden"
-      When run bash "$SCRIPT" --update
-      The status should equal 0
-      The output should equal "Updated: [local-deckrd] workspaces/README.md"
-      The contents of file "${DECKRD_LOCAL_DATA}/workspaces/README.md" should equal "$(workspaces_readme_source)"
-      The path "${DECKRD_TMPDIR}/custom-workspaces/README.md" should not be exist
-    End
-  End
-
-  Describe "Given: source file whose destination subdirectory does not exist"
-    Before "setup_update_env" "setup_undeployed_subdir_missing"
-    After "teardown_update_env"
-
-    It "[Normal] T-CLI-UPDA-23: Should: exit 0, print Updated: [label] name, and deploy the file with its directory"
+    # Counterpart of UPDA-02: rules/x.md matches no keep pattern, so it is copied to the
+    # destination path with .org dropped
+    It "[Normal] T-CLI-UPDA-22: Should: exit 0, print Updated: [docs] rules/x.md, overwrite x.md with the source, and create no x.md.org"
       When run bash "$SCRIPT" --update
       The status should equal 0
       The output should equal "Updated: [docs] rules/x.md"
-      The contents of file "${DECKRD_DOCS_DIR}/rules/x.md" should equal "x"
+      The contents of file "${DECKRD_DOCS_DIR}/rules/x.md" should equal "new"
+      The path "${DECKRD_DOCS_DIR}/rules/x.md.org" should not be exist
     End
   End
 
-  Describe "Given: top-level .gitignore.org source newer than its differing deployed .gitignore"
-    Before "setup_update_env" "setup_docs_gitignore_outdated"
+  Describe "Given: .org source whose destination directory path is occupied by a regular file"
+    Before "setup_update_env" "make_org_rules_path_file"
     After "teardown_update_env"
 
-    It "[Edge] T-CLI-UPDA-24: Should: exit 0, print up to date, and keep the deployed top-level .gitignore"
+    # A regular file at the rules path makes mkdir -p fail; the error names the destination
+    # path (.org dropped), not the source path
+    It "[Error] T-CLI-UPDA-23: Should: exit 1, report the destination path without .org, and print no Updated: line"
       When run bash "$SCRIPT" --update
-      The status should equal 0
-      The output should equal "Assets are up to date."
-      The contents of file "${DECKRD_DOCS_DIR}/.gitignore" should equal "old"
+      The status should equal 1
+      The stderr should include "Error: failed to copy file: ${DECKRD_DOCS_DIR}/rules/x.md"
+      The stderr should not include "x.md.org"
+      The output should not include "Updated:"
+      The path "${DECKRD_DOCS_DIR}/rules" should be file
     End
   End
 
-  Describe "Given: source is newer but has the same content as the deployed file"
-    Before "setup_update_env"
+  Describe "Given: no local gitignore and a .gitignore.org template with the workspaces rule"
+    Before "setup_update_env" "make_gitignore_template_only"
     After "teardown_update_env"
 
-    setup_same_content_for_update() {
-      make_asset docs "$DECKRD_DOCS_DIR" rules/a.md same same "$NEW_MTIME" "$OLD_MTIME"
-    }
-    Before "setup_same_content_for_update"
+    # The copied template already has the workspaces rule, so the rule label is not printed
+    It "[Edge] T-CLI-UPDA-24: Should: exit 0, print Updated: [local-deckrd] .gitignore without the workspaces rule label, and create it from the template"
+      When run bash "$SCRIPT" --update
+      The status should equal 0
+      The output should equal "Updated: [local-deckrd] .gitignore"
+      The output should not include "(workspaces rule)"
+      The contents of file "${DECKRD_LOCAL_DATA}/.gitignore" should equal "$(_local_gitignore_template)"
+    End
+  End
 
-    It "[Normal] T-CLI-UPDA-25: Should: exit 0, print up to date, keep the content, and align the deployed mtime with the source"
+  # UPDA-25 / UPDA-27 form the older / newer boundary pair of the mtime sync:
+  # only a same-content deployed file older than its source gets the source's mtime.
+  Describe "Given: deployed file with the same content as its source but an older mtime"
+    Before "setup_update_env" "make_same_content_older"
+    After "teardown_update_env"
+
+    It "[Normal] T-CLI-UPDA-25: Should: exit 0, print up to date, and set the mtime of the same-content older file to the source's"
       When run bash "$SCRIPT" --update
       The status should equal 0
       The output should equal "Assets are up to date."
+      The value "$(file_mtime "${DECKRD_DOCS_DIR}/rules/a.md")" should equal "$(file_mtime "${INITS_DIR}/docs/rules/a.md")"
       The contents of file "${DECKRD_DOCS_DIR}/rules/a.md" should equal "same"
-      The value "$(_mtime_of "${DECKRD_DOCS_DIR}/rules/a.md")" should equal "$(_mtime_of "${INITS_DIR}/docs/rules/a.md")"
     End
   End
 
-  Describe "Given: source is newer and differs from the deployed file (mtime check)"
+  Describe "Given: deployed file with the same content as its source but an older mtime, without session.json"
+    Before "setup_update_env" "make_same_content_older" "remove_session"
+    After "teardown_update_env"
+
+    It "[Error] T-CLI-UPDA-26: Should: exit 1, stderr prompts init, and leave the mtime of the same-content older file unchanged"
+      When run bash "$SCRIPT" --update
+      The status should equal 1
+      The output should be blank
+      The stderr should include "init"
+      The value "$(file_mtime "${DECKRD_DOCS_DIR}/rules/a.md")" should equal "$(epoch_of "$OLD_MTIME")"
+    End
+  End
+
+  Describe "Given: deployed file with the same content as its source but a newer mtime"
     Before "setup_update_env"
     After "teardown_update_env"
 
-    setup_outdated_mtime_for_update() {
-      make_asset docs "$DECKRD_DOCS_DIR" rules/a.md new old "$NEW_MTIME" "$OLD_MTIME"
+    setup_same_content_newer() {
+      make_asset docs "$DECKRD_DOCS_DIR" rules/a.md same same "$OLD_MTIME" "$NEW_MTIME"
     }
-    Before "setup_outdated_mtime_for_update"
+    Before "setup_same_content_newer"
 
-    It "[Normal] T-CLI-UPDA-26: Should: exit 0, print Updated: [label] name, and keep the source mtime on the overwritten file"
+    # Boundary of UPDA-25: a newer deployed file is not touched back to the source's mtime
+    It "[Edge] T-CLI-UPDA-27: Should: exit 0, print up to date, and keep the newer mtime of the same-content file"
       When run bash "$SCRIPT" --update
       The status should equal 0
-      The output should equal "Updated: [docs] rules/a.md"
-      The value "$(_mtime_of "${DECKRD_DOCS_DIR}/rules/a.md")" should equal "$(_mtime_of "${INITS_DIR}/docs/rules/a.md")"
+      The output should equal "Assets are up to date."
+      The value "$(file_mtime "${DECKRD_DOCS_DIR}/rules/a.md")" should equal "$(epoch_of "$NEW_MTIME")"
     End
   End
 

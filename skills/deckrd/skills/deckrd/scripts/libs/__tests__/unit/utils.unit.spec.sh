@@ -114,6 +114,9 @@ b"
         '/tmp/x/' '/tmp/x'
         'C:\Users\x\' 'C:/Users/x'
         '/a//b///c' '/a/b/c'
+        '//server/share/project' '//server/share/project'
+        '\\server\share\project\' '//server/share/project'
+        '//server//share///x/' '//server/share/x'
       End
 
       It "Then: [Normal] T-LIB-NDP-01-01: $1 は $2 に正規化される"
@@ -137,6 +140,8 @@ b"
     Describe "When: エッジケース"
       Parameters
         '/' '/'
+        '//' '/'
+        '///a//b' '/a/b'
         'C:\' 'C:'
         '' ''
       End
