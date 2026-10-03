@@ -12,6 +12,7 @@ description: Reference table of all deckrd commands
 | Command                         | Description                                                                     |
 | ------------------------------- | ------------------------------------------------------------------------------- |
 | `init <project> <project-type>` | Bootstrap project, write project.json, init session                             |
+| `init <project> <type> --force` | Same, and overwrite every deployed asset with the bundled version               |
 | `module <ns>/<mod>`             | Create module directories, set active module                                    |
 | `module <mod>`                  | Short form; namespace from `.project.json` `project` (fallback: git root name)  |
 | `module <ns>/<mod> --force`     | Re-initialize module (existing files preserved)                                 |
@@ -36,8 +37,8 @@ description: Reference table of all deckrd commands
 | Command                                      | Description                                  |
 | -------------------------------------------- | -------------------------------------------- |
 | `status`                                     | Display current workflow progress and status |
-| `update`                                     | List deployed assets that are outdated       |
-| `update --update`                            | Refresh outdated assets from source          |
+| `update`                                     | List assets that are missing or outdated     |
+| `update --update`                            | Copy missing and outdated assets from source |
 | `review`                                     | Show review command usage                    |
 | `review <doc> [--phase <p>]`                 | Review document with phase-specific analysis |
 | `project --project <name> --language <lang>` | Configure project settings                   |
