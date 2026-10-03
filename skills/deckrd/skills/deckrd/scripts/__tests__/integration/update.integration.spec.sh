@@ -82,6 +82,13 @@ make_same_content_older() {
   make_asset docs "$DECKRD_DOCS_DIR" rules/a.md same same "$NEW_MTIME" "$OLD_MTIME"
 }
 
+# Helper: place a top-level docs .gitignore source newer than and differing from its
+# deployed copy. dst_rel `.gitignore` matches the keep pattern `.gitignore`; this is the
+# top-level counterpart of T-CLI-UPDA-02, which covers `*/.gitignore` (rules/.gitignore).
+make_top_gitignore_outdated() {
+  make_asset docs "$DECKRD_DOCS_DIR" .gitignore new old "$NEW_MTIME" "$OLD_MTIME"
+}
+
 # Fixture: workspaces rule block of the local gitignore template (banner to EOF)
 _workspaces_rule_block() {
   printf '%s\n' '## ---- ##' '##  Shared notes layer: track workspaces/ only ##' '## ---- ##' \
@@ -494,6 +501,18 @@ Describe "T-CLI-UPDI: update.sh: list outdated assets"
     End
   End
 
+  Describe "Given: top-level .gitignore source newer than its differing deployed .gitignore"
+    Before "setup_update_env" "make_top_gitignore_outdated"
+    After "teardown_update_env"
+
+    It "[Edge] T-CLI-UPDI-18: Should: exit 0, print up to date, and keep the deployed top-level .gitignore"
+      When run bash "$SCRIPT"
+      The status should equal 0
+      The output should equal "Assets are up to date."
+      The contents of file "${DECKRD_DOCS_DIR}/.gitignore" should equal "old"
+    End
+  End
+
 End
 
 # ============================================================================
@@ -519,6 +538,24 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
     End
   End
 
+  Describe "Given: one deployed file older than its differing source, checked for the copied mtime"
+    Before "setup_update_env"
+    After "teardown_update_env"
+
+    setup_one_outdated_for_mtime() {
+      make_asset docs "$DECKRD_DOCS_DIR" rules/a.md new old "$NEW_MTIME" "$OLD_MTIME"
+    }
+    Before "setup_one_outdated_for_mtime"
+
+    It "[Normal] T-CLI-UPDA-29: Should: exit 0, print Updated: [docs] rules/a.md, and keep the source's mtime on the copied file"
+      When run bash "$SCRIPT" --update
+      The status should equal 0
+      The output should equal "Updated: [docs] rules/a.md"
+      The contents of file "${DECKRD_DOCS_DIR}/rules/a.md" should equal "new"
+      The value "$(_mtime_of "${DECKRD_DOCS_DIR}/rules/a.md")" should equal "$(_mtime_of "${INITS_DIR}/docs/rules/a.md")"
+    End
+  End
+
   Describe "Given: nested .gitignore.org source newer than its differing deployed .gitignore"
     Before "setup_update_env"
     After "teardown_update_env"
@@ -538,6 +575,20 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
       The status should equal 0
       The output should equal "Assets are up to date."
       The contents of file "${DECKRD_DOCS_DIR}/rules/.gitignore" should equal "old"
+    End
+  End
+
+  Describe "Given: top-level .gitignore source newer than its differing deployed .gitignore"
+    Before "setup_update_env" "make_top_gitignore_outdated"
+    After "teardown_update_env"
+
+    # .gitignore matches the keep pattern .gitignore (UPDA-02 covers */.gitignore),
+    # so it is never overwritten
+    It "[Edge] T-CLI-UPDA-28: Should: exit 0, print up to date, and keep the deployed top-level .gitignore"
+      When run bash "$SCRIPT" --update
+      The status should equal 0
+      The output should equal "Assets are up to date."
+      The contents of file "${DECKRD_DOCS_DIR}/.gitignore" should equal "old"
     End
   End
 
@@ -828,7 +879,7 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
       The stderr should include "Error:"
       The stderr should include "${DECKRD_LOCAL_WORKSPACES}/README.md"
       The output should not include "Updated:"
-      The path "${DECKRD_LOCAL_DATA}/workspaces" should be file
+      The path "$DECKRD_LOCAL_WORKSPACES" should be file
     End
   End
 
