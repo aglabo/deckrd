@@ -46,7 +46,7 @@ _WORKFLOW_REL='rules/deckrd-rule-workflow.md'
 # _UPDATE_WORKFLOW_MSG - stdout line of update.sh --update for a (re)deployed workflow rule
 _UPDATE_WORKFLOW_MSG="Updated: [docs] ${_WORKFLOW_REL}"
 
-# _INIT_WORKFLOW_MSG - stderr line of init.sh for a (re)copied workflow rule
+# _INIT_WORKFLOW_MSG - stderr line of init.sh for a copied workflow rule (re-copied only with --force)
 _INIT_WORKFLOW_MSG="[init/docs] copied: ${_WORKFLOW_REL}"
 
 # _USER_EDIT - Content a user writes over a deployed file
@@ -218,11 +218,11 @@ Describe "init.sh / update.sh asset deploy (e2e)"
           End
         End
 
-        Describe "Given: the deployed workflow rule is outdated when init.sh runs again"
+        Describe "Given: the deployed workflow rule is outdated when init.sh runs again with --force"
           Before "_make_workflow_outdated"
 
-          It "[Normal] T-CLI-DEPE-07: Should: overwrite the outdated workflow rule by re-running init.sh"
-            When run _run_in_project "$INIT_SCRIPT" myapp webapp
+          It "[Normal] T-CLI-DEPE-07: Should: overwrite the outdated workflow rule by re-running init.sh --force"
+            When run _run_in_project "$INIT_SCRIPT" myapp webapp --force
             The status should equal 0
             The stderr should include "$_INIT_WORKFLOW_MSG"
             Assert _same_as_source "docs/.deckrd/${_WORKFLOW_REL}" "docs/${_WORKFLOW_REL}"

@@ -520,7 +520,7 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
   End
 
   Describe "Given: nested .gitignore.org source newer than its differing deployed .gitignore"
-    Before "setup_update_env" "setup_rules_gitignore_outdated"
+    Before "setup_update_env"
     After "teardown_update_env"
 
     # rules/.gitignore matches the keep pattern */.gitignore, so it is never overwritten
