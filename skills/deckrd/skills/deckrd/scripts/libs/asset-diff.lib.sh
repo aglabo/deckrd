@@ -6,7 +6,7 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 #
-# @version 0.1.0
+# @version 0.1.3
 # USAGE: source this file, do NOT execute directly.
 #   . "$(dirname "${BASH_SOURCE[0]}")/asset-diff.lib.sh"
 #
@@ -20,9 +20,6 @@ if [[ -n "${_ASSET_DIFF_LOADED:-}" ]]; then
   return 0
 fi
 readonly _ASSET_DIFF_LOADED=1
-
-# shellcheck disable=SC1091
-. "$(dirname "${BASH_SOURCE[0]}")/utils.lib.sh"
 
 # shellcheck disable=SC1091
 . "$(dirname "${BASH_SOURCE[0]}")/utils.lib.sh"
@@ -69,7 +66,13 @@ ASSET_KEEP_PATTERNS=('.gitignore' '*/.gitignore')
 # protected files already present in dest are excluded. A destination that is
 # a symlink is treated as deployed and is not listed. Read-only.
 #
-# With `--force` as the first argument, list every source file instead,
+# In every mode, including `--force`, a source file is never listed when its
+# destination path is a real directory (not a symlink), or when its
+# destination resolves into the source tree at any level (self-deploy, e.g.
+# dest_dir or one of its subdirectories is a symlink to src_dir or to any
+# directory under it), or when it is a hard link to its own source file.
+#
+# With `--force` as the first argument, list every other source file instead,
 # ignoring whether dest exists or is a symlink, its mtime and content, and the
 # keep patterns.
 # `--force` in any other position does not enable force mode.
@@ -91,7 +94,7 @@ list_asset_files() {
   case "$1" in
   --force)
     shift
-    _list_all_files "$1"
+    _list_deployable_files "$1" "$2"
     return 0
     ;;
   --missing-only)
@@ -102,7 +105,7 @@ list_asset_files() {
   src_dir="$(normalize_dir_path "$1")"
   dest_dir="$(normalize_dir_path "$2")"
   while IFS= read -r src_rel; do
-    dst_rel="$(strip_suffix "$src_rel" .org)"
+    dst_rel="${src_rel%.org}"
     if "$checker" "${src_dir}/${src_rel}" "${dest_dir}/${dst_rel}"; then
       printf '%s\n' "$src_rel"
     fi
@@ -124,7 +127,110 @@ _list_all_files() {
   return 0
 }
 
+# _list_deployable_files - List the source files whose destination may be written (internal)
+#
+# `_list_all_files` filtered by `_asset_dest_is_blocked` on
+# `<dest_dir>/<src_rel without .org>`, and without a destination that is the
+# same file as its source (a hard link). The directories of the source tree are
+# listed once per call, not per file. Feeds every list_asset_files mode:
+# `--force` directly, the other modes through `_list_candidate_files`.
+#
+# @arg $1 Source asset directory
+# @arg $2 Destination directory
+# @stdout Source relative paths, byte-sorted, one per line
+_list_deployable_files() {
+  local src_dir dest_dir src_rel dest REPLY
+  local -a src_dirs
+  src_dir="$(normalize_dir_path "$1")"
+  dest_dir="$(normalize_dir_path "$2")"
+  # Rooted, so a src_dir starting with `-` is not taken as a find option
+  _asset_rooted_path "$src_dir"
+  # -H follows src_dir itself when it is a symlink; a missing src_dir leaves the list empty
+  mapfile -t src_dirs < <(find -H "$REPLY" -type d 2>/dev/null)
+  while IFS= read -r src_rel; do
+    dest="${dest_dir}/${src_rel%.org}"
+    _asset_dest_is_blocked "$dest" "${src_dirs[@]}" && continue
+    # A hard link to its own source (not a symlink, which copy_asset_file replaces)
+    # would be copied onto itself
+    [[ ! -L "$dest" && "$dest" -ef "${src_dir}/${src_rel}" ]] && continue
+    printf '%s\n' "$src_rel"
+  done < <(_list_all_files "$src_dir")
+  return 0
+}
+
+# _asset_dest_is_blocked - Check whether a destination must never be written (internal)
+#
+# Blocked when dest is a real directory (a symlink to a directory is not
+# blocked here), or when dest resolves into the source tree at any level: the
+# nearest existing ancestor of dest (`_asset_nearest_dir`; it starts at the
+# parent of dest, so a dest that is itself a symlink to a directory is judged
+# by where it sits, not where it points, and missing intermediate directories
+# are skipped) is the same directory (`-ef`) as one of the source tree
+# directories. Comparing file identity, not path strings,
+# catches a symlink anywhere above dest, a case-variant spelling, and
+# drive-letter paths, and never walks `..` (Git Bash folds `..` in a
+# drive-letter path textually, before any symlink is followed). In-process.
+#
+# A dest containing `..` behind a missing directory may be blocked
+# conservatively: the strip-based walk drops the `..` together with the missing
+# part, so the judged ancestor can be deeper than the real one. This false
+# positive only skips a write, which is the safe side.
+#
+# @arg $1 Destination file path
+# @arg $2+ Source tree directories: src_dir and every directory under it (none never blocks by location)
+# @return 0 blocked, 1 not blocked
+_asset_dest_is_blocked() {
+  local REPLY dir
+  [[ -d "$1" && ! -L "$1" ]] && return 0
+  _asset_nearest_dir "$1"
+  for dir in "${@:2}"; do
+    [[ "$REPLY" -ef "$dir" ]] && return 0
+  done
+  return 1
+}
+
+# _asset_nearest_dir - Find the nearest existing ancestor directory of a path (internal)
+#
+# Starts at the parent of the path (the path itself is never returned, even
+# when it is a directory or a symlink to one), then strips one `/component` at
+# a time (pure string operation, no `..` resolution) until it names a
+# directory. A `..` component is stripped like any other name, so for a path
+# with `..` behind a missing directory the result can be deeper than the real
+# ancestor (see `_asset_dest_is_blocked`). It never strips past the first
+# component:
+# a relative path is walked as `./<path>`, so it stops at `./`; an absolute
+# path stops at `/` or at a drive root such as `C:/`. Every iteration shortens
+# the path, so the walk always ends. Runs in-process, no subshell.
+#
+# @arg $1 Path (need not exist)
+# @set REPLY The nearest existing ancestor directory, with a trailing `/`
+#   (the root of a missing drive is returned as is)
+_asset_nearest_dir() {
+  _asset_rooted_path "$1"
+  REPLY="${REPLY%/*}"
+  while [[ "$REPLY" == */* && ! -d "${REPLY}/" ]]; do
+    REPLY="${REPLY%/*}"
+  done
+  REPLY="${REPLY}/"
+}
+
+# _asset_rooted_path - Root a path so that it never starts with a bare name (internal)
+#
+# A relative path gets a `./` prefix; an absolute path (`/...`) or a
+# drive-letter path (`C:/...`) is kept. The result never starts with `-`, so a
+# command never parses it as an option. Runs in-process, no subshell.
+#
+# @arg $1 Path
+# @set REPLY The rooted path
+_asset_rooted_path() {
+  REPLY="$1"
+  [[ "$REPLY" == /* || "$REPLY" == [A-Za-z]:/* ]] || REPLY="./${REPLY}"
+}
+
 # _list_candidate_files - List source files not shielded by a keep pattern (internal)
+#
+# Starts from `_list_deployable_files`, so self-deploy and real-directory
+# destinations are already excluded.
 #
 # Drop `<src_rel>` when its destination `<dest_dir>/<src_rel without .org>`
 # exists (file or symlink) and matches a keep pattern. Protected files missing
@@ -139,13 +245,13 @@ _list_candidate_files() {
   src_dir="$(normalize_dir_path "$1")"
   dest_dir="$(normalize_dir_path "$2")"
   while IFS= read -r src_rel; do
-    dst_rel="$(strip_suffix "$src_rel" .org)"
+    dst_rel="${src_rel%.org}"
     if [[ -e "${dest_dir}/${dst_rel}" || -L "${dest_dir}/${dst_rel}" ]] &&
       _asset_is_kept "$dst_rel" "${@:3}"; then
       continue
     fi
     printf '%s\n' "$src_rel"
-  done < <(_list_all_files "$src_dir")
+  done < <(_list_deployable_files "$src_dir" "$dest_dir")
   return 0
 }
 

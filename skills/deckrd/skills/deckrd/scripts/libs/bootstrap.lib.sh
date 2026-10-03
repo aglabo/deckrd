@@ -6,7 +6,7 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 #
-# @version 0.5.1
+# @version 0.5.2
 # USAGE: source this file, then call bootstrap_finalize to lock variables.
 #   . "$(dirname "${BASH_SOURCE[0]}")/bootstrap.lib.sh"
 #   bootstrap_finalize
@@ -17,11 +17,14 @@ if [[ -n "${_BOOTSTRAP_LOADED:-}" ]]; then
 fi
 readonly _BOOTSTRAP_LOADED=1
 
-# _resolve_project_root - Resolve PROJECT_ROOT via git or BASH_SOURCE fallback
+# _resolve_project_root - Resolve PROJECT_ROOT via git or the current directory
 #
-# Priority: env var (already set) > git rev-parse > BASH_SOURCE 6-levels-up
-# BASH_SOURCE[0] is this file: skills/deckrd/skills/deckrd/scripts/libs/bootstrap.lib.sh
-# 6 levels up: libs/ -> scripts/ -> deckrd/ -> skills/ -> deckrd/ -> skills/ -> project root
+# Priority: env var (already set) > git rev-parse > pwd
+#
+# @note Outside git, the current directory is used as is: there is no upward search for an
+#   existing `.local/deckrd`. Run deckrd from the project root, or set PROJECT_ROOT.
+#   From a subdirectory, `update` fails with "session not found" and `init` creates a
+#   second `docs/.deckrd` and `.local/deckrd` there. This is intended.
 #
 # @stdout Resolved PROJECT_ROOT path
 # @return 0 always
@@ -30,8 +33,7 @@ _resolve_project_root() {
     printf '%s' "${PROJECT_ROOT}"
     return 0
   fi
-  git rev-parse --show-toplevel 2>/dev/null ||
-    (CDPATH='' cd -- "$(dirname "${BASH_SOURCE[0]}")/../../../../../.." && pwd)
+  git rev-parse --show-toplevel 2>/dev/null || pwd
 }
 
 # _resolve_deckrd_root - Resolve the deckrd skill root relative to this file's location
@@ -71,7 +73,7 @@ _resolve_deckrd_root() {
 #
 # @return 0 on success, 1 if a readonly SKILL_ROOT differs from the computed value
 bootstrap_init() {
-  # PROJECT_ROOT: env var > git > BASH_SOURCE fallback
+  # PROJECT_ROOT: env var > git > pwd
   if [[ -z "${PROJECT_ROOT:-}" ]]; then
     PROJECT_ROOT="$(_resolve_project_root)"
   fi

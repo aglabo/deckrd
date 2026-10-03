@@ -502,6 +502,41 @@ Describe "T-LIB-ASCP: asset-copy.lib.sh"
       End
     End
 
+    Describe "Given: ソースに .org が 2 重に付いた a.org.org があり配置先が未作成"
+      setup_double_org_src() {
+        put_file "${NAMING_TMPDIR}/src" "a.org.org" "x"
+      }
+      BeforeEach "setup_double_org_src"
+
+      Describe "When: copy_assets を呼ぶ"
+        It "Then: [Edge] T-LIB-ASCP-64: 末尾の .org を 1 回だけ外し、a.org としてコピーする"
+          When call copy_assets "${NAMING_TMPDIR}/src" "${NAMING_TMPDIR}/dest"
+          The status should equal 0
+          The output should equal "a.org"
+          The contents of file "${NAMING_TMPDIR}/dest/a.org" should equal "x"
+          The path "${NAMING_TMPDIR}/dest/a.org.org" should not be exist
+          The path "${NAMING_TMPDIR}/dest/a" should not be exist
+        End
+      End
+    End
+
+    Describe "Given: ソースに名前が .org で終わるディレクトリ rules.org があり配置先が未作成"
+      setup_org_dir_src() {
+        put_file "${NAMING_TMPDIR}/src/rules.org" "a.md" "x"
+      }
+      BeforeEach "setup_org_dir_src"
+
+      Describe "When: copy_assets を呼ぶ"
+        It "Then: [Edge] T-LIB-ASCP-65: ディレクトリ名の .org は外さず、rules.org/a.md としてコピーする"
+          When call copy_assets "${NAMING_TMPDIR}/src" "${NAMING_TMPDIR}/dest"
+          The status should equal 0
+          The output should equal "rules.org/a.md"
+          The contents of file "${NAMING_TMPDIR}/dest/rules.org/a.md" should equal "x"
+          The path "${NAMING_TMPDIR}/dest/rules/a.md" should not be exist
+        End
+      End
+    End
+
     Describe "Given: 配置先に古く内容が同じ同名ファイルが既存"
       setup_dest_old_identical() {
         put_file "${NAMING_TMPDIR}/src" "a.md" "same"
@@ -610,6 +645,59 @@ Describe "T-LIB-ASCP: asset-copy.lib.sh"
           The status should equal 0
           The output should equal "a.md"
           The contents of file "${NAMING_TMPDIR}/dest/a.md" should equal "new"
+        End
+      End
+    End
+
+    # sync_asset_mtimes is replaced inside each It by a stub that records its
+    # arguments to sync.log (or fails, in T-LIB-ASCP-63), so the tests observe
+    # whether copy_assets calls it and how it handles a failure.
+    Describe "Given: ソースに a.md があり配置先が未作成 (sync_asset_mtimes の呼び出し確認)"
+      setup_sync_call_src() {
+        put_file "${NAMING_TMPDIR}/src" "a.md" "NEW"
+      }
+      BeforeEach "setup_sync_call_src"
+
+      Describe "When: --force を第 1 引数にして copy_assets を呼ぶ"
+        It "Then: [Normal] T-LIB-ASCP-60: a.md をコピーし、sync_asset_mtimes を呼ばない"
+          # shellcheck disable=SC2329 # copy_assets から間接的に呼ばれる
+          sync_asset_mtimes() { printf '%s\n' "$*" >>"${NAMING_TMPDIR}/sync.log"; }
+          When call copy_assets --force "${NAMING_TMPDIR}/src" "${NAMING_TMPDIR}/dest"
+          The status should equal 0
+          The output should equal "a.md"
+          The contents of file "${NAMING_TMPDIR}/dest/a.md" should equal "NEW"
+          The path "${NAMING_TMPDIR}/sync.log" should not be exist
+        End
+      End
+
+      Describe "When: copy_assets を呼ぶ"
+        It "Then: [Normal] T-LIB-ASCP-61: a.md をコピーし、src と dest を引数に sync_asset_mtimes を 1 回呼ぶ"
+          # shellcheck disable=SC2329 # copy_assets から間接的に呼ばれる
+          sync_asset_mtimes() { printf '%s\n' "$*" >>"${NAMING_TMPDIR}/sync.log"; }
+          When call copy_assets "${NAMING_TMPDIR}/src" "${NAMING_TMPDIR}/dest"
+          The status should equal 0
+          The output should equal "a.md"
+          The contents of file "${NAMING_TMPDIR}/sync.log" should equal "${NAMING_TMPDIR}/src ${NAMING_TMPDIR}/dest"
+        End
+
+        It "Then: [Error] T-LIB-ASCP-63: sync_asset_mtimes が失敗すると、コピー済みの a.md を出力したうえで 1 を返す"
+          # shellcheck disable=SC2329 # copy_assets から間接的に呼ばれる
+          sync_asset_mtimes() { return 1; }
+          When call copy_assets "${NAMING_TMPDIR}/src" "${NAMING_TMPDIR}/dest"
+          The status should equal 1
+          The output should equal "a.md"
+          The stderr should equal ""
+        End
+      End
+
+      Describe "When: --missing-only を第 1 引数にして copy_assets を呼ぶ"
+        It "Then: [Normal] T-LIB-ASCP-62: a.md をコピーし、src と dest を引数に sync_asset_mtimes を 1 回呼ぶ"
+          # shellcheck disable=SC2329 # copy_assets から間接的に呼ばれる
+          sync_asset_mtimes() { printf '%s\n' "$*" >>"${NAMING_TMPDIR}/sync.log"; }
+          When call copy_assets --missing-only "${NAMING_TMPDIR}/src" "${NAMING_TMPDIR}/dest"
+          The status should equal 0
+          The output should equal "a.md"
+          The contents of file "${NAMING_TMPDIR}/sync.log" should equal "${NAMING_TMPDIR}/src ${NAMING_TMPDIR}/dest"
         End
       End
     End
@@ -875,6 +963,72 @@ Describe "T-LIB-ASCP: asset-copy.lib.sh"
           Assert is_old "${NAMING_TMPDIR}/outside/a.md"
           Assert same_mtime "${NAMING_TMPDIR}/src/b.md" "${NAMING_TMPDIR}/dest/b.md"
           The path "${NAMING_TMPDIR}/dest/b.md" should not be symlink
+        End
+      End
+    End
+  End
+
+  Describe "_copy_listed_assets"
+    BeforeEach "setup_tmpdir"
+    AfterEach "teardown_tmpdir"
+
+    # Helper: succeed when <dir> exists and has no entries
+    is_empty_dir() {
+      [[ -d "$1" && -z "$(ls -A "$1")" ]]
+    }
+
+    Describe "Given: ソースと配置先が空ディレクトリとして存在する"
+      setup_empty_dirs() {
+        mkdir -p "${NAMING_TMPDIR}/src" "${NAMING_TMPDIR}/dest"
+      }
+      BeforeEach "setup_empty_dirs"
+
+      Describe "When: 空リストを渡して _copy_listed_assets を呼ぶ"
+        It "Then: [Normal] T-LIB-ASCP-66: 何もコピーせず、出力なしで 0 を返す"
+          When call _copy_listed_assets "${NAMING_TMPDIR}/src" "${NAMING_TMPDIR}/dest" ""
+          The status should equal 0
+          The output should equal ""
+          The stderr should equal ""
+          Assert is_empty_dir "${NAMING_TMPDIR}/dest"
+        End
+      End
+    End
+
+    Describe "Given: ソースに .gitignore.org と b.md があり、配置先は空"
+      setup_org_and_plain() {
+        put_file "${NAMING_TMPDIR}/src" ".gitignore.org" "IGNORE"
+        put_file "${NAMING_TMPDIR}/src" "b.md" "B"
+        mkdir -p "${NAMING_TMPDIR}/dest"
+      }
+      BeforeEach "setup_org_and_plain"
+
+      Describe "When: 2 件のリストを渡して _copy_listed_assets を呼ぶ"
+        It "Then: [Normal] T-LIB-ASCP-67: .org を外した名前でコピーし、各 dst_rel を出力する"
+          When call _copy_listed_assets "${NAMING_TMPDIR}/src" "${NAMING_TMPDIR}/dest" $'.gitignore.org\nb.md'
+          The status should equal 0
+          The line 1 of output should equal ".gitignore"
+          The line 2 of output should equal "b.md"
+          The lines of output should equal 2
+          The contents of file "${NAMING_TMPDIR}/dest/.gitignore" should equal "IGNORE"
+          The contents of file "${NAMING_TMPDIR}/dest/b.md" should equal "B"
+          The path "${NAMING_TMPDIR}/dest/.gitignore.org" should not be exist
+        End
+      End
+    End
+
+    Describe "Given: ソースに sub/a.md があり、配置先のサブディレクトリ位置に通常ファイルがある"
+      setup_listed_dest_subdir_blocked() {
+        put_file "${NAMING_TMPDIR}/src/sub" "a.md" "A"
+        put_file "${NAMING_TMPDIR}/dest" "sub" "file"
+      }
+      BeforeEach "setup_listed_dest_subdir_blocked"
+
+      Describe "When: sub/a.md のリストを渡して _copy_listed_assets を呼ぶ"
+        It "Then: [Error] T-LIB-ASCP-68: コピーエラーを出し 1 を返す"
+          When call _copy_listed_assets "${NAMING_TMPDIR}/src" "${NAMING_TMPDIR}/dest" "sub/a.md"
+          The status should equal 1
+          The output should equal ""
+          The stderr should include "Error: failed to copy file: ${NAMING_TMPDIR}/dest/sub/a.md"
         End
       End
     End
