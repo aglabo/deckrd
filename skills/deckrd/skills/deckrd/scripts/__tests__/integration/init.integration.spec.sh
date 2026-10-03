@@ -625,7 +625,7 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
         The path "${DECKRD_TMPDIR}/custom/temp" should be directory
       End
 
-      It "[Normal] T-CLI-MAINI-56: Should: exit 0, create the overridden DECKRD_LOCAL_WORKSPACES directory, and install README.md under DECKRD_LOCAL_DATA/workspaces"
+      It "[Normal] T-CLI-MAINI-56: Should: exit 0, ignore the DECKRD_LOCAL_WORKSPACES override, and install README.md under DECKRD_LOCAL_DATA/workspaces"
         export DECKRD_LOCAL_WORKSPACES="${DECKRD_TMPDIR}/custom/workspaces"
         When run bash "$SCRIPT" myapp webapp
         The status should equal 0
@@ -633,9 +633,9 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
         The output should be blank
         The stderr should include "Init complete."
         The stderr should not include "Error:"
-        The path "${DECKRD_TMPDIR}/custom/workspaces" should be directory
+        The path "${DECKRD_LOCAL_DATA}/workspaces" should be directory
         The path "${DECKRD_LOCAL_DATA}/workspaces/README.md" should be file
-        The path "${DECKRD_TMPDIR}/custom/workspaces/README.md" should not be exist
+        The path "${DECKRD_TMPDIR}/custom/workspaces" should not be exist
       End
     End
 
@@ -669,14 +669,15 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
         The stderr should not include "Init complete"
       End
 
-      It "[Error] T-CLI-MAINI-51: Should: exit 1 and report DECKRD_LOCAL_WORKSPACES when it cannot be created"
-        export DECKRD_LOCAL_WORKSPACES="${DECKRD_TMPDIR}/blocker/workspaces"
+      It "[Error] T-CLI-MAINI-51: Should: exit 1 and report DECKRD_LOCAL_DATA/workspaces when it cannot be created"
+        mkdir -p "$DECKRD_LOCAL_DATA"
+        : >"${DECKRD_LOCAL_DATA}/workspaces"
         When run bash "$SCRIPT" myapp webapp
         The status should equal 1
         # @note: --json モード追加時はこのアサーションを見直すこと
         The output should be blank
         The stderr should include "Error:"
-        The stderr should include "${DECKRD_TMPDIR}/blocker/workspaces"
+        The stderr should include "${DECKRD_LOCAL_DATA}/workspaces"
         The stderr should not include "Init complete"
       End
 

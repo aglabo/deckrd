@@ -272,8 +272,8 @@ install_assets() {
 # @description On re-run, only missing files are copied; an existing file is never overwritten,
 #   even when it is older than and differs from its source (refresh it with `update --update`);
 #   with --force (OPTIONS[force]) every asset is overwritten, `.gitignore` and user edits included
-# @description workspaces/README.md always goes to ${DECKRD_LOCAL_DATA}/workspaces/ through the
-#   local-deckrd copy; an overridden DECKRD_LOCAL_WORKSPACES is only created, never filled
+# @description workspaces/README.md goes to DECKRD_LOCAL_WORKSPACES through the local-deckrd copy;
+#   DECKRD_LOCAL_WORKSPACES is always ${DECKRD_LOCAL_DATA}/workspaces (bootstrap ignores an override)
 # @description Stops at the first failure without printing "Init complete."
 # @exitcode 0 All directories initialized
 # @exitcode 1 A directory could not be created or an asset could not be copied
