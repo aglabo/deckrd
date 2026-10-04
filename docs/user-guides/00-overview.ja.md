@@ -193,7 +193,7 @@ meta:
 ```text
 プロジェクトルート/
 ├── .local/deckrd/
-│   ├── project.json          ← プロジェクト設定
+│   ├── .project.json         ← プロジェクト設定
 │   ├── session.json          ← 進捗・アクティブモジュール
 │   ├── temp/                 ← 一時作業ファイル (git 追跡外)
 │   └── workspaces/           ← 共通メモ (git 追跡)

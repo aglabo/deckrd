@@ -35,7 +35,7 @@ deckrd は **Goals → Requirements → Specifications → Implementation → Ta
     /deckrd init <project> <type>
               |
               v
-     .local/deckrd/project.json
+     .local/deckrd/.project.json
      .local/deckrd/session.json
               |
     /deckrd module <ns>/<mod>
@@ -92,7 +92,7 @@ docs/.deckrd/<ns>/<mod>/  (ディレクトリ作成)
 
 | コマンド | 役割                     | 入力                 | 出力                                            |
 | -------- | ------------------------ | -------------------- | ----------------------------------------------- |
-| `init`   | プロジェクト初期化       | project名・type      | `project.json`, `session.json`                  |
+| `init`   | プロジェクト初期化       | project名・type      | `.project.json`, `session.json`                 |
 | `module` | モジュール作成           | namespace/module 名  | `docs/.deckrd/<ns>/<mod>/` ディレクトリ         |
 | `req`    | 要件導出                 | ユーザーの目標・制約 | `requirements.md`                               |
 | `spec`   | 仕様導出                 | `requirements.md`    | `specifications.md`                             |
@@ -131,7 +131,7 @@ docs/.deckrd/<ns>/<mod>/  (ディレクトリ作成)
 │ 生成ファイル                                     │
 │                                                 │
 │  .local/deckrd/                                 │
-│  ├── project.json   ← プロジェクト設定           │
+│  ├── .project.json  ← プロジェクト設定           │
 │  ├── session.json   ← セッション状態             │
 │  ├── temp/          ← 一時作業 (追跡外)          │
 │  └── workspaces/    ← 共通メモ (追跡)            │
@@ -292,7 +292,7 @@ bash module.sh auth/user-login
 ```text
 優先度 1: docs/.deckrd/ 内の既存 namespace と意味的マッチング
 優先度 2: namespace が 1 つだけ → それを使用
-優先度 3: project.json に namespace フィールドあり → それを使用
+優先度 3: .project.json に namespace フィールドあり → それを使用
 優先度 4: module名のキーワードから類推 (例: auth-* → auth)
 優先度 5: git remote origin のリポジトリ名にフォールバック
 ```

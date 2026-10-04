@@ -58,7 +58,7 @@ deckrd は **Goals → Requirements → Specifications → Implementation → Ta
 
 **何が起きるか:**
 
-- `.local/deckrd/project.json` — プロジェクト設定
+- `.local/deckrd/.project.json` — プロジェクト設定
 - `.local/deckrd/session.json` — セッション状態
 - `.local/deckrd/temp/` — 一時作業ファイル置き場（git 追跡外）
 - `.local/deckrd/workspaces/` — モジュールに属さない共通メモ置き場（git 追跡）
@@ -70,6 +70,15 @@ deckrd は **Goals → Requirements → Specifications → Implementation → Ta
 > 既に存在するため `init` は上書きしません。このままでは旧ルールの `*` により `workspaces/` が
 > git に無視されます。`/deckrd update` で `[local-deckrd] .gitignore (workspaces rule)` と表示された場合は、
 > `/deckrd update --update` を実行して workspaces ルールを `.gitignore` の末尾に追記してください。
+>
+> **旧作業ファイルの移行:** 作業ファイルの置き場所は `temp/deckrd-work/`・`temp/tasks/`・`temp/bdd-coder/` から
+> `.local/deckrd/temp/` に移りました。自動移行はありません。`temp/deckrd-work/` と `temp/tasks/` は
+> コマンドを再実行すれば再生成できるため、削除して構いません。作業途中の bdd-coder タスクがある場合だけ、
+> `temp/bdd-coder/bdd-todo.md` を `.local/deckrd/temp/bdd-coder/bdd-todo.md` へ移動してください。
+>
+> **Codex CLI:** `/deckrd:deckrd-review` と bdd-coder のコードレビューは、codex-mcp サーバーではなく
+> Codex CLI (`codex exec`) を直接呼び出します。これらを使う場合は Codex CLI をインストールし、
+> `codex` コマンドに PATH を通してください。プロジェクトの `.mcp.json` に残っている codex-mcp の設定は不要です。
 
 ---
 
