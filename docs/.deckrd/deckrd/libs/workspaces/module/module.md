@@ -20,7 +20,6 @@ deckrd プラグインの共有ライブラリ。bootstrap・kv-store・session�
 | `ARRC`    | `resolve_ai_cli` (ai-runner.sh)                                     |
 | `ARVM`    | `validate_ai_model` (ai-runner.sh)                                  |
 | `ASCP`    | asset-copy.lib.sh                                                   |
-| `ASDF`    | asset-diff.lib.sh                                                   |
 | `BASSET`  | `DECKRD_ASSETS_DIR` の決定                                          |
 | `BASSETF` | `DECKRD_ASSETS_DIR`: 事前設定の維持と実アセットツリー (functional)  |
 | `BDATA`   | `DECKRD_DATA_DIR` の決定 (bootstrap.lib.sh)                         |
@@ -39,7 +38,7 @@ deckrd プラグインの共有ライブラリ。bootstrap・kv-store・session�
 | `BLOCT`   | `DECKRD_LOCAL_TEMP` の決定                                          |
 | `BLOCW`   | `DECKRD_LOCAL_WORKSPACES` の決定                                    |
 | `BPRF`    | `PROJECT_ROOT`: 事前設定の維持 (functional)                         |
-| `BPRFI`   | PROJECT_ROOT: BASH_SOURCE fallback (integration)                    |
+| `BPRFI`   | PROJECT_ROOT: カレントディレクトリ fallback (integration)           |
 | `BPRGI`   | PROJECT_ROOT: git 自動検出 (integration)                            |
 | `BROOT`   | `DECKRD_ROOT` の決定                                                |
 | `BROOTF`  | DECKRD_ROOT: BASH_SOURCE 基点 (functional)                          |
@@ -54,6 +53,7 @@ deckrd プラグインの共有ライブラリ。bootstrap・kv-store・session�
 | `CGS`     | `config_get` / `config_set`                                         |
 | `CINI`    | `config_init`                                                       |
 | `CLD`     | config.sh の読み込み                                                |
+| `IAD`     | `init_asset_dirs` (asset-diff.lib.sh)                               |
 | `KLOADF`  | `kv_load` (functional)                                              |
 | `KLOADI`  | `kv_load` (integration)                                             |
 | `KMSF`    | 複数ストアの独立性 (functional)                                     |
@@ -71,6 +71,8 @@ deckrd プラグインの共有ライブラリ。bootstrap・kv-store・session�
 | `KSNK`    | `_kv_normalize_key`                                                 |
 | `KSST`    | `kv_set`                                                            |
 | `KSSV`    | `kv_save` (unit)                                                    |
+| `LAF`     | `list_asset_files` (asset-diff.lib.sh)                              |
+| `LALF`    | `_list_all_files` (asset-diff.lib.sh)                               |
 | `NAR`     | `adjective_random` (naming.lib.sh)                                  |
 | `NDP`     | `normalize_dir_path` (utils.lib.sh)                                 |
 | `NDT`     | `normalize_doc_type`                                                |
@@ -98,3 +100,5 @@ deckrd プラグインの共有ライブラリ。bootstrap・kv-store・session�
 | `UJR`     | `jq_read` (utils.lib.sh)                                            |
 | `VENV`    | `validate_env` (validate-env.sh)                                    |
 | `VLD`     | validate-env.sh の読み込み                                          |
+| `WRB`     | `workspaces_rule_block` (asset-diff.lib.sh)                         |
+| `WRM`     | `workspaces_rule_missing` (asset-diff.lib.sh)                       |

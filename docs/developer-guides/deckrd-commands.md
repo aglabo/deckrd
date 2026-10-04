@@ -51,16 +51,27 @@ The session file tracks:
 - Document paths
 - Multiple concurrent modules
 
+**Project root**: `PROJECT_ROOT` when set, otherwise the git top-level directory, otherwise the
+current directory. Outside git there is no upward search, so run deckrd from the project root:
+from a subdirectory, `update` reports "session not found" and `init` creates a second project
+tree there
+
 ## Commands
 
 ### /deckrd init
 
-**Usage**: `/deckrd init <project> <project-type>`
+**Usage**: `/deckrd init <project> <project-type> [--force]`
 
-**Purpose**: Bootstrap the project once. Writes `.local/deckrd/.project.json`, initializes the session,
+**Purpose**: Bootstrap the project. Writes `.local/deckrd/.project.json`, initializes the session,
 and deploys bundled rules and templates
 
-**Re-running**: Deployed assets that already exist are kept (use `/deckrd update` to refresh them).
+**Re-running**: Missing assets are copied; deployed assets that already exist are kept (use
+`/deckrd update --update` to refresh outdated ones). With `--force`, every deployed asset is
+overwritten with the bundled version, `.gitignore` files and user edits included; an existing
+`session.json` is still kept. In every mode, `--force` included, a destination that resolves into
+the bundled asset source tree (for example through a symbolic link) or that is an existing
+directory is skipped silently
+([init.md](../../skills/deckrd/skills/deckrd/references/commands/init.md)).
 `.local/deckrd/.project.json` is rewritten on every run: `project`, `project_type`, `language`,
 and `ai_model` take the new values; only `created_at` is kept
 
@@ -213,14 +224,14 @@ Status:
 
 **Usage**: `/deckrd update [--update]`
 
-**Purpose**: Detect deployed assets (rules, rule index, templates) that are older than the plugin's
-bundled source. With `--update`, overwrite them and report each updated file.
-Without `--update`, no file is modified
+**Purpose**: Detect assets (rules, rule index, templates) that are missing from the project or
+older than and different from the plugin's bundled source. With `--update`, copy them and report
+each updated file. Without `--update`, no file is modified
 
 **Notes**:
 
-- Only already-deployed files are compared. A deployed file newer than its source is treated
-  as user-edited and is never overwritten
+- A missing file is listed and copied with `--update`. A deployed file newer than its source is
+  treated as user-edited and is never overwritten
 - `.local/deckrd/.gitignore` is not overwritten. When it lacks the workspaces rule
   (`!/workspaces/`), `update` reports `[local-deckrd] .gitignore (workspaces rule)` and
   `--update` appends the rule block, keeping existing lines

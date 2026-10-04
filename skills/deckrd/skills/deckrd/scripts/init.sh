@@ -235,6 +235,8 @@ make_directories() {
 #   older than and differs from its source
 # @description When OPTIONS[force] is true, copy_assets --force overwrites every file under src
 #   regardless of ASSET_KEEP_PATTERNS and the dest state, and each one is reported as copied
+# @description In every mode, a destination inside the source tree, or that is an existing
+#   directory, is skipped and not reported (see list_asset_files)
 # @description A missing src is not an error: dest is still created, the source is reported, and
 #   no done line is printed
 # @arg $1 string Label shown in the progress messages (e.g. `docs`)
@@ -272,6 +274,7 @@ install_assets() {
 # @description On re-run, only missing files are copied; an existing file is never overwritten,
 #   even when it is older than and differs from its source (refresh it with `update --update`);
 #   with --force (OPTIONS[force]) every asset is overwritten, `.gitignore` and user edits included
+#   (a destination inside the source tree or that is an existing directory is still skipped)
 # @description workspaces/README.md goes to DECKRD_LOCAL_WORKSPACES through the local-deckrd copy;
 #   DECKRD_LOCAL_WORKSPACES is always ${DECKRD_LOCAL_DATA}/workspaces (bootstrap ignores an override)
 # @description Stops at the first failure without printing "Init complete."

@@ -70,7 +70,27 @@ Re-running `init` does not refresh outdated files. To refresh them, run
 
 With `--force`, every source file is copied (`copied:`), whether or not it is deployed.
 This includes `.gitignore` files and files edited by the user.
+The only exceptions are the destinations listed below.
 `.project.json` is rewritten as usual, and an existing `session.json` is still kept.
+
+Two kinds of destination are skipped in every mode, `--force` included, and are not reported:
+
+- A destination inside the source tree.
+  Its nearest existing parent is compared by file identity with every source tree directory.
+  This catches a symbolic link at any level.
+  An example is `docs/.deckrd/rules` linked to `assets/inits/docs/rules`.
+  No asset file is copied onto itself or into the source tree.
+  Missing parent directories may still be created there
+- A destination path that is an existing directory (not a symbolic link). The directory is left
+  untouched
+
+The destinations are resolved from the project root. It is `PROJECT_ROOT` when set.
+Otherwise it is the git top-level directory, or the current directory outside git.
+
+> [!CAUTION]
+> Outside git, run `init` from the project root or set `PROJECT_ROOT`. deckrd does not search
+> parent directories for an existing project. Run from a subdirectory, `init` creates a second
+> `docs/.deckrd` and `.local/deckrd` there.
 
 Each target ends with `[init/<label>] done: N copied`.
 A missing source directory is reported as `source not found, skipping` and is not an error.
@@ -117,9 +137,9 @@ A missing source directory is reported as `source not found, skipping` and is no
 4. **local data and workspaces README** → `.local/deckrd/`
 
    The workspaces README lives in `local-deckrd/workspaces/` and lands in
-   `.local/deckrd/workspaces/README.md`. This path is fixed. When
-   `DECKRD_LOCAL_WORKSPACES` is overridden, `init` only creates that directory and
-   does not put the README there.
+   `.local/deckrd/workspaces/README.md`. This path is fixed:
+   `DECKRD_LOCAL_WORKSPACES` is always `${DECKRD_LOCAL_DATA}/workspaces`, and a value
+   set in the environment is ignored.
 
    ```bash
    assets/inits/local-deckrd/**  →  .local/deckrd/  (recursive, missing only)

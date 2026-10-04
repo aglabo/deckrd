@@ -102,12 +102,12 @@ Assets are up to date.
 
 ## Error Messages
 
-| Error               | Cause                                        | Solution                                   |
-| ------------------- | -------------------------------------------- | ------------------------------------------ |
-| session not found   | `init` has not been run                      | Run `deckrd init <project> <project-type>` |
-| Unknown option      | Unsupported option passed                    | Run `deckrd update --help`                 |
-| failed to update    | A destination path cannot be written         | Fix the path or its permissions and rerun  |
-| failed to copy file | An asset cannot be copied to its destination | Fix the path or its permissions and rerun  |
+| Error               | Cause                                                                                   | Solution                                                                   |
+| ------------------- | --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| session not found   | `init` has not been run, or (outside git) the current directory is not the project root | Run `deckrd init <project> <project-type>`, or rerun from the project root |
+| Unknown option      | Unsupported option passed                                                               | Run `deckrd update --help`                                                 |
+| failed to update    | A destination path cannot be written                                                    | Fix the path or its permissions and rerun                                  |
+| failed to copy file | An asset cannot be copied to its destination                                            | Fix the path or its permissions and rerun                                  |
 
 ## Script
 
