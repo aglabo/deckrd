@@ -39,10 +39,9 @@ deckrd/
 │   ├── deckrd/              # Main workflow skill
 │   │   ├── agents/          # Agent definitions
 │   │   └── skills/deckrd/   # Commands, scripts, assets
-│   ├── bdd-coder/           # BDD implementation skill
-│   │   ├── agents/          # Agent definitions
-│   │   └── skills/bdd-coder/ # Commands, templates, references
-│   └── _runtime/            # Shared runtime libraries
+│   └── bdd-coder/           # BDD implementation skill
+│       ├── agents/          # Agent definitions
+│       └── skills/bdd-coder/ # Commands, templates, references (libs symlinked from deckrd)
 ├── Configuration/            # Tool configs
 │   ├── .mcp.json           # MCP servers
 │   ├── lefthook.yml        # Git hooks
