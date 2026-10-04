@@ -76,9 +76,15 @@ deckrd は **Goals → Requirements → Specifications → Implementation → Ta
 > コマンドを再実行すれば再生成できるため、削除して構いません。作業途中の bdd-coder タスクがある場合だけ、
 > `temp/bdd-coder/bdd-todo.md` を `.local/deckrd/temp/bdd-coder/bdd-todo.md` へ移動してください。
 >
-> **Codex CLI:** `/deckrd:deckrd-review` と bdd-coder のコードレビューは、codex-mcp サーバーではなく
-> Codex CLI (`codex exec`) を直接呼び出します。これらを使う場合は Codex CLI をインストールし、
-> `codex` コマンドに PATH を通してください。プロジェクトの `.mcp.json` に残っている codex-mcp の設定は不要です。
+> **Codex CLI:** `/deckrd:deckrd-review` と bdd-coder のコードレビューは、Codex CLI (`codex exec`) を直接呼び出します。
+> codex-mcp サーバー (`codex mcp-server`) は使えなくなりました。これらのレビューを使う場合は、次の手順で準備してください。
+>
+> 1. Codex CLI をインストールし、`codex` コマンドに PATH を通す
+> 2. `codex login` でログインし、`codex login status` でログイン済みであることを確認する
+> 3. `.mcp.json` などに codex-mcp サーバーの設定が残っている場合は、その設定を削除する
+>
+> ログインしていない場合、`/deckrd:deckrd-review` はレビューを実行せずに終了し、
+> bdd-coder はメトリクスだけのレビューになります。
 
 ---
 
