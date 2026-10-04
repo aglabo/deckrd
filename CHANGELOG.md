@@ -6,6 +6,103 @@
   -->
 <!-- markdownlint-disable line-length -->
 
+## [0.6.0] - 2026-10-04
+
+### Features
+
+- Add `/deckrd update` to list and apply missing or outdated bundled assets.
+- Add `init --force` to explicitly redeploy managed assets while preserving session state.
+- Preserve existing assets during normal `init` runs and install only missing files.
+- Add recursive asset deployment with `.org` suffix handling, source mtime preservation, and protected asset support.
+- Add shared asset copy and diff helpers for `init` and `update`.
+- Add migration support for legacy `.local/deckrd/.gitignore` workspace rules.
+- Create `.local/deckrd/temp/` and `.local/deckrd/workspaces/` during initialization.
+- Add `workspaces/` directories for persistent project and module working files.
+- Move module metadata to `workspaces/module/module.md`.
+- Add Windows ShellSpec execution through WSL.
+- Add `fable` model support to `prepare-commit-msg.sh`.
+- Add module shorthand and namespace resolution from `.project.json` or the Git repository root name.
+- Add module input and writable output support to Deckrd agents.
+
+### Bug Fixes
+
+- Send command and validation errors to stderr instead of stdout.
+- Stop initialization immediately when directory creation or asset deployment fails.
+- Fix session and document path resolution across Deckrd commands.
+- Fix `generate-doc` session validation, path resolution, and verbose configuration output.
+- Harden `run_ai` stdin validation, timeout handling, empty response detection, and stdout/stderr separation.
+- Preserve `run_ai` exit status correctly under `errexit`.
+- Isolate Codex execution from user MCP configuration.
+- Fix ShellSpec runner PATH propagation for integration and system tests.
+- Preserve all ShellSpec spec targets and argument order.
+- Improve project root resolution inside and outside Git repositories.
+- Prevent asset deployment into Deckrd's own asset source tree through symlinks, hard links, or nested paths.
+- Preserve UNC path prefixes during path normalization.
+- Fix shared `SKILL_ROOT` and Deckrd library path resolution.
+- Prevent computed skill paths from leaking into child process environments.
+- Reduce parallel naming collisions.
+- Preserve dangling workspace README symlinks during updates.
+
+### Refactor
+
+- Move temporary and regeneratable working files under `.local/deckrd/temp/`.
+- Define separate temporary, shared workspace, and module workspace layers.
+- Move module documentation and metadata under module `workspaces/`.
+- Prefer `jq` over `jaq` and route JSON reads through the shared `jq_read` helper.
+- Split the specification workflow into 12 phase-specific reference documents.
+- Separate detailed usage and examples from `SKILL.md` files into reference documents.
+- Enforce one input per generated BDD test case.
+- Split test IDs into group IDs and case IDs.
+- Rebuild `run-check-test-ids.sh` with separate declaration indexes and cached lookups.
+- Centralize `init` command options in an associative array.
+- Reorganize shared asset deployment helpers and path utilities.
+
+### AI and Review
+
+- Migrate Codex integrations from `codex-mcp` to the Codex CLI.
+- Remove the Codex MCP server configuration.
+- Use `codex exec` for Deckrd review, bdd-coder review, and related agent workflows.
+- Add Codex CLI availability and login checks.
+- Add metrics-only fallback when Codex review is unavailable.
+- Distinguish unavailable Codex review output from a clean review.
+- Add deterministic commit message generation rules.
+- Change the default commit-message model to `gpt-5.6-luna`.
+- Improve coverage-unavailable handling with `cov=N/A` and `CRAP=N/A` instead of assuming zero coverage.
+
+### Testing
+
+- Add system tests for `generate-doc` and AI runner execution.
+- Add stderr leak detection for generated document content.
+- Expand asset deployment regression and end-to-end coverage.
+- Add Windows and WSL ShellSpec runner tests.
+- Add coverage for workspace paths, session paths, bootstrap behavior, and asset migration.
+- Add group and case test IDs across CLI, library, runner, and subcommand tests.
+
+### Security
+
+- Change the repository `.gitignore` to an allowlist-based policy.
+- Add explicit tracking rules for Deckrd workspace files.
+- Replace Gitleaks with Betterleaks in quality gates and CI.
+- Update reusable Actionlint and Ghalint workflows and pin their revisions.
+
+### Documentation
+
+- Document `/deckrd update`, `init --force`, and recursive asset deployment.
+- Document `.local/deckrd/.project.json` and `.local/deckrd/session.json`.
+- Document the new temporary, shared workspace, and module workspace layout.
+- Document module metadata migration to `workspaces/module/module.md`.
+- Document Codex CLI installation, login, and troubleshooting.
+- Document Windows ShellSpec execution through WSL.
+- Update Deckrd, bdd-coder, review, workflow, and developer guides for the new paths and command behavior.
+- Add troubleshooting and scenario reference documents.
+
+### Tooling
+
+- Add `check:dprint:diff` and report differing files from dprint checks.
+- Update cspell dictionaries for new test IDs and project terms.
+- Move the hackers dictionary into the shared Deckrd assets directory.
+- Share Deckrd libraries and dictionary assets with bdd-coder through symlinks.
+
 ## [0.5.0] - 2026-09-12
 
 ### 🚀 Features
