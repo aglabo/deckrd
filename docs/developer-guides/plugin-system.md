@@ -116,9 +116,10 @@ skills/{skill-name}/
 
 ### 3. Shared Runtime
 
-**Location**: `skills/_runtime/`
+**Location**: `skills/deckrd/skills/deckrd/scripts/libs/`
 
-**Purpose**: Shared libraries used by both deckrd and bdd-coder
+**Purpose**: Shared libraries used by both deckrd and bdd-coder.
+bdd-coder links them via the `skills/bdd-coder/skills/bdd-coder/scripts/libs` symlink.
 
 **Components**:
 

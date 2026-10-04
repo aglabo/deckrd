@@ -62,7 +62,7 @@ The deckrd project uses multiple tools and MCP servers for different tasks. This
 
 ```bash
 # Find function definition
-Grep "function _resolve_deckrd_root" --path skills/_runtime/
+Grep "function _resolve_deckrd_root" --path skills/deckrd/skills/deckrd/scripts/libs/
 
 # List all scripts
 Glob "skills/deckrd/skills/deckrd/scripts/*.sh"

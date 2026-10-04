@@ -101,7 +101,7 @@ Options:
   -h, --help                  Show this help message
 
 Project file:
-  .local/deckrd/project.json
+  .local/deckrd/.project.json
 
 Example:
   init.sh myapp webapp
@@ -296,7 +296,7 @@ init_directories() {
 }
 
 ##
-# @description Write project.json with project settings
+# @description Write .project.json with project settings
 # @stderr Progress messages
 write_project() {
   local timestamp

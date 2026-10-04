@@ -98,17 +98,20 @@ git commit -m "..."
 
 ## Key Commands
 
-| Command                         | Description                                      |
-| ------------------------------- | ------------------------------------------------ |
-| `init <project> <project-type>` | Bootstrap project (run once per project)         |
-| `module <namespace>/<module>`   | Create module directory and set as active module |
-| `req`                           | Create requirements definition                   |
-| `spec`                          | Create specification document                    |
-| `impl`                          | Create implementation criteria                   |
-| `tasks`                         | Create implementation task list                  |
-| `dr --add`                      | Record Decision Records (optional)               |
-| `status`                        | Check workflow progress                          |
-| `review <phase>`                | Review a document (any phase)                    |
+| Command                            | Description                                           |
+| ---------------------------------- | ----------------------------------------------------- |
+| `init <project> <project-type>`    | Bootstrap project (run once per project)              |
+| `init <project> <type> --force`    | Same, and overwrite every deployed asset              |
+| `module <namespace>/<module>`      | Create module directory and set as active module      |
+| `req`                              | Create requirements definition                        |
+| `spec`                             | Create specification document                         |
+| `impl`                             | Create implementation criteria                        |
+| `tasks`                            | Create implementation task list                       |
+| `dr --add`                         | Record Decision Records (optional)                    |
+| `status`                           | Check workflow progress                               |
+| `update [--update]`                | List missing or outdated assets (`--update` to apply) |
+| `rev [--from code] [--to <phase>]` | Reverse-engineer existing code into docs              |
+| `review <phase>`                   | Review a document (any phase)                         |
 
 > For details, see:
 >
