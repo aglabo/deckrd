@@ -1,141 +1,169 @@
+# deckrd v0.6.0
+
 <!-- textlint-disable
   ja-technical-writing/sentence-length,
   ja-technical-writing/max-comma,
   -->
 
-# deckrd v0.5.0
-
-v0.5.0 reorganizes the deckrd rule system, strengthens the BDD workflow, and simplifies the internal runtime and test infrastructure.
-
-This release includes **breaking changes for existing projects**.
-If you are upgrading from an earlier version, see the migration section below.
+v0.6.0 では、アセット管理・作業ディレクトリ・テスト基盤・Codex CLI 連携を中心に改善しました。
 
 ## Highlights
 
-### Reorganized deckrd rules
+### `/deckrd update` を追加
 
-The deckrd rule set has been consolidated and reorganized into **8 focused rule files**.
+配置済みアセットの差分確認と更新を、`init` から分離しました。
 
-Related rules for traceability, IDs, document naming, file structure, and commit linkage have been merged
-into the new document model and workflow rules. New rules cover:
+```sh
+/deckrd update
+/deckrd update --update
+```
 
-- BDD cycles
-- coding guidelines
-- testing guidelines
-- document versioning
-- runners
-- second-opinion reviews
+- 不足・古いアセットを検出
+- `--update` で更新を適用
+- ネストしたアセットに対応
+- ユーザー編集済み・新しいファイルを保持
+- `.local/deckrd/.gitignore` の workspace ルール移行に対応
 
-Rule bodies and Claude-facing indexes are now installed separately:
+### `init` の再実行を安全化
 
-- `docs/.deckrd/rules/` — deckrd rule definitions
-- `.claude/rules/deckrd-rules/` — Claude rule index
-- `.claude/rules/claude-rules/` — Claude command rules
+通常の `init` は未配置アセットのみ追加し、既存ファイルを保持します。
 
-This keeps project documentation separate from the rules Claude needs to load directly.
+```sh
+/deckrd init --force
+```
 
-### Improved BDD workflow
+`--force` を指定した場合のみ、管理対象アセットを同梱版で再配置します。
 
-The BDD workflow now provides stronger review and completion checks.
+シンボリックリンクやハードリンクを経由した Deckrd 自身のアセット領域への誤配置も防止します。
 
-A new `/bdd-coder:bdd-coder-review` command runs `code-reviewer` on demand
-and supports branch-based review and custom coverage commands.
+### Workspace 構成を整理
 
-Code review is now scoped to files changed during the current session instead of the entire working tree.
+作業ファイルを用途別に整理しました。
 
-Phase 5 also gains a **Done Check** that verifies completion and writes the results back to `tasks.md`,
-including task status and checkboxes.
+```text
+.local/deckrd/
+├── session.json
+├── .project.json
+├── temp/          # 再生成可能な一時ファイル
+└── workspaces/    # セッションをまたいで残すメモ
+````
 
-### Test scope and test ID validation
+モジュール固有のメタデータは次へ移動しました。
 
-deckrd can now derive a module's test scope automatically and record it in `module.md`.
-Conflicting explicit scopes are rejected.
+```text
+docs/.deckrd/<namespace>/<module>/workspaces/module/module.md
+```
 
-A new `check:test-ids` runner validates test case IDs, including:
+### Windows で ShellSpec を WSL 実行可能に
 
-- declared ID scopes
-- test coverage
-- abbreviation tables
-- unidentified test cases
+Windows 環境では ShellSpec を WSL へ委譲できるようになりました。
 
-This makes the relationship between specifications, tasks, and tests easier to verify mechanically.
+- Windows / WSL の自動判定
+- login shell の PATH を引き継ぎ
+- 複数 spec / glob の処理を改善
+- `SHELLSPEC_NO_WSL` で無効化可能
 
-### Cleaner runtime and tooling
+### テスト ID 管理を刷新
 
-Internal runtime libraries have moved from `skills/_runtime/` into the deckrd plugin.
+テスト ID を次の 2層に分離しました。
 
-Shell libraries now use the `*.lib.sh` naming convention, JSON handling is standardized on `jq`,
-and runner initialization has been centralized.
+- Group ID
+- Case ID
 
-The package has also moved to ESM, and the linting and formatting configuration has been updated.
+`run-check-test-ids.sh` も新しいモデルに合わせて再構築し、重複・所属・略語定義の検証を強化しました。
 
-### MCP configuration cleanup
+### Codex MCP から Codex CLI へ移行
 
-Agents and skills now use plugin-scoped MCP tool names.
+Codex MCP の利用を廃止し、以下へ統一しました。
 
-The MCP documentation has also been updated to match the current three-server setup:
+```sh
+codex exec
+```
 
-- `cocoindex-code`
-- `filesystem`
-- `codex-mcp`
+対象:
 
-Obsolete `serena-mcp` and `lsmcp` references have been removed.
+- deckrd-review
+- bdd-coder code review
+- AI runner
+- 開発者向けドキュメント
 
-## Documentation improvements
+Codex CLI は PATH 上にあり、ログイン済みである必要があります。
 
-This release expands the documentation around the development workflow:
+### AI runner を強化
 
-- WBS / MECE guidance for task decomposition
-- SemVer versioning for deckrd and bdd-coder documents
-- versioned frontmatter for rule assets
-- updated MCP server documentation
-- migration guidance for the new rule layout
+`run_ai` の入出力契約とエラー処理を改善しました。
 
-## Upgrading from an earlier release
+- 空 stdin / terminal stdin を拒否
+- 空レスポンスをエラー扱い
+- エラーを stderr へ分離
+- stdout を正常レスポンス専用化
+- timeout 処理を統一
+- `set -e` 下でも終了コードを保持
+- Codex 実行時の設定を隔離
 
-The rule layout has changed and requires migration for existing projects.
+### bdd-coder のテスト生成を厳格化
 
-**The order matters.** `/deckrd init` never overwrites or deletes existing files, so
-deleting the old rules first leaves the project without rules if initialization fails.
-Install and verify the new layout before removing anything.
+ケース生成を次の原則に統一しました。
 
-1. Run `/deckrd init` again in the target project.
-2. Confirm that the rule bodies are in `docs/.deckrd/rules/` and that the index is at
-   `.claude/rules/deckrd-rules/deckrd-rules-index.md`.
-3. Only after confirming, delete the legacy rule bodies `.claude/rules/deckrd-rule-*.md`.
-4. Delete the legacy index `.claude/rules/deckrd-rules.md`. The wildcard in step 3 is
-   `deckrd-rule-*.md` and does not match it, so leaving it behind injects two indexes at once.
-5. Delete the legacy `.claude/rules/.gitignore`. It contains a `deckrd-*` line that excludes
-   the whole new `.claude/rules/deckrd-rules/` directory from git. A negation pattern inside
-   the directory cannot recover it, because git does not re-include the contents of an
-   excluded parent directory. Removing the parent file is the only fix.
-6. Confirm that the index is tracked:
+```text
+1 task = 1 test = 1 input
+```
 
-   ```bash
-   git add -An .claude/rules/deckrd-rules/
-   ```
+複数入力を含む Case は自動展開せず `BLOCKED` として扱います。
 
-   If `deckrd-rules-index.md` is listed, it is tracked. If nothing is listed, it is still
-   ignored. Do not use `git check-ignore -v` for this check: it also exits 0 when a negation
-   pattern matches.
+カバレッジ取得不能時は `coverage = 0` を仮定しません。
 
-Without this migration the context reduction does not take effect, and an untracked index
-means your teammates never get the lazy-loading entry point.
+```text
+cov=N/A
+CRAP=N/A
+```
 
-Full procedure with the Japanese explanation: [docs/user-guides/02-commands.ja.md](docs/user-guides/02-commands.ja.md).
+として Cyclomatic Complexity を代替判定に使用します。
 
-There are also internal compatibility changes to be aware of:
+### Spec workflow を 12 Phase に分割
 
-- runtime libraries moved out of `skills/_runtime/`
-- shell libraries were renamed from `*.sh` to `*.lib.sh`
-- `package.json` now uses `"type": "module"`
+`spec` の処理を 12 個の独立したフェーズへ整理しました。
 
-Projects or extensions that directly reference these internal paths or CommonJS configuration files must be updated.
+```sh
+/deckrd spec --phase <phase>
+```
 
-## Other changes
+要件確認、設計、API 判断、生成、レビュー、version bump、second opinion までを段階的に実行できます。
 
-This release also includes several smaller fixes and maintenance improvements, including corrected
-ShellSpec filtering, standardized stderr handling, fixed Japanese test descriptions, updated dprint
-plugins, and improved version-bump handling for `package.json` and `deckrd.json`.
+## Other Changes
 
-All deckrd plugin and skill versions are now aligned at **0.5.0**.
+- `jq` を優先し、`jaq` を fallback とする JSON 処理へ統一
+- コマンドエラーを stderr へ統一
+- `SKILL_ROOT` など共有ライブラリのパス解決を改善
+- 並列実行時の一時ファイル名衝突を軽減
+- `.gitignore` を allowlist ベースへ変更
+- Gitleaks から Betterleaks へ移行
+- commit message 生成モデルを `gpt-5.6-luna` へ変更
+- `fable` モデルを追加サポート
+- SKILL.md の詳細説明を references へ分離
+
+## Migration
+
+既存プロジェクトでは、まず次を実行してください。
+
+```sh
+/deckrd update
+```
+
+適用には、次を実行します。
+
+で適用できます。
+
+また、以下の移行が必要です。
+
+- module metadata を workspaces/module/module.md へ移動
+- 一時ファイルを .local/deckrd/temp/ へ移動
+- 永続メモを .local/deckrd/workspaces/ へ配置
+- Codex MCP を Codex CLI に置き換え
+
+Codex を利用する場合は次を確認してください。
+
+```sh
+codex --version
+codex login status
+```
