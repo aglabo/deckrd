@@ -21,7 +21,7 @@ INIT_SCRIPT="${DECKRD_SCRIPTS_DIR}/init.sh"
 UPDATE_SCRIPT="${DECKRD_SCRIPTS_DIR}/update.sh"
 
 # ---- helpers ----
-Include ../spec_helper.sh
+Include "${SHELLSPEC_SPECFILE%/*}/../spec_helper.sh"
 
 # ---- internal helpers ----
 
