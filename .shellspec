@@ -30,9 +30,6 @@
 # Enable color output
 --color
 
-# Execution directory (run from spec file location for relative imports)
---execdir @specfile
-
 # Skip message severity (moderate = hide skipped test details)
 --skip-message moderate
 
@@ -46,4 +43,3 @@
 # Spec file parallel execution
 # @note: use in Windows is dangerous.
 --jobs 4
-
