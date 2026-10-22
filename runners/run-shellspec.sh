@@ -11,19 +11,19 @@
 
 set -euo pipefail
 
-# shellcheck source=runners/libs/init-vars.lib.sh
+# Initialize directory variables
 . "$(dirname "${BASH_SOURCE[0]}")/libs/init-vars.lib.sh"
 
-# shellcheck source=runners/libs/wsl.lib.sh
+# include using wsl library
 . "${SCRIPT_ROOT}/libs/wsl.lib.sh"
 
-# ShellSpec 実行の本体。PROJECT_ROOT からの相対パスなので WSL 側でもそのまま使える
+# Main ShellSpec entry point. The path is relative to PROJECT_ROOT, so it also works as-is on the WSL side
 readonly EXEC_SCRIPT='runners/exec/shellspec-exec.sh'
 
-# Windows なのに wsl.exe を呼べないときに stderr へ出す 1 行のエラー
+# One-line error written to stderr when running on Windows but wsl.exe cannot be invoked
 readonly WSL_UNAVAILABLE_ERROR='Error: Windows detected but wsl.exe is not available. Install WSL, or set SHELLSPEC_NO_WSL=1 to run ShellSpec on this shell.'
 
-# WSL 側に無いと ShellSpec が意味不明に落ちるコマンド
+# Commands whose absence on the WSL side makes ShellSpec fail with confusing errors
 readonly WSL_REQUIRED_COMMANDS=('bash' 'git' 'rg' 'jq')
 
 #

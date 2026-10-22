@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# runners/__tests__/unit/run-check-test-ids.spec.sh
+# runners/__tests__/unit/run-check-test-ids.unit.spec.sh
 # @(#) : BDD unit tests for run-check-test-ids.sh
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>

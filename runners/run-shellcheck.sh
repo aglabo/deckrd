@@ -7,9 +7,11 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 
+# shellcheck disable=SC1091
+
 set -euo pipefail
 
-# shellcheck source=runners/libs/init-vars.lib.sh
+# Initialize variables and change to the project root directory
 . "$(dirname "${BASH_SOURCE[0]}")/libs/init-vars.lib.sh"
 cd "${SCRIPT_ROOT}/.."
 
