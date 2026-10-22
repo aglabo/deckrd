@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# wsl.lib.sh — WSL delegation library
-# Provides Windows host detection and script execution inside WSL
+# src: runners/libs/wsl.lib.sh
+# @(#): wsl.lib.sh - WSL delegation library
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #
@@ -66,8 +66,8 @@ exec_in_wsl() {
 # @exitcode 0 always
 #
 find_missing_wsl_commands() {
-  # WSL 側で走らせるプローブ。ここで展開してはならないので単引用符で囲む
-  # shellcheck disable=SC2016 # プローブ本文。$@ と $__command は WSL 側の bash が解決する
+  # Probe run on the WSL side. It must not be expanded here, so it is single-quoted
+  # shellcheck disable=SC2016 # Probe body. $@ and $__command are resolved by bash on the WSL side
   local __probe='for __command in "$@"; do command -v "$__command" >/dev/null 2>&1 || printf "%s\n" "$__command"; done'
 
   wsl.exe -e bash -c "$__probe" bash "$@"
