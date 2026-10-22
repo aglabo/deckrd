@@ -486,32 +486,102 @@ Describe 'get_spec_files() - path component anchoring'
   End
 End
 
+#
+# @description Reset the arrays the T-RUN-PO examples hand to parse_options() and pin
+#              the default mode
+# @sideeffect Sets _PO_TARGETS=(), _PO_OPTIONS=() and SKIP_INTEGRATION_TESTS=1
+#
+_setup_parse_options() {
+  _PO_TARGETS=()
+  _PO_OPTIONS=()
+  SKIP_INTEGRATION_TESTS=1
+}
+
+#
+# @description Leave a previous result in the arrays the T-RUN-PO examples hand to
+#              parse_options(), so an example can tell a refill from an append
+# @sideeffect Sets _PO_TARGETS and _PO_OPTIONS to stale elements
+#
+_prefill_parse_options() {
+  _PO_TARGETS=('stale.spec.sh')
+  _PO_OPTIONS=('--stale')
+}
+
+#
+# @description Render an array with every element in brackets, so element boundaries
+#              and order show in one comparable string
+# @arg $1 string Name of the array to render
+# @stdout `[e1][e2]...`; nothing for an empty array
+#
+_po_render() {
+  local -n __po_ref="$1"
+  local __po_elem
+  for __po_elem in ${__po_ref[@]+"${__po_ref[@]}"}; do
+    printf '[%s]' "$__po_elem"
+  done
+}
+
 Describe 'T-RUN-PO: parse_options()'
-  Before 'SKIP_INTEGRATION_TESTS=1'
+  Before '_setup_parse_options'
 
   Describe '--integration flag handling'
-    It 'T-RUN-PO-01: removes --integration and sets SKIP_INTEGRATION_TESTS=0'
-      When call parse_options 'unit' '--integration'
-      The value "${PARSED_ARGS[*]}" should equal 'unit'
+    It '[Normal] T-RUN-PO-01: removes --integration and sets SKIP_INTEGRATION_TESTS=0'
+      When call parse_options _PO_TARGETS _PO_OPTIONS 'unit' '--integration'
+      The value "$(_po_render _PO_TARGETS)" should equal '[unit]'
+      The value "$(_po_render _PO_OPTIONS)" should equal ''
       The variable SKIP_INTEGRATION_TESTS should equal '0'
     End
 
-    It 'T-RUN-PO-02: removes leading --integration flag'
-      When call parse_options '--integration' 'unit'
-      The value "${PARSED_ARGS[*]}" should equal 'unit'
+    It '[Normal] T-RUN-PO-02: removes leading --integration flag'
+      When call parse_options _PO_TARGETS _PO_OPTIONS '--integration' 'unit'
+      The value "$(_po_render _PO_TARGETS)" should equal '[unit]'
+    End
+
+    # --integration belongs to this script, so it never reaches ShellSpec even
+    # when it comes after the first option
+    It '[Normal] T-RUN-PO-06: removes --integration placed among the options'
+      When call parse_options _PO_TARGETS _PO_OPTIONS 'unit' '--focus' '--integration'
+      The value "$(_po_render _PO_OPTIONS)" should equal '[--focus]'
+      The variable SKIP_INTEGRATION_TESTS should equal '0'
     End
   End
 
-  Describe 'passthrough of other options'
-    It 'T-RUN-PO-03: passes --focus through unchanged'
-      When call parse_options 'unit' '--focus'
-      The value "${PARSED_ARGS[*]}" should include 'unit'
-      The value "${PARSED_ARGS[*]}" should include '--focus'
+  Describe 'target / option split'
+    It '[Normal] T-RUN-PO-03: puts an option after the target into the options'
+      When call parse_options _PO_TARGETS _PO_OPTIONS 'unit' '--focus'
+      The value "$(_po_render _PO_TARGETS)" should equal '[unit]'
+      The value "$(_po_render _PO_OPTIONS)" should equal '[--focus]'
     End
 
-    It 'T-RUN-PO-04: leaves PARSED_ARGS empty for no arguments'
-      When call parse_options
-      The value "${#PARSED_ARGS[@]}" should equal '0'
+    # A value-taking option's value, and anything after it, is never a target
+    It '[Normal] T-RUN-PO-05: puts every argument from the first option onward into the options'
+      When call parse_options _PO_TARGETS _PO_OPTIONS 'a.spec.sh' '--example' 'foo' 'b.spec.sh'
+      The value "$(_po_render _PO_TARGETS)" should equal '[a.spec.sh]'
+      The value "$(_po_render _PO_OPTIONS)" should equal '[--example][foo][b.spec.sh]'
+    End
+  End
+
+  Describe 'default target'
+    It '[Edge] T-RUN-PO-04: names the default test type as the only target for no arguments'
+      When call parse_options _PO_TARGETS _PO_OPTIONS
+      The value "$(_po_render _PO_TARGETS)" should equal "[${DEFAULT_TEST_TYPE}]"
+      The value "$(_po_render _PO_OPTIONS)" should equal ''
+    End
+
+    It '[Edge] T-RUN-PO-07: names the default test type as the only target when only options are given'
+      When call parse_options _PO_TARGETS _PO_OPTIONS '--focus'
+      The value "$(_po_render _PO_TARGETS)" should equal "[${DEFAULT_TEST_TYPE}]"
+      The value "$(_po_render _PO_OPTIONS)" should equal '[--focus]'
+    End
+  End
+
+  Describe 'arrays holding a previous result'
+    Before '_prefill_parse_options'
+
+    It '[Edge] T-RUN-PO-08: replaces what the arrays held before the call'
+      When call parse_options _PO_TARGETS _PO_OPTIONS 'unit' '--focus'
+      The value "$(_po_render _PO_TARGETS)" should equal '[unit]'
+      The value "$(_po_render _PO_OPTIONS)" should equal '[--focus]'
     End
   End
 End
@@ -648,12 +718,11 @@ End
 # @description Prepare an in-process main() call: pin the default mode, point SHELLSPEC
 #              at the argv stub and save the globals main() rewrites
 # @sideeffect Sets _STUB_DIR, _SHELLSPEC_STUB, SHELLSPEC and SKIP_INTEGRATION_TESTS=1;
-#             saves SHELLSPEC, SKIP_INTEGRATION_TESTS, PARSED_ARGS and RESOLVED_SPEC_FILES
+#             saves SHELLSPEC, SKIP_INTEGRATION_TESTS and RESOLVED_SPEC_FILES
 #
 _setup_in_process_main() {
   _MRS_ORIG_SHELLSPEC="$SHELLSPEC"
   _MRS_ORIG_SKIP="$SKIP_INTEGRATION_TESTS"
-  _MRS_ORIG_PARSED=(${PARSED_ARGS[@]+"${PARSED_ARGS[@]}"})
   _MRS_ORIG_RESOLVED=(${RESOLVED_SPEC_FILES[@]+"${RESOLVED_SPEC_FILES[@]}"})
   setup_shellspec_stub || return 1
   SHELLSPEC="$_SHELLSPEC_STUB"
@@ -662,14 +731,12 @@ _setup_in_process_main() {
 
 #
 # @description Undo _setup_in_process_main(): remove the stub and restore the globals
-# @sideeffect Restores SHELLSPEC, SKIP_INTEGRATION_TESTS, PARSED_ARGS and
-#             RESOLVED_SPEC_FILES
+# @sideeffect Restores SHELLSPEC, SKIP_INTEGRATION_TESTS and RESOLVED_SPEC_FILES
 #
 _teardown_in_process_main() {
   teardown_shellspec_stub
   SHELLSPEC="$_MRS_ORIG_SHELLSPEC"
   SKIP_INTEGRATION_TESTS="$_MRS_ORIG_SKIP"
-  PARSED_ARGS=(${_MRS_ORIG_PARSED[@]+"${_MRS_ORIG_PARSED[@]}"})
   RESOLVED_SPEC_FILES=(${_MRS_ORIG_RESOLVED[@]+"${_MRS_ORIG_RESOLVED[@]}"})
 }
 

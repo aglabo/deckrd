@@ -30,12 +30,6 @@ readonly TESTS_DIR='__tests__'
 # report cannot be read wholesale
 readonly LOGIN_PATH_MARKER='__DECKRD_LOGIN_PATH__'
 
-# Arguments left over after parse_options() consumed the flags it owns.
-# Both of these are outputs: a function that sets SKIP_INTEGRATION_TESTS cannot
-# return its result on stdout, because reading stdout would put it in a subshell
-# and the flag assignment would be lost when that subshell exits.
-PARSED_ARGS=()
-
 # Spec file paths produced by resolve_spec_files()
 RESOLVED_SPEC_FILES=()
 
@@ -134,22 +128,40 @@ get_spec_files() {
 }
 
 #
-# @description Parse options, extracting --integration flag. Must be called in the
-#              caller's own shell: both results are globals, never stdout
-# @arg $@ Command line arguments
-# @sideeffect Sets PARSED_ARGS to the remaining arguments (without --integration)
+# @description Split the command line into targets and ShellSpec options, consuming
+#              the --integration flag this script owns wherever it appears. Targets
+#              come first, so every argument from the first one starting with `-` is an
+#              option (the value of a value-taking option must not be mistaken for a
+#              target). Must be called in the caller's own shell, never through a pipe
+#              or $(): the SKIP_INTEGRATION_TESTS assignment would be lost with the
+#              subshell, which is why the results go to the caller's arrays by name
+# @arg $1 string Name of the caller's array that receives the targets
+# @arg $2 string Name of the caller's array that receives the ShellSpec options
+# @arg $@ Command line arguments (those after the two names)
+# @sideeffect Replaces the array named by $1 with the targets; DEFAULT_TEST_TYPE alone
+#             when none is named
+# @sideeffect Replaces the array named by $2 with the options; empty when none is given
 # @sideeffect Sets SKIP_INTEGRATION_TESTS=0 if --integration found
 #
 parse_options() {
-  PARSED_ARGS=()
+  # The `__` prefix keeps the namerefs from shadowing the caller's array names
+  local -n __targets="$1" __options="$2"
+  shift 2
+  __targets=()
+  __options=()
   local arg
   for arg in "$@"; do
     if [[ "$arg" == "--integration" ]]; then
       SKIP_INTEGRATION_TESTS=0
+    elif [[ ${#__options[@]} -gt 0 || "$arg" == -* ]]; then
+      __options+=("$arg")
     else
-      PARSED_ARGS+=("$arg")
+      __targets+=("$arg")
     fi
   done
+  # No target named (`pnpm run test:sh` passes none, and so does an options-only
+  # invocation): run the whole suite
+  [[ ${#__targets[@]} -gt 0 ]] || __targets=("$DEFAULT_TEST_TYPE")
 }
 
 #
@@ -399,26 +411,10 @@ run_shellspec() {
 #   main test.spec.sh --repair        # Run with ShellSpec options
 #
 main() {
-  # Called in this shell, not through a pipe or $(): parse_options() reports its
-  # result in PARSED_ARGS precisely so that SKIP_INTEGRATION_TESTS survives
-  parse_options "$@"
-
-  # Targets come first, so everything from the first option onward is a
-  # ShellSpec option (its values must not be mistaken for targets)
-  local -a targets=() options=()
-  local arg seen_option=0
-  for arg in ${PARSED_ARGS[@]+"${PARSED_ARGS[@]}"}; do
-    [[ $seen_option -eq 0 && "$arg" == -* ]] && seen_option=1
-    if [[ $seen_option -eq 1 ]]; then
-      options+=("$arg")
-    else
-      targets+=("$arg")
-    fi
-  done
-
-  # No target named (`pnpm run test:sh` passes none, and so does an
-  # options-only invocation): run the whole suite
-  [[ ${#targets[@]} -eq 0 ]] && targets=("$DEFAULT_TEST_TYPE")
+  # Called in this shell, not through a pipe or $(): parse_options() fills the
+  # arrays through namerefs precisely so that SKIP_INTEGRATION_TESTS survives
+  local -a targets options
+  parse_options targets options "$@"
 
   # Likewise called directly: the `system` type sets SKIP_INTEGRATION_TESTS.
   # A bad target is reported to the caller as return value 1
