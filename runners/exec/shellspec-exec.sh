@@ -151,7 +151,9 @@ parse_options() {
 # @description Resolve spec files from arguments (handles test types, globs, single files).
 #              Must be called in the caller's own shell: the result is a global, never
 #              stdout, because the `system` type also has to set SKIP_INTEGRATION_TESTS
-#              and a subshell would discard that assignment
+#              and a subshell would discard that assignment. The first argument picks
+#              the mode: a spec file or glob means every argument is a spec target,
+#              anything else must be a test type
 # @arg $@ Command line arguments (test type, spec file, or glob pattern)
 # @stderr Error and warning messages
 # @sideeffect Sets RESOLVED_SPEC_FILES to the resolved spec file paths (empty on no match)
@@ -166,30 +168,93 @@ resolve_spec_files() {
     return 1
   }
 
-  local first_arg="$1"
-
-  # A single .spec.sh file is returned as-is
-  if is_spec_file "$first_arg"; then
-    RESOLVED_SPEC_FILES=("$first_arg")
+  # All targets are validated before any is stored, so a bad one leaves no
+  # partial result behind
+  if _is_spec_target "$1"; then
+    _validate_spec_targets "$@" || return 1
+    _store_spec_targets "$@"
     return 0
   fi
 
-  # Glob paths (globs containing *.spec.sh) are expanded by expand_spec_glob
-  if is_spec_glob "$first_arg"; then
-    mapfile -t RESOLVED_SPEC_FILES < <(expand_spec_glob "$first_arg")
-    _drop_empty_resolved
-    return 0
-  fi
+  _resolve_test_type "$@"
+}
 
-  # Not a test type -> error (stderr)
-  if ! is_test_type "$first_arg"; then
-    printf "Error: Unknown argument '%s'. Expected a test type, spec file, or glob pattern.\n" "$first_arg" >&2
+#
+# @description Report an argument that is neither a test type, spec file, nor glob
+# @arg $1 string The rejected argument
+# @stderr Error message naming the argument
+#
+_report_unknown_argument() {
+  printf "Error: Unknown argument '%s'. Expected a test type, spec file, or glob pattern.\n" "$1" >&2
+}
+
+#
+# @description Check if argument is a spec target: a spec glob or a spec file path
+# @arg $1 string Argument to check
+# @exitcode 0 if spec glob or spec file path, 1 otherwise
+#
+_is_spec_target() {
+  is_spec_glob "$1" || is_spec_file "$1"
+}
+
+#
+# @description Check that every target is a spec file or a spec glob. Runs before
+#              anything is stored, so a bad target leaves no partial result behind
+# @arg $@ Targets to check
+# @stderr Error message naming the first invalid target
+# @exitcode 0 if all targets are valid, 1 on the first invalid one
+#
+_validate_spec_targets() {
+  local target
+  for target in "$@"; do
+    if ! _is_spec_target "$target"; then
+      _report_unknown_argument "$target"
+      return 1
+    fi
+  done
+}
+
+#
+# @description Append spec targets to RESOLVED_SPEC_FILES in argument order: spec
+#              files as given, globs expanded in place. Targets must be validated
+#              beforehand. The glob test comes first because a glob also ends in
+#              .spec.sh. A glob that matches nothing contributes no element (not an
+#              empty one): expand_spec_glob prints nothing, so mapfile reads nothing
+# @arg $@ Spec file paths and/or spec glob patterns
+# @stderr Warning for a glob that matches nothing (from expand_spec_glob)
+# @sideeffect Appends to RESOLVED_SPEC_FILES
+#
+_store_spec_targets() {
+  local target
+  local -a expanded
+  for target in "$@"; do
+    if is_spec_glob "$target"; then
+      mapfile -t expanded < <(expand_spec_glob "$target")
+      RESOLVED_SPEC_FILES+=(${expanded[@]+"${expanded[@]}"})
+    else
+      RESOLVED_SPEC_FILES+=("$target")
+    fi
+  done
+}
+
+#
+# @description Resolve spec files for a test type via get_spec_files. Must be called
+#              in the caller's own shell, for the same reason as resolve_spec_files
+# @arg $1 string Test type (all, unit, functional, etc.)
+# @arg $@ Additional file patterns to filter by
+# @stderr Error for an unknown test type; warning when nothing matches
+# @sideeffect Sets RESOLVED_SPEC_FILES to the matching spec file paths
+# @sideeffect Sets SKIP_INTEGRATION_TESTS=0 for the `system` test type
+# @exitcode 0 on success (including no match), 1 if $1 is not a test type
+#
+_resolve_test_type() {
+  local test_type="$1"
+  if ! is_test_type "$test_type"; then
+    _report_unknown_argument "$test_type"
     return 1
   fi
-
-  # Test type -> expand with get_spec_files
-  local test_type="$1"
   shift
+
   [[ "$test_type" == "system" ]] && SKIP_INTEGRATION_TESTS=0
   mapfile -t RESOLVED_SPEC_FILES < <(get_spec_files "$test_type" "$@")
   _drop_empty_resolved
