@@ -26,10 +26,10 @@ tab_width = 2
 [**/temp/**]
 ignore = true
 
-[node_modules/**]
+[**/node_modules/*]
 ignore = true
 
-[.tools/*]
+[**/.tools/*]
 ignore = true
 
 [.local/*]
@@ -38,9 +38,6 @@ ignore = true
 [**/*.spec.sh]
 ignore = true
 
-# ─────────────────────────────
-# Source Code Files
-# ─────────────────────────────
 
 # ─────────────────────────────
 # Shell Scripts
@@ -50,7 +47,7 @@ indent_style = space
 indent_size = 2
 tab_width = 2
 
-##  shell script foematter settings
+#  shell script formatter settings
 # --language-dialect
 shell_variant      = bash
 simplify           = true
@@ -61,13 +58,25 @@ space_redirects    = true
 keep_padding       = true
 # --func-next-line
 function_next_line = true
-minify             = true
+# --minify
+minify             = false
 
 # PowerShell
 [*.ps1]
 indent_style = space
 indent_size = 4
 tab_width = 4
+
+
+# ─────────────────────────────
+# Source Code Files
+# ─────────────────────────────
+# TypeScript
+#[*.{ts,tsx}]
+#indent_style = space
+#indent_size = 2
+#tab_width = 2
+
 
 # ─────────────────────────────
 # Documents
@@ -76,6 +85,7 @@ tab_width = 4
 indent_style = space
 indent_size = 2
 tab_width = 2
+
 
 # ─────────────────────────────
 # configuration files
