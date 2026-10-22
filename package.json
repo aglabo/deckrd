@@ -1,21 +1,21 @@
 {
   "name": "@aglabo/deckrd",
   "version": "0.6.0",
-  "description": "deckrd: goal to tasks",
   "private": true,
+  "description": "deckrd: goal to tasks",
   "keywords": [
     "develop",
     "starter",
     "oss",
     "development"
   ],
-  "author": "atsushifx",
-  "license": "MIT",
-  "type": "module",
   "repository": {
     "type": "git",
     "url": "https://github.com/aglabo/deckrd.git"
   },
+  "license": "MIT",
+  "author": "atsushifx",
+  "type": "module",
   "scripts": {
     "prepare": "bash ./scripts/setup-dev-env.sh",
     "scan:secrets": "concurrently \"betterleaks protect --config C:/Users/atsushifx/workspaces/develop/ci-platform/configs/betterleaks.toml\" \"secretlint --secretlintrc ./configs/secretlint.config.yaml **/*\"",
@@ -34,12 +34,12 @@
     "lint:text": "bash runners/run-textlint.sh ",
     "lint:markdown": "bash runners/run-markdownlint.sh "
   },
+  "devDependencies": {
+    "@commitlint/config-conventional": "^21.2.4"
+  },
   "packageManager": "pnpm@12.15.0",
   "engines": {
     "pnpm": ">=12"
   },
-  "@(#)": "deckrd: goal to tasks",
-  "devDependencies": {
-    "@commitlint/config-conventional": "^21.2.4"
-  }
+  "@(#)": "deckrd: goal to tasks"
 }
