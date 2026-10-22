@@ -24,7 +24,7 @@ _RUNTIME_BOOTSTRAP="${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/skills/deckrd/script
 . "$_RUNTIME_BOOTSTRAP"
 unset _RUNTIME_BOOTSTRAP
 
-Include ../spec_helper.sh
+Include "${SHELLSPEC_SPECFILE%/*}/../spec_helper.sh"
 
 # ============================================================================
 # テスト対象
