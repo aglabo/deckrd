@@ -25,6 +25,11 @@ readonly DEFAULT_TEST_TYPE='all'
 # Directory name that roots every spec tree (runners/__tests__/unit/... etc.)
 readonly TESTS_DIR='__tests__'
 
+# Marks the login shell's PATH report: at the start of a line, the rest of that
+# line is the reported PATH. Startup files write progress lines to stdout, so the
+# report cannot be read wholesale
+readonly LOGIN_PATH_MARKER='__DECKRD_LOGIN_PATH__'
+
 # Arguments left over after parse_options() consumed the flags it owns.
 # Both of these are outputs: a function that sets SKIP_INTEGRATION_TESTS cannot
 # return its result on stdout, because reading stdout would put it in a subshell
@@ -276,6 +281,85 @@ _drop_empty_resolved() {
 }
 
 #
+# @description Pick the PATH a probe reported out of the probe's whole stdout. The
+#              startup files a login shell reads write their own lines to stdout, so
+#              the report cannot be taken wholesale; only the line the probe introduced
+#              with the marker carries the PATH. The marker counts at the start of a
+#              line only, and the last such line wins, so a startup file that prints the
+#              marker's spelling cannot shadow what the probe appended last.
+#              Pure function: reads only its arguments
+# @arg $1 string Marker the probe printed in front of the PATH
+# @arg $2 string Whole stdout of the probe
+# @stdout The rest of the marked line, i.e. the reported PATH; empty when the marked
+#         line carries none
+# @exitcode 0 when the output holds a marked line, 1 when it holds none
+#
+extract_marked_path() {
+  local __marker="$1"
+  # The leading newline lets a marked first line obey the same start-of-line rule
+  # as every later line
+  local __haystack=$'\n'"$2"
+  # Fail rather than return something: without a marked line, the caller would
+  # take a progress line for the PATH
+  [[ "$__haystack" == *$'\n'"$__marker"* ]] || return 1
+  # Longest-prefix removal keeps what follows the last marked line only
+  local __tail="${__haystack##*$'\n'"$__marker"}"
+  printf '%s\n' "${__tail%%$'\n'*}"
+}
+
+#
+# @description Drop the empty entries of a colon separated PATH. An empty entry names
+#              the current directory, so one left in a reported PATH puts whatever
+#              directory ShellSpec runs from on the command search path.
+#              Pure function: reads only its argument
+# @arg $1 string Colon separated PATH
+# @stdout The same PATH without its empty entries; empty when every entry was empty
+# @exitcode 0 always
+#
+drop_empty_path_entries() {
+  local -a __entries=()
+  # The here-string appends a newline, so read always consumes one line and returns 0.
+  # The split loses a trailing empty entry, which is one of those to drop anyway
+  IFS=':' read -ra __entries <<<"$1"
+  local __entry __kept=''
+  # The guarded expansion keeps an empty array safe under `set -u`
+  for __entry in ${__entries[@]+"${__entries[@]}"}; do
+    [[ -n "$__entry" ]] || continue
+    __kept="${__kept:+${__kept}:}${__entry}"
+  done
+  printf '%s\n' "$__kept"
+}
+
+#
+# @description Replace PATH with the one a login and interactive shell reports, so that
+#              tools installed by the user's startup files (volta, linuxbrew, nix) become
+#              reachable. Real-machine tests need them; the non-login, non-interactive
+#              shell that runs this script reads no startup file and has none of them.
+#              `-lic` rather than `-lc`: a startup chain may add its entries from the
+#              interactive rc, and only a shell that is both login and interactive reads
+#              both halves, the same shell the user gets when opening a terminal.
+#              The report replaces PATH instead of extending it: it is a superset of the
+#              inherited PATH, so nothing is lost, and the inherited entries no longer
+#              shadow the copy of a tool the startup files installed
+# @sideeffect Replaces PATH when the login shell reports one
+# @exitcode 0 always; a login shell that fails, reports no marked line, or reports
+#           nothing but empty entries leaves PATH untouched
+#
+ensure_integration_path() {
+  local _raw _marked _cleaned
+  # The marker travels as a positional parameter, which keeps the probe body in plain
+  # single quotes ('bash' is $0, the name used in error messages).
+  # stdin is closed: an interactive shell may read it, and a startup file that calls
+  # read would hang the whole test run instead of failing it
+  # shellcheck disable=SC2016 # probe body; the login shell expands $1 and $PATH
+  _raw="$(bash -lic 'printf "\n%s%s\n" "$1" "$PATH"' bash "$LOGIN_PATH_MARKER" 2>/dev/null </dev/null)" || return 0
+  _marked="$(extract_marked_path "$LOGIN_PATH_MARKER" "$_raw")" || return 0
+  _cleaned="$(drop_empty_path_entries "$_marked")"
+  [[ -n "$_cleaned" ]] && PATH="$_cleaned"
+  return 0
+}
+
+#
 # @description Run ShellSpec with normalized path arguments
 # @arg $@ Spec file paths followed by ShellSpec options (options pass through
 #         normalize_path unchanged unless they contain backslashes)
@@ -294,9 +378,18 @@ run_shellspec() {
 }
 
 #
-# @description Main entry point for running ShellSpec tests
+# @description Main entry point for running ShellSpec tests. When integration mode is
+#              on (--integration, the `system` type, or an inherited
+#              SKIP_INTEGRATION_TESTS=0) and spec files were resolved, PATH is replaced
+#              with the login shell's (ensure_integration_path) before ShellSpec runs, so
+#              that real-machine tests reach the tools the user's startup files install.
+#              Leaves with return, never exit, so a caller running it in its own shell
+#              keeps going; the entry point turns the return value into the exit code
 # @arg $@ Command line arguments (test type, paths and options)
-# @exitcode Exit code from ShellSpec
+# @sideeffect Replaces PATH in integration mode (ensure_integration_path)
+# @exitcode Return value: ShellSpec's exit code; 1 when a target cannot be resolved,
+#           0 when no spec file is resolved (the login shell is not started in either
+#           case)
 #
 # @example
 #   main unit                         # Run unit tests (auto-resolved)
@@ -327,10 +420,22 @@ main() {
   # options-only invocation): run the whole suite
   [[ ${#targets[@]} -eq 0 ]] && targets=("$DEFAULT_TEST_TYPE")
 
-  # Likewise called directly: the `system` type sets SKIP_INTEGRATION_TESTS
-  resolve_spec_files "${targets[@]}" || exit 1
+  # Likewise called directly: the `system` type sets SKIP_INTEGRATION_TESTS.
+  # A bad target is reported to the caller as return value 1
+  resolve_spec_files "${targets[@]}" || return 1
 
-  [[ ${#RESOLVED_SPEC_FILES[@]} -eq 0 ]] && exit 0
+  # Nothing resolved means nothing to run, and so no login shell to start either
+  [[ ${#RESOLVED_SPEC_FILES[@]} -eq 0 ]] && return 0
+
+  # Integration mode is settled only after target resolution: --integration, the
+  # `system` type and an inherited SKIP_INTEGRATION_TESTS=0 all end up in this one
+  # flag, so a single check covers them and starts the login shell at most once,
+  # and only when there are spec files to run.
+  # A string comparison, not `-eq`: an inherited value would otherwise be
+  # arithmetic-evaluated (`true` aborts under set -u, and the subscript in
+  # `BASH_VERSINFO[$(cmd)]` runs cmd), so only the exact string 0 turns
+  # integration mode on
+  [[ "$SKIP_INTEGRATION_TESTS" == 0 ]] && ensure_integration_path
 
   run_shellspec "${RESOLVED_SPEC_FILES[@]}" ${options[@]+"${options[@]}"}
 }
