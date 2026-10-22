@@ -1,11 +1,12 @@
-# src: ./configs/gitcliff.toml
-# @(#): git-cliff configs for agla-dic-tools
+# src: ./configs/cliff.toml
+# @(#): git-cliff configs:
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 
+# cspell:words Tera topo
 
 [changelog]
 # A Tera template to be rendered for each release in the changelog.
@@ -18,13 +19,22 @@ body = """
 {% endif %}\
 {% for group, commits in commits | group_by(attribute="group") %}
     ### {{ group | striptags | trim | upper_first }}
-    {% for commit in commits %}
-        - {% if commit.scope %}*({{ commit.scope }})* {% endif %}\
-            {% if commit.breaking %}[**breaking**] {% endif %}\
+    {% for commit in commits %}{% if not commit.scope %}
+        - {% if commit.breaking %}[**breaking**] {% endif %}\
             {{ commit.message | upper_first }}
         {% if commit.body %}
 {{ commit.body | indent(prefix="          ") }}
         {% endif %}\
+    {% endif %}{% endfor %}\
+    {% for scope, scoped in commits | group_by(attribute="scope") %}
+        #### {{ scope | upper_first }}
+        {% for commit in scoped %}
+            - {% if commit.breaking %}[**breaking**] {% endif %}\
+                {{ commit.message | upper_first }}
+            {% if commit.body %}
+{{ commit.body | indent(prefix="          ") }}
+            {% endif %}\
+        {% endfor %}
     {% endfor %}
 {% endfor %}
 """
@@ -34,8 +44,8 @@ trim = true
 render_always = true
 # An array of regex based postprocessors to modify the changelog.
 postprocessors = [
-    # Replace the placeholder <REPO> with a URL.
-    #{ pattern = '<REPO>', replace = "https://github.com/orhun/git-cliff" },
+  # Replace the placeholder <REPO> with a URL.
+  # { pattern = '<REPO>', replace = "https://github.com/orhun/git-cliff" },
 ]
 # render body even when there are no releases to process
 # render_always = true
@@ -55,14 +65,14 @@ require_conventional = false
 split_commits = false
 # An array of regex based parsers to modify commit messages prior to further processing.
 commit_preprocessors = [
-    # Strip GitHub squash-merge prefix: "merge (#xx): "
-    { pattern = "^merge \\(#\\d+\\):\\s*", replace = "" },
+  # Strip GitHub squash-merge prefix: "merge (#xx): "
+  { pattern = "^merge\\s*\\(#\\d+\\)[:\\]]\\s*", replace = "" },
 
-    # Replace issue numbers with link templates to be updated in `changelog.postprocessors`.
-    #{ pattern = '\((\w+\s)?#([0-9]+)\)', replace = "([#${2}](<REPO>/issues/${2}))"},
-    # Check spelling of the commit message using https://github.com/crate-ci/typos.
-    # If the spelling is incorrect, it will be fixed automatically.
-    #{ pattern = '.*', replace_command = 'typos --write-changes -' },
+  # Replace issue numbers with link templates to be updated in `changelog.postprocessors`.
+  # { pattern = '\((\w+\s)?#([0-9]+)\)', replace = "([#${2}](<REPO>/issues/${2}))"},
+  # Check spelling of the commit message using https://github.com/crate-ci/typos.
+  # If the spelling is incorrect, it will be fixed automatically.
+  # { pattern = '.*', replace_command = 'typos --write-changes -' },
 ]
 # Prevent commits that are breaking from being excluded by commit parsers.
 protect_breaking_commits = false
@@ -70,21 +80,35 @@ protect_breaking_commits = false
 # Assigns commits to groups.
 # Optionally sets the commit's scope and can decide to exclude commits from further processing.
 commit_parsers = [
-    { message = "^Initial", skip = true },
-    { message = "dependabot", skip = true },
+  { message = "^Initial", skip = true },
 
-    { message = "^feat", group = "<!-- 0 --> Features" },
-    { message = "^fix", group = "<!-- 1 --> Bug Fixes" },
-    { message = "^docs", group = "<!-- 2 --> Documentation" },
-    { message = "^refactor", group = "<!-- 3 --> Refactor" },
-    { message = "^perf", group = "<!-- 4 --> Performance" },
-    { message = "^style", group = "<!-- 5 --> Styling" },
-    { message = "^test", group = "<!-- 6 --> Testing" },
-    { message = "^chore|^ci", group = "<!-- 7 --> Miscellaneous Tasks" },
+  # docs 型（docs: / docs(scope): / docs/config: すべて）
+  { message = "^docs", group = "<!-- 02 --> Documentation" },
+  # ﾄﾞhｷLｭ・∂篤g系 scope は型を問わず集約する
+  { message = "^\\w+\\((docs|website|user-guide|developer-guide|readme|changelog|license)[/)]", group = "<!-- 02 --> Documentation" },
+  # ﾄﾞhｷLｭ・∂篤gｻTｲCﾄgの依存更新
+  { message = "(?i)^deps.*(docs|website|docusaurus)", group = "<!-- 02 --> Documentation" },
 
-    { body = ".*security", group = "<!-- 8 --> Security" },
-    { message = "^revert", group = "<!-- 9 --> Revert" },
-    { message = ".*", group = "<!-- 10 --> Other" },
+  { message = "dependabot", skip = true },
+  # 真のﾏ}ｰ[ｼﾞWｺRﾐ~ｯbﾄg（squash ではない）は変更内容を持たない
+  { message = "^Merge branch", skip = true },
+
+  { body = ".*security", group = "<!-- 10 --> Security" },
+
+  { message = "^feat", group = "<!-- 00 --> Features" },
+  { message = "^fix", group = "<!-- 01 --> Bug Fixes" },
+  { message = "^refactor", group = "<!-- 03 --> Refactor" },
+  { message = "^perf", group = "<!-- 04 --> Performance" },
+  { message = "^style", group = "<!-- 05 --> Styling" },
+  { message = "^test", group = "<!-- 06 --> Testing" },
+  { message = "^config", group = "<!-- 09 --> Miscellaneous Tasks", scope = "Config" },
+  { message = "^deps", group = "<!-- 09 --> Miscellaneous Tasks", scope = "Deps" },
+  { message = "^chore", group = "<!-- 09 --> Miscellaneous Tasks", scope = "Chore" },
+  { message = "^ci|^build", group = "<!-- 09 --> Miscellaneous Tasks", scope = "CI" },
+
+  { message = "^revert", group = "<!-- 11 --> Revert" },
+  { message = "^release", group = "<!-- 12 --> Release" },
+  { message = ".*", group = "<!-- 13 --> Other" },
 ]
 
 # Exclude commits that are not matched by any commit parser.

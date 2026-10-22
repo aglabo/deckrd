@@ -10,10 +10,7 @@
 # default: ignore all files
 *
 
-## Allow Template files
-!/templates
-!/templates/**
-
+## General
 # Allow README, LICENSE, CONTRIBUTING
 !**/README*
 !**/LICENSE*
@@ -32,32 +29,28 @@
 # Allow settings
 !**/settings.json
 
-
 ## Root configs
 !**/package.json
 !**/pnpm-lock.yaml
-!/renovate.json
-!/lefthook.yml
-!/dprint.jsonc
-!/.shellspec
-!/.mcp.json
-!/deckrd.json
-!/.claude-plugin/
-!/.claude-plugin/**
-!**/CHANGELOG.md
-!**/Release-Note.md
+!**/renovate.json
+!**/lefthook.yml
+!**/dprint.jsonc
+!**/.shellspec
+!**/.mcp.json
+!**/CHANGELOG.*
+!**/Release-Note.*
 
 ## Project directories
 # config files
-!/configs/
-!/configs/**
-!/configs/**/*.json
-!/configs/**/*.yml
-!/configs/**/*.yaml
-!/configs/**/*.toml
-!/configs/**/*rc
-!/configs/**/*.js
-!/configs/**/*.mjs
+!configs/
+!configs/**
+!configs/**/*.json
+!configs/**/*.yml
+!configs/**/*.yaml
+!configs/**/*.toml
+!configs/**/*rc
+!configs/**/*.js
+!configs/**/*.mjs
 
 # runners & scripts
 !/runners
@@ -68,32 +61,21 @@
 !/scripts/**/*.sh
 !/scripts/**/*.ts
 
-# documents
-!docs/
-!docs/**
-!docs/**/*.md
-
-## deckrd dirs
-!skills/
-!skills/**
-
 ## AI Agents
+# General
+!**/AGENT.md
+
 # claude code
 !**/CLAUDE*.md
 
 # allowlist details: .claude/.gitignore
 !.claude/
-!**/CLAUDE*.md
 !.claude/agents/
 !.claude/agents/**
-!.claude/agents/**/*.md
 !.claude/rules/
 !.claude/rules/**
-!.claude/rules/**/*.md
 !.claude/commands/
 !.claude/commands/**
-!.claude/commands/**/*.md
-!.claude/commands/**/*.sh
 
 ##  Editor
 #   VSCode
@@ -111,6 +93,24 @@
 # allow all gitignore
 !**/.gitignore
 
+## -----------------------------------
+## Repository Specific
+## -----------------------------------
+## Root
+!deckrd.json
+!/.claude-plugin/
+!/.claude-plugin/**
+
+## Deckrd Skills
+!skills/
+!skills/**
+!skills/**/*.json
+!skills/**/*.sh
+
+## Docs
+!docs/
+!docs/**
+
 ## deckrd local data
 # allowlist details: .local/deckrd/.gitignore
 !/.local/
@@ -122,27 +122,49 @@
 ##  Must stay last: these rules undo the broad allow rules above ##
 ## ------------------------------------------------------------ ##
 
-# dependencies
-**/node_modules/
+#   OS specific files
+.DS_Store
+thumbs.db
 
-# temporary directories, cache
-**/temp/
-**/tmp/
-**/.cache/
+#   logs, patches
+**/*.log
+**/*.diff
+**/*.patch
+
+#   history, cache
 **/.history/
+**/.cache/
 
-# .env files
-**/.env
-**/.env.*
+#   backup/swap/temp
+**/$~*
+**/~*
+**/*~
+**/*.tmp
+**/*.swp
+**/*.lock
 
-# logs, patches
-*.log
-*.diff
-*.patch
+#   session files
+**/*session.json
+**/*session
 
-# backup/swap/temp
-*~
-~*
-$~*
-*.tmp
-*.swp
+#   .env files
+**/.env*
+!.env.example
+
+
+#   API keys / credentials
+**/*.key
+**/*.pem
+**/*.p12
+**/*.pfx
+**/*apikey*
+**/*api-key*
+**/*api_key*
+
+#   temporary directories
+**/temp
+**/tmp
+
+#   node
+**/node_modules/
+**/.pnpm-store/

@@ -6,17 +6,17 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 
+## Dev tools
+**/.tools/**
+
 ## AI Generated files
 .claude/**
 .serena/**
+.cocoindex_code
 
-## temp
+# temp
 **/temp/**
 **/tmp/**
 
-## Dev tools
-.tools/**
-
-## releases
+## Releases
 releases/**
-
