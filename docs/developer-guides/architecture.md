@@ -291,7 +291,7 @@ pnpm run test:sh           # ShellSpec tests
 `runners/run-shellspec.sh` is only an entry point: it detects the host and hands the real
 runner, `runners/exec/shellspec-exec.sh`, to WSL when it is running on Git Bash / MSYS2 /
 Cygwin. Spec discovery and ShellSpec itself then run on Linux, which is far faster than
-MSYS2 — the 49-example `shellspec-exec.spec.sh` drops from about 3 minutes to about 5
+MSYS2 — the 49-example `shellspec-exec.unit.spec.sh` drops from about 3 minutes to about 5
 seconds.
 
 On Linux, macOS, or inside WSL the entry point runs the body directly. If it detects
