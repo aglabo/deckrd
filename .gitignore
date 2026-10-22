@@ -70,8 +70,6 @@
 
 # allowlist details: .claude/.gitignore
 !.claude/
-!**/CLAUDE*.md
-!.claude/
 !.claude/agents/
 !.claude/agents/**
 !.claude/rules/
@@ -96,21 +94,22 @@
 !**/.gitignore
 
 ## -----------------------------------
-## Repositry Specific
+## Repository Specific
 ## -----------------------------------
 ## Root
 !deckrd.json
+!/.claude-plugin/
+!/.claude-plugin/**
 
 ## Deckrd Skills
-!skiils/
-!skiils/**
-!skiils/**/*.json
-!skiils/**/*.sh
-
-
+!skills/
+!skills/**
+!skills/**/*.json
+!skills/**/*.sh
 
 ## Docs
-!docs/.deckrd/
+!docs/
+!docs/**
 
 ## deckrd local data
 # allowlist details: .local/deckrd/.gitignore
