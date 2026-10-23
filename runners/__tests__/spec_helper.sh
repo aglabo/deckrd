@@ -104,3 +104,39 @@ teardown_temp_specs() {
   # shellcheck disable=SC2034
   SPEC_SEARCH_ROOT="${ORIG_SPEC_SEARCH_ROOT:-}"
 }
+
+#
+# @description Create a private temporary directory and store its path in the
+#              variable named by $1. Pair with remove_temp_dir()
+# @arg $1 string Name of the variable that receives the directory path
+# @return 0 on success; 1 when the directory could not be created
+# @sideeffect Sets the variable named by $1
+#
+make_temp_dir() {
+  local __dir
+  __dir="$(mktemp -d)" || return 1
+  printf -v "$1" '%s' "$__dir"
+}
+
+#
+# @description Remove the directory created by make_temp_dir() and unset its variable.
+#              Does nothing when the variable is empty or unset
+# @arg $1 string Name of the variable holding the directory path
+# @sideeffect Removes the directory and unsets the variable named by $1
+#
+remove_temp_dir() {
+  local __dir="${!1:-}"
+  [[ -n "$__dir" ]] && rm -rf "$__dir"
+  unset "$1"
+}
+
+#
+# @description Write an executable bash script whose body is given verbatim
+# @arg $1 string Path of the script to write
+# @arg $2 string bash statement the script executes when launched
+# @return 0 on success; 1 when the file could not be written
+#
+write_bash_stub() {
+  printf '#!/usr/bin/env bash\n%s\n' "$2" >"$1" || return 1
+  chmod +x "$1"
+}

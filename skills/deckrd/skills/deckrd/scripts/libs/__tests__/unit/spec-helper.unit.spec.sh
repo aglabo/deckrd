@@ -22,7 +22,7 @@
 # Target under test
 # ============================================================================
 
-Include ../spec_helper.sh
+Include "${SHELLSPEC_SPECFILE%/*}/../spec_helper.sh"
 
 # ============================================================================
 # Internal helpers

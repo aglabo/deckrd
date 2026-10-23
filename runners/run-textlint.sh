@@ -1,24 +1,35 @@
 #!/usr/bin/env bash
-# src: runners/docs/lint
-# @(#) : docs linter runner (markdownlint + textlint)
+# src: runners/run-textlint.sh
+# @(#) : textlint runner
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 
+# shellcheck disable=SC1091
+
 set -euo pipefail
 
-# @description Run markdownlint and textlint against docs
-# @arg $@ string Paths to lint (passed to both linters)
+# Init variables
+. "$(dirname "${BASH_SOURCE[0]}")/libs/init-vars.lib.sh"
+
+# load utilty library
+. "${SCRIPT_ROOT}/libs/utils.lib.sh"
+
+# @description Run textlint with the global config
+# @arg $@ string Paths to lint
 # @exitcode 0 All checks passed
 # @exitcode 1 Lint error
 main() {
   local -a targets=("$@")
+  local configFile
+  configFile="$(resolve_global_configdir)/linters/textlint/textlintrc.yaml"
 
-  textlint --config "${XDG_CONFIG_HOME}/linters/textlint/textlintrc.yaml" --cache --cache-location .cache/textlint/textlintcache ${targets[@]+${targets[@]}}
+  textlint --config "$configFile" --cache --cache-location .cache/textlint/textlintcache "${targets[@]+"${targets[@]}"}"
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   main "$@"
+  exit $?
 fi

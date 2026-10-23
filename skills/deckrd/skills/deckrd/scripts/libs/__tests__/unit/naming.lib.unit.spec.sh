@@ -11,7 +11,7 @@
 
 _RUNTIME_LIBS_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/skills/deckrd/scripts/libs" && pwd)"
 
-Include "../spec_helper.sh"
+Include "${SHELLSPEC_SPECFILE%/*}/../spec_helper.sh"
 
 . "${_RUNTIME_LIBS_DIR}/naming.lib.sh"
 
