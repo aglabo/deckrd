@@ -1,0 +1,16 @@
+# src: .github/dependabot.yml
+# @(#) : dependabot configuration
+#
+# Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
+#
+# This software is released under the MIT License.
+# https://opensource.org/licenses/MIT
+
+version: 2
+updates:
+  - package-ecosystem: "github-actions" # for Workflows lockfile
+    directory: "/" # Location of package manifests
+    cooldown:
+      default-days: 7
+    schedule:
+      interval: "daily"

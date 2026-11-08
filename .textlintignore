@@ -12,7 +12,7 @@
 ## AI Generated files
 .claude/**
 .serena/**
-.cocoindex_code
+.cocoindex_code/**
 
 # temp
 **/temp/**
