@@ -11,7 +11,7 @@ const BaseConfig = {
   extends: ['@commitlint/config-conventional'],
   parserPreset: {
     parserOpts: {
-      headerPattern: /^(?:(merge)\s+\(#(\d+)\):\s+)?(\w*)(?:\(([^)]*)\))?!?: (.+)$/,
+      headerPattern: /^(?:(merge)\s+\(#(\d+)\):\s+)?(\w*)(?:\(((?:[^()]|\([^()]*\))*)\))?!?: (.+)$/,
       headerCorrespondence: [
         'merge',
         'pr',
