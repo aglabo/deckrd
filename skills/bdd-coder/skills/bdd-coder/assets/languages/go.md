@@ -57,10 +57,10 @@ func TestFunctionName(t *testing.T) {
 For canonical host-safety, idempotency, and mock discipline principles, see:
 [../test-quality.md](../test-quality.md)
 
-- **Tempdir**: Use `t.TempDir()` — automatically cleaned up after each test, even on failure.
-- **Env vars**: Use `t.Setenv("VAR", "val")` — automatically restored after the test.
-- **Clock injection**: Accept `time.Time` or `func() time.Time` as a parameter instead
-  of calling `time.Now()` directly in the function under test.
+- Tempdir: Use `t.TempDir()` — automatically cleaned up after each test, even on failure.
+- Env vars: Use `t.Setenv("VAR", "val")` — automatically restored after the test.
+- Clock injection: Accept `time.Time` or `func() time.Time` as a parameter.
+  Do not call `time.Now()` directly in the function under test.
 
 ## Project Detection
 
