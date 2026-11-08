@@ -602,10 +602,16 @@ T-<Target>-<Scenario>-<Case>
 
 ```text
 docs/.deckrd/<ns>/<mod>/decision-records.md (追記形式)
-└─ DR-001: タイトル
-└─ DR-002: タイトル
+└─ DR-01: タイトル
+└─ DR-02: タイトル
 └─ ...
 ```
+
+### 書き方
+
+DR 本文は `dr-writer` エージェントが [DR 作成ガイドライン](../../skills/deckrd/skills/deckrd/references/guidelines/decision-record-authoring.md) に従って書く。
+流れは「決定内容を伝える → 下書きを確認する（yes / edit / no）→ 追記」の 3 段階で、承認するまで `decision-records.md` は変わらない。
+情報が足りないとき（根拠や代替案がないなど）は、下書きの代わりに質問が返る。
 
 > 注意:
 > `tasks` 完了後の追加には確認が必要です。
