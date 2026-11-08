@@ -147,13 +147,9 @@ Boundaries:
 
 **DR Granularity Guidelines:**
 
-To prevent DR explosion, consolidate related decisions:
-
-- Consolidate: Group related promotions into a single DR (e.g., "Promote all input validation to MUST")
-- Threshold: Only create DR for decisions affecting system behavior or architecture
-- Skip DR for: Trivial clarifications, obvious domain constraints, editorial WHEN extractions
-
-Target: 1-5 DRs per review session for typical documents
+Decide whether a change deserves a DR, and how to write it, by the
+[DR authoring guideline](../../references/guidelines/decision-record-authoring.md)
+(section 2 and rules A–G). Consolidate related decisions; target 1-5 DRs per review session.
 
 **Output Style:**
 
@@ -298,7 +294,10 @@ Each phase template defines the exact sections and format to use.
 
 ## Decision Record Format (harden phase only)
 
-When generating DR entries, use this format:
+When generating DR entries, follow the
+[DR authoring guideline](../../references/guidelines/decision-record-authoring.md)
+(no Issue/PR numbers, no tasks or implementation detail, a rejection reason for every alternative).
+Use this format:
 
 ```markdown
 ## Decision Records
