@@ -141,7 +141,7 @@ Use category prefixes in describe blocks:
 
 ## Generation Rules
 
-1. **Read IMPLEMENTATION document(s) first**:
+1. Read IMPLEMENTATION document(s) first:
    - Identify actual function/class/method names
    - Note any renamed or refactored components
    - Understand the actual implementation structure
@@ -149,23 +149,23 @@ Use category prefixes in describe blocks:
    - In split mode, read every file in `implementation_files`; if a name appears
      in multiple files, the latest file in the ordered list wins
 
-2. **Read SPECIFICATIONS** and enumerate ALL coverage items:
+2. Read SPECIFICATIONS and enumerate ALL coverage items:
    - Test targets (functions, classes, methods)
    - Input/output constraints
    - Section 4 (Decision Rules): each rule row → candidate task
-   - **Section 5 (Edge Cases)**: every row in the edge case table → candidate task
-   - **Section 2.5 (Behavioral Design Decisions)**: each Active DD row → at least one task
+   - Section 5 (Edge Cases): every row in the edge case table → candidate task
+   - Section 2.5 (Behavioral Design Decisions): each Active DD row → at least one task
      verifying that the decided behavior is observable
-   - **Section 2.6 (Related Decision Records)**: note each DR-ID listed
+   - Section 2.6 (Related Decision Records): note each DR-ID listed
    - Cross-reference with IMPLEMENTATION document(s) for exact names
 
-3. **Read DECISION RECORDS** (if provided):
+3. Read DECISION RECORDS (if provided):
    - For each `DR-xx` that matches an ID noted in Step 2 Section 2.6,
      read the Decision and Consequences sections
    - Identify any observable behavior mandated or excluded by the DR
-   - Each such behavior is a **coverage item**; generate at least one task for it
+   - Each such behavior is a coverage item; generate at least one task for it
 
-4. **Break down** each specification into a WBS hierarchy — apply the **100% rule** and **MECE principle** at every level:
+4. Break down each specification into a WBS hierarchy — apply the 100% rule and MECE principle at every level:
 
    | Level       | WBS element            | MECE rule                                                                 |
    | ----------- | ---------------------- | ------------------------------------------------------------------------- |
@@ -181,16 +181,16 @@ Use category prefixes in describe blocks:
    Mutual-exclusion check (ME — no duplicates): two cases are duplicates if they share
    the same input domain AND the same expected outcome — merge them into one.
 
-   - **Use exact function/method names from IMPLEMENTATION document(s)**
+   - Use exact function/method names from IMPLEMENTATION document(s)
 
-5. **Generate tasks** with:
+5. Generate tasks with:
    - Unique Task ID
    - Markdown checkbox
    - Clear test description
    - Mapping to BDD structure
-   - **Target names matching IMPLEMENTATION document(s)**
+   - Target names matching IMPLEMENTATION document(s)
 
-6. **Verify source coverage** before finalizing output:
+6. Verify source coverage before finalizing output:
    - Build a coverage matrix: list every coverage item from Steps 2–3
    - For each item, confirm at least one generated task covers it
    - For any uncovered item, generate the missing task(s)
@@ -199,12 +199,12 @@ Use category prefixes in describe blocks:
      - the Task ID(s) that cover it
      - `[UNCOVERED]` for any item with no task (this must be empty before output)
 
-7. **Verify category balance** per test target:
+7. Verify category balance per test target:
    - For each test target (T-XX), classify its tasks into three categories:
-     - **Normal** (`[正常]`): expected behavior under valid inputs
-     - **Error** (`[異常]`): invalid inputs, failure states, rejected operations
-     - **Edge** (`[エッジケース]`): boundary values, state transitions, false-negative checks
-   - A test target is **imbalanced** if ANY category has zero tasks
+     - Normal (`[正常]`): expected behavior under valid inputs
+     - Error (`[異常]`): invalid inputs, failure states, rejected operations
+     - Edge (`[エッジケース]`): boundary values, state transitions, false-negative checks
+   - A test target is imbalanced if ANY category has zero tasks
    - For each missing category, infer and generate the missing task(s) from spec
      behavioral rules and decision rules (Section 4)
    - Add generated tasks to the document and update the Coverage Check accordingly
@@ -213,7 +213,7 @@ Use category prefixes in describe blocks:
      - `[ADDED]` for tasks generated in this step
      - `[OK]` when all three categories are covered
 
-8. **Order tasks** by:
+8. Order tasks by:
    - Test target sequence
    - Normal → Error → Edge case progression
 

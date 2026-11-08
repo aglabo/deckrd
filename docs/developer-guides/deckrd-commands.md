@@ -130,9 +130,9 @@ docs/.deckrd/myproject/authentication/
 
 **Usage**: `/deckrd dr --add`
 
-**Purpose**: Add decision records during requirements phase
+**Purpose**: Add one decision record. The dr-writer agent drafts it by following the DR authoring guideline (`references/guidelines/decision-record-authoring.md`), and appends it after the user approves the draft
 
-**Prerequisites**: Requirements phase must be active
+**Prerequisites**: Active module in the req, spec, impl, or tasks step (tasks asks for confirmation)
 
 **Output**: `decision-records.md`
 

@@ -108,7 +108,7 @@ deckrd stores workflow state and generated documents separately:
   - `specifications/` — specification documents
   - `implementation/` — implementation plan
   - `tasks/` — executable task documents
-  - `workspaces/` — notes and drafts to keep for the module (regenerable files such as checklists go to `.local/deckrd/temp/`)
+  - `workspaces/` — notes and drafts to keep for the module (regeneratable files such as checklists go to `.local/deckrd/temp/`)
 
 You can browse the derived requirements, specifications, and tasks at any time using your editor or file explorer.
 

@@ -166,7 +166,7 @@ Session State (.local/deckrd/session.json)
     ↓
 /deckrd req → requirements.md
     ↓
-/deckrd dr → design-review.md
+/deckrd dr → decision-records.md
     ↓
 /deckrd spec → specifications.md
     ↓

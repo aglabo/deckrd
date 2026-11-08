@@ -1,11 +1,11 @@
 # タスク 1b: タスク 1 のレビュー指摘の是正
 
-対象: `runners/run-check-test-ids.sh`
-テスト: `runners/__tests__/unit/run-check-test-ids.spec.sh`
-テストコマンド: `pnpm run test:sh runners/__tests__/unit/run-check-test-ids.spec.sh`
-作業種別: リファクタリング（タスク 1 の続き。検査 A/B/C/D の判定ロジックは変えない）
+- 対象: `runners/run-check-test-ids.sh`
+- テスト: `runners/__tests__/unit/run-check-test-ids.spec.sh`
+- テストコマンド: `pnpm run test:sh runners/__tests__/unit/run-check-test-ids.spec.sh`
+- 作業種別: リファクタリング（タスク 1 の続き。検査 A/B/C/D の判定ロジックは変えない）
 
-コードレビューが挙げた 4 件を潰す。いずれも走査層の穴か、コメントと実装の食い違いである。
+コードレビューが挙げた 4 件を潰す。いずれも走査層の穴か、コメントと実装の食い違いにあたる。
 
 ## 1. 宣言パターンが ShellSpec の語彙を取りこぼしている
 
@@ -21,7 +21,7 @@ fExample      | fSpecify  | fIt       => f block_example
 Todo                                  =>   todo
 ```
 
-現在の `GROUP_DECL_PATTERN` は `Describe|Context` しか見ていないため、
+現在の `GROUP_DECL_PATTERN` は `Describe|Context` しか見ていない。そのため
 `ExampleGroup` / `xDescribe` / `fContext` などで宣言されたグループ ID が
 **まるごと見えない**。見えないグループ ID は検査 C で「重複なし」と読める。
 検査が黙って無力化される種類の穴なので塞ぐ。
@@ -39,8 +39,8 @@ readonly CASE_DECL_PATTERN='^[[:space:]]*[xf]?(Example|Specify|It)[[:space:]]'
 
 ## 2. グループ ID のアンカーが 1 つもテストされていない
 
-`scan_spec_declarations` の awk に渡す `group_id` の `^(...)$` アンカーを外しても
-**129 examples が 1 つも落ちない**ことをレビューが実測している。アンカーを外すと
+レビューが次のことを実測している。`scan_spec_declarations` の awk に渡す `group_id` の
+`^(...)$` アンカーを外しても、**129 examples が 1 つも落ちない**。アンカーを外すと
 `Describe "XT-AAA-BB: …"` が `G XT-AAA-BB` を、`Describe "T-AAA-BB-01 …"` が
 `G T-AAA-BB-01` を出す。
 
@@ -51,19 +51,19 @@ readonly CASE_DECL_PATTERN='^[[:space:]]*[xf]?(Example|Specify|It)[[:space:]]'
 
 spec の 300 行目付近のコメントは
 「トークン完全一致を外すと `T-RUN-IWH-01` の中の `T-RUN-IWH` が拾われて RED」
-と書いているが、そのフィクスチャは `It` 行なのでグループ分岐に到達しない。
-このケースが通るのはコメントが書いている理由とは別の理由である。
+と書いている。しかしそのフィクスチャは `It` 行なので、グループ分岐に到達しない。
+このケースが通るのは、コメントが書いている理由とは別の理由による。
 
 **間違ったガードコメントは、テストが無いことより悪い。** 次に読む人に
 「その場合は押さえてある」と誤解させる。実際に何を固定しているかに書き直すこと。
 
 ## 4. レコード書式の根拠コメントが実装と矛盾している
 
-`scan_spec_declarations` の `@stdout` ブロック（154-158 行目付近）と 212-214 行目付近は、
-5 欄固定の理由を「5 変数の `read` で可変長の内容が最後の変数に入るようにするため」と
-説明している。しかし 596-600 行目付近は、`IFS=$'\t' read -r kind a b c d` では
-**それが成り立たない**ことを詳しく述べている（bash は TAB を IFS 空白として扱うため
-連続 TAB が 1 個の区切りに潰れる）。だから 605-613 行目付近はパラメータ展開で
+`scan_spec_declarations` の `@stdout` ブロック（154-158 行目付近）と 212-214 行目付近には、
+5 欄固定の理由の説明がある。理由は「5 変数の `read` で、可変長の内容を最後の変数へ入れるため」となっている。
+しかし 596-600 行目付近は、`IFS=$'\t' read -r kind a b c d` では
+**それが成り立たない** ことを詳しく述べている。bash は TAB を IFS 空白として扱うため、
+連続 TAB が 1 個の区切りに潰れる。だから 605-613 行目付近はパラメータ展開で
 4 つの区切りを剥がしている。
 
 `@stdout` だけを読んだ人は、この剥がし処理を冗長だと判断して「整理」し、
@@ -75,10 +75,10 @@ spec の 300 行目付近のコメントは
 
 ## 5. `U` レコードの内容欄の TAB が `load_case_records` を通り抜けていない
 
-内容欄の TAB を検証しているのは `find_unidentified_cases` の awk/`substr` 経路
-（`T-RUN-FUC-07`）だけで、`load_case_records` のパラメータ展開経路には 1 ケースも無い。
+内容欄の TAB は、`find_unidentified_cases` の awk/`substr` 経路
+（`T-RUN-FUC-07`）でしか検証していない。`load_case_records` のパラメータ展開経路には 1 ケースも無い。
 レビューが `d` を最初の TAB で切り捨てる変異を入れて全 129 examples を走らせ、
-**1 つも落ちない**ことを実測している。
+**1 つも落ちない** ことを実測している。
 
 `T-RUN-LCR-03` のフィクスチャが `_append_line` で書く内容に `${_TAB}` を入れ、
 期待値も合わせること。これで剥がし処理が最後の欄を丸ごと保つことが固定される。

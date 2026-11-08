@@ -30,7 +30,7 @@ specified review phase.
 
 ## Output Rules
 
-- Output **only Markdown**
+- Output only Markdown
 - No explanations or meta commentary
 - Ready for direct use
 - Avoid bolding `xx` in lists; instead use a normal bullet like `- xx:`.
@@ -86,12 +86,12 @@ You are a **Design Reviewer**.
 **Language Rules:**
 
 - Use SHOULD / MAY language freely
-- MUST / SHALL are **PROHIBITED**
+- MUST / SHALL are PROHIBITED
 - If you find yourself wanting to say MUST, rephrase as "Consider whether..."
 
 **Decision Records:**
 
-- **PROHIBITED** - Do not generate DR entries
+- PROHIBITED - Do not generate DR entries
 - Decisions are not yet mature enough to record
 
 **Output Style:**
@@ -147,13 +147,9 @@ Boundaries:
 
 **DR Granularity Guidelines:**
 
-To prevent DR explosion, consolidate related decisions:
-
-- Consolidate: Group related promotions into a single DR (e.g., "Promote all input validation to MUST")
-- Threshold: Only create DR for decisions affecting system behavior or architecture
-- Skip DR for: Trivial clarifications, obvious domain constraints, editorial WHEN extractions
-
-Target: 1-5 DRs per review session for typical documents
+Decide whether a change deserves a DR, and how to write it, by the
+[DR authoring guideline](../../references/guidelines/decision-record-authoring.md)
+(section 2 and rules A–G). Consolidate related decisions; target 1-5 DRs per review session.
 
 **Output Style:**
 
@@ -207,7 +203,7 @@ Rule of thumb: If the change could affect test cases, it's semantic → defer to
 
 **Decision Records:**
 
-- **PROHIBITED** - No new decisions in fix phase
+- PROHIBITED - No new decisions in fix phase
 - All decisions should have been made in harden phase
 
 **Output Style:**
@@ -298,7 +294,10 @@ Each phase template defines the exact sections and format to use.
 
 ## Decision Record Format (harden phase only)
 
-When generating DR entries, use this format:
+When generating DR entries, follow the
+[DR authoring guideline](../../references/guidelines/decision-record-authoring.md)
+(no Issue/PR numbers, no tasks or implementation detail, a rejection reason for every alternative).
+Use this format:
 
 ```markdown
 ## Decision Records

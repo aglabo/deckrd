@@ -1,9 +1,9 @@
 # タスク 2: 検査 B / C / D を新しい一意性モデルに書き換える
 
-対象: `runners/run-check-test-ids.sh`
-テスト: `runners/__tests__/unit/run-check-test-ids.spec.sh`
-テストコマンド: `pnpm run test:sh runners/__tests__/unit/run-check-test-ids.spec.sh`
-作業種別: リファクタリング
+- 対象: `runners/run-check-test-ids.sh`
+- テスト: `runners/__tests__/unit/run-check-test-ids.spec.sh`
+- テストコマンド: `pnpm run test:sh runners/__tests__/unit/run-check-test-ids.spec.sh`
+- 作業種別: リファクタリング
 
 タスク 1 / 1b で用意した G レコードとグループ用インデックスを、検査本体に繋ぐ。
 規約は `docs/.deckrd/rules/deckrd-rule-testing-guidelines.md` の §5.4 と §6.2〜§6.5。
@@ -11,7 +11,7 @@
 
 ## 1. 重複検査を `uniq -d` から件数比較へ
 
-**これが本タスクの中心である。**
+**これが本タスクの中心となる。**
 
 `uniq -d` はソート済みで重複が隣接していることに依存する。そのために現行コードは
 `load_indexed_case_ids` で全ファイル分を連結してから 1 回だけ `sort` しており、
@@ -26,7 +26,7 @@
 | `total` == `unique` | 合格                     |
 
 ID は既に配列に載っているので、**連想配列で出現回数を数える。**
-`sort` もパイプも要らず、fork が 0 個で済み、重複した ID の一覧もその場で得られる。
+`sort` とパイプが不要で、fork も 0 個で済む。重複した ID の一覧はその場で得られる。
 `uniq -d` は使わない。
 
 `extract_case_ids` / `extract_group_ids` の「ソート済みで出す」公開契約は
@@ -77,7 +77,7 @@ ID は既に配列に載っているので、**連想配列で出現回数を数
 - spec 側の `T-RUN-LS-*`（`Describe 'T-RUN-LS: layer_suffix() / load_layer_suffix()'` ごと）
 
 レイヤは略語の綴りの一部であり、切り離さない（§5.1）。
-`CINI` は `CIN` + `I` ではない。
+`CINI` を `CIN` + `I` に分けてはならない。
 
 ## 5. `load_case_records` の改名
 
@@ -103,8 +103,8 @@ ID は既に配列に載っているので、**連想配列で出現回数を数
 いずれも `_add_spec_file … 'T-ALP-AA' 'T-ALP-AA-01' 'T-ALP-BB-01'` の形をしている。
 `T-ALP-BB-01` の前に `Describe "T-ALP-BB: …"` を足す形へ組み替える。
 **`T-RUN-CM-10` が本来固定していた「重複がファイル境界をまたいで隣接しない」性質を
-壊さないこと。** 件数比較に変えたことでこの性質は検査の前提ではなくなるが、
-ケース自体は残し、何を固定しているかをコメントで書き直す。
+壊さないこと。** 件数比較に変えたことで、この性質は検査の前提ではなくなる。
+ただしケース自体は残し、何を固定しているかをコメントで書き直す。
 
 ## 触ってはならないもの
 

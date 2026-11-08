@@ -1,7 +1,7 @@
 ---
 title: "Deckrd Rules: Index"
 description: "Deckrd ルールの目次。本体は docs/.deckrd/rules/ にあり、必要なときに Read する"
-version: 2.2.0
+version: 2.3.0
 ---
 
 ## Deckrd Rules: Index
@@ -25,6 +25,12 @@ Deckrd のルール本体は `docs/.deckrd/rules/` 配下にある。このフ�
 | `deckrd-rule-document-model.md`      | 設計チェーン、ID 採番と重複検出、命名、module.md を含むディレクトリ配置  | ID を採番する・ドキュメントを新規作成する・モジュールのディレクトリを作る前 |
 | `deckrd-rule-document-versioning.md` | SemVer 採番と Change History の同期                                      | ドキュメントの version を上げる前                                           |
 | `deckrd-rule-second-opinion.md`      | codex への独立レビュー依頼のタイミングと指摘の扱い                       | フェーズ移行前、設計判断に決め手がないとき                                  |
+
+### スキル側のガイドライン
+
+DR を書く・レビューする前に、DR 作成ガイドラインを Read する。
+置き場所は deckrd スキルの `references/guidelines/decision-record-authoring.md` とする。
+DR の追加は `/deckrd dr --add` で行い、`dr-writer` エージェントがこのガイドラインに従って書く。
 
 ## Common Rationalizations
 
