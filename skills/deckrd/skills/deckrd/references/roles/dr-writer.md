@@ -86,6 +86,8 @@ Run only after the caller got the user's approval of `draft_file`.
    - New `Accepted` DR that supersedes another → MAJOR. Row: `Add <DR_ID>: <title> (supersedes DR-NN)`
    - Frontmatter `version` MUST equal the new row's version.
 5. Final check: run the `apply` and `両方` (both) items of the guideline's self-check list on the content built in memory (A-2, E-1, E-2, E-4). If one fails, return `status: malformed` with the reason and write nothing.
+   - E-2 is checked against the **pre-append** state. Compare `<DR_ID>` with the max + 1 computed in step 1 from the file before the insert (`DR-01` when the file did not exist). Do not recompute the max from the in-memory content: it already contains `<DR_ID>`, so max + 1 would never match.
+   - In the in-memory content, `<DR_ID>` MUST appear exactly once as a `## DR-<number>` heading (the new section) and MUST NOT appear in the `## Deleted Decision Records` table.
 6. Write once. Write the whole new content in a single write. If any step failed, write nothing.
 7. Delete the draft file after a successful write.
 8. Return: `status: applied`, the file path, `dr_id`, old → new version, and warnings.
