@@ -1,0 +1,70 @@
+# src: ./.github/workflows/ci-docs-qa.yml
+# @(#) : Caller workflow for document QA of changed Markdown files
+#
+# Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
+#
+# This software is released under the MIT License.
+# https://opensource.org/licenses/MIT
+
+name: "CI: Documents QA"
+
+# Minimal permissions following security best practices
+permissions:
+  contents: read
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - releases
+
+  pull_request:
+    branches:
+      - main
+      - master
+      - releases
+
+  workflow_dispatch:
+    inputs:
+      commit-count:
+        description: "Number of commits (HEAD~N) to check for changed files"
+        required: false
+        default: "1"
+        type: string
+
+concurrency:
+  group: ${{ github.workflow }}-caller-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  resolve-inputs:
+    name: Resolve Inputs
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      commit-count: ${{ steps.resolve.outputs.commit-count }}
+    steps:
+      - name: Validate commit-count
+        id: resolve
+        shell: bash
+        env:
+          # inputs is empty on push / pull_request, so fall back to the default
+          COMMIT_COUNT: ${{ inputs.commit-count || '1' }}
+        run: |
+          if [[ ! "${COMMIT_COUNT}" =~ ^[1-9][0-9]*$ ]] || (( COMMIT_COUNT > 1000 )); then
+            echo "::error::commit-count must be an integer between 1 and 1000"
+            exit 1
+          fi
+          echo "commit-count=${COMMIT_COUNT}" >> "${GITHUB_OUTPUT}"
+
+  lint-documents:
+    name: Lint Documents
+    needs: resolve-inputs
+    permissions:
+      contents: read
+    uses: aglabo/ci-platform/.github/workflows/ru-lint-documents.yml@76bf81b8f8ef67234ab5d3361ba5f30e0646a284 # v0.6.1
+    with:
+      commit-count: ${{ needs.resolve-inputs.outputs.commit-count }}
