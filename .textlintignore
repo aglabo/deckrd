@@ -20,3 +20,8 @@
 
 ## Releases
 releases/**
+
+## Build artifacts
+**/dist/**
+aglabo.github.io/.blume/**
+aglabo.github.io/.blume-verify/**
