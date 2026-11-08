@@ -2,7 +2,7 @@
 # src: ./scripts/prepare-commit-msg.sh
 # @(#) : Prepare commit message using Codex CLI
 #
-# Copyright (c) 2025- atsushifx <http://github.com/atsushifx>
+# Copyright (c) 2026- atsushifx <http://github.com/atsushifx>
 #
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
@@ -31,7 +31,7 @@
 #   - Context-aware message generation
 #   - Dual output modes: stdout or file output
 #   - Skips if existing message detected (hook mode)
-#   - Safe failure: markers not found → error exit
+#   - Safe failure: markers not found -> error exit
 #
 # @example
 #   # Output to stdout (interactive)
@@ -47,7 +47,7 @@
 # @exitcode 1 Error during generation (AI output invalid, markers missing, etc.)
 #
 # @author atsushifx
-# @version 1.3.1
+# @version 1.3.0
 # @license MIT
 
 # shellcheck disable=SC2034
