@@ -15,6 +15,13 @@ overrides:
   # @astrojs/astro2tsx が @emnapi/runtime 2.0.0-beta を引き、@emnapi/core 1.x と混ざると
   # 'this.bridge.setLastError is not a function' でビルドが落ちる。core に合わせて 1 系に固定する。
   "@emnapi/runtime": ^1.11.3
+  # Dependabot #5 (GHSA-g3hv-75wg-m249): minimatch >=7 <11.0.1。glob@13 が ^10 で引くため 11 系に上げる。
+  minimatch@>=7.0.0 <11.0.1: ^11.0.5
+  # Dependabot #3 (GHSA-rj75-hqrm-r3gf): @tailwindcss/typography が 6.0.10 に固定しているため、6 系の修正版に上げる。
+  # 6.1.6 は minimumReleaseAge 未満のため、修正を含む 6.1.5 に固定する。
+  postcss-selector-parser@<6.1.5: 6.1.5
+  # Dependabot #2 (GHSA-238p-pmpm-9mq7): mermaid@11 が ^0.16 で引くため、修正版の 0.18 系に上げる。
+  katex@>=0.11.0 <0.18.2: ^0.18.10
 
 permissions:
   blume:
