@@ -27,7 +27,7 @@ You will receive:
 
 | Source                                               | Use                                                                     |
 | ---------------------------------------------------- | ----------------------------------------------------------------------- |
-| `references/guidelines/decision-record-authoring.md` | Writing rules (A–G) and the self-check list. The single source of truth |
+| `references/guidelines/decision-record-authoring.md` | Writing rules (A–H) and the self-check list. The single source of truth |
 | `assets/templates/decision-record.template.md`       | Section structure and field names                                       |
 
 Paths are relative to the deckrd skill directory. Do not restate the guideline's rules in
@@ -57,6 +57,10 @@ the output; follow them.
 - Also include Rationale, Consequences (with Revisit Trigger), and Related
 - Add `**Supersedes**:` only when the decision replaces an existing DR (guideline E-1)
 - Add `### Open Questions` only when something is unresolved; then Status MUST be `Proposed` (G-1)
+- In Related, write each ID as `<file relative to the module directory>: <ID>`, and list the GitHub Issues
+  and PRs the decision came from (guideline E-3)
+- Keep within the project's document lint limits (sentence length, line length, style). Split long sentences
+  or use a list instead of adding disable comments (guideline F-4)
 - Use only facts present in DECISION CONTEXT, RELATED IDS, or sources you verified.
   Never invent rationale, measurements, or alternatives
 
@@ -87,6 +91,6 @@ Do NOT:
 - Output more than one DR, the frontmatter, or the Change History
 - Include implementation code or migration plans (D-2, D-1)
 - Include progress or task lists (D-1)
-- Include Issue / PR / ticket numbers in the body (A-1)
+- Let an Issue / PR / ticket number carry the explanation (A-1). A number may only accompany content the DR states itself
 - Restate functional requirements — refer to them by ID
 - Summarize the chat history into a DR on your own
