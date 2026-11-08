@@ -1,7 +1,7 @@
 // src: ./dprint.jsonc
 // @(#) : dprint configuration for project formatting
 //
-// Copyright (c) 2025- atsushifx <https://github.com/atsushifx>
+// Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 //
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
@@ -14,16 +14,18 @@
   "newLineKind": "lf",
   // Include/Exclude patterns
   "includes": [
-    // source code
+    // Programming languages
     "**/*.js",
     "**/*.ts",
-    // Documents
-    "**/*.md",
-    // configuration files
+    // Config files
     "**/*.json",
     "**/*.jsonc",
     "**/*.yml",
     "**/*.yaml",
+    "**/*.toml",
+    // Documents
+    "**/*.md",
+    "**/*.mdx",
   ],
   "excludes": [
     "**/node_modules/**",
@@ -34,16 +36,16 @@
     //
     "**lock.*",
     // Documents
-    "CONTRIBUTING**.md",
-    "CODE_OF_CONDUCT**.md",
+    "CONTRIBUTING*.md",
+    "CODE_OF_CONDUCT*.md",
   ],
   // Plugins
   "plugins": [
-    "npm:@dprint/typescript@0.96.1",
-    "npm:@dprint/json@0.25.2",
-    "npm:@dprint/markdown@0.27.1",
+    "npm:@dprint/typescript@0.99.1",
+    "npm:@dprint/json@0.26.0",
+    "npm:@dprint/markdown@0.29.0",
     "npm:dprint-plugin-yaml@0.6.0",
-    "npm:@dprint/toml@0.9.0",
+    "npm:@dprint/toml@0.10.0",
   ],
   // Language-specific settings
   "typescript": {
@@ -57,6 +59,10 @@
   },
   "json": {},
   "markdown": {
+    "associations": [
+      "**/*.md",
+      "**/*.mdx",
+    ],
     "emphasisKind": "asterisks",
   },
   "yaml": {},
