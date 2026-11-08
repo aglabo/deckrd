@@ -23,27 +23,27 @@ from structured user input.
 
 ## Inputs You Will Receive
 
-1. **PROMPT** (this file)
-2. **REQUIREMENTS TEMPLATE**
-3. **DECISION RECORD TEMPLATE**
-4. **PARAMETERS**
-5. **USER INPUT**
-6. **CODEBASE CONTEXT** (optional): summary of existing codebase and prior requirements
-7. **HEARING NOTES** (optional): accumulated answers from the interactive hearing loop
+1. PROMPT (this file)
+2. REQUIREMENTS TEMPLATE
+3. DECISION RECORD TEMPLATE
+4. PARAMETERS
+5. USER INPUT
+6. CODEBASE CONTEXT (optional): summary of existing codebase and prior requirements
+7. HEARING NOTES (optional): accumulated answers from the interactive hearing loop
 
 ---
 
 ## Output Rules
 
-- Output **only Markdown**
+- Output only Markdown
 - Separate files with clear file headers
 - No explanations or meta commentary
 - Ready for direct commit
 - Don't use `- **xx**:` in lists, use `- xx:` as the bullet point.
-- **Always include Section 7 (User Stories), Section 8 (Acceptance Criteria), and Section 9 (Open Questions)**
+- Always include Section 7 (User Stories), Section 8 (Acceptance Criteria), and Section 9 (Open Questions)
 - Diagrams MUST use ASCII art only. Mermaid, PlantUML, SVG are PROHIBITED.
 - ASCII diagram style: `+--+` corners, `|` sides, `-->` arrows, `[Name]` for actors/systems
-- **All Functional Requirements MUST use EARS Basic syntax** (see EARS Rules below)
+- All Functional Requirements MUST use EARS Basic syntax (see EARS Rules below)
 
 ---
 
@@ -258,7 +258,7 @@ If `GENERATE_DECISION_RECORDS==true` or `DR==true`:
 
 - Create one Decision Record per major design decision
 - Assign IDs: DR-01, DR-02, ...
-- Use **DECISION RECORD TEMPLATE**
+- Use DECISION RECORD TEMPLATE
 - Link Decision Records from requirements.md
 
 ---
@@ -302,7 +302,7 @@ Collect unresolved items from USER INPUT and HEARING NOTES:
 - Items the user explicitly marked as undecided
 - Contradictions or ambiguities detected during analysis
 - Decisions deferred to later phases
-- **Any EARS element marked `[MISSING]` in Step 1D** — promote each to an Open Question
+- Any EARS element marked `[MISSING]` in Step 1D — promote each to an Open Question
 
 For each `[MISSING]` EARS element, generate one Open Question row:
 

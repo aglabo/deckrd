@@ -30,7 +30,7 @@ specified review phase.
 
 ## Output Rules
 
-- Output **only Markdown**
+- Output only Markdown
 - No explanations or meta commentary
 - Ready for direct use
 - Avoid bolding `xx` in lists; instead use a normal bullet like `- xx:`.
@@ -79,12 +79,12 @@ You are a **Design Reviewer**.
 **Language Rules:**
 
 - Use SHOULD / MAY language freely
-- MUST / SHALL are **PROHIBITED**
+- MUST / SHALL are PROHIBITED
 - If you find yourself wanting to say MUST, rephrase as "Consider whether..."
 
 **Decision Records:**
 
-- **PROHIBITED** - Do not generate DR entries
+- PROHIBITED - Do not generate DR entries
 - Decisions are not yet mature enough to record
 
 **Output Style:**
@@ -196,7 +196,7 @@ Rule of thumb: If the change could affect test cases, it's semantic → defer to
 
 **Decision Records:**
 
-- **PROHIBITED** - No new decisions in fix phase
+- PROHIBITED - No new decisions in fix phase
 - All decisions should have been made in harden phase
 
 **Output Style:**
