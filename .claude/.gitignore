@@ -21,6 +21,9 @@
 !hooks/
 !hooks/**
 
+# skills (symlink to ../skills)
+!skills
+
 
 ## claude add-ons
 # Agents

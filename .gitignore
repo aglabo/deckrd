@@ -74,6 +74,7 @@
 !.claude/agents/**
 !.claude/rules/
 !.claude/rules/**
+!.claude/skills
 !.claude/commands/
 !.claude/commands/**
 
