@@ -108,6 +108,7 @@ git commit -m "..."
 | `impl`                             | Create implementation criteria                        |
 | `tasks`                            | Create implementation task list                       |
 | `dr --add`                         | Record Decision Records (optional)                    |
+| `dr --refine [DR-ID ...]`          | Rewrite existing DRs for readability (optional)       |
 | `status`                           | Check workflow progress                               |
 | `update [--update]`                | List missing or outdated assets (`--update` to apply) |
 | `rev [--from code] [--to <phase>]` | Reverse-engineer existing code into docs              |
