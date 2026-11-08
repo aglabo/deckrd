@@ -45,6 +45,7 @@ No announcement = violation. Restart with announcement.
 | spec completed   | impl         | [commands/impl.md](references/commands/impl.md)     |
 | impl completed   | tasks        | [commands/tasks.md](references/commands/tasks.md)   |
 | any              | review       | [commands/review.md](references/commands/review.md) |
+| req–tasks        | dr --add     | [commands/dr.md](references/commands/dr.md)         |
 | init completed   | rev          | [commands/rev.md](references/commands/rev.md)       |
 
 Gate Rule: each command requires the previous command's document. No skipping.
@@ -55,4 +56,5 @@ Gate Rule: each command requires the previous command's document. No skipping.
 > Full command list: [commands/index.md](references/commands/index.md)
 > Workflow overview: [workflow.md](references/workflow.md) — 経路を選ぶとき、呼び出し例を見たいとき
 > Session management: [session.md](references/session.md)
+> DR writing guideline: [guidelines/decision-record-authoring.md](references/guidelines/decision-record-authoring.md) — DR を書く・レビューするとき
 > Troubleshooting: [troubleshooting.md](references/troubleshooting.md) — コマンドが失敗した / 順序ゲートに弾かれたとき
