@@ -16,6 +16,8 @@ created: "{{DATE}}"
 <!--
 Writing rules: references/guidelines/decision-record-authoring.md (the single source of truth).
 Optional frontmatter: `based-on: requirements.md vX.Y.Z` when the DRs depend on a specific requirements version.
+Keep it equal to the latest upstream version, after checking the DRs against it (guideline E-6).
+Every DR section, including the last one, ends with `---` (guideline A-3).
 -->
 
 ---
@@ -80,7 +82,8 @@ Keep it at a level that survives swapping the implementation (D-4). -->
 
 ### Related
 
-- {{RELATED_ID}}
+- {{RELATED_FILE}}: {{RELATED_ID}}
+- GitHub Issue: {{ISSUE_REF}}
 
 ---
 
@@ -96,6 +99,8 @@ Versioning (SemVer, see docs/.deckrd/rules/deckrd-rule-document-versioning.md):
   MAJOR — an accepted DR is superseded, reversed, or deleted
 
 Keep frontmatter `version` equal to the newest Change History row below.
+One version bump per commit: if an uncommitted bump already exists, merge into that row
+instead of adding another one (guideline E-4).
 -->
 
 ## Change History
