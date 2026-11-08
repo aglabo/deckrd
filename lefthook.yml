@@ -12,16 +12,14 @@ pre-commit:
     betterleaks:
       run: betterleaks protect --config ./configs/betterleaks.toml
 
+    # pass staged files NUL-separated so paths with "(", ")" or spaces are not parsed by sh
     secretlint:
-      glob: "**/*"
       run: >
-        secretlint
+        git diff --cached --name-only --diff-filter=ACMR -z
+        | xargs -0 -r secretlint
         --secretlintrc ./configs/secretlint.config.yaml
         --secretlintignore .gitignore
         --maskSecrets
-        "{staged_files}"
-      skip:
-        - empty
 
 prepare-commit-msg:
   commands:

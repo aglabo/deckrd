@@ -1,0 +1,33 @@
+{
+  "name": "@aglabo/deckrd-docs",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Documentation site for deckrd (aglabo.github.io)",
+  "keywords": [
+    "deckrd",
+    "documentation",
+    "blume"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aglabo/deckrd.git",
+    "directory": "aglabo.github.io"
+  },
+  "license": "MIT",
+  "author": "atsushifx",
+  "type": "module",
+  "scripts": {
+    "docs:dev": "pnpm exec blume dev",
+    "docs:build": "pnpm exec blume build"
+  },
+  "devDependencies": {
+    "blume": "~1.5.3",
+    "esbuild": "^0.28.2"
+  },
+  "packageManager": "pnpm@12.18.0",
+  "engines": {
+    "node": ">=24",
+    "pnpm": ">=12"
+  },
+  "@(#)": "Documentation site for deckrd"
+}

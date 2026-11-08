@@ -18,6 +18,8 @@
   "type": "module",
   "scripts": {
     "prepare": "bash ./scripts/setup-dev-env.sh",
+    "site:dev": "pnpm --dir aglabo.github.io run docs:dev",
+    "build:docs": "pnpm --dir aglabo.github.io run docs:build",
     "scan:secrets": "concurrently \"betterleaks protect --config ./configs/betterleaks.toml\" \"secretlint --secretlintrc ./configs/secretlint.config.yaml .\"",
     "check:dprint": "dprint check --list-different",
     "check:dprint:diff": "dprint check",
@@ -37,7 +39,7 @@
   "devDependencies": {
     "@commitlint/config-conventional": "^21.2.4"
   },
-  "packageManager": "pnpm@12.18.0",
+  "packageManager": "pnpm@12.15.0",
   "engines": {
     "pnpm": ">=12"
   },
