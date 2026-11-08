@@ -18,7 +18,7 @@
   "type": "module",
   "scripts": {
     "prepare": "bash ./scripts/setup-dev-env.sh",
-    "scan:secrets": "concurrently \"betterleaks protect --config C:/Users/atsushifx/workspaces/develop/ci-platform/configs/betterleaks.toml\" \"secretlint --secretlintrc ./configs/secretlint.config.yaml **/*\"",
+    "scan:secrets": "concurrently \"betterleaks protect --config ./configs/betterleaks.toml\" \"secretlint --secretlintrc ./configs/secretlint.config.yaml .\"",
     "check:dprint": "dprint check --list-different",
     "check:dprint:diff": "dprint check",
     "format:dprint": "dprint fmt",
@@ -37,7 +37,7 @@
   "devDependencies": {
     "@commitlint/config-conventional": "^21.2.4"
   },
-  "packageManager": "pnpm@12.15.0",
+  "packageManager": "pnpm@12.18.0",
   "engines": {
     "pnpm": ">=12"
   },
