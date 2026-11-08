@@ -37,14 +37,15 @@ main() {
     *) break ;;
     esac
   done
-  local -a targets=("$@")
-  if [[ ${#targets[@]} -eq 0 ]]; then
+  # --apply-ignore applies the .editorconfig ignore rules (spec files, node_modules, .tools, ...)
+  # to explicitly given files as well as to directory walks
+  local -a targets=("${@//\\//}")
+  if [[ $# -eq 0 ]]; then
     targets=(".")
   fi
-  targets=("${targets[@]//\\//}")
   case "$mode" in
-  list) (cd "$PROJECT_ROOT" && shfmt -ln bash -i 2 -l -- "${targets[@]}") ;;
-  format) (cd "$PROJECT_ROOT" && shfmt -ln bash -i 2 -w -- "${targets[@]}") ;;
+  list) (cd "$PROJECT_ROOT" && shfmt -ln bash -i 2 -l --apply-ignore -- "${targets[@]}") ;;
+  format) (cd "$PROJECT_ROOT" && shfmt -ln bash -i 2 -w --apply-ignore -- "${targets[@]}") ;;
   esac
 }
 if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
