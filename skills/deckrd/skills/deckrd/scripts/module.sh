@@ -37,7 +37,8 @@
 
 # shellcheck disable=SC1091
 
-# don't use -u for checking error by Agent
+# No -u: an unbound variable would abort with bash's own message
+# before the script prints an error the agent can act on
 set -eo pipefail
 
 # Load bootstrap (defines SYMBOL, PROJECT_ROOT, DECKRD_LOCAL_DATA, DECKRD_LIB_DIR, etc.)
@@ -46,14 +47,14 @@ _SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "${_SCRIPT_DIR}/libs/bootstrap.lib.sh"
 unset _SCRIPT_DIR
 
-# Load environment validation (validate_env runs in main; requires jq)
+# validate_env runs in main, not at source time (requires jq or jaq)
 . "${DECKRD_LIB_DIR}/validate-env.lib.sh"
 . "${DECKRD_LIB_DIR}/utils.lib.sh"
 
 # ============================================================================
 # Script Configuration
 # ============================================================================
-# Variables provided by bootstrap.sh:
+# Variables provided by bootstrap.lib.sh:
 #   PROJECT_ROOT      - repository root
 #   DECKRD_DOCS_DIR   - docs/.deckrd base directory
 #   DECKRD_LOCAL_DATA - .local/deckrd directory
@@ -176,7 +177,6 @@ parse_args() {
 validate_and_normalize() {
   local raw="$1"
 
-  # Must contain exactly one slash
   if [[ "$raw" != */* ]]; then
     echo "Error: Path must be in format <namespace>/<module>" >&2
     echo "  Example: agt-kind/is-collection" >&2
@@ -186,13 +186,11 @@ validate_and_normalize() {
   local namespace="${raw%%/*}"
   local module="${raw#*/}"
 
-  # Reject empty parts
   if [[ -z "$namespace" || -z "$module" ]]; then
     echo "Error: namespace and module must not be empty" >&2
     return 1
   fi
 
-  # Validate characters using SYMBOL pattern (lowercase, hyphen, underscore only)
   if [[ ! "$namespace" =~ ^${SYMBOL}$ ]]; then
     echo "Error: namespace '${namespace}' contains invalid characters" >&2
     echo "  Allowed: a-z, hyphen (-), underscore (_)" >&2
@@ -216,7 +214,6 @@ validate_and_normalize() {
 _get_default_ns() {
   local project_file="${DECKRD_LOCAL_DATA}/.project.json"
 
-  # 1st priority: .project.json の project フィールド
   if [[ -f "$project_file" ]]; then
     local project_name
     project_name=$(jq_read -r '.project // empty' "$project_file" 2>/dev/null)
@@ -226,7 +223,6 @@ _get_default_ns() {
     fi
   fi
 
-  # 2nd priority: ローカルリポジトリのルートディレクトリ名を取得
   local repo_root
   repo_root=$(git rev-parse --show-toplevel 2>/dev/null) || {
     echo "Error: Cannot resolve default namespace: no .project.json and not in a git repository" >&2
@@ -251,10 +247,8 @@ _get_default_ns() {
 validate_and_normalize_with_fallback() {
   local raw="$1"
   if [[ "$raw" == */* ]]; then
-    # <namespace>/<module> form: delegate to existing validator
     validate_and_normalize "$raw"
   else
-    # <module> form: auto-resolve namespace from project name or git root directory name
     local namespace
     namespace=$(_get_default_ns) || return 1
     validate_and_normalize "${namespace}/${raw}"
@@ -275,10 +269,8 @@ derive_test_scope() {
   local word
 
   if [[ "$rest" != *[-_]* ]]; then
-    # Single word: take the first 3 characters
     scope="${rest:0:3}"
   else
-    # Multiple words: concatenate each initial, up to 4 characters
     while [[ -n "$rest" ]]; do
       word="${rest%%[-_]*}"
       if [[ "$rest" == *[-_]* ]]; then
@@ -426,7 +418,6 @@ create_module_dirs() {
   local module="${path#*/}"
   local base="${DECKRD_DOCS_DIR}/${namespace}/${module}"
 
-  # An existing module is re-initialized only when force is requested
   if [[ -d "$base" && "$force" == false ]]; then
     echo "Error: Module directory already exists: ${base}" >&2
     echo "  Use --force to re-initialize." >&2
@@ -501,7 +492,6 @@ update_session() {
   mkdir -p "$DECKRD_LOCAL_DATA"
 
   if [[ -f "$SESSION_FILE" ]]; then
-    # Update: set active module, add/reset module entry in modules hierarchy
     # shellcheck disable=SC2016
     jq_read --arg path "$path" \
       --arg scope "$scope" \
@@ -517,7 +507,6 @@ update_session() {
       "$SESSION_FILE" >"${SESSION_FILE}.tmp" &&
       mv "${SESSION_FILE}.tmp" "$SESSION_FILE"
   else
-    # Create new session file with modules hierarchy
     # shellcheck disable=SC2016
     jq_read -n \
       --arg path "$path" \

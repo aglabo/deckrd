@@ -23,17 +23,14 @@ SCRIPT="${DECKRD_SCRIPTS_DIR}/init.sh"
 
 Describe "T-CLI-PA: init.sh: parse_args"
   load_script_with_mocks() {
-    # Mock: validate_env を常に成功させる
     # shellcheck disable=SC2329
     validate_env() { return 0; }
     export -f validate_env
 
-    # Mock: validate_ai_model を常に成功させる（stdout は空）
     # shellcheck disable=SC2329
     validate_ai_model() { return 0; }
     export -f validate_ai_model
 
-    # init.sh を source して関数をロード
     # shellcheck disable=SC1090
     . "$SCRIPT"
   }

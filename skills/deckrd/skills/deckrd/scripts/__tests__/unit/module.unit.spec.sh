@@ -222,7 +222,7 @@ Describe "module.sh"
     End
 
     # --------------------------------------------------------------------------
-    # Given: create subcommand with <module> format (git remote auto-completion)
+    # Given: create subcommand with <module> format (namespace from .project.json or the git root directory name)
     # --------------------------------------------------------------------------
 
     Describe "Given: create subcommand with <module> format"
@@ -274,12 +274,10 @@ Describe "module.sh"
   Describe "T-CLI-DTS: derive_test_scope"
 
     load_module_functions() {
-      # Mock: validate_env を常に成功させる
       # shellcheck disable=SC2329
       validate_env() { return 0; }
       export -f validate_env
 
-      # module.sh を source して関数をロード
       # shellcheck disable=SC1090
       . "$SCRIPT"
     }
@@ -351,12 +349,10 @@ Describe "module.sh"
   Describe "T-CLI-VAN: validate_and_normalize"
 
     load_module_functions_for_van() {
-      # Mock: validate_env を常に成功させる
       # shellcheck disable=SC2329
       validate_env() { return 0; }
       export -f validate_env
 
-      # module.sh を source して関数をロード
       # shellcheck disable=SC1090
       . "$SCRIPT"
     }
@@ -453,12 +449,10 @@ Describe "module.sh"
   Describe "T-CLI-VNF: validate_and_normalize_with_fallback"
 
     load_module_functions_for_vnf() {
-      # Mock: validate_env を常に成功させる
       # shellcheck disable=SC2329
       validate_env() { return 0; }
       export -f validate_env
 
-      # module.sh を source して関数をロード
       # shellcheck disable=SC1090
       . "$SCRIPT"
     }
@@ -552,12 +546,10 @@ Describe "module.sh"
   Describe "T-CLI-CMD: create_module_dirs"
 
     load_module_functions_for_cmd() {
-      # Mock: validate_env を常に成功させる
       # shellcheck disable=SC2329
       validate_env() { return 0; }
       export -f validate_env
 
-      # module.sh を source して関数をロード
       # shellcheck disable=SC1090
       . "$SCRIPT"
     }
@@ -685,12 +677,10 @@ Describe "module.sh"
   Describe "T-CLI-CDS: collect_declared_scopes"
 
     load_module_functions_for_scopes() {
-      # Mock: validate_env を常に成功させる
       # shellcheck disable=SC2329
       validate_env() { return 0; }
       export -f validate_env
 
-      # module.sh を source して関数をロード
       # shellcheck disable=SC1090
       . "$SCRIPT"
     }
@@ -978,12 +968,10 @@ Describe "module.sh"
   Describe "T-CLI-RDS: read_declared_scope"
 
     load_module_functions_for_read_declared() {
-      # Mock: validate_env を常に成功させる
       # shellcheck disable=SC2329
       validate_env() { return 0; }
       export -f validate_env
 
-      # module.sh を source して関数をロード
       # shellcheck disable=SC1090
       . "$SCRIPT"
     }
@@ -1089,12 +1077,10 @@ Describe "module.sh"
   Describe "T-CLI-RTS: resolve_test_scope"
 
     load_module_functions_for_resolve() {
-      # Mock: validate_env を常に成功させる
       # shellcheck disable=SC2329
       validate_env() { return 0; }
       export -f validate_env
 
-      # module.sh を source して関数をロード
       # shellcheck disable=SC1090
       . "$SCRIPT"
     }

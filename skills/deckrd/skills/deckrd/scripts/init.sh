@@ -42,7 +42,8 @@
 
 # shellcheck disable=SC1091
 
-# don't use -u for checking error by Agent
+# No -u: an unbound variable would abort with bash's own message
+# before the script prints an error the agent can act on
 set -o pipefail
 
 # Load bootstrap (defines SYMBOL, PROJECT_ROOT, DECKRD_LOCAL_DATA, DECKRD_LIB_DIR, etc.)
@@ -342,7 +343,6 @@ init_session() {
   timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
   if [[ -f "$SESSION_FILE" ]]; then
-    # Already exists: preserve as-is
     echo "" >&2
     echo "Session preserved: ${SESSION_FILE}" >&2
     return 0
