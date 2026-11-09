@@ -219,8 +219,9 @@ tools: [Read, Write, Edit, Bash, Grep, Glob]
 
 **Purpose**: Breaks a request or a tasks.md Target (`T-XX`) into a task list. Each item makes one checklist
 
-**Entry point**: bdd-coder skill Phase 1a, before checklist-builder. Writes `<module dir>/temp/tasklists/<name>.tasklist.md`.
-Example: `docs/.deckrd/<ns>/<module>/temp/tasklists/T01.tasklist.md`.
+**Entry point**: bdd-coder skill Phase 1a, before checklist-builder. Writes `${DECKRD_LOCAL_TEMP}/tasklist/<ns>/<module>/<name>.tasklist.md` (default `.local/deckrd/temp/tasklist/`).
+Example: `.local/deckrd/temp/tasklist/deckrd/libs/T-01.tasklist.md`.
+A natural-language request goes under the active module's directory, or directly under `.local/deckrd/temp/tasklist/` when no module is active.
 Only the selected item's `Handoff` goes to checklist-builder, never the task list file.
 Steps live in the Role file `references/roles/tasklist-builder.md`. Never invoked directly by the user.
 
