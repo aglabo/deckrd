@@ -42,7 +42,7 @@ Phase 6: ワークフロー終了
 | Phase   | 目的                               | Agent                                | 出力                                                                                                         |
 | ------- | ---------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
 | Phase 0 | 開発言語・環境を把握               | explore-agent                        | ENV PROFILE (env-profile.md)                                                                                 |
-| Phase 1 | タスクリストとチェックリストを生成 | tasklist-builder + checklist-builder | `.local/deckrd/temp/tasklist/<name>.tasklist.md`, `.local/deckrd/temp/tasks/<slug>-<adjective>-checklist.md` |
+| Phase 1 | タスクリストとチェックリストを生成 | tasklist-builder + checklist-builder | `<module dir>/temp/tasklists/<name>.tasklist.md`, `.local/deckrd/temp/tasks/<slug>-<adjective>-checklist.md` |
 | Phase 2 | 依存関係を分析                     | bdd-coder                            | 実行グループ (直列 / 並列)                                                                                   |
 | Phase 3 | bdd-coder に委譲                   | bdd-coder                            | 各タスクのステータスレポート                                                                                 |
 | Phase 4 | 全体品質を検証                     | bdd-coder                            | 品質ゲート合格確認                                                                                           |
@@ -74,7 +74,8 @@ Phase 6: ワークフロー終了
 
 > "設定ファイルの読み込みと検証を実装して"
 > → tasklist-builder が Target ごとの項目 (L-01: parseConfig, L-02: validateConfig) を持つ
-> `.local/deckrd/temp/tasklist/load-config-file-calm.tasklist.md` を生成
+> `docs/.deckrd/<active module>/temp/tasklists/load-config-file-calm.tasklist.md` を生成
+> (アクティブなモジュールがなければ `.local/deckrd/temp/tasklists/` に置く)
 > → 項目を 1 件選ぶ → その Handoff から checklist-builder がチェックリストを生成 → bdd-coder で実装
 
 Target が 1 つだけの指示 (例: "グリーティング関数を実装して") は項目が 1 件になるため、確認なしで checklist-builder に進む。
@@ -82,9 +83,9 @@ Target が 1 つだけの指示 (例: "グリーティング関数を実装し�
 **Target ID from tasks.md:**
 
 > "T01 を実装して"
-> → tasklist-builder が `T-01.tasklist.md` に Scenario ごとの項目 (`T01-01`, `T01-02`, …) を生成
+> → tasklist-builder が tasks.md のモジュール配下の `temp/tasklists/T01.tasklist.md` に Scenario ごとの項目 (`T01-01`, `T01-02`, …) を生成
 > → 項目を 1 件選ぶ → checklist-builder → bdd-coder で実装
-> → 続きは `/bdd-coder:bdd-coder --tasklist .local/deckrd/temp/tasklist/T-01.tasklist.md`
+> → 続きは `/bdd-coder:bdd-coder --tasklist docs/.deckrd/<ns>/<module>/temp/tasklists/T01.tasklist.md`
 
 **Task ID from tasks.md:**
 
@@ -185,10 +186,14 @@ Spawn **tasklist-builder** with:
 - 返却されたパスを **TASKLIST PATH** として保存する (Phase 5 Step 4b で使う)
 - checklist-builder に渡すのは選んだ項目の Handoff だけ。タスクリストのファイルは渡さない
   (他タスクを含む資料を渡さない: `docs/.deckrd/rules/deckrd-rule-bdd-cycle.md` の「1 委譲 = 1 タスク」)
-- 同じ Target ID で再実行すると既存のタスクリストを返す (`STATUS: reused`)
+- タスクリストはモジュールごとの `temp/tasklists/` に置く。別モジュールの同じ Target ID とは衝突しない
+- 同じ Target ID で再実行すると、既存のタスクリストを現在の tasks.md と突き合わせる。
+  `done` の項目と項目 ID は残し、分割済みの Case や新しい Scenario を反映する (`STATUS: updated`)。
+  差分がなければそのまま返す (`STATUS: reused`)
 - session.json への登録と再開は #211 で扱う。ここでは行わない
 
-出力: `.local/deckrd/temp/tasklist/<name>.tasklist.md`
+出力: `<module dir>/temp/tasklists/<name>.tasklist.md`。Target ID のときは `TXX.tasklist.md` とする。
+モジュールがない自然言語の指示は `.local/deckrd/temp/tasklists/` に置く。
 
 ### Phase 1b: チェックリスト作成 (checklist-builder 委譲)
 
