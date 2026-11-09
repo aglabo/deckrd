@@ -147,6 +147,7 @@
 - *(config)* Move the package to ESM and switch the markdownlint / textlint CLIs
 - *(config)* Update dprint — bump the json plugin to 0.23.0 and add the toml plugin (0.8.0)
 - *(release)* Unify all plugin and skill versions to 0.5.0
+- *(marketplace)* Rename the marketplace to `deckrd` and set the owner URL to `https://github.com/aglabo/deckrd`
 
 ### 💥 Breaking Changes
 
