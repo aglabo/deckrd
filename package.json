@@ -39,9 +39,5 @@
   "devDependencies": {
     "@commitlint/config-conventional": "^21.2.4"
   },
-  "packageManager": "pnpm@12.15.0",
-  "engines": {
-    "pnpm": ">=12"
-  },
   "@(#)": "deckrd: goal to tasks"
 }
