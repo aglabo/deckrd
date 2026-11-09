@@ -47,6 +47,35 @@ description: Session file location, schema, and state transition rules
 | `modules.*.current_step` | string | Last completed step                            |
 | `modules.*.completed`    | array  | All completed steps                            |
 | `modules.*.documents`    | object | Generated document paths                       |
+| `bdd_coder`              | object | bdd-coder work in progress (optional)          |
+
+### `bdd_coder` (written by bdd-coder)
+
+The bdd-coder skill adds this entry when it builds a task list or a checklist.
+`/bdd-coder:bdd-coder --resume` reads it to restore an interrupted session.
+deckrd commands do not read or write it. They must keep it when they rewrite `session.json`.
+
+```json
+{
+  "bdd_coder": {
+    "tasklist": ".local/deckrd/temp/tasklist/deckrd/libs/T-01.tasklist.md",
+    "item": "L-02",
+    "checklist": ".local/deckrd/temp/tasks/parse-config-calm-checklist.md",
+    "status": "in-progress",
+    "updated_at": "2026-11-09T00:00:00Z"
+  }
+}
+```
+
+| Field                  | Type           | Description                                 |
+| ---------------------- | -------------- | ------------------------------------------- |
+| `bdd_coder.tasklist`   | string \| null | Task list in use (repository-root relative) |
+| `bdd_coder.item`       | string \| null | Selected task list item (`L-XX`)            |
+| `bdd_coder.checklist`  | string \| null | Checklist in use (repository-root relative) |
+| `bdd_coder.status`     | string         | `in-progress` or `done`                     |
+| `bdd_coder.updated_at` | string         | UTC timestamp of the last write             |
+
+Write rules and the resume procedure: bdd-coder `SKILL.md`, "Session entry" and "Resume".
 
 ## State Transitions
 
