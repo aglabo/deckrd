@@ -3,7 +3,8 @@ name: bdd-coder
 description: >
   BDD-style implementation agent. Use when the user gives ANY coding instruction —
   natural-language, explicit Task ID, or custom task list.
-  Always spawns checklist-builder first to generate a checklist, then runs BDD implementation.
+  Breaks large requests into a task list via tasklist-builder, then always spawns
+  checklist-builder for one task to generate a checklist, then runs BDD implementation.
   Examples: "implement X", "add function Y", "create Z", "write code for W",
   "implement task T01-02", "run bdd-coder", "start BDD implementation".
   Do NOT commit or push — implementation only, no git operations.
@@ -20,7 +21,9 @@ metadata:
 # bdd-coder
 
 Implements tasks using strict BDD: Red → Green → Refactor.
-Always generates a checklist first via checklist-builder, then delegates BDD implementation to bdd-coder.
+Breaks the input into a task list via tasklist-builder when needed,
+generates a checklist for one task via checklist-builder,
+then delegates BDD implementation to bdd-coder.
 
 ## Skill Announcement (REQUIRED)
 
@@ -38,30 +41,71 @@ Raise ALL questions before writing any code. Ask NOW if any of the following are
 - Ambiguous specs
 - Implementation approach or dependencies
 
-Once Phase 1 (Checklist Build) starts, stop asking scope questions.
+Once Phase 1 (Tasklist + Checklist Build) starts, stop asking scope questions.
+Choosing which task-list item to run (Phase 1a) is not a scope question and is still asked there.
 
 ## Execution Flow
 
 bdd-coder is an orchestration layer with the following fixed phase order:
 
-| Phase | Name               | Agent                     | What happens                                                                   |
-| ----- | ------------------ | ------------------------- | ------------------------------------------------------------------------------ |
-| 0     | Environment        | explore-agent             | Detect language, test framework, lint, type-check setup                        |
-| 1     | Checklist Build    | checklist-builder         | Generate checklist from instruction or Task ID                                 |
-| 2     | Dependency Map     | bdd-coder                 | Classify checklist tasks into serial / parallel groups                         |
-| 3     | bdd-coder Dispatch | bdd-coder                 | Spawn bdd-coder per task; collect status reports                               |
-| 4     | Quality Gate       | bdd-coder + code-reviewer | Global lint + type-check + all tests pass, then code review                    |
-| 5     | Done Check         | bdd-coder                 | Confirm all checklist items complete; check off tasks.md and write back status |
-| 6     | Session End        | bdd-coder                 | Reset state; remind user to commit manually                                    |
+| Phase | Name                       | Agent                                | What happens                                                                   |
+| ----- | -------------------------- | ------------------------------------ | ------------------------------------------------------------------------------ |
+| 0     | Environment                | explore-agent                        | Detect language, test framework, lint, type-check setup                        |
+| 1     | Tasklist + Checklist Build | tasklist-builder + checklist-builder | Break input into a task list, pick one item, generate its checklist            |
+| 2     | Dependency Map             | bdd-coder                            | Classify checklist tasks into serial / parallel groups                         |
+| 3     | bdd-coder Dispatch         | bdd-coder                            | Spawn bdd-coder per task; collect status reports                               |
+| 4     | Quality Gate               | bdd-coder + code-reviewer            | Global lint + type-check + all tests pass, then code review                    |
+| 5     | Done Check                 | bdd-coder                            | Confirm all checklist items complete; check off tasks.md and write back status |
+| 6     | Session End                | bdd-coder                            | Reset state; remind user to commit manually                                    |
 
 Gate Rule: phases must run in order. No skipping.
 
 All tests MUST pass at Phase 4. No exceptions.
 Do NOT commit after completion — user commits manually.
 
-### Phase 1: Checklist Build
+### Phase 1: Tasklist + Checklist Build
 
-Always spawn **checklist-builder** with the user's instruction or Task ID.
+Route the input first. Only natural language and Target IDs go through tasklist-builder.
+
+| Input                             | Phase 1a: tasklist-builder | Phase 1b: checklist-builder input               |
+| --------------------------------- | -------------------------- | ----------------------------------------------- |
+| Natural-language                  | Run                        | `Handoff` of the selected item                  |
+| Target ID (e.g. `T01`)            | Run                        | `Handoff` of the selected item (`T01-02`)       |
+| Scenario ID (e.g. `T01-02`)       | Skip                       | The Task ID as given                            |
+| `--tasklist <path> [--item L-02]` | Skip                       | `Handoff` of the given item, or first `pending` |
+| `--checklist <path>`              | Skip                       | Skip checklist-builder; use the file            |
+
+#### Phase 1a: Tasklist Build
+
+Spawn **tasklist-builder** with `instruction`, and `tasks_md` for a Target ID.
+Agent definition: [agents/tasklist-builder.md](../../agents/tasklist-builder.md).
+
+| Returned status    | Handling                                                                   |
+| ------------------ | -------------------------------------------------------------------------- |
+| `questions`        | Ask the user the returned question, then re-run with `answers`             |
+| `invalid-input`    | Report `DETAIL` to the user and end the session (Phase 6)                  |
+| `created`/`reused` | Select one item as below, and keep the task list path as **TASKLIST PATH** |
+
+Select the item:
+
+- Exactly one `pending` item → use it without asking.
+- Two or more `pending` items → show the list (ID / Title / Status) and ask which one to run.
+  Default: the first `pending` item whose `Depends-on` items are all `done`.
+- `needs-split` and `done` items cannot be selected.
+  For `needs-split`, tell the user to split the Case in tasks.md via `/deckrd tasks`.
+- No `pending` item → report it and end the session (Phase 6).
+
+Pass **only the selected item's `Handoff`** to Phase 1b.
+Never pass the task list file to checklist-builder or bdd-coder: it lists other tasks.
+The rule "1 delegation = 1 task" (`docs/.deckrd/rules/deckrd-rule-bdd-cycle.md`)
+forbids handing over material that contains other tasks.
+The task list is orchestrator state only.
+
+Output: `.local/deckrd/temp/tasklist/<name>.tasklist.md` (`T-XX.tasklist.md` for a Target ID)
+
+#### Phase 1b: Checklist Build
+
+Spawn **checklist-builder** with the routed input.
 
 | Input type            | checklist-builder behavior                                    |
 | --------------------- | ------------------------------------------------------------- |
@@ -223,6 +267,17 @@ Regardless of input type, also update the checklist file:
    - If not, add a comment line below the target heading:
      `<!-- status: done -->` or `<!-- status: in-progress -->`
 
+#### Step 4b: Write back to the task list (TASKLIST PATH only)
+
+Run this step only when Phase 1 used a task list (Phase 1a ran, or `--tasklist` was given).
+
+1. Open TASKLIST PATH and find the item selected in Phase 1a.
+2. If every case of this invocation is completed in Step 1, change the item checkbox to `- [x]`
+   and its `Status:` to `done`. Otherwise leave the item as is.
+3. Do not touch any other item. Do not register the task list in `.local/deckrd/session.json`.
+4. In the Step 5 report, add `NEXT: <next pending item ID> → <Handoff>`, or `NEXT: none`,
+   and the command to continue: `/bdd-coder:bdd-coder --tasklist <TASKLIST PATH>`.
+
 #### Step 5: Report to user
 
 After all write-backs complete, output the STATUS WRITE-BACK and CHECKLIST BACKFILL blocks.
@@ -239,5 +294,7 @@ After all write-backs complete, output the STATUS WRITE-BACK and CHECKLIST BACKF
 - BDD sub-agent: [agents/bdd-coder.md](../../agents/bdd-coder.md)
 - Code reviewer: [agents/code-reviewer.md](../../agents/code-reviewer.md)
 - On-demand review command: [bdd-coder-review/SKILL.md](../bdd-coder-review/SKILL.md)
+- Task list builder: [agents/tasklist-builder.md](../../agents/tasklist-builder.md) — procedure in [roles/tasklist-builder.md](references/roles/tasklist-builder.md)
+- Task list template: [assets/templates/tasklist.tpl.md](assets/templates/tasklist.tpl.md)
 - Checklist builder: [agents/checklist-builder.md](../../agents/checklist-builder.md)
 - Checklist template: [assets/templates/implementation-checklist.tpl.md](assets/templates/implementation-checklist.tpl.md)
