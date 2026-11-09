@@ -1,4 +1,4 @@
-# deckrd v0.6.0
+# deckrd v0.6.0 - 2026-10-04
 
 <!-- textlint-disable
   ja-technical-writing/sentence-length,
@@ -130,6 +130,45 @@ CRAP=N/A
 
 要件確認、設計、API 判断、生成、レビュー、version bump、second opinion までを段階的に実行できます。
 
+### bdd-coder にタスクリストとセッション再開を追加
+
+`tasklist-builder` エージェントが、Target ID や自然言語の依頼からタスクリストを作成します。
+選択した項目ごとにチェックリストを生成し、BDD 実装へ進みます。
+
+- タスクリストは `.local/deckrd/temp/tasklist/` 配下に保存
+- 同じ Target ID で再実行すると、`tasks.md` と照合して既存のタスクリストを再利用・更新
+- 進行状況を `.local/deckrd/session.json` の `bdd_coder` に記録
+
+中断したセッションは次で再開できます。
+
+```sh
+/bdd-coder:bdd-coder --resume
+```
+
+### コメントレビュー用の `comment-review` スキルを追加
+
+コードコメントをガイドライン (C-1〜C-10) に照らしてレビューし、`comment-refiner` エージェントが修正案を作成します。
+差分を確認して承認した場合のみ適用します。
+
+```sh
+/bdd-coder:comment-review
+/bdd-coder:comment-review --branch
+/bdd-coder:comment-review <path>...
+```
+
+### Decision Record の作成と書き直しを強化
+
+DR 作成ガイドラインを追加し、`dr-writer` エージェントがガイドラインに従って DR を書くようになりました。
+既存の DR は `dr-refiner` エージェントで書き直せます。
+
+```sh
+/deckrd dr --add
+/deckrd dr --refine
+/deckrd dr --refine DR-03 DR-05
+```
+
+決定そのものが変わる指摘は書き換えず、`dr --add` による新しい DR の追加を案内します。
+
 ## Other Changes
 
 - `jq` を優先し、`jaq` を fallback とする JSON 処理へ統一
@@ -141,6 +180,10 @@ CRAP=N/A
 - commit message 生成モデルを `gpt-5.6-luna` へ変更
 - `fable` モデルを追加サポート
 - SKILL.md の詳細説明を references へ分離
+- Actionlint / Ghalint の runner と `lint:gha` スクリプトを追加
+- commitlint 設定を `commitlint.config.mjs` へ変更
+- ドキュメントサイト (Blume) の雛形を `aglabo.github.io/` に追加
+- 未使用のリリーススクリプト (`create-release.sh` / `github-publish.sh` / `run-git-cliff.sh`) を削除
 
 ## Migration
 
