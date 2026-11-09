@@ -17,10 +17,10 @@ that accurately reflects what the code actually does — not what it was intende
 
 ## Mode Variants
 
-This prompt is invoked with `--mode <target>` where target is one of:
+This prompt is invoked with a `TARGET` value in the input context, one of:
 `req`, `spec`, `impl`, `tasks`.
 
-Select the appropriate output format and focus based on the mode.
+Select the appropriate output format and focus based on that target (the "mode").
 
 ---
 
