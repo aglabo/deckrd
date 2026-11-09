@@ -21,7 +21,8 @@ v0.6.0 では、アセット管理・作業ディレクトリ・テスト基盤�
 - 不足・古いアセットを検出
 - `--update` で更新を適用
 - ネストしたアセットに対応
-- ユーザー編集済み・新しいファイルを保持
+- 配置先のほうが新しいファイルは保持 (同梱版より古く内容が異なるファイルは `--update` で上書き)
+- 既存の `.gitignore` は変更しない
 - `.local/deckrd/.gitignore` の workspace ルール移行に対応
 
 ### `init` の再実行を安全化
@@ -29,10 +30,13 @@ v0.6.0 では、アセット管理・作業ディレクトリ・テスト基盤�
 通常の `init` は未配置アセットのみ追加し、既存ファイルを保持します。
 
 ```sh
-/deckrd init --force
+/deckrd init <project> <project-type> --force
 ```
 
-`--force` を指定した場合のみ、管理対象アセットを同梱版で再配置します。
+`--force` を指定した場合のみ、すべての同梱アセットを同梱版で再配置します。
+
+> `--force` は `.gitignore` とユーザーが編集したファイルも上書きします。保持されるのは `session.json` のみです。
+> 古いファイルだけを更新したい場合は `/deckrd update --update` を使ってください。
 
 シンボリックリンクやハードリンクを経由した Deckrd 自身のアセット領域への誤配置も防止します。
 
@@ -84,7 +88,6 @@ codex exec
 
 - deckrd-review
 - bdd-coder code review
-- AI runner
 - 開発者向けドキュメント
 
 Codex CLI は PATH 上にあり、ログイン済みである必要があります。
@@ -97,7 +100,7 @@ Codex CLI は PATH 上にあり、ログイン済みである必要がありま�
 - 空レスポンスをエラー扱い
 - エラーを stderr へ分離
 - stdout を正常レスポンス専用化
-- timeout 処理を統一
+- timeout 処理を統一 (既定値を 120 秒から 300 秒へ変更、`DECKRD_AI_TIMEOUT` で上書き可能)
 - `set -e` 下でも終了コードを保持
 - Codex 実行時の設定を隔離
 
@@ -109,7 +112,7 @@ Codex CLI は PATH 上にあり、ログイン済みである必要がありま�
 1 task = 1 test = 1 input
 ```
 
-複数入力を含む Case は自動展開せず `BLOCKED` として扱います。
+Task ID 指定の Case が複数入力を含む場合は、自動展開せず `BLOCKED` として扱います。
 
 カバレッジ取得不能時は `coverage = 0` を仮定しません。
 
@@ -171,13 +174,12 @@ DR 作成ガイドラインを追加し、`dr-writer` エージェントがガ�
 
 ## Other Changes
 
-- `jq` を優先し、`jaq` を fallback とする JSON 処理へ統一
 - コマンドエラーを stderr へ統一
 - `SKILL_ROOT` など共有ライブラリのパス解決を改善
 - 並列実行時の一時ファイル名衝突を軽減
 - `.gitignore` を allowlist ベースへ変更
 - Gitleaks から Betterleaks へ移行
-- commit message 生成モデルを `gpt-5.6-luna` へ変更
+- commit message フック (`lefthook.yml`) の生成モデルを `gpt-5.6-luna` へ変更
 - `fable` モデルを追加サポート
 - SKILL.md の詳細説明を references へ分離
 - Actionlint / Ghalint の runner と `lint:gha` スクリプトを追加
@@ -201,7 +203,7 @@ DR 作成ガイドラインを追加し、`dr-writer` エージェントがガ�
 
 また、以下の移行が必要です。
 
-- module metadata を workspaces/module/module.md へ移動
+- module metadata を workspaces/module/module.md へ手動で移動 (`/deckrd update` では移動されません。旧配置は読み込まれません)
 - 一時ファイルを .local/deckrd/temp/ へ移動
 - 永続メモを .local/deckrd/workspaces/ へ配置
 - Codex MCP を Codex CLI に置き換え

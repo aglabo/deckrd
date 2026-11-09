@@ -11,8 +11,8 @@
 ### Features
 
 - Add `/deckrd update` to list and apply missing or outdated bundled assets.
-- Add `init --force` to explicitly redeploy managed assets while preserving session state.
-- Preserve existing assets during normal `init` runs and install only missing files.
+- Add `init <project> <project-type> --force` to redeploy every bundled asset. It overwrites `.gitignore` files and user-edited files, and preserves only `session.json`.
+- Keep normal `init` re-runs non-destructive across nested asset directories: only missing files are installed.
 - Add recursive asset deployment with `.org` suffix handling, source mtime preservation, and protected asset support.
 - Add shared asset copy and diff helpers for `init` and `update`.
 - Add migration support for legacy `.local/deckrd/.gitignore` workspace rules.
@@ -21,13 +21,8 @@
 - Move module metadata to `workspaces/module/module.md`.
 - Add Windows ShellSpec execution through WSL.
 - Add `fable` model support to `prepare-commit-msg.sh`.
-- Add module shorthand and namespace resolution from `.project.json` or the Git repository root name.
-- Add module input and writable output support to Deckrd agents.
-- Add the `tasklist-builder` agent to bdd-coder to turn Target IDs and natural-language requests into task lists before checklist generation.
-- Save bdd-coder task list sessions in `.local/deckrd/session.json` and add `--resume` to continue an interrupted session.
-- Add the `comment-review` skill and `comment-refiner` agent to review and rewrite code comments against the code comment guideline.
-- Add the `dr-writer` agent and a decision record authoring guideline for `/deckrd dr --add`.
-- Add `/deckrd dr --refine` and the `dr-refiner` agent to rewrite existing decision records.
+- Add module input and writable output support to the Deckrd `explore-agent`.
+- Add the `DECKRD_AI_TIMEOUT` environment variable and raise the default AI timeout from 120 to 300 seconds.
 
 ### Bug Fixes
 
@@ -52,8 +47,6 @@
 
 - Move temporary and regeneratable working files under `.local/deckrd/temp/`.
 - Define separate temporary, shared workspace, and module workspace layers.
-- Move module documentation and metadata under module `workspaces/`.
-- Prefer `jq` over `jaq` and route JSON reads through the shared `jq_read` helper.
 - Split the specification workflow into 12 phase-specific reference documents.
 - Separate detailed usage and examples from `SKILL.md` files into reference documents.
 - Enforce one input per generated BDD test case.
@@ -71,7 +64,7 @@
 - Add metrics-only fallback when Codex review is unavailable.
 - Distinguish unavailable Codex review output from a clean review.
 - Add deterministic commit message generation rules.
-- Change the default commit-message model to `gpt-5.6-luna`.
+- Change the commit-message model passed by the `prepare-commit-msg` hook in `lefthook.yml` to `gpt-5.6-luna` (the script default stays `sonnet`).
 - Improve coverage-unavailable handling with `cov=N/A` and `CRAP=N/A` instead of assuming zero coverage.
 
 ### Testing
@@ -102,7 +95,6 @@
 - Add troubleshooting and scenario reference documents.
 - Document the bdd-coder task list workflow, its output location under `.local/deckrd/temp/tasklist/`, and session resume.
 - Document decision record authoring, `dr --add`, and `dr --refine` in the user and developer guides.
-- Add a Blume documentation site scaffold under `aglabo.github.io/` in English and Japanese.
 
 ### Tooling
 
@@ -110,13 +102,6 @@
 - Update cspell dictionaries for new test IDs and project terms.
 - Move the hackers dictionary into the shared Deckrd assets directory.
 - Share Deckrd libraries and dictionary assets with bdd-coder through symlinks.
-- Add Actionlint and Ghalint runners with `lint:gha` scripts.
-- Route lint runners through checked-in configs and simplify ShellSpec spec resolution.
-- Switch the commitlint config to `commitlint.config.mjs` and add `@commitlint/config-conventional`.
-- Pin pnpm with `packageManager` and add documentation site scripts (`site:dev`, `build:site`).
-- Add a document QA workflow, an actions lockfile, and daily Dependabot updates for GitHub Actions.
-- Track `.claude/skills` as a symlink to `skills/`.
-- Remove the unused release scripts (`create-release.sh`, `github-publish.sh`, `run-git-cliff.sh`).
 
 ## [0.5.0] - 2026-09-12
 
