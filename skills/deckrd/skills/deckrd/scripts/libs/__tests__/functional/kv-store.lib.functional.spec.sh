@@ -88,7 +88,6 @@ Describe "kv-store.lib.sh - functional tests"
 
       Describe "When: kv_load を呼ぶ"
         It "Then: [Edge] T-LIB-KLOADF-07: 空文字値はデフォルト値にフォールバックする"
-          # 仕様: ${value:-${default}} で空文字 → デフォルト値が使われる
           printf '{"key1":""}' > "${NAMING_TMPDIR}/emptyval.kv"
           kv_load "emptyval_store" "${NAMING_TMPDIR}/emptyval"
           When call kv_get "emptyval_store" "key1"

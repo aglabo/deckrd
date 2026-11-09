@@ -11,7 +11,7 @@
 set -euo pipefail
 
 ##
-# @description Detect if running in CI environment
+# @description Check if the script is running in a CI environment
 # @return 0 If CI environment detected
 # @return 1 If not in CI environment
 is_ci_environment() {
@@ -96,7 +96,6 @@ setup_shellspec() {
 
   echo "Installing shellspec to $install_dir..."
 
-  # Clone shellspec repository
   if git clone --depth 1 https://github.com/shellspec/shellspec.git "$install_dir" >/dev/null 2>&1; then
     echo "shellspec installed successfully to $install_dir"
     echo "Add to PATH: export PATH=\"\$PWD/$install_dir:\$PATH\""
@@ -145,7 +144,6 @@ _clone_agla_tool() {
 
 ##
 # @description Check install state, then check out an aglabo tool repository and install its dependencies
-#   Skips the clone when bin/ already exists (repo checked out but dependencies missing)
 # @arg $1 string Repository name (e.g. agla-dev-tools)
 # @arg $2 string Directory path where aglabo tools are checked out (default: ~/.local/tools)
 # @return 0 If the tool is already installed or was installed successfully
@@ -164,11 +162,12 @@ setup_agla_tool() {
 
   mkdir -p "$tools_dir"
 
+  # Skip the clone when bin/ already exists (repo checked out but dependencies missing)
   if [[ ! -d "${install_dir}/bin" ]]; then
     _clone_agla_tool "$repo" "$install_dir" || return 1
   fi
 
-  # Install dependencies (tool wrappers require node_modules/.bin)
+  # Tool wrappers require node_modules/.bin
   if ! pnpm --dir "$install_dir" install --frozen-lockfile >/dev/null 2>&1; then
     echo "Error: $repo pnpm install failed" >&2
     echo "Hint: run 'pnpm --dir \"$install_dir\" install --frozen-lockfile' manually." >&2
@@ -181,12 +180,10 @@ setup_agla_tool() {
 }
 
 ##
-# @description Main entry point
 # @arg $1 string Optional shellspec installation directory (default: .tools/shellspec)
 # @return 0 If every setup step succeeded or was skipped
 # @return 1 If any setup step failed
 main() {
-  # Skip in CI environment
   if is_ci_environment; then
     echo "CI environment detected. Skipping dev tools install."
     return 0

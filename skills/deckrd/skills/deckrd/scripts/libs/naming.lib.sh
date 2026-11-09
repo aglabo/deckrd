@@ -10,7 +10,6 @@
 # shellcheck shell=bash
 # cspell:words shuf TOCTOU
 
-# Guard: prevent re-sourcing
 if [[ -n "${_NAMING_LIB_LOADED:-}" ]]; then
   return 0
 fi
@@ -21,7 +20,6 @@ readonly _NAMING_LIB_LOADED=1
 _FILENAME_CACHE_DIR="${_FILENAME_CACHE_DIR:-${DECKRD_LOCAL_DATA:-$HOME/.local/share/deckrd}/cache/filenames}"
 
 # Max retry count for generate_filename collision avoidance
-# Override NAMING_MAX_RETRIES to change the limit
 NAMING_MAX_RETRIES="${NAMING_MAX_RETRIES:-5}"
 
 # Default dictionary for hacker_random, resolved once at source time.

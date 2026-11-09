@@ -14,7 +14,6 @@
 #   1. Asset copy  - copy_assets and the per-file copy
 #   2. Mtime sync  - sync_asset_mtimes
 
-# Guard: prevent re-sourcing
 if [[ -n "${_ASSET_COPY_LOADED:-}" ]]; then
   return 0
 fi

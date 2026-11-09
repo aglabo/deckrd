@@ -8,21 +8,18 @@
 #
 # @version 0.1.0
 # USAGE: source this file, do NOT execute directly.
-#   . "$(dirname "${BASH_SOURCE[0]}")/libs/session.sh"
+#   . "$(dirname "${BASH_SOURCE[0]}")/libs/session.lib.sh"
 
-# Guard: prevent re-sourcing
 if [[ -n "${_SESSION_LOADED:-}" ]]; then
   return 0
 fi
 readonly _SESSION_LOADED=1
 
-# Load kv-store as the backing implementation
 # shellcheck disable=SC1091
 . "${DECKRD_LIB_DIR}/kv-store.lib.sh"
 
 # SESSION_SCHEMA - compatibility shim: exposes _KV_SCHEMA as SESSION_SCHEMA
 # This allows existing code that checks SESSION_SCHEMA[$buffer] to work.
-# We use a nameref alias to the same underlying array.
 # shellcheck disable=SC2034
 declare -n SESSION_SCHEMA="_KV_SCHEMA"
 
@@ -40,7 +37,7 @@ session_init() {
 #
 # @arg $1 string JSON file path
 # @arg $2 string Buffer name (store name)
-# @return 0 on success (including file-not-found with default init), 1 on schema error
+# @return 0 on success (including file-not-found with default init), 1 on schema error, invalid JSON, or unknown key
 session_load() {
   local file="$1"
   local buffer="$2"

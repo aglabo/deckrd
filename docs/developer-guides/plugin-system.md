@@ -109,8 +109,11 @@ skills/{skill-name}/
 
 **Components**:
 
-- Skills: bdd-coder (`/bdd-coder:bdd-coder`), bdd-coder-review (`/bdd-coder:bdd-coder-review`)
-- Agents: checklist-builder, bdd-coder, code-reviewer, explore-agent
+- Skills:
+  - bdd-coder (`/bdd-coder:bdd-coder`)
+  - bdd-coder-review (`/bdd-coder:bdd-coder-review`)
+  - comment-review (`/bdd-coder:comment-review`)
+- Agents: checklist-builder, bdd-coder, code-reviewer, comment-refiner, explore-agent
 - Templates: Test templates per language
 - References: BDD cycle documentation
 
@@ -224,6 +227,13 @@ tools: [Read, Write, Edit, Bash, Grep, Glob]
 
 **Entry points**: bdd-coder skill Phase 4 (automatic), or `/bdd-coder:bdd-coder-review` (on demand).
 Reviews the session's changes in aggregate. Never invoked directly by the user.
+
+#### comment-refiner
+
+**Purpose**: Comment cleanup by the comment guideline (C-1 to C-10). Never changes code.
+
+**Entry point**: `/bdd-coder:comment-review`. Works in two modes, draft (findings and diff) and apply (after user approval).
+Steps live in the Role file `references/roles/comment-refiner.md`. Never invoked directly by the user.
 
 #### explore-agent
 

@@ -99,7 +99,7 @@ Describe "ai-runner.sh"
         End
 
         # codex exec は cwd が git リポジトリ外だと起動を拒む。run_ai は cd しないので、
-        # このフラグが落ちると「リポジトリ外の呼び出し元からは無言で空応答」へ逆戻りする
+        # このフラグが落ちると、リポジトリ外の呼び出し元には無言で空応答が返る
         It "Then: [Normal] T-LIB-ABC-11: codex は --skip-git-repo-check を保つ"
           _cmd=()
           When call _build_ai_command "codex" "gpt-4o" _cmd

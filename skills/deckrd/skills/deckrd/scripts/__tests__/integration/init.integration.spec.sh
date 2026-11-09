@@ -32,7 +32,6 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
     It "[Error] T-CLI-MAINI-01: Should: exit 1, stderr includes Usage and 'required', stdout is blank"
       When run bash "$SCRIPT"
       The status should equal 1
-      # @note: revisit this assertion when --json mode is added
       The output should be blank
       The stderr should include "Usage:"
       The stderr should include "required"
@@ -46,7 +45,6 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
     It "[Error] T-CLI-MAINI-02: Should: exit 1, stderr includes Usage and 'required', stdout is blank"
       When run bash "$SCRIPT" myapp
       The status should equal 1
-      # @note: revisit this assertion when --json mode is added
       The output should be blank
       The stderr should include "Usage:"
       The stderr should include "required"
@@ -60,7 +58,6 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
     It "[Normal] T-CLI-MAINI-03: Should: exit 0, stderr includes Usage, stdout is blank"
       When run bash "$SCRIPT" --help
       The status should equal 0
-      # @note: revisit this assertion when --json mode is added
       The output should be blank
       The stderr should include "Usage:"
     End
@@ -80,7 +77,6 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
     It "[Error] T-CLI-MAINI-04: Should: exit 1, stderr includes Usage and 'Unknown option', stdout is blank"
       When run bash "$SCRIPT" myapp webapp --unknown
       The status should equal 1
-      # @note: revisit this assertion when --json mode is added
       The output should be blank
       The stderr should include "Usage:"
       The stderr should include "Unknown option"
@@ -94,7 +90,6 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
     It "[Normal] T-CLI-MAINI-05: stderr includes project name/type/Init complete/Session, stdout is blank"
       When run bash "$SCRIPT" myapp webapp
       The status should equal 0
-      # @note: revisit this assertion when --json mode is added
       The output should be blank
       The stderr should include "myapp"
       The stderr should include "webapp"
@@ -337,7 +332,6 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
     It "[Error] T-CLI-MAINI-22: --language cobol (unsupported)"
       When run bash "$SCRIPT" myapp webapp --language cobol
       The status should equal 1
-      # @note: revisit this assertion when --json mode is added
       The output should be blank
       The stderr should include "Unsupported language"
     End
@@ -356,7 +350,6 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
     It "[Error] T-CLI-MAINI-24: --ai-model org/model-name (unknown provider)"
       When run bash "$SCRIPT" myapp webapp --ai-model org/model-name
       The status should equal 1
-      # @note: revisit this assertion when --json mode is added
       The output should be blank
       The stderr should include "unknown AI model"
     End
@@ -364,7 +357,6 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
     It "[Error] T-CLI-MAINI-25: --ai-model 'bad model!' (invalid characters)"
       When run bash "$SCRIPT" myapp webapp --ai-model "bad model!"
       The status should equal 1
-      # @note: revisit this assertion when --json mode is added
       The output should be blank
       The stderr should include "AI model"
     End
@@ -415,7 +407,6 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
     It "[Normal] T-CLI-MAINI-29: successful run: stdout is blank"
       When run bash "$SCRIPT" myapp webapp
       The status should equal 0
-      # @note: revisit this assertion when --json mode is added
       The output should be blank
       The stderr should include "Init complete"
     End
@@ -423,7 +414,6 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
     It "[Error] T-CLI-MAINI-30: no arguments: stdout is blank"
       When run bash "$SCRIPT"
       The status should equal 1
-      # @note: revisit this assertion when --json mode is added
       The output should be blank
       The stderr should include "Error:"
     End
@@ -431,7 +421,6 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
     It "[Error] T-CLI-MAINI-31: invalid language: stdout is blank"
       When run bash "$SCRIPT" myapp webapp --language cobol
       The status should equal 1
-      # @note: revisit this assertion when --json mode is added
       The output should be blank
       The stderr should include "Error:"
     End
@@ -439,7 +428,6 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
     It "[Error] T-CLI-MAINI-32: invalid ai-model: stdout is blank"
       When run bash "$SCRIPT" myapp webapp --ai-model "bad model!"
       The status should equal 1
-      # @note: revisit this assertion when --json mode is added
       The output should be blank
       The stderr should include "Error:"
     End
@@ -500,7 +488,6 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
         EXPECTED_WORKFLOW="$(cat "${DECKRD_DOCS_DIR}/rules/deckrd-rule-workflow.md")"
         When run bash "$SCRIPT" myapp webapp
         The status should equal 0
-        # @note: revisit this assertion when --json mode is added
         The output should be blank
         The stderr should not include "copied: rules/deckrd-rule-workflow.md"
         The stderr should include "[init/docs] done: 0 copied"
@@ -590,7 +577,6 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
         make_outdated_install "${DECKRD_DOCS_DIR}/rules/deckrd-rule-workflow.md"
         When run bash "$SCRIPT" myapp webapp --language cobol
         The status should equal 1
-        # @note: revisit this assertion when --json mode is added
         The output should be blank
         The stderr should include "Unsupported language"
         The stderr should not include "Rules update available"
@@ -601,7 +587,6 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
         EXPECTED_WORKFLOW="$(cat "${DECKRD_DOCS_DIR}/rules/deckrd-rule-workflow.md")"
         When run bash "$SCRIPT" myapp webapp --force --language cobol
         The status should equal 1
-        # @note: revisit this assertion when --json mode is added
         The output should be blank
         The stderr should include "Unsupported language: cobol"
         The contents of file "${DECKRD_DOCS_DIR}/rules/deckrd-rule-workflow.md" should equal "$EXPECTED_WORKFLOW"
@@ -618,7 +603,6 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
         export DECKRD_LOCAL_TEMP="${DECKRD_TMPDIR}/custom/temp"
         When run bash "$SCRIPT" myapp webapp
         The status should equal 0
-        # @note: --json モード追加時はこのアサーションを見直すこと
         The output should be blank
         The stderr should include "Init complete."
         The stderr should not include "Error:"
@@ -629,7 +613,6 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
         export DECKRD_LOCAL_WORKSPACES="${DECKRD_TMPDIR}/custom/workspaces"
         When run bash "$SCRIPT" myapp webapp
         The status should equal 0
-        # @note: --json モード追加時はこのアサーションを見直すこと
         The output should be blank
         The stderr should include "Init complete."
         The stderr should not include "Error:"
@@ -644,7 +627,6 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
         export CLAUDE_RULES_SRC_DIR="${DECKRD_TMPDIR}/no-such-src"
         When run bash "$SCRIPT" myapp webapp
         The status should equal 0
-        # @note: --json モード追加時はこのアサーションを見直すこと
         The output should be blank
         The stderr should include "[init/claude-rules] source not found, skipping: ${DECKRD_TMPDIR}/no-such-src"
         The stderr should not include "[init/claude-rules] done:"
@@ -662,7 +644,6 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
         export DECKRD_LOCAL_TEMP="${DECKRD_TMPDIR}/blocker/temp"
         When run bash "$SCRIPT" myapp webapp
         The status should equal 1
-        # @note: --json モード追加時はこのアサーションを見直すこと
         The output should be blank
         The stderr should include "Error:"
         The stderr should include "${DECKRD_TMPDIR}/blocker/temp"
@@ -674,7 +655,6 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
         : >"${DECKRD_LOCAL_DATA}/workspaces"
         When run bash "$SCRIPT" myapp webapp
         The status should equal 1
-        # @note: --json モード追加時はこのアサーションを見直すこと
         The output should be blank
         The stderr should include "Error:"
         The stderr should include "${DECKRD_LOCAL_DATA}/workspaces"
@@ -685,7 +665,6 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
         export DECKRD_LOCAL_TEMP="${DECKRD_TMPDIR}/blocker/temp"
         When run bash "$SCRIPT" myapp webapp
         The status should equal 1
-        # @note: --json モード追加時はこのアサーションを見直すこと
         The output should be blank
         The stderr should include "Error:"
         The path "${DECKRD_LOCAL_WORKSPACES}" should not be exist
@@ -698,7 +677,6 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
         export CLAUDE_RULES_DIR="${DECKRD_TMPDIR}/blocker/claude-rules"
         When run bash "$SCRIPT" myapp webapp
         The status should equal 1
-        # @note: --json モード追加時はこのアサーションを見直すこと
         The output should be blank
         The stderr should include "Error: failed to create directory: ${DECKRD_TMPDIR}/blocker/claude-rules"
         The stderr should not include "source not found"
@@ -713,7 +691,6 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
         export DECKRD_LOCAL_TEMP="${DECKRD_TMPDIR}/tempfile"
         When run bash "$SCRIPT" myapp webapp
         The status should equal 1
-        # @note: --json モード追加時はこのアサーションを見直すこと
         The output should be blank
         The stderr should include "Error:"
         The stderr should include "${DECKRD_TMPDIR}/tempfile"
@@ -741,7 +718,6 @@ EOF
       It "[Error] T-CLI-MAINI-52: Should: exit 1 and report the destination file when cp fails"
         When run env PATH="${DECKRD_TMPDIR}/fakebin:${PATH}" bash "$SCRIPT" myapp webapp
         The status should equal 1
-        # @note: --json モード追加時はこのアサーションを見直すこと
         The output should be blank
         The stderr should include "Error:"
         The stderr should include "${DECKRD_LOCAL_DATA}/workspaces/README.md"

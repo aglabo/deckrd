@@ -105,7 +105,7 @@ b"
 
   # Target: normalize_dir_path
   # Responsibility: unify directory path separators to `/`, collapse repeated `/`
-  # and strip a trailing `/` (the root `/` is kept) without external commands.
+  # and strip a trailing `/` (the root `/` is kept).
   Describe "T-LIB-NDP: normalize_dir_path"
 
     Describe "When: 正常系"

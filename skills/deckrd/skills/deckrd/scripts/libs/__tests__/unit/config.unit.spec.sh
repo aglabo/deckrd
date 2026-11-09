@@ -100,7 +100,7 @@ JSON
 
 # _write_session_json_null_active - active が null の session.json を書き出す
 #
-# session_save がアクティブモジュール未設定のまま書き出した状態を模す。
+# init.sh の init_session がアクティブモジュール未設定のまま書き出した状態を模す。
 # JSON の null が空文字として扱われ、deckrd_base が組み立てられないことを検査する。
 #
 # 前提: setup_deckrd_tmpdir が DECKRD_LOCAL を export していること

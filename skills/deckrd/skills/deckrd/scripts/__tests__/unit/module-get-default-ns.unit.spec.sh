@@ -25,12 +25,10 @@ SCRIPT="${DECKRD_SCRIPTS_DIR}/module.sh"
 Describe "T-CLI-GDN: module.sh: _get_default_ns"
 
   load_script_with_mocks() {
-    # Mock: validate_env を常に成功させる
     # shellcheck disable=SC2329
     validate_env() { return 0; }
     export -f validate_env
 
-    # module.sh を source して関数をロード
     # shellcheck disable=SC1090
     . "$SCRIPT"
   }

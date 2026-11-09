@@ -8,10 +8,8 @@
 #
 # @version 0.1.0
 # USAGE: dot-source this file, do NOT execute directly.
-#   . "$(dirname "${BASH_SOURCE[0]}")/ai-runner.sh"
-#   NG: `. "<path>/ai-runner.sh" echo "prompt" | run_ai "sonnet"` は `.` が echo を飲み込み stdin が空になる
+#   . "$(dirname "${BASH_SOURCE[0]}")/ai-runner.lib.sh"
 
-# Guard: prevent re-sourcing
 if [[ -n "${_AI_RUNNER_LOADED:-}" ]]; then
   return 0
 fi
@@ -57,7 +55,8 @@ resolve_ai_cli() {
 # validate_ai_model - Validate AI model identifier
 #
 # @arg $1  string  AI model identifier: "<org>/<model>" or "<model>"
-# @stdout  string  モデル識別子そのまま（有効な場合） / エラーメッセージ（無効な場合）
+# @stdout  string  モデル識別子そのまま（有効な場合）
+# @stderr  string  エラーメッセージ（無効な場合）
 # @exitcode 0  有効なモデル識別子
 # @exitcode 1  無効なモデル識別子 or 空引数
 validate_ai_model() {
@@ -89,7 +88,8 @@ validate_ai_model() {
 # 形式不明な provider（copilot, opencode）はモデル部分をそのまま返す。
 #
 # @arg $1  string  AI model identifier: "<provider>/<model>" or "<model>"
-# @stdout  string  正規化されたモデル名（有効な場合） / エラーメッセージ（無効な場合）
+# @stdout  string  正規化されたモデル名（有効な場合）
+# @stderr  string  エラーメッセージ（無効な場合）
 # @exitcode 0  有効
 # @exitcode 1  無効 or 空引数
 resolve_ai_model() {
@@ -222,8 +222,6 @@ _build_ai_command() {
   case "$cli" in
   claude)
     # Claude aliases are passed as-is; claude CLI resolves them natively.
-    # Special handling: sonnet-1m adds --context-window, opusplan adds --thinking.
-
     case "$model" in
     default)
       _ai_options=()
@@ -278,7 +276,6 @@ _build_ai_command() {
   copilot)
     # Extract model name after prefix (github/<model>, github-copilot/<model>, copilot/<model>)
     local copilot_model="${model#*/}"
-    # Validate against supported copilot model families: claude-*, gpt-*, gemini-*, grok-*
     case "$copilot_model" in
     claude-* | gpt-* | gemini-* | grok-*)
       _cmd_ref=("copilot" "--model" "$copilot_model")
@@ -300,7 +297,7 @@ _build_ai_command() {
 # resolve_ai_timeout - Resolve the timeout (in seconds) used to run an AI CLI
 #
 # Priority: positional arg > DECKRD_AI_TIMEOUT > default (300). Keep this the single
-# source of the default so the docstring and the callers cannot drift apart again.
+# source of the default so the docstring and the callers cannot drift apart.
 #
 # @arg $1  int     Timeout in seconds. Empty or omitted falls back to DECKRD_AI_TIMEOUT
 # @stdout  int     Resolved timeout in seconds (no trailing newline)
@@ -389,8 +386,8 @@ run_ai() {
   # 代入を local と分けるのは、local の終了ステータスが cat の終了ステータスを
   # 上書きして read_status が常に 0 になるのを避けるためである。
   # その代入を if の条件へ置くのは、呼び出し元の errexit を避けるためである。
-  # run_ai は `set -eo pipefail` 配下のパイプラインの要素として呼ばれる
-  # (generate-doc.sh)。errexit はパイプライン要素のサブシェルでも生きているので、
+  # run_ai は `set -eo pipefail` 配下のパイプラインの要素として呼ばれることがある。
+  # errexit はパイプライン要素のサブシェルでも生きているので、
   # 素の代入のままだと cat が非 0 を返した時点でシェルが落ち、read_status を保存する前に
   # 以降の診断と終了ステータスの写し替えが丸ごと飛ぶ。条件文脈の中では errexit が働かない。
   local prompt read_status

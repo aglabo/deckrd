@@ -8,15 +8,13 @@
 #
 # @version 0.1.0
 # USAGE: source this file, do NOT execute directly.
-#   . "$(dirname "${BASH_SOURCE[0]}")/libs/config.sh"
+#   . "$(dirname "${BASH_SOURCE[0]}")/libs/config.lib.sh"
 
-# Guard: prevent re-sourcing
 if [[ -n "${_CONFIG_LOADED:-}" ]]; then
   return 0
 fi
 readonly _CONFIG_LOADED=1
 
-# Load kv-store as the backing implementation
 # shellcheck disable=SC1091
 . "${DECKRD_LIB_DIR}/kv-store.lib.sh"
 
@@ -40,7 +38,6 @@ prompt_path|
 template_path|
 "
 
-# Initialize the config store
 kv_init "config" "$_CONFIG_SCHEMA"
 
 # CONFIG - compatibility shim: exposes _KV_config as CONFIG
@@ -95,7 +92,6 @@ _config_copy_session_value() {
 config_init() {
   local session_file="${1:-}"
 
-  # Re-initialize config store with defaults
   kv_init "config" "$_CONFIG_SCHEMA"
 
   # No session file to read yet (argument omitted, or first run before the file
@@ -157,7 +153,6 @@ config_get() {
 # @arg $2 string Value
 # @note config_set updates the in-memory CONFIG store only.
 #       Changes are NOT automatically written back to session.json.
-#       Call session_save explicitly after config_set if persistence is needed.
 config_set() {
   local key="$1"
   local value="${2:-}"

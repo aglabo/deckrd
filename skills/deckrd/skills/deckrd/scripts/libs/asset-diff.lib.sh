@@ -15,7 +15,6 @@
 #   2. Asset listing      - list_asset_files and its file enumeration / checkers
 #   3. Workspaces rule    - gitignore `!/workspaces/` rule detection and extraction
 
-# Guard: prevent re-sourcing
 if [[ -n "${_ASSET_DIFF_LOADED:-}" ]]; then
   return 0
 fi
@@ -132,8 +131,7 @@ _list_all_files() {
 # `_list_all_files` filtered by `_asset_dest_is_blocked` on
 # `<dest_dir>/<src_rel without .org>`, and without a destination that is the
 # same file as its source (a hard link). The directories of the source tree are
-# listed once per call, not per file. Feeds every list_asset_files mode:
-# `--force` directly, the other modes through `_list_candidate_files`.
+# listed once per call, not per file.
 #
 # @arg $1 Source asset directory
 # @arg $2 Destination directory

@@ -230,8 +230,6 @@ dangling_symlink_unsupported() {
 
 # Helper: print the mtime of a file as epoch seconds
 #
-# Used to compare the deployed file's mtime with its source after `--update`.
-#
 # @arg $1 File path
 # @stdout mtime in seconds since the epoch (`stat -c %Y`)
 _mtime_of() {

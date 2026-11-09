@@ -8,9 +8,8 @@
 #
 # @version 0.1.0
 # USAGE: source this file, do NOT execute directly.
-#   . "$(dirname "${BASH_SOURCE[0]}")/libs/normalize-doc-type.sh"
+#   . "$(dirname "${BASH_SOURCE[0]}")/libs/normalize-doc-type.lib.sh"
 
-# Guard: prevent re-sourcing
 if [[ -n "${_NORMALIZE_DOC_TYPE_LOADED:-}" ]]; then
   return 0
 fi

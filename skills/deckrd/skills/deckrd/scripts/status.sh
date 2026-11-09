@@ -25,7 +25,8 @@
 
 #shellcheck disable=SC1091
 
-# don't use -u for checking error by Agent
+# No -u: an unbound variable would abort with bash's own message
+# before the script prints an error the agent can act on
 set -eo pipefail
 
 # Load bootstrap (defines SYMBOL, PROJECT_ROOT, DECKRD_LOCAL_DATA, DECKRD_LIB_DIR, etc.)
@@ -78,12 +79,10 @@ display_progress() {
   done
 }
 
-# Main function
 main() {
   init_vars
   check_session || exit 1
 
-  # Extract fields from session
   local active lang ai_model created updated current_step completed
 
   active=$(jq_read -r '.active // empty' "$SESSION_FILE")
@@ -101,7 +100,6 @@ main() {
   current_step=$(jq_read -r ".modules[\"$active\"].current_step // empty" "$SESSION_FILE")
   completed=$(jq_read -r ".modules[\"$active\"].completed | join(\", \") // \"none\"" "$SESSION_FILE")
 
-  # Display status
   echo "DECKRD Status"
   echo "============="
   echo ""

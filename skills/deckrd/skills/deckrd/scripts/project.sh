@@ -10,8 +10,7 @@
 # @file project.sh
 # @brief Configure project settings (project name and language)
 # @description
-#   Creates or updates .local/deckrd/project.json with project settings.
-#   This enables deckrd-coder to load language-specific rules.
+#   Creates or updates .local/deckrd/.project.json with project settings.
 #
 # @example
 #   # Configure project with Go language
@@ -29,22 +28,23 @@
 
 #shellcheck disable=SC1091
 
-# don't use -u for checking error by Agent
+# No -u: an unbound variable would abort with bash's own message
+# before the script prints an error the agent can act on
 set -eo pipefail
 
 # ============================================================================
 # Script Configuration
 # ============================================================================
 
+# Load bootstrap (defines SYMBOL, PROJECT_ROOT, DECKRD_LOCAL_DATA, DECKRD_LIB_DIR, etc.)
 ##
 # @description Script directory path
-# Load bootstrap (defines SYMBOL, PROJECT_ROOT, DECKRD_LOCAL_DATA, DECKRD_LIB_DIR, etc.)
 _SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
 . "${_SCRIPT_DIR}/libs/bootstrap.lib.sh"
 unset _SCRIPT_DIR
 
-# Validate environment (requires jq)
+# Validate environment (requires jq or jaq)
 # shellcheck disable=SC1091
 . "${DECKRD_LIB_DIR}/validate-env.lib.sh"
 . "${DECKRD_LIB_DIR}/utils.lib.sh"
@@ -214,7 +214,7 @@ validate_required_params() {
 }
 
 ##
-# @description Ensure .deckrd directory exists
+# @description Ensure the DECKRD_LOCAL_DATA directory (.local/deckrd) exists
 ensure_deckrd_dir() {
   mkdir -p "${DECKRD_LOCAL_DATA}"
 }

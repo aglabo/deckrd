@@ -10,7 +10,6 @@
 # USAGE: source this file, do NOT execute directly.
 #   . "$(dirname "${BASH_SOURCE[0]}")/utils.lib.sh"
 
-# Guard: prevent re-sourcing
 if [[ -n "${_UTILS_LOADED:-}" ]]; then
   return 0
 fi
@@ -52,8 +51,7 @@ jq_read() {
 # @note A leading `//` (UNC, e.g. `\\server\share` or `//server/share`) is kept:
 #       collapsing it would name a different local path under Git Bash/MSYS.
 #       Three or more leading `/` collapse to one (POSIX), and a bare `//` gives `/`.
-# @note Implemented as one sed call (one expression per rule, applied in order);
-#       the trailing-`/` rule needs a character before the `/`, which keeps the root.
+# @note The trailing-`/` rule needs a character before the `/`, which keeps the root.
 #       The path is treated as a single line: it must not contain a newline.
 # @arg $1 Directory path, optional (a missing argument is treated as empty)
 # @stdout Normalized path followed by a newline (an empty line for empty input)
@@ -72,7 +70,6 @@ normalize_dir_path() {
 #       directory name is kept (`rules.org/a.md` is unchanged).
 # @note The suffix is quoted in the expansion, so it is literal: glob characters
 #       such as `*` or `?` are not treated as patterns.
-# @note Pure parameter expansion; no external command is run.
 # @arg $1 String (typically a relative path)
 # @arg $2 Suffix to remove (an empty suffix removes nothing)
 # @stdout The resulting string followed by a newline (an empty line for empty input)

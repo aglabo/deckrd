@@ -41,7 +41,8 @@
 
 # shellcheck disable=SC1091
 
-# don't use -u for checking error by Agent
+# No -u: an unbound variable would abort with bash's own message
+# before the script prints an error the agent can act on
 set -o pipefail
 
 # Load bootstrap (defines PROJECT_ROOT, DECKRD_LOCAL_DATA, DECKRD_LIB_DIR, etc.)

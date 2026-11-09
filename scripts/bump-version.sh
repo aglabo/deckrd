@@ -47,7 +47,6 @@ _bump_skill() {
 _NEW_VERSION="${1:-}"
 [[ -z "$_NEW_VERSION" ]] && _usage
 
-# Validate semver format
 if ! echo "$_NEW_VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
   printf 'Error: "%s" is not a valid semver (expected X.Y.Z)\n' "$_NEW_VERSION" >&2
   exit 1
@@ -57,7 +56,6 @@ cd "$PROJECT_ROOT"
 
 printf '\nBumping version to \033[1m%s\033[0m\n\n' "$_NEW_VERSION"
 
-# 1. plugin.json in each plugin directory
 for _f in skills/*/.claude-plugin/plugin.json; do
   [[ -f "$_f" ]] || continue
   _OLD=$(grep '"version"' "$_f" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || true)
@@ -69,7 +67,6 @@ for _f in skills/*/.claude-plugin/plugin.json; do
   fi
 done
 
-# 2. SKILL.md metadata.version in each skill directory
 for _f in skills/*/skills/*/SKILL.md; do
   [[ -f "$_f" ]] || continue
   _OLD=$(grep -m1 '^ *version: ' "$_f" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || true)
@@ -82,7 +79,6 @@ for _f in skills/*/skills/*/SKILL.md; do
   fi
 done
 
-# 3. marketplace*.json metadata.version
 for _f in .claude-plugin/marketplace*.json; do
   [[ -f "$_f" ]] || continue
   _OLD=$(grep '"version"' "$_f" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || true)
@@ -94,7 +90,6 @@ for _f in .claude-plugin/marketplace*.json; do
   fi
 done
 
-# 4. deckrd.json
 _f="deckrd.json"
 if [[ -f "$_f" ]]; then
   _OLD=$(grep '"version"' "$_f" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || true)
@@ -106,7 +101,6 @@ if [[ -f "$_f" ]]; then
   fi
 fi
 
-# 5. package.json
 _f="package.json"
 if [[ -f "$_f" ]]; then
   _OLD=$(grep '"version"' "$_f" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || true)

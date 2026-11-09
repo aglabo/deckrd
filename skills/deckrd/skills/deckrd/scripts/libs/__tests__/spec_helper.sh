@@ -7,7 +7,7 @@
 # https://opensource.org/licenses/MIT
 
 # ============================================================================
-# Delegate to the canonical spec_helper in scripts/tests/
+# Delegate to the canonical spec_helper in scripts/__tests__/
 # ============================================================================
 
 _HELPER_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/skills/deckrd/scripts/__tests__" && pwd)"

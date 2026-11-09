@@ -45,7 +45,7 @@ _BODY_SENTINEL='AI-RESPONSE-BODY'
 # _NOISE_SENTINEL - AI CLI が stderr へ出す診断の印。_BODY_SENTINEL の部分文字列にならない値にする
 _NOISE_SENTINEL='CLI-DIAGNOSTIC-NOISE'
 
-# _EXIT_CLI_FAILURE - CLI の異常終了を表す終了ステータス。run_ai 自身が返す 1 / 2 / 124 のどれとも異なる値にする
+# _EXIT_CLI_FAILURE - CLI の異常終了を表す終了ステータス。run_ai 自身が返す 1 / 2 / 3 / 4 / 124 のどれとも異なる値にする
 _EXIT_CLI_FAILURE='3'
 
 # _EXIT_CLI_TIMEOUT - CLI の実行が打ち切られたことを表す終了ステータス。timeout(1) が打ち切り時に返す 124 に合わせる

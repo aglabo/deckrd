@@ -8,9 +8,8 @@
 #
 # @version 0.1.0
 # USAGE: source this file, do NOT execute directly.
-#   . "$(dirname "${BASH_SOURCE[0]}")/libs/validate-env.sh"
+#   . "$(dirname "${BASH_SOURCE[0]}")/libs/validate-env.lib.sh"
 
-# Guard: prevent re-sourcing
 if [[ -n "${_VALIDATE_ENV_LOADED:-}" ]]; then
   return 0
 fi
@@ -19,8 +18,6 @@ readonly _VALIDATE_ENV_LOADED=1
 # validate_env - Validate that required environment tools are available
 #
 # @note Exports jqexe into the caller's shell: "jq" if available, otherwise "jaq".
-#       jq is preferred so that the engine does not depend on what happens to be
-#       installed on the machine. jaq stays as a fallback.
 #       jqexe is overwritten unconditionally, even if it was set before the call.
 #       Call it as `validate_env || exit 1`; a command substitution such as
 #       `$(validate_env)` runs it in a subshell and discards the export.

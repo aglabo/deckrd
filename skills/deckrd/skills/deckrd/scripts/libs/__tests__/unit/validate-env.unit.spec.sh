@@ -42,7 +42,6 @@ Describe "validate-env.sh"
     Describe "Given: jaq も jq もインストールされていない環境 (両方を隠す)"
       Describe "When: validate_env を呼ぶ"
         It "Then: [Error] T-LIB-VENV-02: return 1 を返し、stderr に 'jq or jaq is required' を含む"
-          # 新規サブシェルで validate-env.sh を source し、jq/jaq を隠して validate_env を呼ぶ
           When run /usr/bin/bash -c "command() { [[ \"\$*\" == *jq* || \"\$*\" == *jaq* ]] && return 1; builtin command \"\$@\"; }; export -f command; . '${DECKRD_LIB_DIR}/validate-env.lib.sh'; validate_env"
           The status should equal 1
           The stderr should include "jq or jaq is required"
@@ -53,7 +52,6 @@ Describe "validate-env.sh"
     Describe "Given: jq と jaq の両方が使える環境 (両方を見つかる扱いにする)"
       Describe "When: validate_env を呼ぶ"
         It "Then: [Normal] T-LIB-VENV-03-01: jqexe が 'jq' に解決される"
-          # 新規サブシェルで command を上書きし、jq/jaq をどちらも利用可能として validate_env を呼ぶ
           When run /usr/bin/bash -c "command() { [[ \"\$*\" == *jaq* || \"\$*\" == *jq* ]] && return 0; builtin command \"\$@\"; }; export -f command; . '${DECKRD_LIB_DIR}/validate-env.lib.sh'; validate_env; echo \"\$jqexe\""
           The status should equal 0
           The output should equal "jq"

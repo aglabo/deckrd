@@ -365,7 +365,6 @@ Describe "kv-store.lib.sh (store)"
         End
 
         It "Then: [Edge] T-LIB-KSST-04: 値引数なしで呼ぶと空文字がセットされる"
-          # value=${3:-} の仕様: 引数省略 → 空文字
           kv_set "set_store" "name"
           When call kv_get "set_store" "name"
           The status should equal 0
