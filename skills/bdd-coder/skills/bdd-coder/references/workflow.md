@@ -39,15 +39,15 @@ Phase 5: チェックリスト確認と完了判定
 Phase 6: ワークフロー終了
 ```
 
-| Phase   | 目的                               | Agent                                | 出力                                                                                                         |
-| ------- | ---------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
-| Phase 0 | 開発言語・環境を把握               | explore-agent                        | ENV PROFILE (env-profile.md)                                                                                 |
-| Phase 1 | タスクリストとチェックリストを生成 | tasklist-builder + checklist-builder | `<module dir>/temp/tasklists/<name>.tasklist.md`, `.local/deckrd/temp/tasks/<slug>-<adjective>-checklist.md` |
-| Phase 2 | 依存関係を分析                     | bdd-coder                            | 実行グループ (直列 / 並列)                                                                                   |
-| Phase 3 | bdd-coder に委譲                   | bdd-coder                            | 各タスクのステータスレポート                                                                                 |
-| Phase 4 | 全体品質を検証                     | bdd-coder                            | 品質ゲート合格確認                                                                                           |
-| Phase 5 | 完了状態を確認                     | bdd-coder                            | セッション終了前の最終確認                                                                                   |
-| Phase 6 | セッション終了                     | bdd-coder                            | 開発ツール・状態をリセット                                                                                   |
+| Phase   | 目的                               | Agent                                | 出力                                                                                                                                                    |
+| ------- | ---------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 0 | 開発言語・環境を把握               | explore-agent                        | ENV PROFILE (env-profile.md)                                                                                                                            |
+| Phase 1 | タスクリストとチェックリストを生成 | tasklist-builder + checklist-builder | `.local/deckrd/temp/tasklist/<ns>/<module>/<name>.tasklist.md`, `.local/deckrd/temp/tasks/<slug>-<adjective>-checklist.md`, session.json の `bdd_coder` |
+| Phase 2 | 依存関係を分析                     | bdd-coder                            | 実行グループ (直列 / 並列)                                                                                                                              |
+| Phase 3 | bdd-coder に委譲                   | bdd-coder                            | 各タスクのステータスレポート                                                                                                                            |
+| Phase 4 | 全体品質を検証                     | bdd-coder                            | 品質ゲート合格確認                                                                                                                                      |
+| Phase 5 | 完了状態を確認                     | bdd-coder                            | セッション終了前の最終確認                                                                                                                              |
+| Phase 6 | セッション終了                     | bdd-coder                            | 開発ツール・状態をリセット                                                                                                                              |
 
 ## Usage
 
@@ -66,6 +66,9 @@ Phase 6: ワークフロー終了
 # Continue an existing task list
 /bdd-coder:bdd-coder --tasklist <path>              # first pending item
 /bdd-coder:bdd-coder --tasklist <path> --item L-02  # a given item
+
+# Resume the work recorded in .local/deckrd/session.json (bdd_coder)
+/bdd-coder:bdd-coder --resume
 ```
 
 ### 呼び出し例
@@ -74,8 +77,8 @@ Phase 6: ワークフロー終了
 
 > "設定ファイルの読み込みと検証を実装して"
 > → tasklist-builder が Target ごとの項目 (L-01: parseConfig, L-02: validateConfig) を持つ
-> `docs/.deckrd/<active module>/temp/tasklists/load-config-file-calm.tasklist.md` を生成
-> (アクティブなモジュールがなければ `.local/deckrd/temp/tasklists/` に置く)
+> `.local/deckrd/temp/tasklist/<active module>/load-config-file-calm.tasklist.md` を生成
+> (アクティブなモジュールがなければ `.local/deckrd/temp/tasklist/` の直下に置く)
 > → 項目を 1 件選ぶ → その Handoff から checklist-builder がチェックリストを生成 → bdd-coder で実装
 
 Target が 1 つだけの指示 (例: "グリーティング関数を実装して") は項目が 1 件になるため、確認なしで checklist-builder に進む。
@@ -83,9 +86,15 @@ Target が 1 つだけの指示 (例: "グリーティング関数を実装し�
 **Target ID from tasks.md:**
 
 > "T01 を実装して"
-> → tasklist-builder が tasks.md のモジュール配下の `temp/tasklists/T01.tasklist.md` に Scenario ごとの項目 (`T01-01`, `T01-02`, …) を生成
-> → 項目を 1 件選ぶ → checklist-builder → bdd-coder で実装
-> → 続きは `/bdd-coder:bdd-coder --tasklist docs/.deckrd/<ns>/<module>/temp/tasklists/T01.tasklist.md`
+> → tasklist-builder が `.local/deckrd/temp/tasklist/<ns>/<module>/T-01.tasklist.md` を生成
+> (Scenario ごとの項目 `T01-01`, `T01-02`, …)
+> → 項目を 1 件選ぶ → session.json の `bdd_coder` に記録 → checklist-builder → bdd-coder で実装
+> → 続きは `/bdd-coder:bdd-coder T01` (既存のタスクリストを再利用する) か `/bdd-coder:bdd-coder --resume`
+
+**中断したセッションの再開:**
+
+> `/bdd-coder:bdd-coder --resume`
+> → session.json の `bdd_coder` から作業中のタスクリスト・項目・チェックリストを復元 → bdd-coder で実装
 
 **Task ID from tasks.md:**
 
@@ -172,6 +181,7 @@ git status --porcelain=v1 --untracked-files=all
 | Scenario ID (例: T01-02)          | スキップ                    | Task ID をそのまま渡す                |
 | `--tasklist <path> [--item L-02]` | スキップ                    | 指定項目、なければ先頭の `pending`    |
 | `--checklist <path>`              | スキップ                    | スキップ (既存チェックリストを使用)   |
+| `--resume`                        | スキップ                    | session.json の `bdd_coder` から復元  |
 
 ### Phase 1a: タスクリスト作成 (tasklist-builder 委譲)
 
@@ -186,14 +196,19 @@ Spawn **tasklist-builder** with:
 - 返却されたパスを **TASKLIST PATH** として保存する (Phase 5 Step 4b で使う)
 - checklist-builder に渡すのは選んだ項目の Handoff だけ。タスクリストのファイルは渡さない
   (他タスクを含む資料を渡さない: `docs/.deckrd/rules/deckrd-rule-bdd-cycle.md` の「1 委譲 = 1 タスク」)
-- タスクリストはモジュールごとの `temp/tasklists/` に置く。別モジュールの同じ Target ID とは衝突しない
+- タスクリストは `.local/deckrd/temp/tasklist/<ns>/<module>/` に置く。モジュールごとにディレクトリを分けるため、
+  別モジュールの同じ Target ID とは衝突しない
 - 同じ Target ID で再実行すると、既存のタスクリストを現在の tasks.md と突き合わせる。
   `done` の項目と項目 ID は残し、分割済みの Case や新しい Scenario を反映する (`STATUS: updated`)。
-  差分がなければそのまま返す (`STATUS: reused`)
-- session.json への登録と再開は #211 で扱う。ここでは行わない
+  差分がなければそのまま返す (`STATUS: reused`)。同じ Target ID のタスクリストを 2 本作らない
+- 項目を選んだら session.json の `bdd_coder` に `tasklist` / `item` を書く。書き込み規則と再開の手順は
+  [SKILL.md](../SKILL.md) の「Session entry」「Resume」に従う
+- タスクリストは **オーケストレータの状態ファイル** であり、bdd-coder エージェントへの資料ではない。
+  「タスクリストを渡して L-02 だけ実装させればよい」という短絡は「1 委譲 = 1 タスク」に反する
 
-出力: `<module dir>/temp/tasklists/<name>.tasklist.md`。Target ID のときは `TXX.tasklist.md` とする。
-モジュールがない自然言語の指示は `.local/deckrd/temp/tasklists/` に置く。
+出力: `.local/deckrd/temp/tasklist/<ns>/<module>/<name>.tasklist.md`。Target ID のときは `T-XX.tasklist.md` とする。
+モジュールがない自然言語の指示は `.local/deckrd/temp/tasklist/` の直下に置く。
+`DECKRD_LOCAL_TEMP` を設定している場合は `.local/deckrd/temp` の代わりにその値を使う。
 
 ### Phase 1b: チェックリスト作成 (checklist-builder 委譲)
 
@@ -230,7 +245,7 @@ checklist-builder の報告が `BLOCKED:` で始まる場合 (Task ID の Case �
 - Phase 6 (セッション終了) へ進む。入力の自力展開や自然言語入力への切り替えはしない
 
 `CHECKLIST:` が返った場合、返却されたチェックリストパスを **CHECKLIST PATH** として保存。
-Phase 2 以降で使用する。
+Phase 2 以降で使用する。再開時に復元できるよう、session.json の `bdd_coder.checklist` にも書く。
 
 出力: `.local/deckrd/temp/tasks/<slug>-<adjective>-checklist.md`
 
@@ -415,7 +430,9 @@ The `none` row matters when every case came back `BLOCKED`: a target already mar
 実行内容:
 
 - 開発ツール・状態をリセット
-- セッション情報をクリア
+- メモリ上のセッション情報 (ENV PROFILE、TASKLIST PATH など) をクリア
+- session.json の `bdd_coder` は消さない。全 Case が完了していれば Phase 5 で `status: done` になっている。
+  途中で終わった場合 (`BLOCKED`、中断) は `in-progress` のまま残し、`--resume` で再開できるようにする
 - コミットはユーザーが手動実施 (bdd-coder は git 操作禁止)
 
 出力: セッション終了。
