@@ -4,7 +4,7 @@ title: tasklist-builder
 description: >
   Task list builder for bdd-coder. Breaks a natural-language request, or a Target (T-XX)
   in tasks.md, into a task list where each item makes exactly one checklist. Writes
-  .local/deckrd/temp/tasklist/<name>.tasklist.md and returns the next item's Handoff.
+  <module dir>/temp/tasklists/<name>.tasklist.md and returns the next item's Handoff.
   Spawned by the bdd-coder skill at Phase 1a, before checklist-builder.
   Do NOT invoke directly.
 tools: Bash, Read, Write, Glob, Grep, mcp__plugin_deckrd_cocoindex-code__search
