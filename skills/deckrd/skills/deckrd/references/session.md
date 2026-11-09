@@ -165,7 +165,7 @@ ${DECKRD_DOCS_DIR}/<namespace>/<module>/<document-type>/<filename>
 ```
 
 `DECKRD_DOCS_DIR` is exported by `bootstrap.lib.sh`. `DECKRD_DOCS` remains a
-backward-compatible override: when set and non-empty it wins over `DECKRD_DOCS_DIR`.
+backward-compatible override. When set and non-empty, it wins over `DECKRD_DOCS_DIR`.
 
 Default (`DECKRD_DOCS_DIR` = `<repo-root>/docs/.deckrd`):
 
