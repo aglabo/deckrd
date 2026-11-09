@@ -110,23 +110,26 @@ Repeat the `Findings` and `Diff` blocks per changed file, in path order. List fi
 Run only after the caller got the user's approval of `draft_file`.
 
 1. Parse the draft. If `# EOF` is missing, or a file has a `Diff` block that is not a valid unified diff, return `status: malformed`.
-2. Re-check the base. For each file, compare its current SHA-256 with the `sha256` in the draft. On any mismatch, stop and return `status: conflict`. Do not merge silently.
-3. Apply each diff to its file (`git apply --check` first, then `git apply`; for untracked files, apply the hunks with Edit).
-4. Check the invariant of draft step 7 again between the original (`git show HEAD:<path>`, or the draft-time content) and the new file. If it fails, restore that file and return `status: malformed`.
+2. Take a snapshot of every file in the draft: read its current content and compare its SHA-256 with the `sha256` in the draft. On any mismatch, stop and return `status: conflict`. Do not merge silently.
+   - A matching hash means the snapshot is the draft-time content. Use the snapshot as the only base for the invariant check and for restoring files. Do not use `HEAD`: the target may have uncommitted code changes made before the draft.
+3. Build every result before writing any file. For each file, apply its diff to the snapshot in memory, or to a copy under `.local/deckrd/temp/bdd-coder/`.
+   - If a hunk does not apply, or a result breaks the invariant of draft step 7 against its snapshot, return `status: malformed` and write nothing.
+4. Write all results to the target files. If a write fails, restore every file already written from its snapshot and return `status: malformed`.
 5. Run the project's lint and test scripts for the changed files, through the project's scripts only (for example `pnpm run ...`). Never call the underlying tools directly. Report the results. Do not fix code to make them pass.
 6. Delete the draft file after a successful apply.
 7. Return: `status: applied`, the changed files, finding counts per class, and the lint and test results.
 
 ## Failure Handling
 
-| Condition                               | Action                                     |
-| --------------------------------------- | ------------------------------------------ |
-| No target file, or no comment to change | `status: no-change`; no draft              |
-| An `ask` finding has no answer          | `status: questions`; partial draft is kept |
-| A file breaks the comment-only rule     | Discard that file; report it               |
-| File changed between draft and apply    | `status: conflict`; no write               |
-| Draft cannot be parsed or applied       | `status: malformed`; no write              |
-| Lint or tests fail after apply          | Report the output; do not change code      |
+| Condition                                    | Action                                              |
+| -------------------------------------------- | --------------------------------------------------- |
+| No target file, or no comment to change      | `status: no-change`; no draft                       |
+| An `ask` finding has no answer               | `status: questions`; partial draft is kept          |
+| A file breaks the comment-only rule (draft)  | Discard that file; report it                        |
+| File changed between draft and apply         | `status: conflict`; no write                        |
+| Draft cannot be parsed, applied, or verified | `status: malformed`; no write                       |
+| A write fails during apply                   | `status: malformed`; restore all files to snapshots |
+| Lint or tests fail after apply               | Report the output; do not change code               |
 
 ## Constraints
 
