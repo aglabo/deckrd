@@ -1,6 +1,7 @@
 ---
 title: "Task List"
 source: "{{ SOURCE }}"
+module: "{{ MODULE }}"
 task_id: "{{ TASK_ID }}"
 tasks_md: "{{ TASKS_MD }}"
 created: "{{ YYYY-MM-DD HH:MM:SS }}"
@@ -14,9 +15,10 @@ created: "{{ YYYY-MM-DD HH:MM:SS }}"
 
 <!--
 source:   tasks | natural-language
+module:   <namespace>/<module> the list belongs to; "-" when there is no module
 task_id:  Target ID (T-XX) when source is tasks; "-" otherwise
 tasks_md: path to tasks.md when source is tasks; "-" otherwise
-Status:   pending | needs-split (<reason>) | done
+Status:   pending | needs-split (<reason>) | done | removed (not in tasks.md)
 -->
 
 ## Items
