@@ -23,6 +23,11 @@
 - Add `fable` model support to `prepare-commit-msg.sh`.
 - Add module shorthand and namespace resolution from `.project.json` or the Git repository root name.
 - Add module input and writable output support to Deckrd agents.
+- Add the `tasklist-builder` agent to bdd-coder to turn Target IDs and natural-language requests into task lists before checklist generation.
+- Save bdd-coder task list sessions in `.local/deckrd/session.json` and add `--resume` to continue an interrupted session.
+- Add the `comment-review` skill and `comment-refiner` agent to review and rewrite code comments against the code comment guideline.
+- Add the `dr-writer` agent and a decision record authoring guideline for `/deckrd dr --add`.
+- Add `/deckrd dr --refine` and the `dr-refiner` agent to rewrite existing decision records.
 
 ### Bug Fixes
 
@@ -95,6 +100,9 @@
 - Document Windows ShellSpec execution through WSL.
 - Update Deckrd, bdd-coder, review, workflow, and developer guides for the new paths and command behavior.
 - Add troubleshooting and scenario reference documents.
+- Document the bdd-coder task list workflow, its output location under `.local/deckrd/temp/tasklist/`, and session resume.
+- Document decision record authoring, `dr --add`, and `dr --refine` in the user and developer guides.
+- Add a Blume documentation site scaffold under `aglabo.github.io/` in English and Japanese.
 
 ### Tooling
 
@@ -102,6 +110,13 @@
 - Update cspell dictionaries for new test IDs and project terms.
 - Move the hackers dictionary into the shared Deckrd assets directory.
 - Share Deckrd libraries and dictionary assets with bdd-coder through symlinks.
+- Add Actionlint and Ghalint runners with `lint:gha` scripts.
+- Route lint runners through checked-in configs and simplify ShellSpec spec resolution.
+- Switch the commitlint config to `commitlint.config.mjs` and add `@commitlint/config-conventional`.
+- Pin pnpm with `packageManager` and add documentation site scripts (`site:dev`, `build:site`).
+- Add a document QA workflow, an actions lockfile, and daily Dependabot updates for GitHub Actions.
+- Track `.claude/skills` as a symlink to `skills/`.
+- Remove the unused release scripts (`create-release.sh`, `github-publish.sh`, `run-git-cliff.sh`).
 
 ## [0.5.0] - 2026-09-12
 
