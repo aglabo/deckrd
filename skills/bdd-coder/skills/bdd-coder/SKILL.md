@@ -11,7 +11,7 @@ description: >
   Do NOT implement multiple tasks in one invocation — one task per call.
 metadata:
   author: aglabo
-  version: 0.6.0
+  version: 0.7.0
   license: MIT
 ---
 
@@ -41,39 +41,118 @@ Raise ALL questions before writing any code. Ask NOW if any of the following are
 - Ambiguous specs
 - Implementation approach or dependencies
 
-Once Phase 1 (Tasklist + Checklist Build) starts, stop asking scope questions.
+Once Phase 1 (Tasklist Resolve + Checklist Build) starts, stop asking scope questions.
 Choosing which task-list item to run (Phase 1a) is not a scope question and is still asked there.
 
 ## Execution Flow
 
 bdd-coder is an orchestration layer with the following fixed phase order:
 
-| Phase | Name                       | Agent                                | What happens                                                                   |
-| ----- | -------------------------- | ------------------------------------ | ------------------------------------------------------------------------------ |
-| 0     | Environment                | explore-agent                        | Detect language, test framework, lint, type-check setup                        |
-| 1     | Tasklist + Checklist Build | tasklist-builder + checklist-builder | Break input into a task list, pick one item, generate its checklist            |
-| 2     | Dependency Map             | bdd-coder                            | Classify checklist tasks into serial / parallel groups                         |
-| 3     | bdd-coder Dispatch         | bdd-coder                            | Spawn bdd-coder per task; collect status reports                               |
-| 4     | Quality Gate               | bdd-coder + code-reviewer            | Global lint + type-check + all tests pass, then code review                    |
-| 5     | Done Check                 | bdd-coder                            | Confirm all checklist items complete; check off tasks.md and write back status |
-| 6     | Session End                | bdd-coder                            | Reset state; remind user to commit manually                                    |
+| Phase | Name                               | Agent                                | What happens                                                                                  |
+| ----- | ---------------------------------- | ------------------------------------ | --------------------------------------------------------------------------------------------- |
+| 0     | Environment                        | explore-agent                        | Detect language, test framework, lint, type-check setup                                       |
+| 1     | Tasklist Resolve + Checklist Build | tasklist-builder + checklist-builder | Build or restore the task list, pick one item, generate its checklist, save the session entry |
+| 2     | Dependency Map                     | bdd-coder                            | Classify checklist tasks into serial / parallel groups                                        |
+| 3     | bdd-coder Dispatch                 | bdd-coder                            | Spawn bdd-coder per task; collect status reports                                              |
+| 4     | Quality Gate                       | bdd-coder + code-reviewer            | Global lint + type-check + all tests pass, then code review                                   |
+| 5     | Done Check                         | bdd-coder                            | Confirm all checklist items complete; write back tasks.md, task list, session                 |
+| 6     | Session End                        | bdd-coder                            | Reset state; remind user to commit manually                                                   |
 
 Gate Rule: phases must run in order. No skipping.
 
 All tests MUST pass at Phase 4. No exceptions.
 Do NOT commit after completion — user commits manually.
 
-### Phase 1: Tasklist + Checklist Build
+### Phase 1: Tasklist Resolve + Checklist Build
 
 Route the input first. Only natural language and Target IDs go through tasklist-builder.
 
-| Input                             | Phase 1a: tasklist-builder | Phase 1b: checklist-builder input               |
-| --------------------------------- | -------------------------- | ----------------------------------------------- |
-| Natural-language                  | Run                        | `Handoff` of the selected item                  |
-| Target ID (e.g. `T01`)            | Run                        | `Handoff` of the selected item (`T01-02`)       |
-| Scenario ID (e.g. `T01-02`)       | Skip                       | The Task ID as given                            |
-| `--tasklist <path> [--item L-02]` | Skip                       | `Handoff` of the given item, or first `pending` |
-| `--checklist <path>`              | Skip                       | Skip checklist-builder; use the file            |
+| Input                             | Phase 1a: tasklist-builder | Phase 1b: checklist-builder input                    |
+| --------------------------------- | -------------------------- | ---------------------------------------------------- |
+| Natural-language                  | Run                        | `Handoff` of the selected item                       |
+| Target ID (e.g. `T01`)            | Run                        | `Handoff` of the selected item (`T01-02`)            |
+| Scenario ID (e.g. `T01-02`)       | Skip                       | The Task ID as given                                 |
+| `--tasklist <path> [--item L-02]` | Skip                       | `Handoff` of the given item, or first `pending`      |
+| `--checklist <path>`              | Skip                       | Skip checklist-builder; use the file                 |
+| `--resume`                        | Skip                       | Restored from `session.json` (see [Resume](#resume)) |
+
+#### Session entry
+
+The skill keeps the work in progress in the `bdd_coder` entry of `.local/deckrd/session.json`,
+so an interrupted session can be resumed. Paths are relative to the repository root.
+
+```json
+{
+  "bdd_coder": {
+    "tasklist": ".local/deckrd/temp/tasklist/deckrd/libs/T-01.tasklist.md",
+    "item": "L-02",
+    "checklist": ".local/deckrd/temp/tasks/parse-config-calm-checklist.md",
+    "status": "in-progress",
+    "updated_at": "2026-11-09T00:00:00Z"
+  }
+}
+```
+
+| Field        | Value                                                                   |
+| ------------ | ----------------------------------------------------------------------- |
+| `tasklist`   | TASKLIST PATH, or `null` when Phase 1 used no task list                 |
+| `item`       | Item ID selected in Phase 1a, or `null` when there is no task list      |
+| `checklist`  | CHECKLIST PATH, or `null` until Phase 1b returns it                     |
+| `status`     | `in-progress` from Phase 1 on; `done` when Phase 5 completes every case |
+| `updated_at` | UTC timestamp of the last write (`date -u +"%Y-%m-%dT%H:%M:%SZ"`)       |
+
+Rules:
+
+- Only this skill (the orchestrator) reads or writes `bdd_coder`. tasklist-builder, checklist-builder,
+  and the bdd-coder agent never see it (Phase 3: "Do NOT pass ... session.json").
+- Replace the `bdd_coder` value as a whole and leave every other key untouched.
+  Write through a temporary file, as `module.sh` does:
+
+  ```bash
+  jq --arg tl "$TASKLIST" --arg item "$ITEM" --arg cl "$CHECKLIST" --arg st "$STATUS" \
+     --arg now "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
+     'def nz: if . == "" then null else . end;
+      .bdd_coder = {tasklist: ($tl | nz), item: ($item | nz), checklist: ($cl | nz),
+                    status: $st, updated_at: $now}' \
+     .local/deckrd/session.json > .local/deckrd/session.json.tmp &&
+    mv .local/deckrd/session.json.tmp .local/deckrd/session.json
+  ```
+
+  Pass an empty string for a `null` field. Do not use `select(. != "")` instead of `nz`:
+  an empty value inside `{...}` makes jq output nothing, and the `mv` then empties `session.json`.
+  `jaq` accepts the same filter.
+- If `.local/deckrd/session.json` does not exist, do not create it. Warn that the session cannot be
+  saved (`/deckrd init` has not run) and continue without it.
+
+| When                                    | Write                                                                        |
+| --------------------------------------- | ---------------------------------------------------------------------------- |
+| Phase 1a: an item is selected           | `tasklist`, `item`, `checklist: null`, `status: in-progress`                 |
+| Phase 1b: CHECKLIST PATH is returned    | Keep `tasklist` / `item` (or `null`), set `checklist`, `status: in-progress` |
+| Phase 5 Step 4c: every case is complete | `status: done`                                                               |
+
+A session that ends early (`BLOCKED`, abort) keeps `status: in-progress`, so it can be resumed.
+
+#### Resume
+
+`--resume` continues the work recorded in `bdd_coder`:
+
+| `bdd_coder` state                                         | Action                                                         |
+| --------------------------------------------------------- | -------------------------------------------------------------- |
+| Missing, or `status: done`                                | Report "nothing to resume" and end the session (Phase 6)       |
+| `checklist` set and the file exists                       | Use it as `--checklist`; restore TASKLIST PATH and the item    |
+| `checklist` is `null`, `tasklist` set and the file exists | Run as `--tasklist <tasklist> --item <item>`                   |
+| A recorded file does not exist                            | Report the missing path and end the session. Do not rebuild it |
+
+A Target ID or `--tasklist` also restores work. After Phase 1a (or after reading `--tasklist`),
+check the `bdd_coder` entry against these conditions:
+
+- `bdd_coder.tasklist` equals TASKLIST PATH
+- `status` is `in-progress`
+- the recorded `item` is still `pending` in the task list
+- the recorded `checklist` file exists
+
+If all of them hold, select that item without asking and reuse the checklist (skip Phase 1b).
+Tell the user which item and checklist were restored.
 
 #### Phase 1a: Tasklist Build
 
@@ -98,18 +177,22 @@ Select the item:
 - On `updated`, show the `CHANGED` line to the user before selecting.
 - No `pending` item → report it and end the session (Phase 6).
 
+After selecting the item, write the [session entry](#session-entry).
+
 Pass **only the selected item's `Handoff`** to Phase 1b.
 Never pass the task list file to checklist-builder or bdd-coder: it lists other tasks.
 The rule "1 delegation = 1 task" (`docs/.deckrd/rules/deckrd-rule-bdd-cycle.md`)
 forbids handing over material that contains other tasks.
-The task list is orchestrator state only.
+The task list is orchestrator state only. Shortcuts such as "pass the task list and say
+'do L-02 only'" break this rule: the agent sees the other items and may implement them.
 
-Output:
+Output (under `${DECKRD_LOCAL_TEMP}`, default `.local/deckrd/temp`):
 
-- Target ID: `<module dir>/temp/tasklists/TXX.tasklist.md`
-  (for example `docs/.deckrd/<ns>/<module>/temp/tasklists/T01.tasklist.md`)
-- Natural language: `docs/.deckrd/<active module>/temp/tasklists/<name>.tasklist.md`
-- Natural language, no active module: `.local/deckrd/temp/tasklists/<name>.tasklist.md`
+- Target ID: `.local/deckrd/temp/tasklist/<ns>/<module>/T-XX.tasklist.md`
+  (for example `.local/deckrd/temp/tasklist/deckrd/libs/T-01.tasklist.md`).
+  Re-running the same Target ID reuses this file (`reused` / `updated`); it is never created twice.
+- Natural language: `.local/deckrd/temp/tasklist/<active module>/<name>.tasklist.md`
+- Natural language, no active module: `.local/deckrd/temp/tasklist/<name>.tasklist.md`
 
 #### Phase 1b: Checklist Build
 
@@ -122,6 +205,9 @@ Spawn **checklist-builder** with the routed input.
 | `--checklist <path>`  | Skip checklist-builder, use the specified existing file       |
 
 Output: `.local/deckrd/temp/tasks/<slug>-<adjective>-checklist.md`
+
+When the checklist path is returned (or given by `--checklist`), keep it as **CHECKLIST PATH**
+and write the [session entry](#session-entry).
 
 If checklist-builder reports `BLOCKED` (a Task ID's Case lists more than one input):
 
@@ -282,9 +368,15 @@ Run this step only when Phase 1 used a task list (Phase 1a ran, or `--tasklist` 
 1. Open TASKLIST PATH and find the item selected in Phase 1a.
 2. If every case of this invocation is completed in Step 1, change the item checkbox to `- [x]`
    and its `Status:` to `done`. Otherwise leave the item as is.
-3. Do not touch any other item. Do not register the task list in `.local/deckrd/session.json`.
+3. Do not touch any other item.
 4. In the Step 5 report, add `NEXT: <next pending item ID> → <Handoff>`, or `NEXT: none`,
    and the command to continue: `/bdd-coder:bdd-coder --tasklist <TASKLIST PATH>`.
+
+#### Step 4c: Update the session entry
+
+If every case of this invocation is completed in Step 1, set `status: done` in the
+[session entry](#session-entry). Otherwise leave it `in-progress`, and add the command to continue
+to the Step 5 report: `/bdd-coder:bdd-coder --resume`.
 
 #### Step 5: Report to user
 
