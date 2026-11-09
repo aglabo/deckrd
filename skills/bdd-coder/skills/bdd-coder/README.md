@@ -27,15 +27,15 @@ deckrd ワークフローと統合された BDD コーディングスキルで�
 
 ## 実行フェーズ
 
-| Phase | 内容                                                                  | 担当エージェント          |
-| ----- | --------------------------------------------------------------------- | ------------------------- |
-| 0     | 開発環境検出 (言語・テストフレームワーク・ツールコマンド)             | explore-agent-coder       |
-| 1     | チェックリスト生成 (Task ID または自然言語から BDD タスクに分解)      | checklist-builder         |
-| 2     | タスク依存関係分析 (直列/並列グループ分類)                            | bdd-coder                 |
-| 3     | BDD 実装 (Red → Green → Refactor を1アサーションずつ)                 | bdd-coder                 |
-| 4     | グローバル品質ゲート (Lint・型チェック・テスト・CRAP・コードレビュー) | bdd-coder + code-reviewer |
-| 5     | 完了確認                                                              | bdd-coder                 |
-| 6     | セッション終了 (コミットはユーザーが手動実施)                         | bdd-coder                 |
+| Phase | 内容                                                                                                          | 担当エージェント                     |
+| ----- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| 0     | 開発環境検出 (言語・テストフレームワーク・ツールコマンド)                                                     | explore-agent-coder                  |
+| 1     | タスクリスト生成 (自然言語・Target ID を 1 項目 = 1 チェックリストに分解) → 選んだ 1 項目のチェックリスト生成 | tasklist-builder + checklist-builder |
+| 2     | タスク依存関係分析 (直列/並列グループ分類)                                                                    | bdd-coder                            |
+| 3     | BDD 実装 (Red → Green → Refactor を1アサーションずつ)                                                         | bdd-coder                            |
+| 4     | グローバル品質ゲート (Lint・型チェック・テスト・CRAP・コードレビュー)                                         | bdd-coder + code-reviewer            |
+| 5     | 完了確認                                                                                                      | bdd-coder                            |
+| 6     | セッション終了 (コミットはユーザーが手動実施)                                                                 | bdd-coder                            |
 
 ## 構成
 
@@ -47,6 +47,7 @@ skills/bdd-coder/
 │   ├── languages/                    # 言語別ルール (TypeScript/Go/Rust/Shell)
 │   ├── templates/
 │   │   ├── implementation-checklist.tpl.md
+│   │   ├── tasklist.tpl.md
 │   │   └── shell-header.tpl.sh
 │   ├── test-quality.md               # テスト品質原則 (Host Safety/Idempotency/CRAP)
 │   ├── testing-anti-patterns.md      # BDD を破壊するアンチパターン集
@@ -59,7 +60,8 @@ skills/bdd-coder/
     ├── guidelines/
     │   └── code-comments.md          # コードコメント ガイドライン (C-1〜C-10)
     └── roles/
-        └── comment-refiner.md        # comment-refiner の手順 (Role)
+        ├── comment-refiner.md        # comment-refiner の手順 (Role)
+        └── tasklist-builder.md       # tasklist-builder の手順 (Role)
 ```
 
 関連スキル (`skills/bdd-coder/skills/` 配下):
@@ -70,6 +72,7 @@ skills/bdd-coder/
 関連エージェント (`skills/bdd-coder/agents/` 配下):
 
 - `bdd-coder.md` — Red-Green-Refactor 実装エージェント
+- `tasklist-builder.md` — 自然言語・Target ID をタスクリストに分解するエージェント（手順は `references/roles/tasklist-builder.md`）
 - `checklist-builder.md` — BDD チェックリスト生成エージェント
 - `explore-agent-coder.md` — 開発環境検出エージェント
 - `code-reviewer.md` — CC/CRAP 算出・codex CLI コードレビューエージェント

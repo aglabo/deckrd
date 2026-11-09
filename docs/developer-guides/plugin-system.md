@@ -113,7 +113,9 @@ skills/{skill-name}/
   - bdd-coder (`/bdd-coder:bdd-coder`)
   - bdd-coder-review (`/bdd-coder:bdd-coder-review`)
   - comment-review (`/bdd-coder:comment-review`)
-- Agents: checklist-builder, bdd-coder, code-reviewer, comment-refiner, explore-agent
+- Agents:
+  - tasklist-builder, checklist-builder, bdd-coder
+  - code-reviewer, comment-refiner, explore-agent
 - Templates: Test templates per language
 - References: BDD cycle documentation
 
@@ -212,6 +214,14 @@ tools: [Read, Write, Edit, Bash, Grep, Glob]
 **Scope**: codebase-extraction, codebase-survey, prior-art, pattern-detection
 
 ### Agent Types in bdd-coder
+
+#### tasklist-builder
+
+**Purpose**: Breaks a request or a tasks.md Target (`T-XX`) into a task list. Each item makes one checklist
+
+**Entry point**: bdd-coder skill Phase 1a, before checklist-builder. Writes `.local/deckrd/temp/tasklist/<name>.tasklist.md`.
+Only the selected item's `Handoff` goes to checklist-builder, never the task list file.
+Steps live in the Role file `references/roles/tasklist-builder.md`. Never invoked directly by the user.
 
 #### checklist-builder
 
