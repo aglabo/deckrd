@@ -33,5 +33,8 @@
     "lint:markdown": "bash runners/run-markdownlint.sh ",
     "test:sh": "bash runners/run-shellspec.sh ",
     "test:sh:all": "bash runners/run-shellspec.sh all"
+  },
+  "devDependencies": {
+    "@commitlint/config-conventional": "^21.2.4"
   }
 }
