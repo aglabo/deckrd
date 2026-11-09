@@ -19,6 +19,21 @@ This Role is the **canonical procedure** for building a task list before checkli
 
 All paths below are relative to the bdd-coder skill directory unless they start with `.local/` or `docs/`.
 
+## Where task lists live
+
+A task list lives in the `temp/tasklists/` directory of the module it belongs to.
+The module directory is the scope, so `T-01` of one module never meets `T-01` of another.
+
+| Source                                                                | Directory                               |
+| --------------------------------------------------------------------- | --------------------------------------- |
+| Target ID                                                             | `<module dir>/temp/tasklists/`          |
+| Natural language, `.local/deckrd/session.json` has an `active` module | `docs/.deckrd/<active>/temp/tasklists/` |
+| Natural language, no active module                                    | `.local/deckrd/temp/tasklists/`         |
+
+- `<module dir>` is the directory that holds `tasks/tasks.md`: two levels above `tasks_md`.
+- `temp/` is ignored by git (`**/temp/` in `docs/.deckrd/.gitignore` and `.local/deckrd/.gitignore`).
+- This Role only reads `session.json`. Saving which task list is in use belongs to #211.
+
 ## Responsibility
 
 Break the input into a task list where **each item is one task, and one item makes one checklist**.
@@ -47,19 +62,21 @@ A Scenario ID (`T01-02`, `T-01-02`) or a Case ID (`T-01-02-03`) is already one t
 | Anything else                                | Natural language |
 
 Normalize a Target ID to the canonical form `T-XX` (`T01` → `T-01`).
+Its short form `TXX` (`T01`) is used in the file name.
 
 ### Step 2: Target ID
 
-1. Output path: `.local/deckrd/temp/tasklist/T-XX.tasklist.md`.
-   If the file already exists, do not rebuild it. Return its path with `status: reused`.
-2. If `tasks_md` is missing or unreadable, return `status: invalid-input`.
+1. If `tasks_md` is missing or unreadable, return `status: invalid-input`.
+2. Read `module: <namespace>/<module>` from the frontmatter of `tasks_md`. If there is none, return `status: invalid-input`.
 3. Read the `## T-XX:` section of `tasks_md`. If there is none, return `status: invalid-input`.
-4. Make one item per Scenario heading `#### T-XX-YY: <scenario>`, in file order.
+4. Output path: `<module dir>/temp/tasklists/TXX.tasklist.md` (for example `docs/.deckrd/deckrd/libs/temp/tasklists/T01.tasklist.md`).
+   If the file already exists, go to [Step 2a](#step-2a-reconcile-an-existing-task-list) after building the items below.
+5. Make one item per Scenario heading `#### T-XX-YY: <scenario>`, in file order.
    - Title: the Scenario heading text.
    - Target: the `Target:` value of the Scenario's Case lines. If they differ, list them comma-separated.
    - Handoff: the invocation form `TXX-YY` (for example `T01-02`), as checklist-builder accepts it.
    - Depends-on: `-`. `tasks.md` does not record dependencies between Scenarios.
-5. Set each item's Status from its Case lines `- [ ] **T-XX-YY-ZZ**: ...`:
+6. Set each item's Status from its Case lines `- [ ] **T-XX-YY-ZZ**: ...`:
 
    | Condition                                                                   | Status                                   |
    | --------------------------------------------------------------------------- | ---------------------------------------- |
@@ -68,6 +85,26 @@ Normalize a Target ID to the canonical form `T-XX` (`T01` → `T-01`).
    | Otherwise                                                                   | `pending`                                |
 
    The multi-input check is the same as checklist-builder Phase 1 step 3. Do not split the Case yourself: `tasks.md` is split only by `/deckrd tasks`.
+
+### Step 2a: Reconcile an existing task list
+
+Run this step only when the Target ID task list already exists.
+The items built in Step 2 show the current `tasks.md`. The existing file holds the work done so far.
+
+1. Read the frontmatter of the existing file. If its `module` or `tasks_md` differs from this run, return `status: invalid-input` and leave the file unchanged.
+2. Match each new item to an existing item by `Handoff` (`TXX-YY`).
+
+   | Case                                                       | Result                                                        |
+   | ---------------------------------------------------------- | ------------------------------------------------------------- |
+   | Existing item is `done`                                    | Keep it as is: ID, checkbox, and Status                       |
+   | Existing item is not `done`                                | Keep its ID. Take Title, Target, and Status from the new item |
+   | New item has no match (a new Scenario)                     | Append it with the next free ID (`L-<max + 1>`)               |
+   | Existing item has no match (Scenario gone from `tasks.md`) | Keep it, and set Status to `removed (not in tasks.md)`        |
+
+   So a `needs-split` item becomes `pending` once its Case is split by `/deckrd tasks`.
+3. Never renumber IDs: the caller and the user refer to items by ID.
+4. If nothing changed, leave the file as is and return `status: reused`.
+   Otherwise rewrite the items, keep the frontmatter as is, and return `status: updated`.
 
 ### Step 3: Natural language
 
@@ -84,7 +121,7 @@ Normalize a Target ID to the canonical form `T-XX` (`T01` → `T-01`).
    - Depends-on: IDs of items that must be done first (for example, a Target that calls another). Use `-` when there are none.
    - Status: `pending`.
 4. Order the items so that each item comes after the items in its `Depends-on`.
-5. Output path: `.local/deckrd/temp/tasklist/<content-slug>-<adjective>.tasklist.md`.
+5. Output path: `<directory>/<content-slug>-<adjective>.tasklist.md`. Choose `<directory>` by the table in [Where task lists live](#where-task-lists-live).
    - `<content-slug>`: kebab-case summary of the whole request, verb + noun, at most 4 words.
    - `<adjective>`: pick it with `adjective_random()`:
 
@@ -104,6 +141,7 @@ Normalize a Target ID to the canonical form `T-XX` (`T01` → `T-01`).
    | Placeholder           | Value                                                   |
    | --------------------- | ------------------------------------------------------- |
    | `{{ SOURCE }}`        | `tasks` or `natural-language`                           |
+   | `{{ MODULE }}`        | `<namespace>/<module>`, or `-` when there is no module  |
    | `{{ TASK_ID }}`       | `T-XX`, or `-` for natural language                     |
    | `{{ TASKS_MD }}`      | The `tasks_md` path, or `-` for natural language        |
    | `YYYY-MM-DD HH:MM:SS` | Current timestamp                                       |
@@ -119,16 +157,17 @@ Normalize a Target ID to the canonical form `T-XX` (`T01` → `T-01`).
      > Return an error when the file does not exist.
    ```
 
-3. Create `.local/deckrd/temp/tasklist/` if needed and write the file.
+3. Create the `temp/tasklists/` directory if needed and write the file.
 4. Check the written file: no `{{` remains, every item has all five fields, and every `Depends-on` ID exists in the list.
 
 ### Step 5: Return the summary
 
 ```text
-TASKLIST: .local/deckrd/temp/tasklist/<name>.tasklist.md
-STATUS: created | reused
-ITEMS: <n> total, <n> pending, <n> needs-split, <n> done
+TASKLIST: <directory>/<name>.tasklist.md
+STATUS: created | reused | updated
+ITEMS: <n> total, <n> pending, <n> needs-split, <n> done, <n> removed
 NEEDS_SPLIT: L-02 (T-01-02-03), ...      # omit when none
+CHANGED: L-02 needs-split → pending, L-05 added, ...   # updated only
 NEXT: L-01 → <Handoff>                   # first pending item; "none" when no item is pending
 ```
 
@@ -145,15 +184,18 @@ DETAIL: <the question, or what was wrong with the input>
 | ------------------------------------------------------ | ---------------------------------------- |
 | Scenario or Case ID given                              | `status: invalid-input`; no file         |
 | Target ID without a readable `tasks_md`                | `status: invalid-input`; no file         |
+| `tasks_md` has no `module:` in its frontmatter         | `status: invalid-input`; no file         |
 | Target ID not found in `tasks_md`                      | `status: invalid-input`; no file         |
-| Task list for the Target ID already exists             | `status: reused`; file unchanged         |
+| Existing task list has another `module` or `tasks_md`  | `status: invalid-input`; file unchanged  |
+| Existing task list matches the current `tasks.md`      | `status: reused`; file unchanged         |
+| Existing task list differs from the current `tasks.md` | `status: updated`; reconciled (Step 2a)  |
 | Targets or scope of a natural-language request unclear | `status: questions`; no file             |
 | A Case lists more than one input                       | Item gets `needs-split`; list is written |
 
 ## Constraints
 
-- Write only under `.local/deckrd/temp/tasklist/`. Read `tasks.md`; never edit it.
+- Write only to a `temp/tasklists/` directory from [Where task lists live](#where-task-lists-live). Read `tasks.md` and `session.json`; never edit them.
 - Never write code or run tests.
 - One task list per invocation.
-- Never overwrite an existing task list.
+- Change an existing task list only through Step 2a. Never drop a `done` item and never renumber IDs.
 - Do not commit. Git operations belong to the user.
