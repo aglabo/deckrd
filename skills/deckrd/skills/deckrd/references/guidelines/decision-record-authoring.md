@@ -1,7 +1,7 @@
 ---
 title: "DR 作成ガイドライン"
 description: "Decision Record（DR）に何を残し何を残さないかの基準。dr-writer・dr-refiner とレビュアーが共通で参照する正本"
-version: 1.5.0
+version: 1.5.1
 ---
 
 <!-- textlint-disable
@@ -440,6 +440,7 @@ draft の時点では apply の項目を「未実施」として扱い、不合�
 
 refine では、draft と `両方` の項目でレビューする（7.3 で分類する）。
 apply の項目のうち A-2 は 7.1 の不変条件に、E-4 は PATCH の版更新に読み替える。F-4 はそのまま確かめる。
+E-2 は新規採番の規則なので、refine では「DR-ID が元のまま変わらず、重複も再利用もない」ことの確認に読み替える。
 
 ## 7. refine の規則
 
@@ -511,3 +512,4 @@ DR ごとの点検とは別に、ファイル全体について次を確かめ�
 | 2026-11-09 | 1.3.0   | Add F-4 (no document lint errors); E-3 requires the defining file before each ID and lists GitHub Issues and PRs |
 | 2026-11-09 | 1.4.0   | Add A-3, C-4, C-5, E-5, E-6 and file-level checks (7.4); one version bump per commit (E-4); refine B-2, C-2, F-2 |
 | 2026-11-09 | 1.5.0   | F-4: a lint fix keeps the role of each sentence and never introduces decision wording                            |
+| 2026-11-09 | 1.5.1   | Clarify that refine reads E-2 as "DR-IDs unchanged and unique"                                                   |

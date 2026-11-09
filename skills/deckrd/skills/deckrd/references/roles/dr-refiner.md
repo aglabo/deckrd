@@ -104,7 +104,8 @@ Run only after the caller got the user's approval of `draft_file`.
    - Do not realign the table columns by hand. The formatter in step 6 does it.
 4. Final check on the content built in memory. If one fails, return `status: malformed` with the reason and write nothing.
    - R-1 to R-7 (guideline 7.1) hold between the file read in step 1 and the new content, for every DR.
-   - Sections other than the targets, the frontmatter (except `version`), and the Change History rows that existed before are byte-identical.
+   - Sections other than the targets and the frontmatter (except `version`) are byte-identical.
+   - Change History rows that are in the committed file (`git show HEAD:<path>`) are byte-identical. Rows after the committed last row are a pending bump; step 3 may replace them with its single merged row. If git is not available or the file is not tracked, every row that existed before is byte-identical.
    - E-4: frontmatter `version` equals the last Change History row.
 5. Write once. Write the whole new content in a single write. If any step failed, write nothing.
 6. Format and lint (guideline F-4). Follow [dr command: Format and Lint](../commands/dr.md#format-and-lint). The range this run wrote is the target DR sections and the new Change History row. After any lint fix, check R-1 to R-7 again for the fixed DR; a fix that would break one is not made, and the error is reported instead.
