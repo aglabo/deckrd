@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# generate-doc-execute-prompt.spec.sh - ShellSpec tests for ai-runner.sh integration in generate-doc.sh
+# generate-doc-execute-prompt.spec.sh - ShellSpec tests for ai-runner.lib.sh integration in generate-doc.sh
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #

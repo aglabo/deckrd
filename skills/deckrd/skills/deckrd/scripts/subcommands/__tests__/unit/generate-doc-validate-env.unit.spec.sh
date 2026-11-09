@@ -2,14 +2,16 @@
 # generate-doc-validate-env.unit.spec.sh - ShellSpec tests for the validate_env guard in generate-doc.sh
 #
 # Unit test design:
-#   - generate-doc.sh は他の 5 本の入口スクリプトと同じく、ライブラリ読み込みの直後に
+#   - generate-doc.sh は他の 4 本の入口スクリプト（init / project / status / update）と同じく、
+#     ライブラリ読み込みの直後に
 #     トップレベルで `validate_env || exit 1` を呼ばなければならない。
+#     module.sh だけは main の中で呼ぶ（source 時に走らないことを T-CLI-MOD-15 が検査する）。
 #     validate_env だけが jqexe を export するので、呼ばないと jq_read が
 #     リテラル jq へフォールバックし、jaq しか無い環境で全コマンドが落ちる。
 #   - 静的検査はソーステキストを見る。source 行と呼び出し行のどちらが欠けても
 #     配線は成立しないので、2 つを別ケースで検査する。
 #   - 存在検査だけではガードが機能ライブラリの後ろへ動いたことを見逃す。
-#     行番号を比べるケースを別に置き、5 入口と同じ「ガードが先」の形を機械的に守る。
+#     行番号を比べるケースを別に置き、4 入口と同じ「ガードが先」の形を機械的に守る。
 #   - 機能検査は generate-doc.sh を source せずサブプロセスで起動する。
 #     source すると spec 自身のシェルでトップレベルの validate_env が走り、
 #     スタブの戻り値で spec ごと終了してしまう。
@@ -186,7 +188,7 @@ _run_generate_doc_with_stubbed_validate_env() {
 # ============================================================================
 
 # generate-doc.sh の validate_env 呼び出し配線。
-# 他 5 入口と同じ位置・同じ形でガードが入っており、
+# 他 4 入口と同じ位置・同じ形でガードが入っており、
 # かつ validate_env の失敗で後続処理へ進まないことを担保する。
 Describe "T-SUB-VE: generate-doc.sh の validate_env 呼び出し配線"
 
@@ -194,7 +196,7 @@ Describe "T-SUB-VE: generate-doc.sh の validate_env 呼び出し配線"
   After "_teardown_isolated_env"
 
   Describe "Given: 修正後の generate-doc.sh のソーステキスト"
-    # 配線が静的に存在し、かつ 5 入口と同じ順序で並んでいることの検査
+    # 配線が静的に存在し、かつ 4 入口と同じ順序で並んでいることの検査
     Describe "When: 正常系"
       It "Then: [Normal] T-SUB-VE-01: validate-env.lib.sh を source している"
         When call _source_has_pattern '^\. .*validate-env\.lib\.sh'

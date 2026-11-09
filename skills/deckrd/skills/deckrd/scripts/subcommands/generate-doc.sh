@@ -19,10 +19,10 @@
 #
 # @example
 #   # Generate requirements in Japanese
-#   generate-doc.sh requirements "user input" --lang ja
+#   generate-doc.sh @requirements "user input" --lang ja
 #
 #   # Generate spec with context from file
-#   generate-doc.sh spec @docs/input.md --model claude-sonnet-4-5 --lang en
+#   generate-doc.sh @specifications @docs/input.md --ai-model claude-sonnet-4-5 --lang en
 #
 # @exitcode 0 Success
 # @exitcode 1 Error during execution
@@ -33,7 +33,8 @@
 
 # shellcheck disable=SC1091
 
-# don't use  -u for checking error by Agent
+# No -u: an unbound variable would abort with bash's own message
+# before the script prints an error the agent can act on
 set -eo pipefail
 
 # Load bootstrap (defines SYMBOL, PROJECT_ROOT, DECKRD_LOCAL_DATA, DECKRD_LIB_DIR, etc.)
@@ -255,20 +256,18 @@ resolve_context() {
 }
 
 ##
-# @description Get prompt content from doc-type or detect prompt-file mode
+# @description Get the prompt text from the argument, or detect prompt-file mode
 # @arg $1 string Raw first argument (doc-type name or @<keyword>)
 # @stdout Prompt content string
-# @return 0  doc-type mode: prompt content written to stdout
+# @return 0  prompt-text mode: the argument itself written to stdout
 # @return 1  prompt-file mode: caller should use cat on PROMPT_PATH
 get_prompt() {
   local arg="$1"
 
   if [[ "$arg" == @* ]]; then
-    # @<keyword> mode: caller uses cat on PROMPT_PATH
     return 1
   fi
 
-  # prompt-text mode: arg is the prompt string itself
   echo "$arg"
   return 0
 }
@@ -297,7 +296,7 @@ get_prompt_file() {
 
 ##
 # @description Resolve prompt and template paths for document type
-# @arg $1 string Document type (normalized form from validate_doc_type)
+# @arg $1 string Document type (asset base name, e.g. requirements)
 # @stdout Two lines: prompt path, template path
 resolve_doc_paths() {
   local doc_type="$1"
@@ -378,7 +377,6 @@ output_result() {
   if [[ -z "$output_file" ]]; then
     echo "$result"
   else
-    # Prepend DECKRD_BASE to output path
     local full_path="${DECKRD_BASE}/${output_file}"
     mkdir -p "$(dirname "$full_path")"
     echo "$result" >"$full_path"
@@ -391,17 +389,14 @@ output_result() {
 # ============================================================================
 
 main() {
-  # セッションファイルパス
   local session_file="${SESSION_FILE}"
 
   # config 初期化（デフォルト + セッション読込）
   # session.json が読めないときは既定値で続行せず中断する（理由は config_init が出力する）。
   config_init "$session_file" || exit 1
 
-  # コマンドライン引数の解析
   parse_options "$@"
 
-  # DECKRD_BASE の解決（CONFIG 経由）
   local deckrd_base
   deckrd_base=$(config_get "deckrd_base")
   if [[ -z "$deckrd_base" ]]; then
@@ -410,7 +405,6 @@ main() {
   fi
   export DECKRD_BASE="$deckrd_base"
 
-  # doc_type チェック
   local doc_type prompt_mode
   doc_type=$(config_get "doc_type")
   prompt_mode=$(config_get "prompt_mode")
@@ -429,7 +423,6 @@ main() {
     config_set "template_path" "$(echo "$paths" | tail -1)"
   fi
 
-  # コンテキスト入力の解決
   local context_input
   context_input=$(config_get "context_input")
   if [[ -n "$context_input" ]]; then
@@ -439,13 +432,11 @@ main() {
     config_set "context_input" "$(cat)"
   fi
 
-  # デバッグ出力（--verbose 指定時のみ）
   if [[ "$(config_get "verbose")" == "1" ]]; then
     config_all >&2
     echo "" >&2
   fi
 
-  # prompt_path チェック
   local prompt_path
   prompt_path=$(config_get "prompt_path")
   if [[ -z "$prompt_path" ]]; then
@@ -453,7 +444,6 @@ main() {
     exit 1
   fi
 
-  # 実行
   local template_path lang context
   template_path=$(config_get "template_path")
   lang=$(config_get "lang")
