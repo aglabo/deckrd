@@ -498,7 +498,7 @@ Describe "bootstrap.lib.sh"
 
   # ------------------------------------------------------------------ #
   #  DECKRD_ROOT                                                        #
-  #  Depends on: PROJECT_ROOT (derived from source path when unset)    #
+  #  Depends on: SKILL_ROOT only (not PROJECT_ROOT)                    #
   # ------------------------------------------------------------------ #
   Describe "T-LIB-BROOT: DECKRD_ROOT"
 

@@ -12,7 +12,6 @@
 # shellcheck disable=SC2178  # nameref false positive: local -n correctly references arrays
 # shellcheck disable=SC2016  # jq filter strings intentionally use single quotes; $k/$v are jq variables, not shell
 
-# Guard: prevent re-sourcing
 if [[ -n "${_KV_STORE_LOADED:-}" ]]; then
   return 0
 fi
@@ -22,7 +21,7 @@ readonly _KV_STORE_LOADED=1
 # shellcheck disable=SC1091
 . "$(dirname "${BASH_SOURCE[0]}")/utils.lib.sh"
 
-# Global associative array: store_name → schema array name ("_KV_SCHEMA_<store>")
+# Global associative array of registered stores: store_name → store_name (the schema itself is in "_KV_SCHEMA_<store>")
 declare -Ag _KV_SCHEMA
 
 # _kv_schema_iter - Iterate over schema entries, calling callback for each key/default pair
@@ -44,12 +43,10 @@ _kv_schema_iter() {
 # _kv_normalize_key - Normalize and validate a key name
 #
 # Trims leading/trailing whitespace, then validates against identifier naming rules.
-# Valid pattern: ^[a-zA-Z_][a-zA-Z0-9_]*$
-#   - First character: letter or underscore
-#   - Subsequent characters: letters, digits, or underscores
 #
 # @arg $1 string Key name to normalize and validate
-# @stdout Normalized key on success; error message on failure
+# @stdout Normalized key on success
+# @stderr Error message on failure
 # @return 0 if valid, 1 if invalid
 _kv_normalize_key() {
   local key="$1"
@@ -79,7 +76,6 @@ kv_init() {
   local store="$1"
   local schema="$2"
 
-  # Guard: empty schema is an error
   if [[ -z "$schema" ]]; then
     echo "Error: kv_init: schema must not be empty" >&2
     return 1
@@ -104,7 +100,6 @@ kv_init() {
   # Register schema array: _KV_SCHEMA_<store>[key]=default
   declare -Ag "_KV_SCHEMA_${store}"
   local -n _kv_schema_ref="_KV_SCHEMA_${store}"
-  # Clear previous schema entries
   for _key in "${!_kv_schema_ref[@]}"; do
     unset "_kv_schema_ref[$_key]"
   done
@@ -116,10 +111,7 @@ kv_init() {
   # Register schema (mark store as initialized)
   _KV_SCHEMA["$store"]="$store"
 
-  # Declare the store associative array if not already declared
   declare -Ag "_KV_${store}"
-
-  # Initialize with default values using nameref
 
   local -n _kv_buf="_KV_${store}"
   local _kv_set_default
@@ -186,7 +178,6 @@ _kv_normalize_filename() {
   local base="$1"
   local stem
 
-  # Reject empty basename first
   if [[ -z "$base" ]]; then
     printf 'Error: _kv_normalize_filename: basename must not be empty\n' >&2
     return 1
@@ -196,18 +187,16 @@ _kv_normalize_filename() {
   # shellcheck disable=SC2001
   base="$(sed 's/\.\.*/./g' <<<"$base")"
 
-  # Valid pattern: optional prefix of [._-], then at least one [A-Za-z],
-  # then any sequence of [A-Za-z0-9_.-]
   if [[ ! "$base" =~ ^[._-]*[A-Za-z][A-Za-z0-9_.-]*$ ]]; then
     printf "Error: _kv_normalize_filename: invalid basename: '%s'\n" "$base" >&2
     return 1
   fi
 
   if [[ "$base" == .* ]]; then
-    stem="${base%.*}"                # dot-file: strip last extension only
+    stem="${base%.*}"
     [[ -z "$stem" ]] && stem="$base" # no extension (e.g. ".project"): keep as-is
   else
-    stem="${base%.*}" # regular file: strip last extension only
+    stem="${base%.*}"
   fi
   printf '%s' "$stem"
 }
@@ -218,7 +207,6 @@ _kv_normalize_filename() {
 #                    "/foo/bar/session"   → "/foo/bar/session.kv"
 #                    "/foo/bar/.project" → "/foo/bar/.project.kv"
 # @stdout Resolved path with .kv extension
-
 _kv_file_path() {
   local path="$1"
   local dir base stem
@@ -236,7 +224,6 @@ _kv_file_path() {
   base="${path##*/}"
   stem="$(_kv_normalize_filename "$base")" || return 1
 
-  # Reconstruct path: preserve dir if present, else filename only
   if [[ "$path" == */* ]]; then
     dir="${path%/*}"
     printf '%s/%s.kv' "$dir" "$stem"
@@ -245,9 +232,9 @@ _kv_file_path() {
   fi
 }
 
-# kv_store_path - Resolve .kv file path (public API wrapping _kv_file_path)
+# kv_store_path - Resolve .kv file path (public API)
 #
-# If path contains a directory component, delegates directly to _kv_file_path.
+# If path contains a directory component, replaces the basename's extension with .kv (same rule as _kv_file_path).
 # If path is a filename only (no "/"), prepends DECKRD_LOCAL_DATA as the directory.
 #
 # @arg $1 string Path or filename
@@ -270,7 +257,6 @@ kv_store_path() {
   local base="${path##*/}"
   stem="$(_kv_normalize_filename "$base")" || return 1
 
-  # Reconstruct path: preserve dir if present, else prepend DECKRD_LOCAL_DATA
   if [[ "$path" == */* ]]; then
     local dir="${path%/*}"
     printf '%s/%s.kv' "$dir" "$stem"
@@ -285,7 +271,8 @@ kv_store_path() {
 
 # _kv_json_to_buff - Load a JSON string into a KV buffer
 #
-# Validates JSON keys against schema, then populates _KV_<store> from the JSON string.
+# Validates JSON keys against the schema while populating _KV_<store> from the JSON string.
+# On an unknown key it fails, and entries read before that key may already be stored.
 # Empty-string values fall back to schema defaults (${value:-${default}}).
 # Caller is responsible for ensuring the string is valid JSON.
 #
@@ -331,7 +318,7 @@ _kv_json_to_buff() {
 #
 # @arg $1 string Store name
 # @arg $2 string Path (directory + basename; .kv extension applied automatically)
-# @return 0 on success (including file-not-found with default init), 1 on schema error
+# @return 0 on success (including file-not-found with default init), 1 on schema error, invalid JSON, or unknown key
 kv_load() {
   local store="$1"
   local path="$2"
@@ -344,7 +331,6 @@ kv_load() {
   fi
 
   if [[ ! -f "$file" ]]; then
-    # File not found: initialize with defaults
     local -n _kv_buf="_KV_${store}"
     local _kv_set_default
     # shellcheck disable=SC2329
@@ -354,7 +340,6 @@ kv_load() {
     return 0
   fi
 
-  # Validate JSON before loading
   if ! jq_read empty "$file" 2>/dev/null; then
     echo "Error: kv_load: invalid JSON file '${file}'" >&2
     return 1
@@ -368,13 +353,11 @@ kv_load() {
 # _kv_buff_to_json - Serialize an associative array to compact JSON
 #
 # @arg $1 string Store name (nameref target "_KV_<store>")
-# @stdout Compact JSON object (no trailing newline issues, CRLF-safe)
+# @stdout Compact JSON object followed by a newline, with LF line endings
 _kv_buff_to_json() {
   local store="$1"
   local -n _kv_buf="_KV_${store}"
 
-  # Build "key\tvalue" TSV lines from the buffer and convert to compact JSON
-  # in a single jq invocation.
   local json='{}'
   local key
   for key in "${!_kv_buf[@]}"; do

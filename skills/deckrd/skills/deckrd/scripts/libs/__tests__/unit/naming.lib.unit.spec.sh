@@ -586,7 +586,7 @@ Describe "naming.lib.sh"
       End
 
       # Proves the duplicate check is not a vacuous pass. The implementation's printf '%s' emits no newline,
-      # so without the worker's newline all 20 names were joined into one line and uniq -d was always empty
+      # so without the worker's newline all 20 names would be joined into one line and uniq -d would always be empty
       It "Then: [Normal] T-LIB-NGFR-08: 結果ファイルが 1 件 1 行の 20 行になる"
         lines=$(wc -l <"${_PARALLEL_RESULTS}" | tr -d ' ')
         When call test "$lines" -eq 20

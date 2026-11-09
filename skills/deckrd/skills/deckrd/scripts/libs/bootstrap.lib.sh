@@ -7,11 +7,10 @@
 # https://opensource.org/licenses/MIT
 #
 # @version 0.5.2
-# USAGE: source this file, then call bootstrap_finalize to lock variables.
+# USAGE: source this file. It calls bootstrap_init and bootstrap_finalize
+#   (pass --no-finalize to skip bootstrap_finalize).
 #   . "$(dirname "${BASH_SOURCE[0]}")/bootstrap.lib.sh"
-#   bootstrap_finalize
 
-# Guard: prevent re-sourcing
 if [[ -n "${_BOOTSTRAP_LOADED:-}" ]]; then
   return 0
 fi
@@ -38,7 +37,8 @@ _resolve_project_root() {
 
 # _resolve_deckrd_root - Resolve the deckrd skill root relative to this file's location
 #
-# Always resolves to the deckrd skill root, regardless of the caller's path.
+# Resolves to the root of the skill whose scripts/libs/ holds this file (through a link,
+# the linking skill's root), regardless of the caller's path.
 # Resolution is relative to BASH_SOURCE[0] (this file), independent of PROJECT_ROOT.
 #
 # BASH_SOURCE[0] path: .../skills/deckrd/skills/deckrd/scripts/libs/bootstrap.lib.sh
@@ -89,7 +89,6 @@ bootstrap_init() {
   # A readonly SKILL_ROOT is accepted only when it equals the computed value;
   # a mismatch fails fast (a readonly assignment error would abort the caller's
   # whole command without a usable status, so it is checked up front).
-  # Resolved before DECKRD_ROOT.
   local _skill_root
   _skill_root="$(_resolve_deckrd_root)"
   if [[ "${SKILL_ROOT:-}" != "${_skill_root}" ]]; then
@@ -157,7 +156,6 @@ bootstrap_init() {
   export DECKRD_DOCS_DIR
 
   # SYMBOL: valid character pattern for project names, namespaces, and domains
-  # Allowed: lowercase letter start (a-z), followed by lowercase letters, hyphens (-), underscores (_)
   # Usage: [[ "$value" =~ ^${SYMBOL}$ ]]  or  [[ "$path" =~ ^${SYMBOL}/${SYMBOL}$ ]]
   # Mock support: define SYMBOL before sourcing this file to override.
   if [[ -z "${SYMBOL:-}" ]]; then
@@ -170,9 +168,9 @@ bootstrap_init() {
 #
 # Must be called after bootstrap_init().
 # SYMBOL is locked unconditionally: if pre-set by the caller, it was already
-# exported and will be made readonly here. If the caller needs a mutable SYMBOL,
-# they must not pre-set it (use bootstrap_init's default) or override after
-# sourcing. This makes the readonly contract consistent across all variables.
+# exported and will be made readonly here. SYMBOL stays mutable only when the
+# library is sourced with --no-finalize. This makes the readonly contract
+# consistent across all variables.
 #
 # @return 0 always
 bootstrap_finalize() {
@@ -193,8 +191,8 @@ bootstrap_finalize() {
 # Auto-invocation: sourcing this file calls bootstrap_init and, by default,
 # bootstrap_finalize to lock all variables.
 #
-# Pass "no-finalize" as an argument to skip finalize:
-#   . bootstrap.lib.sh no-finalize   # init only - variables remain writable
+# Pass "--no-finalize" as an argument to skip finalize:
+#   . bootstrap.lib.sh --no-finalize # init only - variables remain writable
 #   . bootstrap.lib.sh               # init + finalize - variables locked
 bootstrap_init || return 1
 if [[ "${1:-}" != "--no-finalize" ]]; then
