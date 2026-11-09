@@ -143,16 +143,21 @@ A session that ends early (`BLOCKED`, abort) keeps `status: in-progress`, so it 
 | `checklist` is `null`, `tasklist` set and the file exists | Run as `--tasklist <tasklist> --item <item>`                   |
 | A recorded file does not exist                            | Report the missing path and end the session. Do not rebuild it |
 
-A Target ID or `--tasklist` also restores work. After Phase 1a (or after reading `--tasklist`),
+A Target ID or `--tasklist` also restores the selected item. After Phase 1a (or after reading `--tasklist`),
 check the `bdd_coder` entry against these conditions:
 
 - `bdd_coder.tasklist` equals TASKLIST PATH
 - `status` is `in-progress`
 - the recorded `item` is still `pending` in the task list
-- the recorded `checklist` file exists
+- `--item` is not given, or names the recorded `item`
 
-If all of them hold, select that item without asking and reuse the checklist (skip Phase 1b).
-Tell the user which item and checklist were restored.
+If all of them hold, select that item without asking and tell the user which item was restored.
+Otherwise select the item as usual. An explicit `--item` always wins over the recorded item.
+
+Run Phase 1b for the restored item even when the recorded checklist still exists.
+tasks.md may have changed since the checklist was built (a Case added or changed in the Scenario),
+and reconciliation keeps the item's ID and its `pending` status, so the old checklist cannot be trusted.
+Only `--resume` reuses the recorded checklist as is. If tasks.md has changed, run the Target ID instead of `--resume`.
 
 #### Phase 1a: Tasklist Build
 
