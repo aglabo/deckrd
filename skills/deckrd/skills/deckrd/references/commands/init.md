@@ -65,8 +65,9 @@ files. Each source file is handled as follows:
 - A file that already exists is never overwritten and is not reported. This holds even when the
   file is older than its source, differs from it, was edited by the user, or is a `.gitignore`
 
-Re-running `init` does not refresh outdated files. To refresh them, run
-[`/deckrd update --update`](update.md) (outdated files only) or `/deckrd init --force` (every file).
+Re-running `init` does not refresh outdated files. To refresh outdated files only, run
+[`/deckrd update --update`](update.md). To refresh every file, run
+`/deckrd init <project> <project-type> --force`.
 
 With `--force`, every source file is copied (`copied:`), whether or not it is deployed.
 This includes `.gitignore` files and files edited by the user.
@@ -148,7 +149,7 @@ A missing source directory is reported as `source not found, skipping` and is no
 #### Migrating a project initialized before the rule consolidation
 
 Re-running `init` only adds missing files. To refresh outdated files that still exist in the
-bundle, run [`/deckrd update --update`](update.md). `/deckrd init --force` also works, but it
+bundle, run [`/deckrd update --update`](update.md). `/deckrd init <project> <project-type> --force` also works, but it
 overwrites user edits too. Files removed from the bundle are not handled by either. Delete these
 first, then re-run `/deckrd init`:
 
@@ -171,9 +172,9 @@ docs/.deckrd/
 └── temp/
 ```
 
-### Phase 2: Write project.json
+### Phase 2: Write .project.json
 
-Creates or updates `.local/deckrd/project.json`:
+Creates or updates `.local/deckrd/.project.json`:
 
 ```json
 {

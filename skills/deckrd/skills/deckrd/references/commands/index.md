@@ -11,7 +11,7 @@ description: Reference table of all deckrd commands
 
 | Command                         | Description                                                                     |
 | ------------------------------- | ------------------------------------------------------------------------------- |
-| `init <project> <project-type>` | Bootstrap project, write project.json, init session                             |
+| `init <project> <project-type>` | Bootstrap project, write .project.json, init session                            |
 | `init <project> <type> --force` | Same, and overwrite every deployed asset with the bundled version               |
 | `module <ns>/<mod>`             | Create module directories, set active module                                    |
 | `module <mod>`                  | Short form; namespace from `.project.json` `project` (fallback: git root name)  |

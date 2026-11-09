@@ -27,7 +27,7 @@ Configure project settings (project name and development language).
 
 1. Validate `--project` and `--language` parameters (exit 1 if missing or unsupported)
 2. Create `.local/deckrd/` directory if it does not exist
-3. Write or update `.local/deckrd/project.json`:
+3. Write or update `.local/deckrd/.project.json`:
    - New file: write all fields including `created_at` and `updated_at`
    - Existing file: preserve `created_at`, update `updated_at` only
 
@@ -53,7 +53,7 @@ Deckrd project configured.
 
 Project : <project>
 Language: <language>
-Project : .local/deckrd/project.json
+Project : .local/deckrd/.project.json
 ```
 
 ## Script
@@ -75,7 +75,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/project.sh --project <name> --language <lang>
 
 ## Notes
 
-- Project settings are stored at `.local/deckrd/project.json`, together with `.local/deckrd/session.json`
+- Project settings are stored at `.local/deckrd/.project.json`, together with `.local/deckrd/session.json`
 - This command is project-scoped and does not interact with session state
 - Can be run at any time, before or after `init`
 - `deckrd-coder` reads this project settings in Phase 0 to load language-specific rules

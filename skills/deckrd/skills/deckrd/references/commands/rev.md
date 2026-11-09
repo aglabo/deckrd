@@ -129,36 +129,33 @@ Execute based on `--to` value:
 **`--to req`**:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/subcommands/generate-doc.sh rev \
-  --mode req \
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/subcommands/generate-doc.sh @rev "<context>" \
   --output "requirements/requirements.md"
 ```
 
 **`--to spec`**:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/subcommands/generate-doc.sh rev \
-  --mode spec \
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/subcommands/generate-doc.sh @rev "<context>" \
   --output "specifications/specifications.md"
 ```
 
 **`--to impl`**:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/subcommands/generate-doc.sh rev \
-  --mode impl \
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/subcommands/generate-doc.sh @rev "<context>" \
   --output "implementation/implementation.md"
 ```
 
 **`--to tasks`**:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/subcommands/generate-doc.sh rev \
-  --mode tasks \
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/subcommands/generate-doc.sh @rev "<context>" \
   --output "tasks/tasks.md"
 ```
 
-Pass EXTRACTION CONTEXT and GAP NOTES as additional context.
+`<context>` is the combined prompt context built above. The target is passed through its
+`TARGET` line — `generate-doc.sh` has no `--mode` option.
 
 ---
 

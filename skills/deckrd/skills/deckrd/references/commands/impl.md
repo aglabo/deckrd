@@ -315,7 +315,7 @@ replace the `{{SPEC_VERSION}}` placeholder. Never leave it literal.
 Execute:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/subcommands/generate-doc.sh @impl \
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/subcommands/generate-doc.sh @implementation \
   @specifications/specifications.md \
   [--lang <lang>] \
   --output "implementation/implementation.md"
@@ -404,7 +404,7 @@ deckrd/assets/
 Execute: [generate-doc.sh](../../scripts/subcommands/generate-doc.sh)
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/subcommands/generate-doc.sh @impl @specifications/specifications.md [--lang <lang>] --output "implementation/implementation.md"
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/subcommands/generate-doc.sh @implementation @specifications/specifications.md [--lang <lang>] --output "implementation/implementation.md"
 ```
 
 > **Note**: The `@` prefix resolves to the active module's document path:
