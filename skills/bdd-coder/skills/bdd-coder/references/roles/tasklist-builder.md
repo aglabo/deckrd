@@ -1,7 +1,7 @@
 ---
 title: "Role: tasklist-builder"
 description: "Procedure for breaking a natural-language request or a tasks.md Target into a task list, one item per checklist. Canonical steps for the tasklist-builder agent"
-version: 1.0.0
+version: 1.1.0
 ---
 
 ## Role: tasklist-builder
@@ -21,25 +21,26 @@ All paths below are relative to the bdd-coder skill directory unless they start 
 
 ## Where task lists live
 
-A task list lives in the `temp/tasklists/` directory of the module it belongs to.
-The module directory is the scope, so `T-01` of one module never meets `T-01` of another.
+A task list lives under `${DECKRD_LOCAL_TEMP}/tasklist/` (default `.local/deckrd/temp/tasklist/`), in one subdirectory per module.
+The module subdirectory is the scope, so `T-01` of one module never meets `T-01` of another.
 
-| Source                                                                | Directory                               |
-| --------------------------------------------------------------------- | --------------------------------------- |
-| Target ID                                                             | `<module dir>/temp/tasklists/`          |
-| Natural language, `.local/deckrd/session.json` has an `active` module | `docs/.deckrd/<active>/temp/tasklists/` |
-| Natural language, no active module                                    | `.local/deckrd/temp/tasklists/`         |
+| Source                                                                | Directory                                    |
+| --------------------------------------------------------------------- | -------------------------------------------- |
+| Target ID                                                             | `.local/deckrd/temp/tasklist/<ns>/<module>/` |
+| Natural language, `.local/deckrd/session.json` has an `active` module | `.local/deckrd/temp/tasklist/<active>/`      |
+| Natural language, no active module                                    | `.local/deckrd/temp/tasklist/`               |
 
-- `<module dir>` is the directory that holds `tasks/tasks.md`: two levels above `tasks_md`.
-- `temp/` is ignored by git (`**/temp/` in `docs/.deckrd/.gitignore` and `.local/deckrd/.gitignore`).
-- This Role only reads `session.json`. Saving which task list is in use belongs to #211.
+- `<ns>/<module>` is the `module:` value in the frontmatter of `tasks_md`.
+- When `DECKRD_LOCAL_TEMP` is set, use it in place of `.local/deckrd/temp`. Return paths relative to the repository root.
+- `temp/` is ignored by git (`**/temp/` in `.local/deckrd/.gitignore`).
+- This Role only reads `session.json`. The caller (the bdd-coder skill) registers the task list in use there.
 
 ## Responsibility
 
 Break the input into a task list where **each item is one task, and one item makes one checklist**.
 Each item carries a `Handoff`: the exact input that the caller passes to checklist-builder.
 
-The Role does **not**: build checklists, choose which item to run, write code, run tests, edit `tasks.md`, or register anything in `.local/deckrd/session.json`. The caller does the first two. Session registration and resuming belong to #211.
+The Role does **not**: build checklists, choose which item to run, write code, run tests, edit `tasks.md`, or register anything in `.local/deckrd/session.json`. The caller does the first three: it is the only writer of the `bdd_coder` session entry.
 
 ## Inputs
 
@@ -62,15 +63,16 @@ A Scenario ID (`T01-02`, `T-01-02`) or a Case ID (`T-01-02-03`) is already one t
 | Anything else                                | Natural language |
 
 Normalize a Target ID to the canonical form `T-XX` (`T01` → `T-01`).
-Its short form `TXX` (`T01`) is used in the file name.
+The canonical form is used in the file name. The short form `TXX` (`T01`) is used in Handoffs.
 
 ### Step 2: Target ID
 
 1. If `tasks_md` is missing or unreadable, return `status: invalid-input`.
 2. Read `module: <namespace>/<module>` from the frontmatter of `tasks_md`. If there is none, return `status: invalid-input`.
 3. Read the `## T-XX:` section of `tasks_md`. If there is none, return `status: invalid-input`.
-4. Output path: `<module dir>/temp/tasklists/TXX.tasklist.md` (for example `docs/.deckrd/deckrd/libs/temp/tasklists/T01.tasklist.md`).
-   If the file already exists, go to [Step 2a](#step-2a-reconcile-an-existing-task-list) after building the items below.
+4. Output path: `.local/deckrd/temp/tasklist/<ns>/<module>/T-XX.tasklist.md` (for example `.local/deckrd/temp/tasklist/deckrd/libs/T-01.tasklist.md`).
+   The module and the Target ID fix the path, so a re-run always finds the same file.
+   If the file already exists, go to [Step 2a](#step-2a-reconcile-an-existing-task-list) after building the items below. Never create a second task list for the same Target ID.
 5. Make one item per Scenario heading `#### T-XX-YY: <scenario>`, in file order.
    - Title: the Scenario heading text.
    - Target: the `Target:` value of the Scenario's Case lines. If they differ, list them comma-separated.
@@ -157,7 +159,7 @@ The items built in Step 2 show the current `tasks.md`. The existing file holds t
      > Return an error when the file does not exist.
    ```
 
-3. Create the `temp/tasklists/` directory if needed and write the file.
+3. Create the task list directory if needed and write the file.
 4. Check the written file: no `{{` remains, every item has all five fields, and every `Depends-on` ID exists in the list.
 
 ### Step 5: Return the summary
@@ -194,7 +196,7 @@ DETAIL: <the question, or what was wrong with the input>
 
 ## Constraints
 
-- Write only to a `temp/tasklists/` directory from [Where task lists live](#where-task-lists-live). Read `tasks.md` and `session.json`; never edit them.
+- Write only to a directory from [Where task lists live](#where-task-lists-live). Read `tasks.md` and `session.json`; never edit them.
 - Never write code or run tests.
 - One task list per invocation.
 - Change an existing task list only through Step 2a. Never drop a `done` item and never renumber IDs.
