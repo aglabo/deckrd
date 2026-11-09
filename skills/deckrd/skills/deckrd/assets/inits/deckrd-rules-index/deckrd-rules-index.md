@@ -31,6 +31,7 @@ Deckrd のルール本体は `docs/.deckrd/rules/` 配下にある。このフ�
 DR を書く・レビューする前に、DR 作成ガイドラインを Read する。
 置き場所は deckrd スキルの `references/guidelines/decision-record-authoring.md` とする。
 DR の追加は `/deckrd dr --add` で行い、`dr-writer` エージェントがこのガイドラインに従って書く。
+既存 DR の書き直しは `/deckrd dr --refine` で行い、`dr-refiner` エージェントがこのガイドラインの 7 節（refine の規則）に従って書き直す。
 
 ## Common Rationalizations
 

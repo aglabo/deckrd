@@ -142,7 +142,7 @@ Boundaries:
 
 Decide whether a change deserves a DR, and how to write it, by the
 [DR authoring guideline](../../references/guidelines/decision-record-authoring.md)
-(section 2 and rules A–G). Consolidate related decisions; target 1-5 DRs per review session.
+(section 2 and rules A–H). Consolidate related decisions; target 1-5 DRs per review session.
 
 **Output Style:**
 

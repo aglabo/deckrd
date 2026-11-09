@@ -129,6 +129,8 @@ docs/.deckrd/
 # (Optional) Add Decision Records during any step
 /deckrd dr --add
 # → Appends to decision-records.md
+# (Optional) Rewrite existing DRs for readability (decisions unchanged)
+# /deckrd dr --refine
 
 # Derive specifications from requirements
 /deckrd spec

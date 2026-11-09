@@ -128,11 +128,14 @@ docs/.deckrd/myproject/authentication/
 
 ### /deckrd dr
 
-**Usage**: `/deckrd dr --add`
+**Usage**: `/deckrd dr --add`, `/deckrd dr --refine [DR-ID ...]`
 
-**Purpose**: Add one decision record. The dr-writer agent drafts it by following the DR authoring guideline (`references/guidelines/decision-record-authoring.md`), and appends it after the user approves the draft
+**Purpose**:
 
-**Prerequisites**: Active module in the req, spec, impl, or tasks step (tasks asks for confirmation)
+- `--add`: Add one decision record. The dr-writer agent drafts it by following the DR authoring guideline (`references/guidelines/decision-record-authoring.md`), and appends it after the user approves the draft
+- `--refine`: Rewrite existing decision records for readability. The dr-refiner agent reviews them against the guideline and rewrites the wording only (guideline section 7). Decisions, Phase, Status, and Supersedes never change. One PATCH bump per run after the user approves the diff
+
+**Prerequisites**: `--add`: active module in the req, spec, impl, or tasks step (tasks asks for confirmation). `--refine`: active module with an existing `decision-records.md` (any step)
 
 **Output**: `decision-records.md`
 

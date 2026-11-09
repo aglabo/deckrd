@@ -107,6 +107,7 @@ git commit -m "..."
 | `impl`                             | 実装判断基準を作成                                   |
 | `tasks`                            | 実装用タスクリストを作成                             |
 | `dr --add`                         | Decision Records を記録 (オプション)                 |
+| `dr --refine [DR-ID ...]`          | 既存の DR を読みやすく書き直す (オプション)          |
 | `status`                           | ワークフロー進捗を確認                               |
 | `update [--update]`                | 不足または古いアセットを一覧表示 (`--update` で更新) |
 | `rev [--from code] [--to <phase>]` | 既存コードからドキュメントを逆生成                   |

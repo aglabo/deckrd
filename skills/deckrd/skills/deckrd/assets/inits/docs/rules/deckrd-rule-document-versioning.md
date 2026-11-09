@@ -1,7 +1,7 @@
 ---
 title: "Deckrd Rule: ドキュメントのバージョニング"
 description: "Deckrd ドキュメントの SemVer 採番規則と Change History の同期"
-version: 1.0.1
+version: 1.1.0
 ---
 
 <!-- textlint-disable
@@ -62,6 +62,26 @@ frontmatter の `version` は、Change History テーブルの最新行と一致
 | 2026-08-12 | 1.0.1   | Clarify REQ-F-003 |
 | 2026-08-12 | 1.1.0   | Add REQ-F-004     |
 ```
+
+### 1 コミット 1 版
+
+版は 1 コミットにつき 1 つだけ上げる。コミットしていない版上げがすでにあるときは、新しい行を足さない。
+
+1. コミット済みの版（`git show HEAD:<file>` の frontmatter）を基準にする
+2. コミットしていない変更とこれから行う変更のうち、最も大きい増分で、基準から 1 回だけ上げる
+3. コミット済みの最終行より後の行を、1 行にまとめる。Description には両方の変更を書く
+
+```markdown
+<!-- コミット済み: 2.2.0。コミット前に refine を 2 回実行した -->
+
+| 2026-11-09 | 2.2.1 | Refine DR-01..DR-16: clarify wording | ← OK（1 行）
+
+| 2026-11-09 | 2.2.1 | Refine DR-03..DR-16: clarify wording | ← NG（2 行）
+| 2026-11-09 | 2.2.2 | Refine DR-01..DR-16: clarify wording |
+```
+
+ファイルがまだコミットされていなければ、`1.0.0` のままとし、初版の行に変更を書き足す。
+git で管理していないファイルは、この節を適用しない。
 
 ## ドキュメント間の参照
 
