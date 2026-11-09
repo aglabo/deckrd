@@ -80,19 +80,22 @@ Route the input first. Only natural language and Target IDs go through tasklist-
 Spawn **tasklist-builder** with `instruction`, and `tasks_md` for a Target ID.
 Agent definition: [agents/tasklist-builder.md](../../agents/tasklist-builder.md).
 
-| Returned status    | Handling                                                                   |
-| ------------------ | -------------------------------------------------------------------------- |
-| `questions`        | Ask the user the returned question, then re-run with `answers`             |
-| `invalid-input`    | Report `DETAIL` to the user and end the session (Phase 6)                  |
-| `created`/`reused` | Select one item as below, and keep the task list path as **TASKLIST PATH** |
+| Returned status              | Handling                                                                   |
+| ---------------------------- | -------------------------------------------------------------------------- |
+| `questions`                  | Ask the user the returned question, then re-run with `answers`             |
+| `invalid-input`              | Report `DETAIL` to the user and end the session (Phase 6)                  |
+| `created`/`reused`/`updated` | Select one item as below, and keep the task list path as **TASKLIST PATH** |
 
 Select the item:
 
 - Exactly one `pending` item → use it without asking.
 - Two or more `pending` items → show the list (ID / Title / Status) and ask which one to run.
   Default: the first `pending` item whose `Depends-on` items are all `done`.
-- `needs-split` and `done` items cannot be selected.
-  For `needs-split`, tell the user to split the Case in tasks.md via `/deckrd tasks`.
+- `needs-split`, `done`, and `removed` items cannot be selected.
+  For `needs-split`, tell the user to split the Case in tasks.md via `/deckrd tasks`,
+  then run the same Target ID again. tasklist-builder reconciles the list with tasks.md
+  (`STATUS: updated`) and keeps the `done` items.
+- On `updated`, show the `CHANGED` line to the user before selecting.
 - No `pending` item → report it and end the session (Phase 6).
 
 Pass **only the selected item's `Handoff`** to Phase 1b.
@@ -101,7 +104,12 @@ The rule "1 delegation = 1 task" (`docs/.deckrd/rules/deckrd-rule-bdd-cycle.md`)
 forbids handing over material that contains other tasks.
 The task list is orchestrator state only.
 
-Output: `.local/deckrd/temp/tasklist/<name>.tasklist.md` (`T-XX.tasklist.md` for a Target ID)
+Output:
+
+- Target ID: `<module dir>/temp/tasklists/TXX.tasklist.md`
+  (for example `docs/.deckrd/<ns>/<module>/temp/tasklists/T01.tasklist.md`)
+- Natural language: `docs/.deckrd/<active module>/temp/tasklists/<name>.tasklist.md`
+- Natural language, no active module: `.local/deckrd/temp/tasklists/<name>.tasklist.md`
 
 #### Phase 1b: Checklist Build
 
