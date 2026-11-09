@@ -46,6 +46,7 @@ No announcement = violation. Restart with announcement.
 | impl completed   | tasks        | [commands/tasks.md](references/commands/tasks.md)   |
 | any              | review       | [commands/review.md](references/commands/review.md) |
 | req–tasks        | dr --add     | [commands/dr.md](references/commands/dr.md)         |
+| any (DRs exist)  | dr --refine  | [commands/dr.md](references/commands/dr.md)         |
 | init completed   | rev          | [commands/rev.md](references/commands/rev.md)       |
 
 Gate Rule: each command requires the previous command's document. No skipping.
