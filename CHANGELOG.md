@@ -120,6 +120,11 @@
 - Move the hackers dictionary into the shared Deckrd assets directory.
 - Share Deckrd libraries and dictionary assets with bdd-coder through symlinks.
 
+### Breaking Changes
+
+- The `codex-mcp` server configuration is removed. Codex review now runs through `codex exec`, so the Codex CLI must be on `PATH` and logged in.
+- Module metadata is read only from `workspaces/module/module.md`. Move an existing `module.md` there by hand: `/deckrd update` does not move it, and the old location is no longer read.
+
 ## [0.5.0] - 2026-09-12
 
 ### 🚀 Features
