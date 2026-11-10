@@ -155,8 +155,18 @@ To work on a different module:
 /deckrd module <other-namespace>/<other-module>
 ```
 
-Running `module` on an existing module makes it active again.
-Add `--force` to re-initialize it.
+`module` creates a new module and makes it active.
+It fails if the module directory already exists.
+
+`module --force` is not a way to resume a module.
+It resets the module's session entry, so the recorded progress is lost:
+
+- `current_step` becomes `"module"`
+- `completed` becomes `["module"]`
+- `documents` becomes `{}`
+
+The existing files and `module.md` are kept.
+There is no command that only switches `active` without resetting the module.
 
 ## Document Path Resolution
 
