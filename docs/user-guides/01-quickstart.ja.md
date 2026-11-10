@@ -65,6 +65,7 @@ deckrd は **Goals → Requirements → Specifications → Implementation → Ta
 - `docs/.deckrd/` — ドキュメント格納ディレクトリ
 - `docs/.deckrd/rules/` — deckrd ルール本体（必要なときだけ読み込む）
 - `.claude/rules/deckrd-rules/deckrd-rules-index.md` — ルールの目次（毎セッション読み込まれる）
+- `.claude/rules/claude-rules/` — Claude Code 向けの共通ルール（コマンド実行ルールなど）
 
 > **既存プロジェクトの注意:** 旧バージョンで初期化したプロジェクトでは、`.local/deckrd/.gitignore` が
 > 既に存在するため `init` は上書きしません。このままでは旧ルールの `*` により `workspaces/` が
@@ -194,7 +195,6 @@ HTTP クライアントにリトライ機能を追加したい。
 **出力ファイル:**
 
 - `tasks/tasks.md` — タスク一覧
-- `tasks/implementation-checklist.md` — BDD 実装チェックリスト
 
 **タスク ID 形式:**
 

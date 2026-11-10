@@ -30,7 +30,8 @@ description: Session file location, schema, and state transition rules
       "documents": {
         "requirements": "requirements.md",
         "specifications": "specifications.md"
-      }
+      },
+      "test_scope": "NOR"
     }
   }
 }
@@ -47,6 +48,7 @@ description: Session file location, schema, and state transition rules
 | `modules.*.current_step` | string | Last completed step                            |
 | `modules.*.completed`    | array  | All completed steps                            |
 | `modules.*.documents`    | object | Generated document paths                       |
+| `modules.*.test_scope`   | string | Test scope set by `module` (2-4 `A-Z0-9`)      |
 | `bdd_coder`              | object | bdd-coder work in progress (optional)          |
 
 ### `bdd_coder` (written by bdd-coder)
@@ -82,12 +84,14 @@ Write rules and the resume procedure: bdd-coder `SKILL.md`, "Session entry" and 
 ```bash
 # init is a prerequisite (not a tracked step)
 (none) ──module──> module ──req──> req ──spec──> spec ──impl──> impl ──tasks──> tasks
-                                    │
-                                    └──dr──> (stays in req, append-only DRs)
+                                    │            │            │            │
+                                    └────────────┴─────dr─────┴────────────┘
+                                         (stays in the current step, append-only DRs)
 ```
 
-Note: The `dr` command does NOT advance the step. It appends Decision Records
-while remaining in the `req` step.
+Note: The `dr` command does NOT advance the step.
+`dr --add` appends Decision Records while remaining in the current step.
+It is allowed in `req`, `spec`, `impl` and `tasks`.
 
 ## Session Operations
 
@@ -115,7 +119,8 @@ while remaining in the `req` step.
     "agt-kind/is-collection": {
       "current_step": "module",
       "completed": ["module"],
-      "documents": {}
+      "documents": {},
+      "test_scope": "IC"
     }
   }
 }
@@ -147,14 +152,21 @@ After `req` command:
 To work on a different module:
 
 ```bash
-/deckrd init <other-namespace>/<other-module>
+/deckrd module <other-namespace>/<other-module>
 ```
 
-Or resume existing module:
+`module` creates a new module and makes it active.
+It fails if the module directory already exists.
 
-```bash
-/deckrd resume <namespace>/<module>
-```
+`module --force` is not a way to resume a module.
+It resets the module's session entry, so the recorded progress is lost:
+
+- `current_step` becomes `"module"`
+- `completed` becomes `["module"]`
+- `documents` becomes `{}`
+
+The existing files and `module.md` are kept.
+There is no command that only switches `active` without resetting the module.
 
 ## Document Path Resolution
 
@@ -176,9 +188,9 @@ docs/.deckrd/agt-kind/is-collection/specifications/specifications.md
 
 ## Error Handling
 
-| Condition                 | Action                             |
-| ------------------------- | ---------------------------------- |
-| No session file           | Prompt to run `init` first         |
-| No active module          | Prompt to run `init` or `resume`   |
-| Step out of order         | Warn and suggest correct next step |
-| dr --add outside req step | Error, do NOT modify files         |
+| Condition                  | Action                             |
+| -------------------------- | ---------------------------------- |
+| No session file            | Prompt to run `init` first         |
+| No active module           | Prompt to run `module`             |
+| Step out of order          | Warn and suggest correct next step |
+| dr --add outside req-tasks | Error, do NOT modify files         |

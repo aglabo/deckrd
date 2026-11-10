@@ -10,10 +10,10 @@ Initialize a DECKRD module directory structure and set it as the active module.
 ## Usage
 
 ```bash
-/deckrd module <namespace>/<module> [--force]
-/deckrd module <module> [--force]
-/deckrd module create <namespace>/<module> [--force]
-/deckrd module create <module> [--force]
+/deckrd module <namespace>/<module> [--force] [--test-scope <SCOPE>]
+/deckrd module <module> [--force] [--test-scope <SCOPE>]
+/deckrd module create <namespace>/<module> [--force] [--test-scope <SCOPE>]
+/deckrd module create <module> [--force] [--test-scope <SCOPE>]
 ```
 
 ## Subcommands
@@ -34,10 +34,11 @@ Initialize a DECKRD module directory structure and set it as the active module.
 
 ## Options
 
-| Option    | Description                                               |
-| --------- | --------------------------------------------------------- |
-| `--force` | Re-initialize even if the module directory already exists |
-| `--help`  | Show usage information                                    |
+| Option                 | Description                                                                                                                                                                                                                                                                                                                        |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--force`              | Re-initialize even if the module directory already exists                                                                                                                                                                                                                                                                          |
+| `--test-scope <SCOPE>` | Test scope for the module: 2-4 uppercase letters or digits (e.g. `NOR`). Written to `module.md` and the session (`test_scope`). When omitted, the existing `module.md` value is kept, or one is derived from the module name. Errors if it differs from the scope already declared in `module.md` or conflicts with another module |
+| `--help`               | Show usage information                                                                                                                                                                                                                                                                                                             |
 
 ## Naming Rules
 
@@ -125,12 +126,16 @@ AI runs: bash module.sh auth/user-login
    ```
 
    - Without `--force`: exits with error if directory already exists
-   - With `--force`: recreates directories (existing files are preserved; an existing `module.md` keeps its `test_scope`)
-   - A legacy `<module>/module.md` directly under the module directory is not read; move it to `workspaces/module/module.md`
+   - With `--force`: recreates directories
+     - Existing files are preserved
+     - An existing `module.md` keeps its `test_scope`
+   - A legacy `<module>/module.md` directly under the module directory is not read
+     - Move it to `workspaces/module/module.md`
 
 5. Update `.local/deckrd/session.json`:
    - Set `active` to the validated module path
    - Set `current_step` to `"module"`, `completed` to `["module"]`, `documents` to `{}`
+   - Set `test_scope` to the resolved test scope
 
 ## Session Schema (after module)
 
@@ -143,7 +148,8 @@ AI runs: bash module.sh auth/user-login
     "<namespace>/<module>": {
       "current_step": "module",
       "completed": ["module"],
-      "documents": {}
+      "documents": {},
+      "test_scope": "<SCOPE>"
     }
   },
   "created_at": "<ISO8601>",

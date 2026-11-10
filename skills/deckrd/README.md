@@ -92,7 +92,6 @@ Each step derives the next document from the previous one.
 | `spec`                  | Derive specifications from requirements   |
 | `impl`                  | Derive implementation plan from specs     |
 | `tasks`                 | Generate executable tasks from impl plan  |
-| `tasks update`          | Regenerate implementation-checklist.md    |
 | `status`                | Show current workflow progress            |
 | `update [--update]`     | Detect / refresh outdated deployed assets |
 | `review <doc>`          | Review document quality                   |

@@ -40,7 +40,8 @@ Create module directory structure and set the active module.
 Variants:
 
 - `module <ns>/<mod> --force` — Re-initialize existing module (files preserved)
-- `module create <ns>/<mod>` — Create module with `.project.json`
+- `module create <ns>/<mod>` — Alias of the default behavior (no `.project.json` is written)
+- `module <ns>/<mod> --test-scope <SCOPE>` — Set the test scope (2-4 of `A-Z0-9`, e.g. `NOR`)
 
 ### 2. req (Requirements)
 
@@ -82,12 +83,8 @@ Derive an implementation plan (phase and commit decomposition) from specificatio
 Derive executable BDD-style implementation tasks.
 
 - **Input:** `implementation/implementation.md` + `specifications/specifications.md`
-- **Output:** `tasks/tasks.md` + `tasks/implementation-checklist.md`
+- **Output:** `tasks/tasks.md`
 - **Next:** (complete — use `/deckrd-coder` to implement)
-
-Variants:
-
-- `tasks update` — Regenerate `implementation-checklist.md` from existing `tasks.md`
 
 ## Directory Structure
 
@@ -107,8 +104,7 @@ docs/.deckrd/
         ├── implementation/
         │   └── implementation.md
         ├── tasks/
-        │   ├── tasks.md
-        │   └── implementation-checklist.md
+        │   └── tasks.md
         └── workspaces/           # Notes to keep for this module (checklists go to .local/deckrd/temp/)
 ```
 
@@ -142,7 +138,7 @@ docs/.deckrd/
 
 # Derive executable tasks
 /deckrd tasks
-# → Reads implementation.md, creates tasks.md + implementation-checklist.md
+# → Reads implementation.md, creates tasks.md
 ```
 
 ### Scenario Examples
@@ -150,7 +146,7 @@ docs/.deckrd/
 **New feature from goals:**
 
 > "I want to add a retry mechanism to the HTTP client."
-> → `/deckrd init my-project/http-retry` → `req` → `spec` → `impl` → `tasks`
+> → `/deckrd init my-project <project-type>` → `/deckrd module my-project/http-retry` → `req` → `spec` → `impl` → `tasks`
 
 **Existing code, no docs:**
 

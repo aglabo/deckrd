@@ -119,7 +119,6 @@ meta:
 │  /deckrd impl  ─────────────▶  implementation.md            │
 │       ▼                                                     │
 │  /deckrd tasks ─────────────▶  tasks.md                     │
-│                               implementation-checklist.md   │
 └───────────────────────────────┬─────────────────────────────┘
                                 │
 ┌───────────────────────────────▼─────────────────────────────┐
@@ -182,7 +181,6 @@ meta:
        ▼
 ┌─────────────┐
 │ tasks       │  → tasks.md  (T-01-01-01 形式)
-│             │  → implementation-checklist.md
 └─────────────┘
 ```
 
@@ -201,6 +199,9 @@ meta:
 ├── .claude/rules/deckrd-rules/
 │   └── deckrd-rules-index.md ← ルールの目次 (常時ロード)
 │
+├── .claude/rules/claude-rules/
+│   └── claude-rule-command-execute.md ← Claude Code 向け共通ルール
+│
 └── docs/.deckrd/
     ├── rules/                ← deckrd ルール本体 (必要時に読む)
     └── <namespace>/<module>/
@@ -211,8 +212,7 @@ meta:
         ├── implementation/
         │   └── implementation.md
         ├── tasks/
-        │   ├── tasks.md
-        │   └── implementation-checklist.md
+        │   └── tasks.md
         ├── workspaces/            ← モジュールの作業用ファイル
         │   └── module/
         │       └── module.md      ← モジュールメタデータ (test_scope / owns)
