@@ -27,6 +27,7 @@ pyproject
 pytest
 Resumability
 rumdl
+shdoc
 Tera
 TOCTOU
 topo
