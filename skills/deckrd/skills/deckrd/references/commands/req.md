@@ -145,7 +145,7 @@ USER INPUT:       <Phase 1 initial text>
 Then execute:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/subcommands/generate-doc.sh @requirements \
+bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @requirements \
   "<USER_INPUT>" \
   [--lang <lang>] \
   --output "requirements/requirements.md"
@@ -304,7 +304,7 @@ deckrd/assets/
 Execute: [generate-doc.sh](../../scripts/subcommands/generate-doc.sh)
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/subcommands/generate-doc.sh @requirements <user_input> [--lang <lang>] --output "requirements/requirements.md"
+bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @requirements <user_input> [--lang <lang>] --output "requirements/requirements.md"
 ```
 
 ## Session Update

@@ -9,6 +9,7 @@ version: 1.0.0
   ja-technical-writing/max-comma,
   -->
 <!-- markdownlint-disable line-length -->
+<!-- cspell:words noqa -->
 
 ## コードコメント ガイドライン
 

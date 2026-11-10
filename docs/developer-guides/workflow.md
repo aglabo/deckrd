@@ -436,6 +436,18 @@ pnpm run test:sh
 4. Commit with /idd-commit-message
 5. Create PR with /idd-pr
 
+## Release
+
+`gh skill install aglabo/deckrd` installs from the tag of the **latest GitHub Release**.
+A pushed tag alone is not enough. Create a GitHub Release for every version:
+
+```bash
+gh release create vX.Y.Z --title "deckrd vX.Y.Z" --notes-file release-note.md
+```
+
+Before releasing, run `gh skill publish --dry-run` to check the skills against the Agent Skills spec.
+Do not use symbolic links inside `skills/deckrd/skills/deckrd/`; `gh skill` and `npx skills` do not copy them reliably.
+
 ## Troubleshooting
 
 ### deckrd session lost

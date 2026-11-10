@@ -53,9 +53,8 @@ A file is reported (and copied with `--update`) when either of the following hol
 A deployed file newer than its source is treated as edited by the user. It is neither
 reported nor overwritten, even with `--update`.
 
-A copied file keeps the mtime of its source. A deployed file older than its source with
-the same contents is not reported and its contents are kept. `--update` only sets its
-mtime to the source's.
+A copied file keeps the mtime of its source. A deployed file older than its source, with the same contents, is not reported.
+Its contents are kept. `--update` only sets its mtime to the source's.
 
 Deployed rules are managed by the plugin and are not meant to be edited. Put project
 customizations in separate files. `--update` may overwrite a deployed rule edited before
@@ -67,17 +66,19 @@ notes in separate files under `workspaces/`.
 
 An existing `.gitignore` at any depth is never overwritten. Users are expected to edit it.
 A missing one is deployed like any other file.
-An existing entry that is not a regular file (e.g. a directory or a dangling symlink) is
-left untouched.
+An existing entry that is not a regular file is left untouched.
+This covers a directory or a dangling symlink.
 
-An older deckrd version may have left a `.local/deckrd/.gitignore` without the
-workspaces rule (`!/workspaces/`). `update` reports such a file as
-`[local-deckrd] .gitignore (workspaces rule)`. `--update` appends the workspaces rule
-block of the template to it. The existing lines are kept.
+An older deckrd may leave `.local/deckrd/.gitignore` without
+the workspaces rule (`!/workspaces/`).
+`update` reports such a file as `[local-deckrd] .gitignore (workspaces rule)`.
+`--update` appends the workspaces rule block of the template to it.
+The existing lines are kept.
 
-A project initialized before the workspaces directory existed has no
-`.local/deckrd/workspaces/README.md`. Like any missing file, `update` reports it as
-`[local-deckrd] workspaces/README.md`. `--update` creates the directory and copies it.
+An older project has no `.local/deckrd/workspaces/README.md`.
+It was initialized before the workspaces directory existed.
+Like any missing file, `update` reports it as `[local-deckrd] workspaces/README.md`.
+`--update` creates the directory and copies it.
 This README path is fixed to where `init` deploys it.
 Overriding `DECKRD_LOCAL_WORKSPACES` does not move it.
 
@@ -114,5 +115,5 @@ Assets are up to date.
 Execute: [scripts/update.sh](../../scripts/update.sh)
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/update.sh [--update]
+bash "<DECKRD_SKILL_DIR>/scripts/update.sh" [--update]
 ```

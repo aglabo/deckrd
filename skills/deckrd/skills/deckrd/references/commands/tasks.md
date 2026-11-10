@@ -214,7 +214,7 @@ After completion, update `.local/deckrd/session.json`:
 Execute: [generate-doc.sh](../../scripts/subcommands/generate-doc.sh)
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/subcommands/generate-doc.sh @tasks [--lang <lang>] --output "tasks/tasks.md"
+bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @tasks [--lang <lang>] --output "tasks/tasks.md"
 ```
 
 ## Next Step

@@ -132,7 +132,7 @@ deckrd/assets/
 Execute: [generate-doc.sh](../../scripts/subcommands/generate-doc.sh)
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/subcommands/generate-doc.sh @specifications @requirements/requirements.md [--lang <lang>] --output "specifications/specifications.md"
+bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @specifications @requirements/requirements.md [--lang <lang>] --output "specifications/specifications.md"
 ```
 
 > **Note**:

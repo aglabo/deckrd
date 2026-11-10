@@ -20,6 +20,16 @@ metadata:
 
 Goals → Requirements → Specifications → Implementation → Tasks
 
+`<DECKRD_SKILL_DIR>` is a placeholder.
+It is neither a shell variable nor an agent-specific substitution.
+It means the absolute path of the directory containing this `SKILL.md`.
+Use the path you loaded this file from.
+
+Reference files run scripts as `bash "<DECKRD_SKILL_DIR>/scripts/..."`.
+Replace the placeholder with that absolute path first.
+No environment variable is needed.
+The scripts resolve their own root from `BASH_SOURCE`.
+
 ## Skill Announcement (REQUIRED)
 
 Before every command, YOU MUST output:
