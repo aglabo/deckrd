@@ -4,13 +4,14 @@ description: "Code quality standards, formatting rules, and quality gates for de
 category: "contributing"
 tags: ["quality", "standards", "formatting", "linting"]
 created: "2026-01-14"
-version: "0.1.1"
+version: "0.1.2"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
   - 0.0.4   2026-01-14  Initial version
   - 0.1.0   2026-03-21  Version update
   - 0.1.1   2026-11-10  gitleaks to betterleaks; fix config file references
+  - 0.1.2   2026-11-10  Fix textlint config lookup order
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.
@@ -123,7 +124,11 @@ markdownlint-cli2 README.md
 
 ### textlint (Text Quality)
 
-**Configuration**: `${XDG_CONFIG_HOME}/linters/textlint/textlintrc.yaml` (falls back to `configs/textlintrc.yaml`)
+**Configuration**: `pnpm run lint:text` searches in this order and uses the first file found:
+
+1. `configs/textlintrc.yaml`
+2. `${XDG_CONFIG_HOME}/global-configs/textlintrc.yaml`
+3. `${HOME}/.config/global-configs/textlintrc.yaml`
 
 **Purpose**: Japanese technical writing quality
 
