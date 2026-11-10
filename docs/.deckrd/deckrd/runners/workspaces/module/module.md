@@ -29,6 +29,7 @@ owns:
 | `ESG`  | `expand_spec_glob`                          |
 | `FMR`  | `read_module_scalar` / `read_module_owns`   |
 | `FMW`  | `find_missing_wsl_commands`                 |
+| `FSF`  | `find_shell_files`                          |
 | `FUC`  | `find_unidentified_cases`                   |
 | `GFL`  | `get_filelist`                              |
 | `GSF`  | `get_spec_files`                            |
@@ -47,6 +48,7 @@ owns:
 | `MN`   | `main` (run-check-test-ids.sh)              |
 | `MRO`  | `module_ref_of`                             |
 | `MRS`  | `main` (exec/shellspec-exec.sh)             |
+| `MSC`  | `main` (run-shellcheck.sh)                  |
 | `MSL`  | `main` (run-shellspec.sh)                   |
 | `NP`   | `normalize_path`                            |
 | `PMG`  | `path_matches_glob`                         |
