@@ -52,8 +52,8 @@ deckrd は、開発ライフサイクル全体をカバーする 3 つの統合�
 ### Agent Skills として利用する場合（Claude Code、Codex など）
 
 ```bash
-# gh skills
-gh skills install aglabo/deckrd
+# gh skill
+gh skill install aglabo/deckrd
 
 # npx skills
 npx skills add aglabo/deckrd
@@ -158,8 +158,8 @@ deckrd で `tasks.md` を生成した後、自動実装が必要な場合に使�
 `bdd-coder` は deckrd マーケットプレイスに含まれており、deckrd と一緒にインストールできます。
 
 ```bash
-# gh skills（deckrd と bdd-coder を両方インストール）
-gh skills install aglabo/deckrd
+# gh skill（deckrd と bdd-coder を両方インストール）
+gh skill install aglabo/deckrd
 
 # または claude plugin で個別にインストール
 claude plugin install bdd-coder@deckrd
