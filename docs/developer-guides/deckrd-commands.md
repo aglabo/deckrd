@@ -83,7 +83,11 @@ and `ai_model` take the new values; only `created_at` is kept
 
 ### /deckrd module
 
-**Usage**: `/deckrd module <namespace>/<module>` or `/deckrd module <module>`
+**Usage**: `/deckrd module <namespace>/<module> [--force] [--test-scope <SCOPE>]` or `/deckrd module <module> [--force] [--test-scope <SCOPE>]`
+
+`--test-scope <SCOPE>` sets the module's test scope (2-4 uppercase letters or digits, e.g. `NOR`).
+It is written to `module.md` and to `modules.<id>.test_scope` in the session.
+When omitted, the value in an existing `module.md` is kept, or one is derived from the module name.
 
 **Purpose**: Create a module directory and set it as the active module
 
@@ -194,12 +198,29 @@ docs/.deckrd/myproject/authentication/
 **Example Output**:
 
 ```bash
-Module: myproject/authentication
-Status:
-  ✓ Requirements
-  ✓ Specifications
-  ✓ Implementation
-  → Tasks (in progress)
+DECKRD Status
+=============
+
+Active Module: myproject/authentication
+Current Step:  tasks
+Completed:     module, req, spec, impl
+
+Module Path:   docs/.deckrd/myproject/authentication
+
+Configuration:
+  Language:    typescript
+  AI Model:    sonnet
+
+Session Info:
+  Created:     2025-01-15T10:00:00Z
+  Updated:     2025-01-15T14:30:00Z
+
+Workflow Progress:
+  [✓] module
+  [✓] req
+  [✓] spec
+  [✓] impl
+  [ ] tasks
 ```
 
 ### /deckrd review
