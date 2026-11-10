@@ -11,7 +11,7 @@ description: Session file location, schema, and state transition rules
 .local/deckrd/session.json
 ```
 
-> **Note**: The `DECKRD_LOCAL` environment variable overrides the default location.
+> **Note**: The `DECKRD_LOCAL_DATA` environment variable overrides the default location.
 > Default: `<repo-root>/.local/deckrd`
 
 ## Session Schema

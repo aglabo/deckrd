@@ -21,7 +21,7 @@ Bootstrap the project once per repository. Writes project configuration and crea
 
 - **Command:** `init <project> <project-type>`
 - **Input:** Project name and project type (e.g., `webapp`, `lib`, `cli`)
-- **Output:** `.local/deckrd/project.json` + `.local/deckrd/session.json` (no active module set)
+- **Output:** `.local/deckrd/.project.json` + `.local/deckrd/session.json` (no active module set)
 - **Note:** Run once per project — not part of the per-feature workflow
 
 ---
@@ -93,7 +93,7 @@ Variants:
 
 ```bash
 .local/deckrd/
-├── project.json                     # Project configuration
+├── .project.json                     # Project configuration
 └── session.json                     # Session state
 
 docs/.deckrd/
