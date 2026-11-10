@@ -6,6 +6,25 @@
   -->
 <!-- markdownlint-disable line-length -->
 
+## [0.6.1] - 2026-11-10
+
+### Bug Fixes
+
+- Show the project config path as `.local/deckrd/.project.json` in the `project.sh` help text and result summary.
+- Make the `rev` prompt read its target from the `TARGET` line of the input context instead of a `--mode` option that `generate-doc.sh` does not have.
+
+### Documentation
+
+- Correct the command references: the `.local/deckrd/.project.json` path, the `generate-doc.sh @implementation` and `@rev` invocations, and the `init <project> <project-type> --force` form.
+- Correct the session location override variable to `DECKRD_LOCAL_DATA`.
+- Correct the v0.6.0 changelog and release note descriptions of `init --force`, `/deckrd update --update`, the AI timeout, and the commit-message hook model.
+
+### Tooling
+
+- Skip `.tools` and `node_modules` directories at any depth when `run-shellcheck.sh` looks for shell files.
+- Ignore everything under `node_modules` in `.editorconfig`.
+- Add test target abbreviations to the cspell dictionary.
+
 ## [0.6.0] - 2026-10-04
 
 ### Features
@@ -93,8 +112,6 @@
 - Document Windows ShellSpec execution through WSL.
 - Update Deckrd, bdd-coder, review, workflow, and developer guides for the new paths and command behavior.
 - Add troubleshooting and scenario reference documents.
-- Document the bdd-coder task list workflow, its output location under `.local/deckrd/temp/tasklist/`, and session resume.
-- Document decision record authoring, `dr --add`, and `dr --refine` in the user and developer guides.
 
 ### Tooling
 

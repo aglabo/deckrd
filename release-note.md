@@ -1,9 +1,24 @@
-# deckrd v0.6.0 - 2026-10-04
+# deckrd v0.6.1 - 2026-11-10
 
 <!-- textlint-disable
   ja-technical-writing/sentence-length,
   ja-technical-writing/max-comma,
   -->
+
+v0.6.1 は v0.6.0 の修正リリースです。表示とドキュメントの誤りを直しました。
+
+## v0.6.1 での修正
+
+- `project.sh` のヘルプと実行結果が示す設定ファイルのパスを `.local/deckrd/.project.json` に修正
+- `rev` プロンプトが、存在しない `--mode` オプションではなく入力コンテキストの `TARGET` を読むように修正
+- コマンドリファレンスの記載を実装に合わせて修正
+  - `.local/deckrd/.project.json` のパス
+  - `generate-doc.sh @implementation` / `@rev` の呼び出し形式
+  - `init <project> <project-type> --force` の引数形式
+- セッションの保存先を変更する環境変数名を `DECKRD_LOCAL_DATA` に修正
+- v0.6.0 のリリースノートと CHANGELOG の挙動説明を訂正 (`init --force`、`/deckrd update --update`、AI タイムアウト、コミットメッセージフックのモデル)
+
+以下は v0.6.0 の変更点です (訂正済み)。
 
 v0.6.0 では、アセット管理・作業ディレクトリ・テスト基盤・Codex CLI 連携を中心に改善しました。
 
@@ -133,45 +148,6 @@ CRAP=N/A
 
 要件確認、設計、API 判断、生成、レビュー、version bump、second opinion までを段階的に実行できます。
 
-### bdd-coder にタスクリストとセッション再開を追加
-
-`tasklist-builder` エージェントが、Target ID や自然言語の依頼からタスクリストを作成します。
-選択した項目ごとにチェックリストを生成し、BDD 実装へ進みます。
-
-- タスクリストは `.local/deckrd/temp/tasklist/` 配下に保存
-- 同じ Target ID で再実行すると、`tasks.md` と照合して既存のタスクリストを再利用・更新
-- 進行状況を `.local/deckrd/session.json` の `bdd_coder` に記録
-
-中断したセッションは次で再開できます。
-
-```sh
-/bdd-coder:bdd-coder --resume
-```
-
-### コメントレビュー用の `comment-review` スキルを追加
-
-コードコメントをガイドライン (C-1〜C-10) に照らしてレビューし、`comment-refiner` エージェントが修正案を作成します。
-差分を確認して承認した場合のみ適用します。
-
-```sh
-/bdd-coder:comment-review
-/bdd-coder:comment-review --branch
-/bdd-coder:comment-review <path>...
-```
-
-### Decision Record の作成と書き直しを強化
-
-DR 作成ガイドラインを追加し、`dr-writer` エージェントがガイドラインに従って DR を書くようになりました。
-既存の DR は `dr-refiner` エージェントで書き直せます。
-
-```sh
-/deckrd dr --add
-/deckrd dr --refine
-/deckrd dr --refine DR-03 DR-05
-```
-
-決定そのものが変わる指摘は書き換えず、`dr --add` による新しい DR の追加を案内します。
-
 ## Other Changes
 
 - コマンドエラーを stderr へ統一
@@ -182,10 +158,6 @@ DR 作成ガイドラインを追加し、`dr-writer` エージェントがガ�
 - commit message フック (`lefthook.yml`) の生成モデルを `gpt-5.6-luna` へ変更
 - `fable` モデルを追加サポート
 - SKILL.md の詳細説明を references へ分離
-- Actionlint / Ghalint の runner と `lint:gha` スクリプトを追加
-- commitlint 設定を `commitlint.config.mjs` へ変更
-- ドキュメントサイト (Blume) の雛形を `aglabo.github.io/` に追加
-- 未使用のリリーススクリプト (`create-release.sh` / `github-publish.sh` / `run-git-cliff.sh`) を削除
 
 ## Migration
 
