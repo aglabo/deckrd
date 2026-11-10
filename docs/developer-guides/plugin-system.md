@@ -96,7 +96,9 @@ skills/{skill-name}/
 
 **Components**:
 
-- Skills: `/deckrd` commands (init, req, dr, spec, impl, tasks, status, review)
+- Skills: `/deckrd` commands
+  - init, project, module, req, dr, spec, impl, tasks
+  - status, review, rev, update
 - Scripts: Bash implementation of each command
 - Templates: Document templates
 - Prompts: AI prompts for generation
