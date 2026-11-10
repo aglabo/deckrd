@@ -74,7 +74,6 @@ docs/.deckrd/<ns>/<mod>/  (ディレクトリ作成)
               |
               v
      tasks/tasks.md
-     tasks/implementation-checklist.md
               |
               |
        【BDD 実装フェーズ】
@@ -97,7 +96,7 @@ docs/.deckrd/<ns>/<mod>/  (ディレクトリ作成)
 | `req`    | 要件導出                 | ユーザーの目標・制約 | `requirements.md`                               |
 | `spec`   | 仕様導出                 | `requirements.md`    | `specifications.md`                             |
 | `impl`   | 実装計画導出             | `specifications.md`  | `implementation.md`                             |
-| `tasks`  | タスク生成               | `implementation.md`  | `tasks.md`, `implementation-checklist.md`       |
+| `tasks`  | タスク生成               | `implementation.md`  | `tasks.md`                                      |
 | `review` | ドキュメントレビュー     | 任意のドキュメント   | レビュー結果（任意: DR追記）                    |
 | `dr`     | 決定記録追加             | 設計判断の文脈       | `decision-records.md` (追記)                    |
 | `status` | 進捗確認                 | —                    | 現在ステップ・完了状況の表示                    |
@@ -143,6 +142,9 @@ docs/.deckrd/<ns>/<mod>/  (ディレクトリ作成)
 │                                                 │
 │  .claude/rules/deckrd-rules/                    │
 │  └── deckrd-rules-index.md ← ルールの目次        │
+│                                                 │
+│  .claude/rules/claude-rules/                    │
+│  └── claude-rule-command-execute.md              │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -232,11 +234,16 @@ docs/.deckrd/<ns>/<mod>/  (ディレクトリ作成)
 ## module — モジュール作成
 
 ```bash
-/deckrd module <namespace>/<module> [--force]
-/deckrd module <module> [--force]          # AI が namespace を自動類推
-/deckrd module create <namespace>/<module> [--force]
-/deckrd module create <module> [--force]
+/deckrd module <namespace>/<module> [--force] [--test-scope <SCOPE>]
+/deckrd module <module> [--force] [--test-scope <SCOPE>]          # namespace を自動解決
+/deckrd module create <namespace>/<module> [--force] [--test-scope <SCOPE>]
+/deckrd module create <module> [--force] [--test-scope <SCOPE>]
 ```
+
+| オプション             | 説明                                                                                                                                                                    |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--force`              | 既存モジュールを再初期化する (既存ファイルは保持)                                                                                                                       |
+| `--test-scope <SCOPE>` | テストスコープ (英大文字・数字 2〜4 文字、例: `NOR`)。`module.md` とセッションの `test_scope` に書く。省略時は既存の `module.md` の値、無ければモジュール名から導出する |
 
 ### 入出力図
 
@@ -287,15 +294,16 @@ AI: "auth/user-login と推測しました。実行しますか？ (y/n)"
 bash module.sh auth/user-login
 ```
 
-### namespace 類推の優先順位
+### namespace の解決順序
+
+`<module>` だけを指定した場合、namespace は次の順で決まる。
 
 ```text
-優先度 1: docs/.deckrd/ 内の既存 namespace と意味的マッチング
-優先度 2: namespace が 1 つだけ → それを使用
-優先度 3: .project.json に namespace フィールドあり → それを使用
-優先度 4: module名のキーワードから類推 (例: auth-* → auth)
-優先度 5: git remote origin のリポジトリ名にフォールバック
+優先度 1: .local/deckrd/.project.json の project フィールド
+優先度 2: git rev-parse --show-toplevel のディレクトリ名 (小文字化。remote は参照しない)
 ```
+
+どちらも得られない場合はエラーになる。
 
 ### 命名規則
 
@@ -472,7 +480,6 @@ session.json 更新 (current_step: "impl")
 
 ```bash
 /deckrd tasks
-/deckrd tasks update   # implementation-checklist.md のみ再生成
 ```
 
 ### 実行フロー
@@ -493,7 +500,6 @@ BDD スタイルのタスクに分解
      |
      v
 tasks/tasks.md 生成
-tasks/implementation-checklist.md 生成
      |
      v
 session.json 更新 (current_step: "tasks")
@@ -503,10 +509,8 @@ session.json 更新 (current_step: "tasks")
 
 ```text
 tasks/
-├── tasks.md
-│   └─ タスク一覧 (ID, 目的, 受け入れ基準)
-└── implementation-checklist.md
-    └─ BDD 実装用チェックリスト
+└── tasks.md
+    └─ タスク一覧 (ID, 目的, 受け入れ基準)
 ```
 
 ### タスク ID 形式
@@ -646,20 +650,32 @@ Related には、ID の前にその ID を定義しているファイルを書�
 ### 表示内容
 
 ```text
-┌────────────────────────────────────────┐
-│ Active module: http/retry-client       │
-│                                        │
-│ Progress:                              │
-│   [x] init                             │
-│   [x] module                           │
-│   [x] req      → requirements.md       │
-│   [x] spec     → specifications.md     │
-│   [ ] impl                             │
-│   [ ] tasks                            │
-│                                        │
-│ Current step: impl                     │
-└────────────────────────────────────────┘
+DECKRD Status
+=============
+
+Active Module: http/retry-client
+Current Step:  spec
+Completed:     module, req, spec
+
+Module Path:   docs/.deckrd/http/retry-client
+
+Configuration:
+  Language:    typescript
+  AI Model:    sonnet
+
+Session Info:
+  Created:     2025-01-15T10:00:00Z
+  Updated:     2025-01-15T14:30:00Z
+
+Workflow Progress:
+  [✓] module
+  [✓] req
+  [✓] spec
+  [ ] impl
+  [ ] tasks
 ```
+
+`[✓]` は完了、`[•]` は現在のステップ、`[ ]` は未着手を表す。
 
 ---
 
