@@ -102,6 +102,7 @@ git commit -m "..."
 | ---------------------------------- | ----------------------------------------------------- |
 | `init <project> <project-type>`    | Bootstrap project (run once per project)              |
 | `init <project> <type> --force`    | Same, and overwrite every deployed asset              |
+| `project --project <name>`         | Update project settings (type, language, AI model)    |
 | `module <namespace>/<module>`      | Create module directory and set as active module      |
 | `req`                              | Create requirements definition                        |
 | `spec`                             | Create specification document                         |
@@ -109,6 +110,7 @@ git commit -m "..."
 | `tasks`                            | Create implementation task list                       |
 | `dr --add`                         | Record Decision Records (optional)                    |
 | `dr --refine [DR-ID ...]`          | Rewrite existing DRs for readability (optional)       |
+| `review`                           | Review a document with an independent second opinion  |
 | `status`                           | Check workflow progress                               |
 | `update [--update]`                | List missing or outdated assets (`--update` to apply) |
 | `rev [--from code] [--to <phase>]` | Reverse-engineer existing code into docs              |
