@@ -12,7 +12,7 @@ Configure project settings (project name and development language).
 ## Usage
 
 ```bash
-/deckrd project --project <name> --language <lang>
+/deckrd project --project <name> [--project-type <type>] [--language <lang>] [--ai-model <model>]
 ```
 
 ## Parameters
@@ -20,7 +20,9 @@ Configure project settings (project name and development language).
 | Parameter                     | Required | Description                                                                                                 |
 | ----------------------------- | -------- | ----------------------------------------------------------------------------------------------------------- |
 | `--project <name>`            | Yes      | Project name                                                                                                |
+| `--project-type <type>`       | No       | Project type (e.g. `webapp`, `lib`, `cli`). When omitted on an existing file, the stored value is kept      |
 | `--language <lang>`, `--lang` | No       | Development language (default: `typescript`): `go`, `typescript`, `python`, `rust`, `shell` (alias: `bash`) |
+| `--ai-model <model>`          | No       | AI model (default: `sonnet`). When left at the default on an existing file, the stored model is kept        |
 | `-h`, `--help`                | No       | Show usage information                                                                                      |
 
 ## Actions
@@ -51,9 +53,11 @@ Configure project settings (project name and development language).
 ```bash
 Deckrd project configured.
 
-Project : <project>
-Language: <language>
-Project : .local/deckrd/.project.json
+  project:      <project>
+  project_type: <project-type>
+  language:     <language>
+  ai_model:     <ai-model>
+  project:      .local/deckrd/.project.json
 ```
 
 ## Script
@@ -61,7 +65,7 @@ Project : .local/deckrd/.project.json
 Execute: [scripts/project.sh](../../scripts/project.sh)
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/project.sh --project <name> --language <lang>
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/project.sh --project <name> [--project-type <type>] [--language <lang>] [--ai-model <model>]
 ```
 
 > **Note**: `${CLAUDE_PLUGIN_ROOT}` resolves to the plugin installation directory.

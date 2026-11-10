@@ -24,12 +24,12 @@ Bootstrap and initialize a DECKRD project.
 
 <!-- markdownlint-disable line-length MD060 -->
 
-| Option                        | Default      | Description                                                                         |
-| ----------------------------- | ------------ | ----------------------------------------------------------------------------------- |
-| `--language <lang>`, `--lang` | `typescript` | Programming language: `typescript`, `go`, `python`, `rust`, `shell` (alias: `bash`) |
-| `--ai-model <model>`          | `sonnet`     | AI model: `gpt-*`, `o1-*` or `<provider>`/`<model>`                                 |
-| `--force`                     | —            | Overwrite every asset file, including `.gitignore` files and user edits             |
-| `-h`, `--help`                | —            | Show usage information                                                              |
+| Option                        | Default      | Description                                                                            |
+| ----------------------------- | ------------ | -------------------------------------------------------------------------------------- |
+| `--language <lang>`, `--lang` | `typescript` | Programming language: `typescript`, `go`, `python`, `rust`, `shell` (alias: `bash`)    |
+| `--ai-model <model>`          | `sonnet`     | AI model: `claude-*`, `haiku`, `sonnet`, `opus`, `gpt-*`, `o1-*`, `<provider>/<model>` |
+| `--force`                     | —            | Overwrite every asset file, including `.gitignore` files and user edits                |
+| `-h`, `--help`                | —            | Show usage information                                                                 |
 
 <!-- markdownlint-enable line-length MD060 -->
 
@@ -62,8 +62,9 @@ files. Each source file is handled as follows:
 - A `.org` suffix is dropped from the file name (`.gitignore.org` → `.gitignore`)
 - A file missing from the destination is copied (`copied:`)
 - A copied file keeps the mtime of its source
-- A file that already exists is never overwritten and is not reported. This holds even when the
-  file is older than its source, differs from it, was edited by the user, or is a `.gitignore`
+- A file that already exists is never overwritten and is not reported.
+  This holds even when the file is older than its source.
+  It also holds when the file differs from the source, was edited by the user, or is a `.gitignore`.
 
 Re-running `init` does not refresh outdated files. To refresh outdated files only, run
 [`/deckrd update --update`](update.md). To refresh every file, run
@@ -196,6 +197,8 @@ Creates `.local/deckrd/session.json` if it does not exist:
 ```json
 {
   "active": null,
+  "lang": "<language>",
+  "ai_model": "<ai-model>",
   "modules": {},
   "created_at": "<ISO8601>",
   "updated_at": "<ISO8601>"
