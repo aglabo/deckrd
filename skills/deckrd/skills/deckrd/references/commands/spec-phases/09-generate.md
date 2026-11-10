@@ -46,7 +46,7 @@ replace the `{{REQ_VERSION}}` placeholder. Never leave it literal.
 For **each file** in SPLIT PLAN, execute:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/subcommands/generate-doc.sh @specifications \
+bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @specifications \
   @requirements/requirements.md \
   [--lang <lang>] \
   --output "specifications/<filename>"

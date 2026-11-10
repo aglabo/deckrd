@@ -175,8 +175,8 @@ AI runs: bash module.sh auth/user-login
 Execute: [scripts/module.sh](../../scripts/module.sh)
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/module.sh <namespace>/<module> [--force]
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/module.sh <module> [--force]
+bash "<DECKRD_SKILL_DIR>/scripts/module.sh" <namespace>/<module> [--force]
+bash "<DECKRD_SKILL_DIR>/scripts/module.sh" <module> [--force]
 ```
 
 ## Next Step

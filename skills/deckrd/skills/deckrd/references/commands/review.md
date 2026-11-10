@@ -314,5 +314,5 @@ Execute: [generate-doc.sh](../../scripts/subcommands/generate-doc.sh)
 For review mode:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/subcommands/generate-doc.sh @review-<phase> @<document> [--lang <lang>] [--output <file>]
+bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @review-<phase> @<document> [--lang <lang>] [--output <file>]
 ```

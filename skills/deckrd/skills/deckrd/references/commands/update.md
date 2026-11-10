@@ -114,5 +114,5 @@ Assets are up to date.
 Execute: [scripts/update.sh](../../scripts/update.sh)
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/update.sh [--update]
+bash "<DECKRD_SKILL_DIR>/scripts/update.sh" [--update]
 ```

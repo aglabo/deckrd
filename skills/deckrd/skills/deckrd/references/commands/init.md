@@ -213,7 +213,7 @@ Creates `.local/deckrd/session.json` if it does not exist:
 Execute: [scripts/init.sh](../../scripts/init.sh)
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/init.sh <project> <project-type> [OPTIONS]
+bash "<DECKRD_SKILL_DIR>/scripts/init.sh" <project> <project-type> [OPTIONS]
 ```
 
 ## Next Step

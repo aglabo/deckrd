@@ -65,10 +65,10 @@ Deckrd project configured.
 Execute: [scripts/project.sh](../../scripts/project.sh)
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/project.sh --project <name> [--project-type <type>] [--language <lang>] [--ai-model <model>]
+bash "<DECKRD_SKILL_DIR>/scripts/project.sh" --project <name> --language <lang>
 ```
 
-> **Note**: `${CLAUDE_PLUGIN_ROOT}` resolves to the plugin installation directory.
+> **Note**: `<DECKRD_SKILL_DIR>` is a placeholder; see SKILL.md.
 
 ## Error Messages
 

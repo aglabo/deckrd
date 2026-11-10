@@ -129,28 +129,28 @@ Execute based on `--to` value:
 **`--to req`**:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/subcommands/generate-doc.sh @rev "<context>" \
+bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @rev "<context>" \
   --output "requirements/requirements.md"
 ```
 
 **`--to spec`**:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/subcommands/generate-doc.sh @rev "<context>" \
+bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @rev "<context>" \
   --output "specifications/specifications.md"
 ```
 
 **`--to impl`**:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/subcommands/generate-doc.sh @rev "<context>" \
+bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @rev "<context>" \
   --output "implementation/implementation.md"
 ```
 
 **`--to tasks`**:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/subcommands/generate-doc.sh @rev "<context>" \
+bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @rev "<context>" \
   --output "tasks/tasks.md"
 ```
 
