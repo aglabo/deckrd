@@ -24,11 +24,12 @@ Supports legacy codebases, post-PoC documentation, and applying deckrd to existi
 
 ## Options
 
-| Option                | Values                         | Default  | Description                            |
-| --------------------- | ------------------------------ | -------- | -------------------------------------- |
-| `--from`              | `code`                         | `code`   | Source artifact type                   |
-| `--to`                | `req`, `spec`, `impl`, `tasks` | `req`    | Target document to generate            |
-| `--module <ns>/<mod>` | path string                    | (active) | Override active module for output path |
+| Option   | Values                         | Default | Description                 |
+| -------- | ------------------------------ | ------- | --------------------------- |
+| `--from` | `code`                         | `code`  | Source artifact type        |
+| `--to`   | `req`, `spec`, `impl`, `tasks` | `req`   | Target document to generate |
+
+The output path follows the session's `active` module. Switch modules with `/deckrd module` before running `rev`.
 
 ## Preconditions
 
