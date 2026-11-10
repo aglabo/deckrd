@@ -30,8 +30,10 @@ readonly -a SHORT_TYPES=(
 # Canonical long forms
 # shellcheck disable=SC2034
 readonly -a LONG_TYPES=(
+  "decision-record"
   "implementation"
   "requirements"
+  "rev"
   "review-explore"
   "review-fix"
   "review-harden"
@@ -70,7 +72,7 @@ normalize_doc_type() {
   task)
     echo "tasks"
     ;;
-  requirements | specifications | implementation | tasks | review)
+  requirements | specifications | implementation | tasks | rev | decision-record)
     echo "${doc_type}"
     ;;
   explore)

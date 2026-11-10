@@ -55,10 +55,13 @@ Describe "T-LIB-NDT: normalize_doc_type"
       The output should equal "requirements"
     End
 
-    It "T-LIB-NDT-06: review → review"
+  End
+
+  Describe "phase なしの review は拒否する"
+    It "T-LIB-NDT-06: review → unknown doc-type"
       When run normalize_doc_type review
-      The status should equal 0
-      The output should equal "review"
+      The status should equal 1
+      The stderr should include "Error: unknown doc-type: review"
     End
   End
 
@@ -117,6 +120,20 @@ Describe "T-LIB-NDT: normalize_doc_type"
       When run normalize_doc_type "req1"
       The status should equal 1
       The stderr should include "Error: doc-type must match"
+    End
+  End
+
+  Describe "rev / decision-record はそのまま返す"
+    It "T-LIB-NDT-15: rev → rev"
+      When run normalize_doc_type rev
+      The status should equal 0
+      The output should equal "rev"
+    End
+
+    It "T-LIB-NDT-16: decision-record → decision-record"
+      When run normalize_doc_type decision-record
+      The status should equal 0
+      The output should equal "decision-record"
     End
   End
 
