@@ -4,7 +4,7 @@ description: "High-level architecture and design principles of the deckrd projec
 category: "developer-guides"
 tags: ["architecture", "design", "overview"]
 created: "2026-01-14"
-version: "0.6.0"
+version: "0.6.1"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
@@ -14,6 +14,7 @@ changes:
   - 0.5.0   2026-09-06  Add codex-mcp to Layer 3 MCP servers
   - 0.5.1   2026-09-09  Convert bold-label lists to tables for textlint
   - 0.6.0   2026-09-24  Drop codex-mcp from Layer 3; Codex moves to the CLI
+  - 0.6.1   2026-11-10  Align session schema with the implementation; gitleaks to betterleaks
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.
@@ -142,7 +143,7 @@ Codex CLI, so `/deckrd:deckrd-review` and bdd-coder's `code-reviewer` agent invo
 
 **Pre-commit Hooks**:
 
-- gitleaks (secret detection)
+- betterleaks (secret detection)
 - secretlint (sensitive data)
 - commitlint (message validation)
 
@@ -245,11 +246,16 @@ See [MCP Servers Reference](../specs/mcp-servers.md) for detailed information ab
 
 ```json
 {
-  "module": "feature-name",
-  "phase": "implementation",
-  "completed": ["requirements", "design-review"],
-  "documents": {
-    "requirements": "docs/feature-name/requirements.md"
+  "active": "deckrd/feature-name",
+  "lang": "typescript",
+  "ai_model": "sonnet",
+  "modules": {
+    "deckrd/feature-name": {
+      "current_step": "spec",
+      "completed": ["module", "req"],
+      "documents": {},
+      "test_scope": "unit"
+    }
   }
 }
 ```
@@ -344,7 +350,7 @@ startup file costs you the real-machine tests and nothing else.
 | ------------------- | ---------------------- |
 | `dprint`            | Code formatter         |
 | `lefthook`          | Git hooks manager      |
-| `gitleaks`          | Secret scanner         |
+| `betterleaks`       | Secret scanner         |
 | `markdownlint-cli2` | Markdown linter        |
 | `textlint`          | Text quality checker   |
 | `cspell`            | Spell checker          |
@@ -376,7 +382,7 @@ startup file costs you the real-machine tests and nothing else.
 
 ### Secret Protection
 
-- gitleaks scans on every commit
+- betterleaks scans on every commit
 - secretlint pattern matching
 - Pre-commit hook blocking
 
