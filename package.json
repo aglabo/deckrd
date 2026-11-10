@@ -1,6 +1,6 @@
 {
   "name": "@aglabo/deckrd",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "private": true,
   "description": "deckrd: goal to tasks",
   "keywords": [
@@ -38,6 +38,10 @@
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^21.2.4"
+  },
+  "packageManager": "pnpm@12.15.0",
+  "engines": {
+    "pnpm": ">=12"
   },
   "@(#)": "deckrd: goal to tasks"
 }
