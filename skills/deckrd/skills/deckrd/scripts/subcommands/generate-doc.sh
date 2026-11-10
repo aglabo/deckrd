@@ -83,23 +83,25 @@ resolve_deckrd_base() {
 # @description Show usage information
 show_usage() {
   cat <<EOF
-Usage: generate-doc.sh <type> [context] [OPTIONS]
+Usage: generate-doc.sh @<type> [context] [OPTIONS]
 
 Execute AI prompt with auto-loaded prompt and template files.
 
 Arguments:
-  <type>            Document type (required): ${LONG_TYPES[*]}
+  @<type>           Document type (required): ${LONG_TYPES[*]}
   [context]         Context/input text or @filepath for file content
                     If starts with @, reads content from the specified file
 
-Document Types:
-  requirements    Generate requirements document
-  spec            Generate specification document
-  tasks           Generate task breakdown
-  impl            Generate implementation guide
-  review-explore  Review: explore phase
-  review-harden   Review: harden phase
-  review-fix      Review: fix phase
+Document Types (long names are canonical; short names are aliases):
+  requirements     Generate requirements document (alias: req)
+  specifications   Generate specification document (alias: spec)
+  tasks            Generate task breakdown (alias: task)
+  implementation   Generate implementation guide (alias: impl)
+  rev              Reverse-engineer code into a deckrd document
+  decision-record  Generate decision record
+  review-explore   Review: explore phase (alias: explore)
+  review-harden    Review: harden phase (alias: harden)
+  review-fix       Review: fix phase (alias: fix)
 
 Options:
   --ai-model <model>  AI model name (default: loaded from session, or sonnet)
@@ -126,13 +128,13 @@ Execution Flow:
 
 Examples:
   # Generate requirements in Japanese
-  generate-doc.sh requirements "user input" --lang ja
+  generate-doc.sh @requirements "user input" --lang ja
 
   # Generate spec with context from file
-  generate-doc.sh spec @docs/input.md --model claude-sonnet-4-5 --lang en
+  generate-doc.sh @specifications @docs/input.md --ai-model claude-sonnet-4-5 --lang en
 
   # Read context from stdin
-  echo "My requirements" | generate-doc.sh requirements --lang ja
+  echo "My requirements" | generate-doc.sh @requirements --lang ja
 EOF
 }
 
@@ -417,8 +419,10 @@ main() {
 
   # @keyword モード: prompt/template パスを解決
   if [[ "$prompt_mode" -eq 1 ]]; then
-    local paths
-    paths=$(resolve_doc_paths "$doc_type") || exit 1
+    # 別名 (impl 等) を正本の長名へ正規化してからアセットを解決する
+    local asset_type paths
+    asset_type=$(get_prompt_file "@${doc_type}") || exit 1
+    paths=$(resolve_doc_paths "$asset_type") || exit 1
     config_set "prompt_path" "$(echo "$paths" | head -1)"
     config_set "template_path" "$(echo "$paths" | tail -1)"
   fi
