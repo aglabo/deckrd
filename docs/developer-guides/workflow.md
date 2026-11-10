@@ -4,13 +4,14 @@ description: "Document-driven and issue-driven development workflow for deckrd p
 category: "developer-guides"
 tags: ["workflow", "deckrd", "idd-framework", "development"]
 created: "2026-01-14"
-version: "0.4.0"
+version: "0.4.1"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
   - 0.0.4   2026-01-14  Initial version
   - 0.1.0   2026-03-21  Fix session path and schema, fix IDD/deckrd workflow order, add lang/ai_model fields to session schema
   - 0.4.0   2026-06-19  Rename deckrd-coder to bdd-coder, update command references
+  - 0.4.1   2026-11-10  Align session schema, init/module steps and output paths with the implementation; gitleaks to betterleaks
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.
@@ -47,11 +48,15 @@ See [Deckrd Commands Reference](./deckrd-commands.md) for detailed command docum
 #### 1. Initialize New Feature
 
 ```bash
-# Start a new deckrd module
-/deckrd init
+# Initialize the project (writes language and AI model)
+/deckrd init <project> <type>
 
-# Creates session file: .local/deckrd/session.json
-# Tracks: module name, active phase, completion status
+# Register a module and make it the active one
+/deckrd module <namespace>/<module>
+
+# Session file: .local/deckrd/session.json
+# init writes: active (null), lang, ai_model
+# module writes: modules[<path>] and sets active
 ```
 
 #### 2. Define Requirements
@@ -60,7 +65,7 @@ See [Deckrd Commands Reference](./deckrd-commands.md) for detailed command docum
 # Create requirements document
 /deckrd req
 
-# Output: docs/{module}/requirements.md
+# Output: docs/.deckrd/{namespace}/{module}/requirements/requirements.md
 # Contains: goals, user stories, constraints
 ```
 
@@ -70,7 +75,7 @@ See [Deckrd Commands Reference](./deckrd-commands.md) for detailed command docum
 # Create detailed specifications
 /deckrd spec
 
-# Output: docs/{module}/specifications.md
+# Output: docs/.deckrd/{namespace}/{module}/specifications/specifications.md
 # Contains: technical details, API contracts, data models
 ```
 
@@ -80,7 +85,7 @@ See [Deckrd Commands Reference](./deckrd-commands.md) for detailed command docum
 # Generate implementation guide
 /deckrd impl
 
-# Output: docs/{module}/implementation.md
+# Output: docs/.deckrd/{namespace}/{module}/implementation/implementation.md
 # Contains: step-by-step implementation plan
 ```
 
@@ -90,7 +95,7 @@ See [Deckrd Commands Reference](./deckrd-commands.md) for detailed command docum
 # Break down into executable tasks
 /deckrd tasks
 
-# Output: docs/{module}/tasks.md
+# Output: docs/.deckrd/{namespace}/{module}/tasks/tasks.md
 # Contains: actionable task list, acceptance criteria
 ```
 
@@ -109,12 +114,16 @@ See [Deckrd Commands Reference](./deckrd-commands.md) for detailed command docum
 
 ```json
 {
-  "module": "feature-name",
-  "phase": "implementation",
-  "completed": ["requirements", "design-review", "specifications"],
-  "documents": {
-    "requirements": "docs/feature-name/requirements.md",
-    "specifications": "docs/feature-name/specifications.md"
+  "active": "deckrd/feature-name",
+  "lang": "typescript",
+  "ai_model": "sonnet",
+  "modules": {
+    "deckrd/feature-name": {
+      "current_step": "spec",
+      "completed": ["module", "req"],
+      "documents": {},
+      "test_scope": "unit"
+    }
   }
 }
 ```
@@ -233,27 +242,27 @@ gh pr create --title "{title}" --body "{generated-body}"
 
 ```bash
 # 1. Initialize
-/deckrd init
-# → Enter module name: "status-command"
+/deckrd init deckrd-demo lib
+/deckrd module deckrd/status-command
 
 # 2. Define requirements
 /deckrd req
-# → Creates: docs/status-command/requirements.md
+# → Creates: docs/.deckrd/deckrd/status-command/requirements/requirements.md
 
 # 3. (Optional) Codex second opinion
 /deckrd:deckrd-review req --focus risk
 
 # 4. Write specifications
 /deckrd spec
-# → Creates: docs/status-command/specifications.md
+# → Creates: docs/.deckrd/deckrd/status-command/specifications/specifications.md
 
 # 5. Plan implementation
 /deckrd impl
-# → Creates: docs/status-command/implementation.md
+# → Creates: docs/.deckrd/deckrd/status-command/implementation/implementation.md
 
 # 6. Generate tasks
 /deckrd tasks
-# → Creates: docs/status-command/tasks.md
+# → Creates: docs/.deckrd/deckrd/status-command/tasks/tasks.md
 ```
 
 #### Execution Phase (IDD Framework + bdd-coder)
@@ -388,7 +397,7 @@ pnpm run test:sh
 
 ### Pre-commit Hooks (Automatic)
 
-- gitleaks - Secret detection
+- betterleaks - Secret detection
 - secretlint - Sensitive data patterns
 - commitlint - Commit message validation
 
@@ -435,8 +444,9 @@ pnpm run test:sh
 # Check session file
 cat .local/deckrd/session.json
 
-# Reinitialize if needed
-/deckrd init
+# Reinitialize if needed, then register the module again
+/deckrd init <project> <type>
+/deckrd module <namespace>/<module>
 ```
 
 ### IDD files not found

@@ -4,7 +4,7 @@ description: "Guide for selecting the right tool for each development task in de
 category: "developer-guides"
 tags: ["tools", "mcp", "selection-guide", "cocoindex-code"]
 created: "2026-01-14"
-version: "0.5.0"
+version: "0.5.1"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
@@ -12,6 +12,7 @@ changes:
   - 0.1.0   2026-03-21  Update from serena-mcp/lsmcp/codex-mcp to cocoindex-code/filesystem
   - 0.4.0   2026-06-19  Update skill paths from plugins/ to skills/, rename deckrd-coder to bdd-coder
   - 0.5.0   2026-09-24  Replace codex-mcp with the codex CLI
+  - 0.5.1   2026-11-10  gitleaks to betterleaks
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.
@@ -40,7 +41,7 @@ The deckrd project uses multiple tools and MCP servers for different tasks. This
 | Code generation       | codex CLI      | AI-powered generation |
 | Format code           | dprint         | Consistent formatting |
 | Check commit messages | commitlint     | Conventional Commits  |
-| Detect secrets        | gitleaks       | Security scanning     |
+| Detect secrets        | betterleaks    | Security scanning     |
 
 ## For Bash Script Analysis
 

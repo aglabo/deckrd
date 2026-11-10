@@ -241,7 +241,7 @@ meta:
 ┌──────────────────────▼───────────────────────────────┐
 │  Layer 4: 品質ゲート                                 │
 │   dprint / markdownlint / textlint / shellcheck      │
-│   gitleaks / secretlint / commitlint                 │
+│   betterleaks / secretlint / commitlint                 │
 └──────────────────────────────────────────────────────┘
 ```
 

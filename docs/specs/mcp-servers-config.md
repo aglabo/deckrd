@@ -4,7 +4,7 @@ description: "Configuration and usage guide for MCP servers in deckrd project"
 category: "specs"
 tags: ["mcp", "servers", "configuration", "cocoindex-code", "filesystem"]
 created: "2026-01-14"
-version: "0.2.0"
+version: "0.2.1"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
@@ -13,6 +13,7 @@ changes:
   - 0.1.1   2026-09-06  Correct .mcp.json table to actual layout, add codex-mcp
   - 0.1.2   2026-09-09  Convert bold-label lists to tables for textlint
   - 0.2.0   2026-09-24  Remove codex-mcp; Codex is configured as a CLI, not a server
+  - 0.2.1   2026-11-10  Use npx -y for the filesystem server example
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.
@@ -87,8 +88,8 @@ lang: "bash"
 {
   "mcpServers": {
     "filesystem": {
-      "command": "pnpx",
-      "args": ["@modelcontextprotocol/server-filesystem", "."]
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "."]
     }
   }
 }

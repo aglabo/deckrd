@@ -4,12 +4,14 @@ description: "Code quality standards, formatting rules, and quality gates for de
 category: "contributing"
 tags: ["quality", "standards", "formatting", "linting"]
 created: "2026-01-14"
-version: "0.1.0"
+version: "0.1.2"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
   - 0.0.4   2026-01-14  Initial version
   - 0.1.0   2026-03-21  Version update
+  - 0.1.1   2026-11-10  gitleaks to betterleaks; fix config file references
+  - 0.1.2   2026-11-10  Fix textlint config lookup order
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.
@@ -122,7 +124,11 @@ markdownlint-cli2 README.md
 
 ### textlint (Text Quality)
 
-**Configuration**: `configs/.textlintrc.yaml`
+**Configuration**: `pnpm run lint:text` searches in this order and uses the first file found:
+
+1. `configs/textlintrc.yaml`
+2. `${XDG_CONFIG_HOME}/global-configs/textlintrc.yaml`
+3. `${HOME}/.config/global-configs/textlintrc.yaml`
 
 **Purpose**: Japanese technical writing quality
 
@@ -235,9 +241,9 @@ commitlint --from HEAD~1
 
 ## Security Standards
 
-### gitleaks (Secret Detection)
+### betterleaks (Secret Detection)
 
-**Configuration**: `configs/gitleaks.toml`
+**Configuration**: `configs/betterleaks.toml`
 
 **Purpose**: Detect accidentally committed secrets
 
@@ -253,13 +259,13 @@ commitlint --from HEAD~1
 
 ```bash
 # Scan staged files
-gitleaks protect --config ./configs/gitleaks.toml --staged
+betterleaks protect --config ./configs/betterleaks.toml --staged
 
 # Scan entire repo
-gitleaks detect --config ./configs/gitleaks.toml
+betterleaks detect --config ./configs/betterleaks.toml
 
 # Scan specific file
-gitleaks detect --config ./configs/gitleaks.toml --file .env
+betterleaks detect --config ./configs/betterleaks.toml --file .env
 ```
 
 ### secretlint
@@ -316,7 +322,7 @@ secretlint --config ./configs/secretlint.config.yaml .env
 - Validates type and scope
 - Ensures proper description
 
-#### 3. pre-commit (gitleaks)
+#### 3. pre-commit (betterleaks)
 
 **Purpose**: Detect secrets in staged files
 
@@ -333,7 +339,7 @@ secretlint --config ./configs/secretlint.config.yaml .env
 **Actions**:
 
 - Scans with different patterns
-- Complementary to gitleaks
+- Complementary to betterleaks
 - Blocks commit if found
 
 **Usage**:
@@ -367,7 +373,7 @@ textlint --config ./configs/textlintrc.yaml "**/*.md"
 cspell check "**/*.{sh,md,json,yml,yaml}"
 
 # Check for secrets
-gitleaks protect --config ./configs/gitleaks.toml --staged
+betterleaks protect --config ./configs/betterleaks.toml --staged
 ```
 
 ### Before Creating PR
@@ -378,7 +384,7 @@ dprint check
 markdownlint-cli2 "**/*.md"
 textlint --config ./configs/textlintrc.yaml "**/*.md"
 cspell check "**/*.{sh,md,json,yml,yaml}"
-gitleaks detect --config ./configs/gitleaks.toml
+betterleaks detect --config ./configs/betterleaks.toml
 
 # Verify commit messages
 git log --oneline -10  # Check format
@@ -508,7 +514,7 @@ command --flag value
 - markdownlint pass rate: 100%
 - textlint pass rate: 100%
 - cspell pass rate: 100%
-- gitleaks violations: 0
+- betterleaks violations: 0
 - Commit message compliance: 100%
 
 ### Monitoring
@@ -519,7 +525,7 @@ dprint check && \
 markdownlint-cli2 "**/*.md" && \
 textlint --config ./configs/textlintrc.yaml "**/*.md" && \
 cspell check "**/*.{sh,md,json,yml,yaml}" && \
-gitleaks detect --config ./configs/gitleaks.toml && \
+betterleaks detect --config ./configs/betterleaks.toml && \
 echo "All quality checks passed ✓"
 ```
 
@@ -567,7 +573,7 @@ technical term
 <!-- cSpell:enable -->
 ```
 
-### gitleaks Blocks Commit
+### betterleaks Blocks Commit
 
 1. Remove the secret from file
 2. Commit the change

@@ -4,7 +4,7 @@ description: "Detailed documentation of the deckrd plugin architecture and imple
 category: "developer-guides"
 tags: ["plugins", "skills", "architecture", "modular"]
 created: "2026-01-14"
-version: "0.6.0"
+version: "0.6.1"
 authors:
   - atsushifx <https://github.com/atsushifx>
 changes:
@@ -13,6 +13,7 @@ changes:
   - 0.4.0   2026-06-19  Rename deckrd-coder to bdd-coder, update paths from plugins/ to skills/
   - 0.5.0   2026-09-06  Correct per-plugin MCP table, add codex-mcp and scoped tool naming
   - 0.6.0   2026-09-24  Remove codex-mcp from the per-plugin MCP table
+  - 0.6.1   2026-11-10  Fix session example, bootstrap path, set options, version examples; gitleaks to betterleaks
 copyright:
   - Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
   - This software is released under the MIT License.
@@ -65,7 +66,7 @@ skills/{skill-name}/
 ```json
 {
   "name": "deckrd",
-  "version": "0.4.0"
+  "version": "0.6.1"
 }
 ```
 
@@ -82,7 +83,7 @@ skills/{skill-name}/
 ```json
 {
   "name": "deckrd",
-  "version": "0.4.0"
+  "version": "0.6.1"
 }
 ```
 
@@ -96,10 +97,9 @@ skills/{skill-name}/
 
 **Components**:
 
-- Skills: `/deckrd` commands
-  - init, project, module, req, dr, spec, impl, tasks
-  - status, review, rev, update
-- Scripts: Bash implementation of each command
+- Skills: `/deckrd` commands (init, req, dr, spec, impl, tasks, status, review)
+- Scripts: dedicated scripts for init / module / project / status / update
+- Document commands (req, spec, impl, tasks, dr) go through `subcommands/generate-doc.sh`
 - Templates: Document templates
 - Prompts: AI prompts for generation
 
@@ -148,10 +148,10 @@ Each command follows this pattern:
 # Purpose: {description}
 # Usage: claude /deckrd {command}
 
-set -euo pipefail
+set -eo pipefail
 
 # Source bootstrap
-. "${DECKRD_ROOT}/skills/deckrd/skills/deckrd/scripts/libs/bootstrap.lib.sh"
+. "${DECKRD_ROOT}/scripts/libs/bootstrap.lib.sh"
 
 # Functions
 main() {
@@ -177,15 +177,15 @@ Commands read/write session state:
 ```bash
 # Read session
 get_current_module() {
-  jq -r '.module // empty' "$SESSION_FILE"
+  jq -r '.active // empty' "$SESSION_FILE"
 }
 
 # Write session
 update_session() {
   local module=$1
-  local phase=$2
-  jq --arg mod "$module" --arg ph "$phase" \
-    '.module = $mod | .phase = $ph' \
+  local step=$2
+  jq --arg mod "$module" --arg step "$step" \
+    '.active = $mod | .modules[$mod].current_step = $step' \
     "$SESSION_FILE" > "$SESSION_FILE.tmp"
   mv "$SESSION_FILE.tmp" "$SESSION_FILE"
 }
@@ -376,7 +376,7 @@ Add to `.claude-plugin/marketplace.json`:
 #### 3. Error Handling
 
 ```bash
-set -euo pipefail  # Strict mode
+set -eo pipefail  # -u is intentionally not used (see #276)
 
 # Validate inputs
 if [[ -z "${MODULE:-}" ]]; then
@@ -433,10 +433,6 @@ gh skills install aglabo/deckrd
 claude plugin install bdd-coder@deckrd
 ```
 
-### Release Artifacts
-
-Release zips are in `releases/v{version}/` and contain the full skill tree for offline installation.
-
 ## Plugin Lifecycle
 
 ### Installation
@@ -471,14 +467,14 @@ sanitize_input() {
 
 ```bash
 # Use absolute paths via bootstrap
-. "${DECKRD_ROOT}/skills/deckrd/skills/deckrd/scripts/libs/bootstrap.lib.sh"
+. "${DECKRD_ROOT}/scripts/libs/bootstrap.lib.sh"
 ```
 
 ### Secret Handling
 
 - Never hardcode secrets
 - Use environment variables
-- Check with gitleaks before commit
+- Check with betterleaks before commit
 
 ## Related Documentation
 

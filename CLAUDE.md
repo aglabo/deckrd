@@ -20,7 +20,7 @@ version: 0.1.0
 deckrd/
 ├── skills/deckrd/           # Main plugin (skills, scripts, assets)
 ├── skills/bdd-coder/        # BDD implementation plugin (independent, same marketplace)
-├── docs/                    # user-guides, developer-guides, specs, contributing, onboarding
+├── docs/                    # user-guides, developer-guides, specs, contributing
 ├── configs/                 # Linter/formatter configs
 └── temp/idd/                # IDD framework working files
 ```
@@ -60,14 +60,14 @@ IDD Framework location: `~/.claude/plugins/marketplaces/claude-idd-framework-mar
 
 ## Tool Selection
 
-| Task                 | Tool                                               |
-| -------------------- | -------------------------------------------------- |
-| Bash code analysis   | serena-mcp                                         |
-| Code generation      | codex CLI (`codex exec`)                           |
-| Documentation search | Read, Grep                                         |
-| deckrd commands      | `skills/deckrd/skills/deckrd/references/commands/` |
-| bdd-coder skill      | `skills/bdd-coder/skills/bdd-coder/`               |
-| IDD commands         | IDD Framework path above                           |
+| Task                 | Tool                                                         |
+| -------------------- | ------------------------------------------------------------ |
+| Code search          | cocoindex-code (`mcp__plugin_deckrd_cocoindex-code__search`) |
+| Code generation      | codex CLI (`codex exec`)                                     |
+| Documentation search | Read, Grep                                                   |
+| deckrd commands      | `skills/deckrd/skills/deckrd/references/commands/`           |
+| bdd-coder skill      | `skills/bdd-coder/skills/bdd-coder/`                         |
+| IDD commands         | IDD Framework path above                                     |
 
 ## Key Docs
 
