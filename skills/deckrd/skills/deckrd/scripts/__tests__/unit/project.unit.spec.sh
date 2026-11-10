@@ -34,6 +34,11 @@ Describe "T-CLI-PRJ: project.sh"
       The status should equal 0
       The output should include "Usage:"
     End
+
+    It "[Normal] T-CLI-PRJ-21: ヘルプに .local/deckrd/.project.json が含まれる"
+      When run bash "$SCRIPT" --help
+      The output should include ".local/deckrd/.project.json"
+    End
   End
 
   Describe "不明なオプション"
@@ -75,6 +80,11 @@ Describe "T-CLI-PRJ: project.sh"
       When run bash "$SCRIPT" --project myapp --language typescript
       The output should include "myapp"
       The output should include "typescript"
+    End
+
+    It "[Normal] T-CLI-PRJ-22: project: 行に .local/deckrd/.project.json が含まれる"
+      When run bash "$SCRIPT" --project myapp --language go
+      The output should include "project:      .local/deckrd/.project.json"
     End
   End
 

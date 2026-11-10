@@ -11,6 +11,7 @@
 # @brief Configure project settings (project name and language)
 # @description
 #   Creates or updates .local/deckrd/.project.json with project settings.
+#   This enables deckrd-coder to load language-specific rules.
 #
 # @example
 #   # Configure project with Go language
@@ -98,7 +99,7 @@ Options:
   -h, --help                    Show this help message
 
 Project file:
-  .local/deckrd/project.json
+  .local/deckrd/.project.json
 
 Example:
   project.sh --project myapp --language go
@@ -264,7 +265,7 @@ display_result() {
   echo "  project_type: ${PROJECT_TYPE}"
   echo "  language:     ${LANGUAGE}"
   echo "  ai_model:     ${AI_MODEL}"
-  echo "  project:      .local/deckrd/project.json"
+  echo "  project:      .local/deckrd/.project.json"
 }
 
 # ============================================================================
