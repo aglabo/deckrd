@@ -9,7 +9,7 @@ description: >
   Changes comments only — never code. Never commits.
 metadata:
   author: aglabo
-  version: 0.6.1
+  version: 0.7.0
   license: MIT
 argument-hint: "[--branch [<base>] | <paths...>]"
 ---

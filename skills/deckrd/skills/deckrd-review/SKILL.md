@@ -7,7 +7,7 @@ description: >
   Use after /deckrd review, before phase transitions, or when a design decision is unclear.
 metadata:
   author: aglabo
-  version: 0.6.1
+  version: 0.7.0
   license: MIT
 allowed-tools: Read Write Bash(codex:*) Bash(mkdir:*) Bash(jq:*)
 argument-hint: "<file_or_phase> [--focus completeness|risk|consistency|feasibility]"
