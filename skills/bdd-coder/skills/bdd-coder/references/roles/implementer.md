@@ -16,7 +16,11 @@ This Role is the **canonical procedure** for implementing one checklist task. It
 - In Claude Code, the `bdd-coder` agent (`agents/bdd-coder.md` at the plugin root) loads this Role and runs it in a sub-context.
 - Where agents are not available, the main session follows this Role step by step itself.
 
-All paths below are relative to the bdd-coder skill directory unless they start with `.local/` or `docs/`.
+Paths are resolved as follows:
+
+- Bundled resources (`assets/`, `references/`) are relative to the bdd-coder skill directory.
+- Everything else is relative to the project root and stays under it: project files, `docs/...`, `.local/...`, and paths given by the caller. The skill may be installed outside the project, so never resolve these against the skill directory.
+
 Progress is tracked in `.local/deckrd/temp/bdd-coder/bdd-todo.md` (see Core Principles).
 
 ## Core Principles

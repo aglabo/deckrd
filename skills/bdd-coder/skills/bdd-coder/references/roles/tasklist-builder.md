@@ -17,7 +17,10 @@ This Role is the **canonical procedure** for building a task list before checkli
 - In Claude Code, the `tasklist-builder` agent (`agents/tasklist-builder.md` at the plugin root) loads this Role and runs it in a sub-context.
 - Where agents are not available, the main session follows this Role step by step itself.
 
-All paths below are relative to the bdd-coder skill directory unless they start with `.local/` or `docs/`.
+Paths are resolved as follows:
+
+- Bundled resources (`assets/`, `references/`) are relative to the bdd-coder skill directory.
+- Everything else is relative to the project root and stays under it: project files, `docs/...`, `.local/...`, and paths given by the caller. The skill may be installed outside the project, so never resolve these against the skill directory.
 
 ## Where task lists live
 
