@@ -18,8 +18,9 @@ This Role is the **canonical procedure** for writing a Decision Record (DR).
 
 Paths are resolved as follows:
 
-- Bundled resources (`assets/`, `references/`) are relative to the deckrd skill directory.
-- Everything else is relative to the project root and stays under it: project files, `<modulePath>` (`docs/.deckrd/<namespace>/<module>`), `.local/...`, and paths given by the caller. The skill may be installed outside the project, so never resolve these against the skill directory.
+- Bundled resources (`assets/`, `references/`) are relative to `skill_dir`, the deckrd skill directory passed by the caller.
+- Everything else is relative to the project root and stays under it: project files, `<modulePath>` (`docs/.deckrd/<namespace>/<module>`), and paths given by the caller. The skill may be installed outside the project, so never resolve these against the skill directory.
+- Local data is under `local_dir`, an absolute path passed by the caller. Write `<local_dir>/session.json` and `<local_dir>/temp/...`, never a literal `.local/deckrd`. `temp` is always `<local_dir>/temp`.
 
 ## Responsibility
 
@@ -35,6 +36,8 @@ confirmation, or decide whether the user approves the draft. The caller
 
 | Parameter          | Mode         | Description                                                                                                                        |
 | ------------------ | ------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `skill_dir`        | both         | Absolute path of the skill directory (where `SKILL.md` is)                                                                         |
+| `local_dir`        | both         | Absolute path of the deckrd local data (`DECKRD_LOCAL_DATA`)                                                                       |
 | `mode`             | both         | `draft` or `apply`                                                                                                                 |
 | `module_id`        | both         | `<namespace>/<module>` (the caller reads it from the session)                                                                      |
 | `module_path`      | both         | `docs/.deckrd/<namespace>/<module>` (`session.modules[active].path`)                                                               |
@@ -63,7 +66,7 @@ confirmation, or decide whether the user approves the draft. The caller
 7. Self-check against section 6 of the guideline, using the items whose timing is `draft` or `両方` (both). Treat `apply` items as not yet run, not as failures. Fix what you can.
    - Evaluate **every** such row, in table order. Do not stop at the first failure.
    - For each item that still fails, quote the sentence or line that triggers it in the summary. A failure without a quote is not reported. This keeps the result the same from run to run. If a MUST item still fails because information is missing, produce the Questions block instead of a section.
-8. Write the result to `.local/deckrd/temp/deckrd-work/dr-draft-<module>-<DR_ID>.md`, where `<module>` is `module_id` with `/` replaced by `-`, in the [Draft File Format](../commands/dr.md#draft-file-format) exactly: the metadata list (`dr_id`, and `supersedes: DR-NN (scope)` if there is a Supersede candidate), then a `# <DR_ID> Draft` block with the section, then `# EOF`. Do not lint the draft file or a merged copy, and never call the underlying lint tools directly (the project's scripts may exclude `.local/`; that is not a reason to bypass them). Lint errors are caught and fixed in apply step 7.
+8. Write the result to `<local_dir>/temp/deckrd-work/dr-draft-<module>-<DR_ID>.md`, where `<module>` is `module_id` with `/` replaced by `-`, in the [Draft File Format](../commands/dr.md#draft-file-format) exactly: the metadata list (`dr_id`, and `supersedes: DR-NN (scope)` if there is a Supersede candidate), then a `# <DR_ID> Draft` block with the section, then `# EOF`. Do not lint the draft file or a merged copy, and never call the underlying lint tools directly (the project's scripts may exclude `.local/`; that is not a reason to bypass them). Lint errors are caught and fixed in apply step 7.
 9. Return a summary (at most 200 words):
    - `status`: `drafted` or `questions`
    - `draft_file`, `dr_id`, `title`
@@ -71,7 +74,7 @@ confirmation, or decide whether the user approves the draft. The caller
    - Supersede candidate, if any
    - questions for the user, if `status` is `questions`
 
-Draft mode MUST NOT touch `decision-records.md` or any file outside `.local/deckrd/temp/deckrd-work/`.
+Draft mode MUST NOT touch `decision-records.md` or any file outside `<local_dir>/temp/deckrd-work/`.
 
 ## Mode: apply
 
@@ -116,7 +119,7 @@ Run only after the caller got the user's approval of `draft_file`.
 - Never edit the body of an existing DR. Only the Status line of a superseded DR may change.
 - After the single write, the only further edits are those of the formatter and the lint fixes inside the range this run wrote.
 - Never add lint disable comments to `decision-records.md`.
-- Never touch `.local/deckrd/session.json`.
+- Never touch `<local_dir>/session.json`.
 - Never create files in the module directory other than `decision-records.md`.
 - Never write more than one DR per run.
 - Do not commit. Git operations belong to the user.
