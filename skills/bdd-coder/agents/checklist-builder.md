@@ -16,7 +16,7 @@ color: cyan
 
 <!-- markdownlint-disable line-length -->
 
-Follow the Role [`skills/bdd-coder/references/roles/checklist-builder.md`](../skills/bdd-coder/references/roles/checklist-builder.md).
+Follow the Role [`../skills/bdd-coder/references/roles/checklist-builder.md`](../skills/bdd-coder/references/roles/checklist-builder.md).
 The Role holds the full procedure, inputs, outputs, and failure handling. This file only wraps it for Claude Code.
 
 For the Role's "semantic code search tool", use `mcp__plugin_deckrd_cocoindex-code__search`.

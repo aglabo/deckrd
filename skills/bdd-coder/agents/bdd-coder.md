@@ -16,7 +16,7 @@ color: blue
 
 <!-- markdownlint-disable line-length -->
 
-Follow the Role [`skills/bdd-coder/references/roles/implementer.md`](../skills/bdd-coder/references/roles/implementer.md).
+Follow the Role [`../skills/bdd-coder/references/roles/implementer.md`](../skills/bdd-coder/references/roles/implementer.md).
 The Role holds the full procedure, inputs, outputs, and failure handling. This file only wraps it for Claude Code.
 
 Record progress in the checklist file the Role names. `TodoWrite` may mirror it but never replaces it.

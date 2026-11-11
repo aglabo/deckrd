@@ -15,7 +15,7 @@ color: green
 
 <!-- markdownlint-disable line-length -->
 
-Follow the Role [`skills/bdd-coder/references/roles/explorer.md`](../skills/bdd-coder/references/roles/explorer.md).
+Follow the Role [`../skills/bdd-coder/references/roles/explorer.md`](../skills/bdd-coder/references/roles/explorer.md).
 The Role holds the full procedure, inputs, outputs, and failure handling. This file only wraps it for Claude Code.
 
 For the Role's "semantic code search tool", use `mcp__plugin_deckrd_cocoindex-code__search`.

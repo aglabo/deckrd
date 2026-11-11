@@ -16,7 +16,7 @@ color: cyan
 
 <!-- markdownlint-disable line-length -->
 
-Follow the Role [`skills/bdd-coder/references/roles/comment-refiner.md`](../skills/bdd-coder/references/roles/comment-refiner.md).
+Follow the Role [`../skills/bdd-coder/references/roles/comment-refiner.md`](../skills/bdd-coder/references/roles/comment-refiner.md).
 The Role holds the full procedure, inputs, outputs, and failure handling. This file only wraps it for Claude Code.
 
 ## Inputs
