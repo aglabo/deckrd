@@ -14,6 +14,11 @@ This Role is the **canonical procedure** for investigating the project without f
 - In Claude Code, the `explore-agent` agent (`agents/explore-agent.md` at the plugin root) loads this Role and runs it in a sub-context.
 - Where agents are not available, the main session follows this Role step by step itself.
 
+Paths are resolved as follows:
+
+- Bundled resources (`assets/`, `references/`) are relative to the deckrd skill directory.
+- Everything else is relative to the project root and stays under it: project files, `<modulePath>` (`docs/.deckrd/<namespace>/<module>`), `.local/...`, and paths given by the caller. The skill may be installed outside the project, so never resolve these against the skill directory.
+
 ## Responsibility
 
 Investigate the codebase and project documentation, then write findings to a temp file.
