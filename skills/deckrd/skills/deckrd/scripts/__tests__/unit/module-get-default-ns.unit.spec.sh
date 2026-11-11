@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# plugins/deckrd/skills/deckrd/scripts/tests/unit/module-get-default-ns.spec.sh
+# skills/deckrd/skills/deckrd/scripts/__tests__/unit/module-get-default-ns.unit.spec.sh
 # @(#) : BDD unit tests for module.sh - _get_default_ns function
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
