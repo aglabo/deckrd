@@ -39,15 +39,15 @@ Phase 5: チェックリスト確認と完了判定
 Phase 6: ワークフロー終了
 ```
 
-| Phase   | 目的                               | Agent                                | 出力                                                                                                                                                    |
-| ------- | ---------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Phase 0 | 開発言語・環境を把握               | explore-agent                        | ENV PROFILE (env-profile.md)                                                                                                                            |
-| Phase 1 | タスクリストとチェックリストを生成 | tasklist-builder + checklist-builder | `.local/deckrd/temp/tasklist/<ns>/<module>/<name>.tasklist.md`, `.local/deckrd/temp/tasks/<slug>-<adjective>-checklist.md`, session.json の `bdd_coder` |
-| Phase 2 | 依存関係を分析                     | bdd-coder                            | 実行グループ (直列 / 並列)                                                                                                                              |
-| Phase 3 | bdd-coder に委譲                   | bdd-coder                            | 各タスクのステータスレポート                                                                                                                            |
-| Phase 4 | 全体品質を検証                     | bdd-coder                            | 品質ゲート合格確認                                                                                                                                      |
-| Phase 5 | 完了状態を確認                     | bdd-coder                            | セッション終了前の最終確認                                                                                                                              |
-| Phase 6 | セッション終了                     | bdd-coder                            | 開発ツール・状態をリセット                                                                                                                              |
+| Phase   | 目的                               | Agent                                | 出力                                                                                                                                                |
+| ------- | ---------------------------------- | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 0 | 開発言語・環境を把握               | explore-agent                        | ENV PROFILE (env-profile.md)                                                                                                                        |
+| Phase 1 | タスクリストとチェックリストを生成 | tasklist-builder + checklist-builder | `<local_dir>/temp/tasklist/<ns>/<module>/<name>.tasklist.md`, `<local_dir>/temp/tasks/<slug>-<adjective>-checklist.md`, session.json の `bdd_coder` |
+| Phase 2 | 依存関係を分析                     | bdd-coder                            | 実行グループ (直列 / 並列)                                                                                                                          |
+| Phase 3 | bdd-coder に委譲                   | bdd-coder                            | 各タスクのステータスレポート                                                                                                                        |
+| Phase 4 | 全体品質を検証                     | bdd-coder                            | 品質ゲート合格確認                                                                                                                                  |
+| Phase 5 | 完了状態を確認                     | bdd-coder                            | セッション終了前の最終確認                                                                                                                          |
+| Phase 6 | セッション終了                     | bdd-coder                            | 開発ツール・状態をリセット                                                                                                                          |
 
 ## Usage
 
@@ -77,8 +77,8 @@ Phase 6: ワークフロー終了
 
 > "設定ファイルの読み込みと検証を実装して"
 > → tasklist-builder が Target ごとの項目 (L-01: parseConfig, L-02: validateConfig) を持つ
-> `.local/deckrd/temp/tasklist/<active module>/load-config-file-calm.tasklist.md` を生成
-> (アクティブなモジュールがなければ `.local/deckrd/temp/tasklist/` の直下に置く)
+> `<local_dir>/temp/tasklist/<active module>/load-config-file-calm.tasklist.md` を生成
+> (アクティブなモジュールがなければ `<local_dir>/temp/tasklist/` の直下に置く)
 > → 項目を 1 件選ぶ → その Handoff から checklist-builder がチェックリストを生成 → bdd-coder で実装
 
 Target が 1 つだけの指示 (例: "グリーティング関数を実装して") は項目が 1 件になるため、確認なしで checklist-builder に進む。
@@ -86,7 +86,7 @@ Target が 1 つだけの指示 (例: "グリーティング関数を実装し�
 **Target ID from tasks.md:**
 
 > "T01 を実装して"
-> → tasklist-builder が `.local/deckrd/temp/tasklist/<ns>/<module>/T-01.tasklist.md` を生成
+> → tasklist-builder が `<local_dir>/temp/tasklist/<ns>/<module>/T-01.tasklist.md` を生成
 > (Scenario ごとの項目 `T01-01`, `T01-02`, …)
 > → 項目を 1 件選ぶ → session.json の `bdd_coder` に記録 → checklist-builder → bdd-coder で実装
 > → 続きは `/bdd-coder:bdd-coder T01` (既存のタスクリストを再利用する) か `/bdd-coder:bdd-coder --resume`
@@ -103,7 +103,7 @@ Target が 1 つだけの指示 (例: "グリーティング関数を実装し�
 
 **Existing checklist (skip checklist-builder):**
 
-> `/bdd-coder:bdd-coder T01-02 --checklist .local/deckrd/temp/tasks/my-happy-checklist.md`
+> `/bdd-coder:bdd-coder T01-02 --checklist <local_dir>/temp/tasks/my-happy-checklist.md`
 > → 既存チェックリストをそのまま使用 → bdd-coder で実装
 
 ## Before You Begin (MANDATORY — Phase 0 の前に実行)
@@ -126,6 +126,8 @@ Phase 0 開始後はスコープ質問禁止。
 
 Spawn **explore-agent** with:
 
+- `skill_dir`, `local_dir`: absolute paths, see "Path arguments" in SKILL.md
+
 - `scope`: `pattern-detection`
 - `directory`: repository root (or sub-package root for monorepos)
 - `focus`: `test-framework,build-tools,lint,type-check`
@@ -143,14 +145,14 @@ The agent:
 
 4. Identifies tool commands (build, run, lint, type-check, test, formatter)
 
-5. Writes the environment profile to `.local/deckrd/temp/deckrd-work/env-profile.md`
+5. Writes the environment profile to `<local_dir>/temp/deckrd-work/env-profile.md`
 
 ### Step 0-2: ENV PROFILE の取得
 
 Read the **Commands table** returned by the agent.
 Store as **ENV PROFILE** for use in Phase 3 (bdd-coder への渡し), Phase 4, Phase 5。
 
-出力: `.local/deckrd/temp/deckrd-work/env-profile.md`
+出力: `<local_dir>/temp/deckrd-work/env-profile.md`
 
 ### Step 0-3: SESSION BASELINE の記録
 
@@ -187,6 +189,8 @@ git status --porcelain=v1 --untracked-files=all
 
 Spawn **tasklist-builder** with:
 
+- `skill_dir`, `local_dir`: absolute paths, see "Path arguments" in SKILL.md
+
 - `instruction`: ユーザーの指示 or Target ID
 - `tasks_md`: tasks.md のパス (Target ID 入力時のみ)
 
@@ -196,7 +200,7 @@ Spawn **tasklist-builder** with:
 - 返却されたパスを **TASKLIST PATH** として保存する (Phase 5 Step 4b で使う)
 - checklist-builder に渡すのは選んだ項目の Handoff だけ。タスクリストのファイルは渡さない
   (他タスクを含む資料を渡さない: `docs/.deckrd/rules/deckrd-rule-bdd-cycle.md` の「1 委譲 = 1 タスク」)
-- タスクリストは `.local/deckrd/temp/tasklist/<ns>/<module>/` に置く。モジュールごとにディレクトリを分けるため、
+- タスクリストは `<local_dir>/temp/tasklist/<ns>/<module>/` に置く。モジュールごとにディレクトリを分けるため、
   別モジュールの同じ Target ID とは衝突しない
 - 同じ Target ID で再実行すると、既存のタスクリストを現在の tasks.md と突き合わせる。
   `done` の項目と項目 ID は残し、分割済みの Case や新しい Scenario を反映する (`STATUS: updated`)。
@@ -206,9 +210,9 @@ Spawn **tasklist-builder** with:
 - タスクリストは **オーケストレータの状態ファイル** であり、bdd-coder エージェントへの資料ではない。
   「タスクリストを渡して L-02 だけ実装させればよい」という短絡は「1 委譲 = 1 タスク」に反する
 
-出力: `.local/deckrd/temp/tasklist/<ns>/<module>/<name>.tasklist.md`。Target ID のときは `T-XX.tasklist.md` とする。
-モジュールがない自然言語の指示は `.local/deckrd/temp/tasklist/` の直下に置く。
-`DECKRD_LOCAL_TEMP` を設定している場合は `.local/deckrd/temp` の代わりにその値を使う。
+出力: `<local_dir>/temp/tasklist/<ns>/<module>/<name>.tasklist.md`。Target ID のときは `T-XX.tasklist.md` とする。
+モジュールがない自然言語の指示は `<local_dir>/temp/tasklist/` の直下に置く。
+`<local_dir>/temp` 固定とし、`DECKRD_LOCAL_TEMP` の上書きは Role に伝えない。
 
 ### Phase 1b: チェックリスト作成 (checklist-builder 委譲)
 
@@ -226,6 +230,8 @@ Spawn **tasklist-builder** with:
 
 Spawn **checklist-builder** with:
 
+- `skill_dir`, `local_dir`: absolute paths, see "Path arguments" in SKILL.md
+
 - `instruction`: Phase 1a で選んだ項目の Handoff、またはユーザーの指示 / Task ID (Phase 1a をスキップした場合)
 - `tasks_md`: tasks.md のパス (Task ID 入力時のみ)
 - `directory`: リポジトリルート
@@ -233,7 +239,7 @@ Spawn **checklist-builder** with:
 The agent:
 
 1. 入力を解析してタスクを分解
-2. チェックリストを `.local/deckrd/temp/tasks/<slug>-<adjective>-checklist.md` に書き込む
+2. チェックリストを `<local_dir>/temp/tasks/<slug>-<adjective>-checklist.md` に書き込む
 3. チェックリストのパスをメインセッションに返却 (複数入力の Case を検出した場合は `BLOCKED` を返却)
 
 ### Step 1-2: チェックリストの取得
@@ -247,7 +253,7 @@ checklist-builder の報告が `BLOCKED:` で始まる場合 (Task ID の Case �
 `CHECKLIST:` が返った場合、返却されたチェックリストパスを **CHECKLIST PATH** として保存。
 Phase 2 以降で使用する。再開時に復元できるよう、session.json の `bdd_coder.checklist` にも書く。
 
-出力: `.local/deckrd/temp/tasks/<slug>-<adjective>-checklist.md`
+出力: `<local_dir>/temp/tasks/<slug>-<adjective>-checklist.md`
 
 ## Phase 2: タスク分析・依存関係マッピング
 
@@ -353,7 +359,7 @@ code-reviewer は **セッション全体で 1 回だけ** 起動する (タス�
 - `task_id`: 単一タスク起動ならその ID。複数タスクにまたがる場合は `N/A`
 - `changed_files`: 下記「セッションスコープの解決」で求めたファイルのうち実装ファイル
 - `test_files`: 同じスコープのうちテストファイル (ENV PROFILE のテストファイル規約で振り分け)
-- `env_profile`: `.local/deckrd/temp/deckrd-work/env-profile.md`
+- `env_profile`: `<local_dir>/temp/deckrd-work/env-profile.md`
 - `coverage_cmd`: ENV PROFILE のカバレッジコマンド
 
 同じレビューは `/bdd-coder:bdd-coder-review` で任意のタイミングでも実行できる。
