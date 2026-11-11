@@ -38,11 +38,11 @@ deckrd is a plugin-based framework that provides document-driven development wor
 deckrd/
 ├── skills/                   # Agent Skills modules
 │   ├── deckrd/              # Main workflow skill
-│   │   ├── agents/          # Agent definitions
-│   │   └── skills/deckrd/   # Commands, scripts, assets
+│   │   ├── agents/          # Thin wrappers (procedure lives in Roles)
+│   │   └── skills/deckrd/   # Commands, Roles, scripts, assets
 │   └── bdd-coder/           # BDD implementation skill
-│       ├── agents/          # Agent definitions
-│       └── skills/bdd-coder/ # Commands, templates, references (libs symlinked from deckrd)
+│       ├── agents/          # Thin wrappers (procedure lives in Roles)
+│       └── skills/bdd-coder/ # Roles, commands, templates, references (libs symlinked from deckrd)
 ├── Configuration/            # Tool configs
 │   ├── .mcp.json           # MCP servers
 │   ├── lefthook.yml        # Git hooks
