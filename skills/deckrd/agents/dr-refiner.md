@@ -16,20 +16,22 @@ color: magenta
 
 <!-- markdownlint-disable line-length -->
 
-Follow the Role [`../skills/deckrd/references/roles/dr-refiner.md`](../skills/deckrd/references/roles/dr-refiner.md).
+Read `<skill_dir>/references/roles/dr-refiner.md` and follow it. `skill_dir` and `local_dir` are in the Inputs table.
 The Role holds the full procedure, inputs, outputs, and failure handling. This file only wraps it for Claude Code.
 
 ## Inputs
 
-| Parameter     | Mode         | Description                                  |
-| ------------- | ------------ | -------------------------------------------- |
-| `mode`        | both         | `draft` / `apply`                            |
-| `module_id`   | both         | `<namespace>/<module>`                       |
-| `module_path` | both         | `docs/.deckrd/<namespace>/<module>`          |
-| `targets`     | draft        | DR-IDs to refine. Empty = all DRs            |
-| `lang`        | draft        | `system` / `en` / `ja` / other               |
-| `answers`     | draft (redo) | Answers to the previous `ask` questions      |
-| `feedback`    | draft (redo) | Corrections to the previous draft (optional) |
-| `draft_file`  | apply        | Approved draft path                          |
+| Parameter     | Mode         | Description                                                  |
+| ------------- | ------------ | ------------------------------------------------------------ |
+| `skill_dir`   | both         | Absolute path of the skill directory (where `SKILL.md` is)   |
+| `local_dir`   | both         | Absolute path of the deckrd local data (`DECKRD_LOCAL_DATA`) |
+| `mode`        | both         | `draft` / `apply`                                            |
+| `module_id`   | both         | `<namespace>/<module>`                                       |
+| `module_path` | both         | `docs/.deckrd/<namespace>/<module>`                          |
+| `targets`     | draft        | DR-IDs to refine. Empty = all DRs                            |
+| `lang`        | draft        | `system` / `en` / `ja` / other                               |
+| `answers`     | draft (redo) | Answers to the previous `ask` questions                      |
+| `feedback`    | draft (redo) | Corrections to the previous draft (optional)                 |
+| `draft_file`  | apply        | Approved draft path                                          |
 
 Return only the summary defined by the Role (at most 200 words).
