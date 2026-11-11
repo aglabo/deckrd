@@ -18,8 +18,9 @@ This Role is the **canonical procedure** for refining existing code comments.
 
 Paths are resolved as follows:
 
-- Bundled resources (`assets/`, `references/`) are relative to the bdd-coder skill directory.
-- Everything else is relative to the project root and stays under it: project files, `docs/...`, `.local/...`, and paths given by the caller. The skill may be installed outside the project, so never resolve these against the skill directory.
+- Bundled resources (`assets/`, `references/`) are relative to `skill_dir`, the bdd-coder skill directory passed by the caller.
+- Everything else is relative to the project root and stays under it: project files, `docs/...`, and paths given by the caller. The skill may be installed outside the project, so never resolve these against the skill directory.
+- Local data is under `local_dir`, an absolute path passed by the caller. Write `<local_dir>/session.json` and `<local_dir>/temp/...`, never a literal `.local/deckrd`. `temp` is always `<local_dir>/temp`.
 
 ## Responsibility
 
@@ -32,6 +33,8 @@ The Role does **not**: decide whether the user approves the draft, commit, or ed
 
 | Parameter    | Mode         | Description                                                                    |
 | ------------ | ------------ | ------------------------------------------------------------------------------ |
+| `skill_dir`  | both         | Absolute path of the skill directory (where `SKILL.md` is)                     |
+| `local_dir`  | both         | Absolute path of the deckrd local data (`DECKRD_LOCAL_DATA`)                   |
 | `mode`       | both         | `draft` or `apply`                                                             |
 | `paths`      | draft        | Files, directories, or globs to review. Directories are searched recursively   |
 | `answers`    | draft (redo) | User's answers to the `ask` questions of a previous run, keyed by finding ID   |
@@ -76,10 +79,10 @@ The Role does **not**: decide whether the user approves the draft, commit, or ed
    - Any `ask` finding without an answer → `status: questions`. Still write the draft with the changes done so far.
    - No file changed → `status: no-change`. Do not write a draft.
    - Otherwise → `status: drafted`.
-9. Write the draft to `.local/deckrd/temp/bdd-coder/comment-refine.md` in the format below.
+9. Write the draft to `<local_dir>/temp/bdd-coder/comment-refine.md` in the format below.
 10. Return a summary (at most 200 words): `status`, `draft_file`, changed files, finding counts per class, and the questions (with finding IDs) if `status` is `questions`.
 
-Draft mode MUST NOT touch any target file or any file outside `.local/deckrd/temp/bdd-coder/`.
+Draft mode MUST NOT touch any target file or any file outside `<local_dir>/temp/bdd-coder/`.
 
 ### Draft File Format
 
@@ -115,7 +118,7 @@ Run only after the caller got the user's approval of `draft_file`.
 1. Parse the draft. If `# EOF` is missing, or a file has a `Diff` block that is not a valid unified diff, return `status: malformed`.
 2. Take a snapshot of every file in the draft: read its current content and compare its SHA-256 with the `sha256` in the draft. On any mismatch, stop and return `status: conflict`. Do not merge silently.
    - A matching hash means the snapshot is the draft-time content. Use the snapshot as the only base for the invariant check and for restoring files. Do not use `HEAD`: the target may have uncommitted code changes made before the draft.
-3. Build every result before writing any file. For each file, apply its diff to the snapshot in memory, or to a copy under `.local/deckrd/temp/bdd-coder/`.
+3. Build every result before writing any file. For each file, apply its diff to the snapshot in memory, or to a copy under `<local_dir>/temp/bdd-coder/`.
    - If a hunk does not apply, or a result breaks the invariant of draft step 7 against its snapshot, return `status: malformed` and write nothing.
 4. Write all results to the target files. If a write fails, restore every file already written from its snapshot and return `status: malformed`.
 5. Run the project's lint and test scripts for the changed files, through the project's scripts only (for example `pnpm run ...`). Never call the underlying tools directly. Report the results. Do not fix code to make them pass.

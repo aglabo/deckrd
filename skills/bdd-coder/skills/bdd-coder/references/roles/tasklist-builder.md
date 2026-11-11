@@ -19,23 +19,24 @@ This Role is the **canonical procedure** for building a task list before checkli
 
 Paths are resolved as follows:
 
-- Bundled resources (`assets/`, `references/`) are relative to the bdd-coder skill directory.
-- Everything else is relative to the project root and stays under it: project files, `docs/...`, `.local/...`, and paths given by the caller. The skill may be installed outside the project, so never resolve these against the skill directory.
+- Bundled resources (`assets/`, `references/`) are relative to `skill_dir`, the bdd-coder skill directory passed by the caller.
+- Everything else is relative to the project root and stays under it: project files, `docs/...`, and paths given by the caller. The skill may be installed outside the project, so never resolve these against the skill directory.
+- Local data is under `local_dir`, an absolute path passed by the caller. Write `<local_dir>/session.json` and `<local_dir>/temp/...`, never a literal `.local/deckrd`. `temp` is always `<local_dir>/temp`.
 
 ## Where task lists live
 
-A task list lives under `${DECKRD_LOCAL_TEMP}/tasklist/` (default `.local/deckrd/temp/tasklist/`), in one subdirectory per module.
+A task list lives under `<local_dir>/temp/tasklist/`, in one subdirectory per module.
 The module subdirectory is the scope, so `T-01` of one module never meets `T-01` of another.
 
-| Source                                                                | Directory                                    |
-| --------------------------------------------------------------------- | -------------------------------------------- |
-| Target ID                                                             | `.local/deckrd/temp/tasklist/<ns>/<module>/` |
-| Natural language, `.local/deckrd/session.json` has an `active` module | `.local/deckrd/temp/tasklist/<active>/`      |
-| Natural language, no active module                                    | `.local/deckrd/temp/tasklist/`               |
+| Source                                                              | Directory                                  |
+| ------------------------------------------------------------------- | ------------------------------------------ |
+| Target ID                                                           | `<local_dir>/temp/tasklist/<ns>/<module>/` |
+| Natural language, `<local_dir>/session.json` has an `active` module | `<local_dir>/temp/tasklist/<active>/`      |
+| Natural language, no active module                                  | `<local_dir>/temp/tasklist/`               |
 
 - `<ns>/<module>` is the `module:` value in the frontmatter of `tasks_md`.
-- When `DECKRD_LOCAL_TEMP` is set, use it in place of `.local/deckrd/temp`. Return paths relative to the repository root.
-- `temp/` is ignored by git (`**/temp/` in `.local/deckrd/.gitignore`).
+- Return the task list path as written under `<local_dir>`, not relative to the repository root.
+- `temp/` is ignored by git (`**/temp/` in `<local_dir>/.gitignore`).
 - This Role only reads `session.json`. The caller (the bdd-coder skill) registers the task list in use there.
 
 ## Responsibility
@@ -43,12 +44,14 @@ The module subdirectory is the scope, so `T-01` of one module never meets `T-01`
 Break the input into a task list where **each item is one task, and one item makes one checklist**.
 Each item carries a `Handoff`: the exact input that the caller passes to checklist-builder.
 
-The Role does **not**: build checklists, choose which item to run, write code, run tests, edit `tasks.md`, or register anything in `.local/deckrd/session.json`. The caller does the first three: it is the only writer of the `bdd_coder` session entry.
+The Role does **not**: build checklists, choose which item to run, write code, run tests, edit `tasks.md`, or register anything in `<local_dir>/session.json`. The caller does the first three: it is the only writer of the `bdd_coder` session entry.
 
 ## Inputs
 
 | Parameter     | Description                                                                |
 | ------------- | -------------------------------------------------------------------------- |
+| `skill_dir`   | Absolute path of the skill directory (where `SKILL.md` is)                 |
+| `local_dir`   | Absolute path of the deckrd local data (`DECKRD_LOCAL_DATA`)               |
 | `instruction` | A natural-language request, or a Target ID (`T-01` or `T01`)               |
 | `tasks_md`    | Path to `tasks.md`. Required only when `instruction` is a Target ID        |
 | `answers`     | The user's answer to the question of a previous `questions` run (optional) |
@@ -73,7 +76,7 @@ The canonical form is used in the file name. The short form `TXX` (`T01`) is use
 1. If `tasks_md` is missing or unreadable, return `status: invalid-input`.
 2. Read `module: <namespace>/<module>` from the frontmatter of `tasks_md`. If there is none, return `status: invalid-input`.
 3. Read the `## T-XX:` section of `tasks_md`. If there is none, return `status: invalid-input`.
-4. Output path: `.local/deckrd/temp/tasklist/<ns>/<module>/T-XX.tasklist.md` (for example `.local/deckrd/temp/tasklist/deckrd/libs/T-01.tasklist.md`).
+4. Output path: `<local_dir>/temp/tasklist/<ns>/<module>/T-XX.tasklist.md` (for example `<local_dir>/temp/tasklist/deckrd/libs/T-01.tasklist.md`).
    The module and the Target ID fix the path, so a re-run always finds the same file.
    If the file already exists, go to [Step 2a](#step-2a-reconcile-an-existing-task-list) after building the items below. Never create a second task list for the same Target ID.
 5. Make one item per Scenario heading `#### T-XX-YY: <scenario>`, in file order.

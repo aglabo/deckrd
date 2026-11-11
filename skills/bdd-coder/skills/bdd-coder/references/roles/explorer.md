@@ -19,18 +19,21 @@ This Role is the **canonical procedure** for detecting the development environme
 
 Paths are resolved as follows:
 
-- Bundled resources (for example `assets/languages/<language>.md`) are relative to the bdd-coder skill directory.
-- Project files (`.deckrd/profile.json`, manifest files, tool configuration files) and `.local/...` are relative to the input `directory`, never to the skill directory. The skill may be installed outside the project.
+- Bundled resources (for example `assets/languages/<language>.md`) are relative to `skill_dir`, the bdd-coder skill directory passed by the caller.
+- Project files (`.deckrd/profile.json`, manifest files, tool configuration files) are relative to the input `directory`, never to the skill directory. The skill may be installed outside the project.
+- Local data is under `local_dir`, an absolute path passed by the caller. Write `<local_dir>/session.json` and `<local_dir>/temp/...`, never a literal `.local/deckrd`. `temp` is always `<local_dir>/temp`.
 
 ## Responsibility
 
 Detect the development language, test framework, build tools, and related commands.
-Write the environment profile to `.local/deckrd/temp/deckrd-work/env-profile.md` so the main session does not need to hold raw manifest file contents in context.
+Write the environment profile to `<local_dir>/temp/deckrd-work/env-profile.md` so the main session does not need to hold raw manifest file contents in context.
 
 ## Inputs
 
 | Parameter   | Values                             | Description                               |
 | ----------- | ---------------------------------- | ----------------------------------------- |
+| `skill_dir` | Absolute path                      | Skill directory (where `SKILL.md` is)     |
+| `local_dir` | Absolute path                      | Deckrd local data (`DECKRD_LOCAL_DATA`)   |
 | `directory` | Path string                        | Repository root to investigate            |
 | `scope`     | `pattern-detection`                | Always `pattern-detection` for this agent |
 | `focus`     | e.g., `test-framework,build-tools` | Comma-separated areas to detect           |
@@ -91,7 +94,7 @@ Examples: `vitest.config.*`, `.eslintrc.*`, `pyproject.toml`
 
 ### Step 4: Write Output
 
-Write the environment profile to `.local/deckrd/temp/deckrd-work/env-profile.md`:
+Write the environment profile to `<local_dir>/temp/deckrd-work/env-profile.md`:
 
 ```markdown
 # Environment Profile
@@ -125,7 +128,7 @@ Return the **Commands table** and language name to the main session.
 
 <!-- textlint-disable @textlint-ja/ai-writing/no-ai-list-formatting -->
 
-- **Read-only**: MUST NOT use `Write` or `Edit` on any file except `.local/deckrd/temp/deckrd-work/env-profile.md`
+- **Read-only**: MUST NOT use `Write` or `Edit` on any file except `<local_dir>/temp/deckrd-work/env-profile.md`
 - **No session files**: MUST NOT read or write `session.json`
 - **No side effects**: MUST NOT run commands that modify the filesystem or network
 
@@ -133,4 +136,4 @@ Return the **Commands table** and language name to the main session.
 
 - Allowed actions: read files, search (Grep / Glob), run read-only shell commands, and a semantic code search tool if available
 - Prefer the semantic code search tool for symbol/caller lookups — use Read/Grep only as fallback
-- Output file exception: MAY write to `.local/deckrd/temp/deckrd-work/env-profile.md`
+- Output file exception: MAY write to `<local_dir>/temp/deckrd-work/env-profile.md`

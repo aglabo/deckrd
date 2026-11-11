@@ -17,8 +17,9 @@ This Role is the **canonical procedure** for reviewing code that bdd-coder imple
 
 Paths are resolved as follows:
 
-- Bundled resources (`assets/`, `references/`) are relative to the bdd-coder skill directory.
-- Everything else is relative to the project root and stays under it: project files, `docs/...`, `.local/...`, and paths given by the caller. The skill may be installed outside the project, so never resolve these against the skill directory.
+- Bundled resources (`assets/`, `references/`) are relative to `skill_dir`, the bdd-coder skill directory passed by the caller.
+- Everything else is relative to the project root and stays under it: project files, `docs/...`, and paths given by the caller. The skill may be installed outside the project, so never resolve these against the skill directory.
+- Local data is under `local_dir`, an absolute path passed by the caller. Write `<local_dir>/session.json` and `<local_dir>/temp/...`, never a literal `.local/deckrd`. `temp` is always `<local_dir>/temp`.
 
 ## Responsibility
 
@@ -29,6 +30,8 @@ The reviewer is separate from the implementer (bdd-coder) to avoid self-assessme
 
 | Parameter       | Description                                                       |
 | --------------- | ----------------------------------------------------------------- |
+| `skill_dir`     | Absolute path of the skill directory (where `SKILL.md` is)        |
+| `local_dir`     | Absolute path of the deckrd local data (`DECKRD_LOCAL_DATA`)      |
 | `task_id`       | Task ID being reviewed (e.g. `T-01-02-01`)                        |
 | `changed_files` | List of files created, modified, or deleted during implementation |
 | `test_files`    | List of test files added, modified, or deleted                    |
