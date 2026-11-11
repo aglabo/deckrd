@@ -13,10 +13,6 @@ description: Derive an implementation plan from specifications via wall-hitting 
 Derive an implementation plan (phase decomposition and commit decomposition)
 from specifications through an interactive wall-hitting workflow.
 
-```bash
-DECKRD_ROOT="./docs/"
-```
-
 ## Usage
 
 ```bash
@@ -69,7 +65,7 @@ Spawn **explore-agent** (non-blocking) with:
 - `directory`: project root
 - `module`: active module (`active` in `.local/deckrd/session.json`)
 - `focus`: feature keywords from SPEC SUMMARY
-- Agent definition: [`plugins/deckrd/agents/explore-agent.md`](../../../../agents/explore-agent.md)
+- Agent definition: [`agents/explore-agent.md`](../../../../agents/explore-agent.md)
 
 The agent writes findings to `.local/deckrd/temp/deckrd-work/codebase-context.md`.
 Proceed to Phase B immediately in parallel — do NOT wait for this agent.
@@ -93,7 +89,7 @@ Spawn **explore-agent** (non-blocking, parallel with A-2) with:
 - `scope`: `prior-art`
 - `directory`: project root
 - `focus`: feature keywords from SPEC SUMMARY
-- Agent definition: [`plugins/deckrd/agents/explore-agent.md`](../../../../agents/explore-agent.md)
+- Agent definition: [`agents/explore-agent.md`](../../../../agents/explore-agent.md)
 
 The agent writes findings to `.local/deckrd/temp/deckrd-work/prior-art.md`.
 

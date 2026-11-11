@@ -56,7 +56,7 @@ Before collecting user input, delegate codebase investigation to explore-agent:
    - `directory`: project root
    - `module`: active module (`active` in `.local/deckrd/session.json`)
    - `focus`: module name and feature keywords from user input (if available)
-   - Agent definition: [`plugins/deckrd/agents/explore-agent.md`](../../../../agents/explore-agent.md)
+   - Agent definition: [`agents/explore-agent.md`](../../../../agents/explore-agent.md)
 4. The agent writes findings to `.local/deckrd/temp/deckrd-work/codebase-context.md`
 5. Read the **Summary** returned by the agent and store as **CODEBASE CONTEXT** for Phase 3
 6. Proceed to Phase 1 immediately — do NOT wait for the agent to complete Phase 0 before starting Phase 1
