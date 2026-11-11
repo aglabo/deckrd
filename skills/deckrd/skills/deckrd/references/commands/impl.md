@@ -65,7 +65,7 @@ Spawn **explore-agent** (non-blocking) with:
 - `directory`: project root
 - `module`: active module (`active` in `.local/deckrd/session.json`)
 - `focus`: feature keywords from SPEC SUMMARY
-- Agent definition: [`agents/explore-agent.md`](../../../../agents/explore-agent.md)
+- Role: [`roles/explorer.md`](../roles/explorer.md) (no subagent: follow it yourself, see SKILL.md)
 
 The agent writes findings to `.local/deckrd/temp/deckrd-work/codebase-context.md`.
 Proceed to Phase B immediately in parallel — do NOT wait for this agent.
@@ -89,7 +89,7 @@ Spawn **explore-agent** (non-blocking, parallel with A-2) with:
 - `scope`: `prior-art`
 - `directory`: project root
 - `focus`: feature keywords from SPEC SUMMARY
-- Agent definition: [`agents/explore-agent.md`](../../../../agents/explore-agent.md)
+- Role: [`roles/explorer.md`](../roles/explorer.md) (no subagent: follow it yourself, see SKILL.md)
 
 The agent writes findings to `.local/deckrd/temp/deckrd-work/prior-art.md`.
 

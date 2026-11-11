@@ -35,7 +35,7 @@ Before generating tasks, delegate document reading to explore-agent:
    - `directory`: project root
    - `module`: active module (`active` in `.local/deckrd/session.json`)
    - `focus`: `specifications,implementation`
-   - Agent definition: [`agents/explore-agent.md`](../../../../agents/explore-agent.md)
+   - Role: [`roles/explorer.md`](../roles/explorer.md) (no subagent: follow it yourself, see SKILL.md)
 2. The agent reads `specifications/specifications.md` and `implementation/implementation.md`.
    Then writes a summary to `.local/deckrd/temp/deckrd-work/codebase-context.md`
 3. Read the **Summary** returned by the agent
