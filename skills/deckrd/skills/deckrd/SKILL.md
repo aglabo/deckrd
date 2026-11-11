@@ -6,7 +6,7 @@ description: >
   Use when user says "write requirements", "create spec", "plan implementation",
   "derive tasks", "structure this feature", "break down into tasks", or "document this module".
   Also use for reverse engineering existing code into docs (/deckrd rev).
-  Do NOT use for direct code writing — use /deckrd-coder after tasks are generated.
+  Do NOT use for direct code writing — use /bdd-coder:bdd-coder after tasks are generated.
   Do NOT use when the user only wants to run or fix existing code without planning.
 metadata:
   author: aglabo
