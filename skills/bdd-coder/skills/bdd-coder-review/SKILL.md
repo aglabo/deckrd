@@ -26,8 +26,8 @@ This skill is a thin dispatcher: it resolves the five inputs code-reviewer requi
 spawns the agent, and presents the returned report. It MUST NOT compute CRAP itself,
 redefine review criteria, or fix any finding.
 
-Review criteria, CRAP formula, thresholds, and the report format live in the agent
-definition: [agents/code-reviewer.md](../../agents/code-reviewer.md).
+Review criteria, CRAP formula, thresholds, and the report format live in the Role:
+[roles/code-reviewer.md](../bdd-coder/references/roles/code-reviewer.md).
 
 Scope is **aggregate**: the whole resolved diff is reviewed in a single invocation.
 This skill does not loop per task.
@@ -120,7 +120,7 @@ Argument → `.local/deckrd/temp/bdd-coder/bdd-todo.md` → `N/A`, in that order
 
 Do NOT spawn explore-agent and do NOT define degraded behaviour here. When coverage is
 unavailable, code-reviewer applies its own fallback: CC-only classification reported as `cov=N/A`
-(never `coverage = 0`). See [agents/code-reviewer.md](../../agents/code-reviewer.md) — Phase 1.3.
+(never `coverage = 0`). See [roles/code-reviewer.md](../bdd-coder/references/roles/code-reviewer.md) — Phase 1.3.
 
 ### Step 5: Spawn code-reviewer
 
@@ -132,7 +132,10 @@ Spawn **code-reviewer** with:
 - `env_profile`: resolved in Step 4
 - `coverage_cmd`: resolved in Step 4
 
-Agent definition: [../../agents/code-reviewer.md](../../agents/code-reviewer.md)
+Role: [roles/code-reviewer.md](../bdd-coder/references/roles/code-reviewer.md)
+
+If you can start a subagent, hand it the Role file and let it run.
+If you cannot, follow the same Role file yourself, step by step.
 
 ### Step 6: Present the report
 
