@@ -111,7 +111,7 @@ The items built in Step 2 show the current `tasks.md`. The existing file holds t
 ### Step 3: Natural language
 
 1. Read the instruction and identify every **Target**: a function, class, or module that the request asks to create or change.
-   - If the request extends existing code, use `mcp__plugin_deckrd_cocoindex-code__search` (query: `"<Target> implementation"`) to confirm the real names and files.
+   - If the request extends existing code, use a semantic code search tool if available, otherwise Grep / Glob (query: `"<Target> implementation"`) to confirm the real names and files.
    - If the Targets or the scope are unclear and `answers` does not settle them, return `status: questions` with ONE question. Write no file.
 2. Make one item per Target.
    - Check the 100% rule: every Target in the request has an item, and no two items cover the same Target (MECE).
