@@ -589,5 +589,5 @@ git filter-branch --force --index-filter \
 ## Related Documentation
 
 - [Development Workflow](../developer-guides/workflow.md) - Workflow process
-- [Tool Selection](tool-selection.md) - Tool usage guide
-- [MCP Servers](mcp-servers.md) - MCP configuration
+- [Tool Selection](../developer-guides/tool-selection.md) - Tool usage guide
+- [MCP Servers](../specs/mcp-servers.md) - MCP configuration
