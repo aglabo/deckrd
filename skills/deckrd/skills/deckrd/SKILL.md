@@ -30,15 +30,18 @@ Replace the placeholder with that absolute path first.
 No environment variable is needed.
 The scripts resolve their own root from `BASH_SOURCE`.
 
-## When explore-agent Is Unavailable
+## Roles and Subagents
 
 Reference files say "Spawn **explore-agent**".
-`agents/` belongs to the plugin, not to this skill directory.
-A standalone install (`npx skills add`, `gh skill install`) does not include it.
-When the agent cannot be spawned, do the survey in the main session instead:
+Its procedure is the Role [`references/roles/explorer.md`](references/roles/explorer.md).
+The Role sits inside this skill directory.
+A standalone install (`npx skills add`, `gh skill install`) therefore keeps it.
 
-1. Read `agents/explore-agent.md` at the plugin root if it exists.
-   Otherwise use the `scope`, `directory`, `module` and `focus` given in the reference file.
+- If you can start a subagent, hand it the Role file and let it run.
+- If you cannot, follow the same Role file yourself, step by step, in the main session:
+
+1. Read `references/roles/explorer.md`.
+   Use the `scope`, `directory`, `module` and `focus` given in the reference file.
 2. Survey the project with Read, Grep and Glob (read-only).
 3. Write the findings to the output file the reference file names.
    Example: `.local/deckrd/temp/deckrd-work/codebase-context.md`.
