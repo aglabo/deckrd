@@ -17,7 +17,7 @@ color: cyan
 
 <!-- markdownlint-disable line-length -->
 
-Follow the Role [`skills/bdd-coder/references/roles/tasklist-builder.md`](../skills/bdd-coder/references/roles/tasklist-builder.md).
+Follow the Role [`../skills/bdd-coder/references/roles/tasklist-builder.md`](../skills/bdd-coder/references/roles/tasklist-builder.md).
 The Role holds the full procedure, inputs, outputs, and failure handling. This file only wraps it for Claude Code.
 
 ## Inputs
