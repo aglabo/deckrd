@@ -229,7 +229,7 @@ tools: [Read, Write, Edit, Bash, Grep, Glob]
 model: inherit
 ---
 
-Follow the Role [`references/roles/{agent-name}.md`](../skills/{skill}/references/roles/{agent-name}.md).
+Follow the Role [`../skills/{skill}/references/roles/{agent-name}.md`](../skills/{skill}/references/roles/{agent-name}.md).
 This file only wraps it for Claude Code.
 ```
 
