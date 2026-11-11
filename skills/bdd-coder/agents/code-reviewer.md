@@ -17,13 +17,15 @@ color: yellow
 
 <!-- markdownlint-disable line-length -->
 
-Follow the Role [`../skills/bdd-coder/references/roles/code-reviewer.md`](../skills/bdd-coder/references/roles/code-reviewer.md).
+Read `<skill_dir>/references/roles/code-reviewer.md` and follow it. `skill_dir` and `local_dir` are in the Inputs table.
 The Role holds the full procedure, inputs, outputs, and failure handling. This file only wraps it for Claude Code.
 
 ## Inputs
 
 | Parameter       | Description                                                       |
 | --------------- | ----------------------------------------------------------------- |
+| `skill_dir`     | Absolute path of the skill directory (where `SKILL.md` is)        |
+| `local_dir`     | Absolute path of the deckrd local data (`DECKRD_LOCAL_DATA`)      |
 | `task_id`       | Task ID being reviewed (e.g. `T-01-02-01`)                        |
 | `changed_files` | List of files created, modified, or deleted during implementation |
 | `test_files`    | List of test files added, modified, or deleted                    |

@@ -51,6 +51,9 @@ Inside `/bdd-coder:bdd-coder`, Phase 4 already runs this review; invoking it man
 
 ## Execution Steps
 
+`local_dir` is the value of `DECKRD_LOCAL_DATA` (`.local/deckrd` by default), as an absolute path.
+Every `<local_dir>` below means this value.
+
 ### Step 1: Resolve review targets
 
 | Condition            | Command                                                                                                             |
@@ -94,7 +97,7 @@ If the resolved list is empty: report `No changes to review` with the resolution
 
 ### Step 2: Split into `changed_files` and `test_files`
 
-If `.local/deckrd/temp/deckrd-work/env-profile.md` exists, follow its test-file convention.
+If `<local_dir>/temp/deckrd-work/env-profile.md` exists, follow its test-file convention.
 
 If it does not, fall back to the common conventions below and **state in the report which rule was used**:
 
@@ -107,16 +110,16 @@ If it does not, fall back to the common conventions below and **state in the rep
 
 ### Step 3: Resolve `task_id`
 
-Argument → `.local/deckrd/temp/bdd-coder/bdd-todo.md` → `N/A`, in that order.
+Argument → `<local_dir>/temp/bdd-coder/bdd-todo.md` → `N/A`, in that order.
 
 `N/A` is normal, not an error: an aggregate review spanning several tasks has no single task ID.
 
 ### Step 4: Resolve `env_profile` and `coverage_cmd`
 
-| Input          | Resolution                                                             |
-| -------------- | ---------------------------------------------------------------------- |
-| `env_profile`  | `.local/deckrd/temp/deckrd-work/env-profile.md` if present, else `N/A` |
-| `coverage_cmd` | `--coverage-cmd` argument → coverage command in ENV PROFILE → `N/A`    |
+| Input          | Resolution                                                           |
+| -------------- | -------------------------------------------------------------------- |
+| `env_profile`  | `<local_dir>/temp/deckrd-work/env-profile.md` if present, else `N/A` |
+| `coverage_cmd` | `--coverage-cmd` argument → coverage command in ENV PROFILE → `N/A`  |
 
 Do NOT spawn explore-agent and do NOT define degraded behaviour here. When coverage is
 unavailable, code-reviewer applies its own fallback: CC-only classification reported as `cov=N/A`
@@ -126,6 +129,8 @@ unavailable, code-reviewer applies its own fallback: CC-only classification repo
 
 Spawn **code-reviewer** with:
 
+- `skill_dir`: the bdd-coder skill directory (`../bdd-coder/` from this file), as an absolute path
+- `local_dir`: the value of `DECKRD_LOCAL_DATA` (`.local/deckrd`), as an absolute path
 - `task_id`: resolved in Step 3
 - `changed_files`: implementation files from Step 2
 - `test_files`: test files from Step 2

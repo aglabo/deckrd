@@ -68,10 +68,17 @@ The procedure of each agent lives in a Role file under [references/roles/](refer
 - bdd-coder → [implementer.md](references/roles/implementer.md)
 - code-reviewer → [code-reviewer.md](references/roles/code-reviewer.md)
 
+On every "Spawn", also pass two absolute paths:
+
+- `skill_dir`: this skill directory, the one that holds this `SKILL.md`.
+- `local_dir`: the value of `DECKRD_LOCAL_DATA` (`.local/deckrd` under the project root, as an absolute path).
+
+The Role resolves every path from these two values. `temp` is always `<local_dir>/temp`.
+
 Wherever a phase says "Spawn", do this:
 
-- If you can start a subagent, hand it the Role file and let it run.
-- If you cannot, follow the same Role file yourself, step by step.
+- If you can start a subagent, hand it `skill_dir`, `local_dir` and the Role file, and let it run.
+- If you cannot, follow the same Role file yourself with the same two values, step by step.
 
 Gate Rule: phases must run in order. No skipping.
 
@@ -93,15 +100,15 @@ Route the input first. Only natural language and Target IDs go through tasklist-
 
 #### Session entry
 
-The skill keeps the work in progress in the `bdd_coder` entry of `.local/deckrd/session.json`,
-so an interrupted session can be resumed. Paths are relative to the repository root.
+The skill keeps the work in progress in the `bdd_coder` entry of `<local_dir>/session.json`,
+so an interrupted session can be resumed. Stored paths start with the `local_dir` value (`<local_dir>` below).
 
 ```json
 {
   "bdd_coder": {
-    "tasklist": ".local/deckrd/temp/tasklist/deckrd/libs/T-01.tasklist.md",
+    "tasklist": "<local_dir>/temp/tasklist/deckrd/libs/T-01.tasklist.md",
     "item": "L-02",
-    "checklist": ".local/deckrd/temp/tasks/parse-config-calm-checklist.md",
+    "checklist": "<local_dir>/temp/tasks/parse-config-calm-checklist.md",
     "status": "in-progress",
     "updated_at": "2026-11-09T00:00:00Z"
   }
@@ -129,14 +136,14 @@ Rules:
      'def nz: if . == "" then null else . end;
       .bdd_coder = {tasklist: ($tl | nz), item: ($item | nz), checklist: ($cl | nz),
                     status: $st, updated_at: $now}' \
-     .local/deckrd/session.json > .local/deckrd/session.json.tmp &&
-    mv .local/deckrd/session.json.tmp .local/deckrd/session.json
+     <local_dir>/session.json > <local_dir>/session.json.tmp &&
+    mv <local_dir>/session.json.tmp <local_dir>/session.json
   ```
 
   Pass an empty string for a `null` field. Do not use `select(. != "")` instead of `nz`:
   an empty value inside `{...}` makes jq output nothing, and the `mv` then empties `session.json`.
   `jaq` accepts the same filter.
-- If `.local/deckrd/session.json` does not exist, do not create it. Warn that the session cannot be
+- If `<local_dir>/session.json` does not exist, do not create it. Warn that the session cannot be
   saved (`/deckrd init` has not run) and continue without it.
 
 | When                                    | Write                                                                        |
@@ -176,7 +183,7 @@ Only `--resume` reuses the recorded checklist as is. If tasks.md has changed, ru
 
 #### Phase 1a: Tasklist Build
 
-Spawn **tasklist-builder** with `instruction`, and `tasks_md` for a Target ID.
+Spawn **tasklist-builder** with `skill_dir`, `local_dir`, `instruction`, and `tasks_md` for a Target ID.
 Role: [roles/tasklist-builder.md](references/roles/tasklist-builder.md).
 
 | Returned status              | Handling                                                                   |
@@ -206,17 +213,17 @@ forbids handing over material that contains other tasks.
 The task list is orchestrator state only. Shortcuts such as "pass the task list and say
 'do L-02 only'" break this rule: the agent sees the other items and may implement them.
 
-Output (under `${DECKRD_LOCAL_TEMP}`, default `.local/deckrd/temp`):
+Output (under `<local_dir>/temp`):
 
-- Target ID: `.local/deckrd/temp/tasklist/<ns>/<module>/T-XX.tasklist.md`
-  (for example `.local/deckrd/temp/tasklist/deckrd/libs/T-01.tasklist.md`).
+- Target ID: `<local_dir>/temp/tasklist/<ns>/<module>/T-XX.tasklist.md`
+  (for example `<local_dir>/temp/tasklist/deckrd/libs/T-01.tasklist.md`).
   Re-running the same Target ID reuses this file (`reused` / `updated`); it is never created twice.
-- Natural language: `.local/deckrd/temp/tasklist/<active module>/<name>.tasklist.md`
-- Natural language, no active module: `.local/deckrd/temp/tasklist/<name>.tasklist.md`
+- Natural language: `<local_dir>/temp/tasklist/<active module>/<name>.tasklist.md`
+- Natural language, no active module: `<local_dir>/temp/tasklist/<name>.tasklist.md`
 
 #### Phase 1b: Checklist Build
 
-Spawn **checklist-builder** with the routed input.
+Spawn **checklist-builder** with `skill_dir`, `local_dir`, and the routed input.
 Role: [roles/checklist-builder.md](references/roles/checklist-builder.md).
 
 | Input type            | checklist-builder behavior                                    |
@@ -225,7 +232,7 @@ Role: [roles/checklist-builder.md](references/roles/checklist-builder.md).
 | Task ID (e.g. T01-02) | Read tasks.md entry, expand into BDD checklist, generate file |
 | `--checklist <path>`  | Skip checklist-builder, use the specified existing file       |
 
-Output: `.local/deckrd/temp/tasks/<slug>-<adjective>-checklist.md`
+Output: `<local_dir>/temp/tasks/<slug>-<adjective>-checklist.md`
 
 When the checklist path is returned (or given by `--checklist`), keep it as **CHECKLIST PATH**
 and write the [session entry](#session-entry).
@@ -241,12 +248,14 @@ If checklist-builder reports `BLOCKED` (a Task ID's Case lists more than one inp
 
 Pass the following context to each bdd-coder instance:
 
-| Item              | Content                             |
-| ----------------- | ----------------------------------- |
-| Task ID           | e.g. `T-01-02-01`                   |
-| Task description  | Full Given/When/Then from checklist |
-| Quality gate cmds | Commands table from ENV PROFILE     |
-| Checklist path    | Path to generated checklist file    |
+| Item              | Content                              |
+| ----------------- | ------------------------------------ |
+| `skill_dir`       | This skill directory (absolute path) |
+| `local_dir`       | `DECKRD_LOCAL_DATA` (absolute path)  |
+| Task ID           | e.g. `T-01-02-01`                    |
+| Task description  | Full Given/When/Then from checklist  |
+| Quality gate cmds | Commands table from ENV PROFILE      |
+| Checklist path    | Path to generated checklist file     |
 
 Do NOT pass: session-wide context, other tasks' info, or session.json.
 
@@ -277,10 +286,12 @@ aggregate review over every file changed in Phase 3, not one invocation per task
 
 | Input           | Value                                                                          |
 | --------------- | ------------------------------------------------------------------------------ |
+| `skill_dir`     | This skill directory (absolute path)                                           |
+| `local_dir`     | `DECKRD_LOCAL_DATA` (absolute path)                                            |
 | `task_id`       | The Task ID of this invocation, or `N/A` for multiple tasks                    |
 | `changed_files` | Implementation files from the session scope resolved below                     |
 | `test_files`    | Test files from that same scope, split by the ENV PROFILE test-file convention |
-| `env_profile`   | `.local/deckrd/temp/deckrd-work/env-profile.md` (Phase 0 output)               |
+| `env_profile`   | `<local_dir>/temp/deckrd-work/env-profile.md` (Phase 0 output)                 |
 | `coverage_cmd`  | Coverage command from ENV PROFILE                                              |
 
 **Session scope**, in this order:
@@ -368,7 +379,7 @@ and the Status column of the affected Test Targets (Step 3).
 
 Regardless of input type, also update the checklist file:
 
-1. Open `.local/deckrd/temp/tasks/<slug>-<adjective>-checklist.md`
+1. Open `<local_dir>/temp/tasks/<slug>-<adjective>-checklist.md`
 2. For every case reported `DONE` / `DONE_WITH_CONCERNS` in Phase 3, confirm its
    `-R` / `-G` / `-F` items are `[x]`. Check any the bdd-coder instance left behind,
    and list them in the Step 5 report so the gap is visible.

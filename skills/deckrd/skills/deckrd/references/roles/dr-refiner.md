@@ -18,8 +18,9 @@ This Role is the **canonical procedure** for refining existing Decision Records 
 
 Paths are resolved as follows:
 
-- Bundled resources (`assets/`, `references/`) are relative to the deckrd skill directory.
-- Everything else is relative to the project root and stays under it: project files, `<modulePath>` (`docs/.deckrd/<namespace>/<module>`), `.local/...`, and paths given by the caller. The skill may be installed outside the project, so never resolve these against the skill directory.
+- Bundled resources (`assets/`, `references/`) are relative to `skill_dir`, the deckrd skill directory passed by the caller.
+- Everything else is relative to the project root and stays under it: project files, `<modulePath>` (`docs/.deckrd/<namespace>/<module>`), and paths given by the caller. The skill may be installed outside the project, so never resolve these against the skill directory.
+- Local data is under `local_dir`, an absolute path passed by the caller. Write `<local_dir>/session.json` and `<local_dir>/temp/...`, never a literal `.local/deckrd`. `temp` is always `<local_dir>/temp`.
 
 ## Responsibility
 
@@ -35,6 +36,8 @@ or decide whether the user approves the result. The caller ([dr command](../comm
 
 | Parameter     | Mode         | Description                                                                              |
 | ------------- | ------------ | ---------------------------------------------------------------------------------------- |
+| `skill_dir`   | both         | Absolute path of the skill directory (where `SKILL.md` is)                               |
+| `local_dir`   | both         | Absolute path of the deckrd local data (`DECKRD_LOCAL_DATA`)                             |
 | `mode`        | both         | `draft` or `apply`                                                                       |
 | `module_id`   | both         | `<namespace>/<module>` (the caller reads it from the session)                            |
 | `module_path` | both         | `docs/.deckrd/<namespace>/<module>` (`session.modules[active].path`)                     |
@@ -75,7 +78,7 @@ or decide whether the user approves the result. The caller ([dr command](../comm
    - Any `ask` finding without an answer → `status: questions`. Still write the draft file with the rewrites done so far, so the next run can build on it.
    - No refined section (every target unchanged, excluded, or `supersede` only) → `status: no-change`. Do not write a draft file.
    - Otherwise → `status: drafted`.
-8. Write the draft to `.local/deckrd/temp/deckrd-work/dr-refine-<module>.md`, where `<module>` is `module_id` with `/` replaced by `-`, in the [Draft File Format](../commands/dr.md#draft-file-format) exactly.
+8. Write the draft to `<local_dir>/temp/deckrd-work/dr-refine-<module>.md`, where `<module>` is `module_id` with `/` replaced by `-`, in the [Draft File Format](../commands/dr.md#draft-file-format) exactly.
    - Metadata list:
      - `base_version`: frontmatter version of `decision-records.md`
      - `targets`: the refined DRs only
@@ -90,7 +93,7 @@ or decide whether the user approves the result. The caller ([dr command](../comm
    - questions for the user, if `status` is `questions`, each tagged with DR-ID and rule ID
    - file-level findings (E-6 `based-on` mismatch)
 
-Draft mode MUST NOT touch `decision-records.md` or any file outside `.local/deckrd/temp/deckrd-work/`.
+Draft mode MUST NOT touch `decision-records.md` or any file outside `<local_dir>/temp/deckrd-work/`.
 
 ## Mode: apply
 
@@ -134,6 +137,6 @@ Run only after the caller got the user's approval of `draft_file`.
 - Never invent rationale, alternatives, scope, or evidence. Missing information becomes an `ask` question.
 - After the single write, the only further edits are those of the formatter and the lint fixes inside the range this run wrote.
 - Never add lint disable comments to `decision-records.md`.
-- Never touch `.local/deckrd/session.json`.
+- Never touch `<local_dir>/session.json`.
 - Never create files in the module directory other than `decision-records.md`.
 - Do not commit. Git operations belong to the user.

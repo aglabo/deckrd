@@ -64,7 +64,10 @@ With no argument, the uncommitted changes are reviewed.
 
 ### Step 2: Draft
 
-Spawn **comment-refiner** with `mode: draft` and `paths` from Step 1.
+Spawn **comment-refiner** with `skill_dir`, `local_dir`, `mode: draft` and `paths` from Step 1.
+`skill_dir` is the bdd-coder skill directory (`../bdd-coder/` from this file), as an absolute path.
+The Role lives there, not in this skill.
+`local_dir` is the value of `DECKRD_LOCAL_DATA`, as an absolute path.
 
 Handle the result:
 
@@ -102,7 +105,7 @@ Ask: `Apply comment changes? (yes / edit / no):`
 
 ### Step 5: Apply
 
-Spawn **comment-refiner** with `mode: apply` and `draft_file`.
+Spawn **comment-refiner** with `skill_dir`, `local_dir`, `mode: apply` and `draft_file`.
 
 | `status`    | Action                                               |
 | ----------- | ---------------------------------------------------- |

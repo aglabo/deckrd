@@ -16,7 +16,7 @@ color: cyan
 
 <!-- markdownlint-disable line-length -->
 
-Follow the Role [`../skills/bdd-coder/references/roles/checklist-builder.md`](../skills/bdd-coder/references/roles/checklist-builder.md).
+Read `<skill_dir>/references/roles/checklist-builder.md` and follow it. `skill_dir` and `local_dir` are in the Inputs table.
 The Role holds the full procedure, inputs, outputs, and failure handling. This file only wraps it for Claude Code.
 
 For the Role's "semantic code search tool", use `mcp__plugin_deckrd_cocoindex-code__search`.
@@ -25,6 +25,8 @@ For the Role's "semantic code search tool", use `mcp__plugin_deckrd_cocoindex-co
 
 | Parameter     | Description                                                    |
 | ------------- | -------------------------------------------------------------- |
+| `skill_dir`   | Absolute path of the skill directory (where `SKILL.md` is)     |
+| `local_dir`   | Absolute path of the deckrd local data (`DECKRD_LOCAL_DATA`)   |
 | `instruction` | Natural-language instruction OR Task ID (e.g. `T01-02`)        |
 | `tasks_md`    | Path to tasks.md (required only when instruction is a Task ID) |
 | `directory`   | Repository root (default: current working directory)           |

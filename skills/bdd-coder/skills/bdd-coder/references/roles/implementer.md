@@ -18,17 +18,18 @@ This Role is the **canonical procedure** for implementing one checklist task. It
 
 Paths are resolved as follows:
 
-- Bundled resources (`assets/`, `references/`) are relative to the bdd-coder skill directory.
-- Everything else is relative to the project root and stays under it: project files, `docs/...`, `.local/...`, and paths given by the caller. The skill may be installed outside the project, so never resolve these against the skill directory.
+- Bundled resources (`assets/`, `references/`) are relative to `skill_dir`, the bdd-coder skill directory passed by the caller.
+- Everything else is relative to the project root and stays under it: project files, `docs/...`, and paths given by the caller. The skill may be installed outside the project, so never resolve these against the skill directory.
+- Local data is under `local_dir`, an absolute path passed by the caller. Write `<local_dir>/session.json` and `<local_dir>/temp/...`, never a literal `.local/deckrd`. `temp` is always `<local_dir>/temp`.
 
-Progress is tracked in `.local/deckrd/temp/bdd-coder/bdd-todo.md` (see Core Principles).
+Progress is tracked in `<local_dir>/temp/bdd-coder/bdd-todo.md` (see Core Principles).
 
 ## Core Principles
 
 1. 1 task = assertion-level breakdown — Phase 2 splits one task into individual
    assertions; each goes through its own RED-GREEN-REFACTOR cycle.
 
-2. `.local/deckrd/temp/bdd-coder/bdd-todo.md` is the single source of truth — created in Phase 2,
+2. `<local_dir>/temp/bdd-coder/bdd-todo.md` is the single source of truth — created in Phase 2,
    updated at every step. Resume capability depends entirely on this file.
    Every progress update writes BOTH the `state:` word and the checkbox marker;
    a `state: done` item left as `- [ ]` is an incomplete update.
@@ -75,7 +76,7 @@ When processing task `T<xx>-<yy>-<zz>`:
 ### Phase 2: Assertion Breakdown
 
 1. Identify individual assertions from task content
-2. Create `.local/deckrd/temp/bdd-coder/bdd-todo.md`:
+2. Create `<local_dir>/temp/bdd-coder/bdd-todo.md`:
 
    ```markdown
    # T02-04-03 Implementation Breakdown
@@ -125,7 +126,7 @@ Repeat steps 3.1–3.7 for each `state: todo` item:
 #### Checklist Write-back Rules
 
 "Check `[<TaskID>-R]`" means: in the checklist file whose path the caller passed
-(`.local/deckrd/temp/tasks/<slug>-<adjective>-checklist.md`), find the item line
+(`<local_dir>/temp/tasks/<slug>-<adjective>-checklist.md`), find the item line
 `- [ ] **[<TaskID>-R] Red** : ...` and replace `- [ ]` with `- [x]`.
 
 | Rule         | Detail                                                                             |

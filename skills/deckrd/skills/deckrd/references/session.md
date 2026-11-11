@@ -60,22 +60,22 @@ deckrd commands do not read or write it. They must keep it when they rewrite `se
 ```json
 {
   "bdd_coder": {
-    "tasklist": ".local/deckrd/temp/tasklist/deckrd/libs/T-01.tasklist.md",
+    "tasklist": "<local_dir>/temp/tasklist/deckrd/libs/T-01.tasklist.md",
     "item": "L-02",
-    "checklist": ".local/deckrd/temp/tasks/parse-config-calm-checklist.md",
+    "checklist": "<local_dir>/temp/tasks/parse-config-calm-checklist.md",
     "status": "in-progress",
     "updated_at": "2026-11-09T00:00:00Z"
   }
 }
 ```
 
-| Field                  | Type           | Description                                 |
-| ---------------------- | -------------- | ------------------------------------------- |
-| `bdd_coder.tasklist`   | string \| null | Task list in use (repository-root relative) |
-| `bdd_coder.item`       | string \| null | Selected task list item (`L-XX`)            |
-| `bdd_coder.checklist`  | string \| null | Checklist in use (repository-root relative) |
-| `bdd_coder.status`     | string         | `in-progress` or `done`                     |
-| `bdd_coder.updated_at` | string         | UTC timestamp of the last write             |
+| Field                  | Type           | Description                                  |
+| ---------------------- | -------------- | -------------------------------------------- |
+| `bdd_coder.tasklist`   | string \| null | Task list in use (starts with `<local_dir>`) |
+| `bdd_coder.item`       | string \| null | Selected task list item (`L-XX`)             |
+| `bdd_coder.checklist`  | string \| null | Checklist in use (starts with `<local_dir>`) |
+| `bdd_coder.status`     | string         | `in-progress` or `done`                      |
+| `bdd_coder.updated_at` | string         | UTC timestamp of the last write              |
 
 Write rules and the resume procedure: bdd-coder `SKILL.md`, "Session entry" and "Resume".
 

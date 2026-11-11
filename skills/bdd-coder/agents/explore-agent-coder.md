@@ -15,7 +15,7 @@ color: green
 
 <!-- markdownlint-disable line-length -->
 
-Follow the Role [`../skills/bdd-coder/references/roles/explorer.md`](../skills/bdd-coder/references/roles/explorer.md).
+Read `<skill_dir>/references/roles/explorer.md` and follow it. `skill_dir` and `local_dir` are in the Inputs table.
 The Role holds the full procedure, inputs, outputs, and failure handling. This file only wraps it for Claude Code.
 
 For the Role's "semantic code search tool", use `mcp__plugin_deckrd_cocoindex-code__search`.
@@ -24,6 +24,8 @@ For the Role's "semantic code search tool", use `mcp__plugin_deckrd_cocoindex-co
 
 | Parameter   | Values                             | Description                               |
 | ----------- | ---------------------------------- | ----------------------------------------- |
+| `skill_dir` | Absolute path                      | Skill directory (where `SKILL.md` is)     |
+| `local_dir` | Absolute path                      | Deckrd local data (`DECKRD_LOCAL_DATA`)   |
 | `directory` | Path string                        | Repository root to investigate            |
 | `scope`     | `pattern-detection`                | Always `pattern-detection` for this agent |
 | `focus`     | e.g., `test-framework,build-tools` | Comma-separated areas to detect           |

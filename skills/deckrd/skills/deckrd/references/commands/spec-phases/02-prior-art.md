@@ -27,12 +27,13 @@ description: Survey prior art — proof-of-concept code, related branches, and e
 
 Spawn **explore-agent** (non-blocking, parallel with Step 1-2) with:
 
+- `skill_dir`, `local_dir`: absolute paths, see "Path arguments" in SKILL.md
 - `scope`: `prior-art`
 - `directory`: project root
 - `focus`: feature keywords from REQ SUMMARY
 - Role: [`roles/explorer.md`](../../roles/explorer.md) (no subagent: follow it yourself, see SKILL.md)
 
-The agent writes findings to `.local/deckrd/temp/deckrd-work/prior-art.md`.
+The agent writes findings to `<local_dir>/temp/deckrd-work/prior-art.md`.
 
 Store the agent Summary as **PRIOR ART** when it completes:
 

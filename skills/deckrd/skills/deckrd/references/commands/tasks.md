@@ -31,13 +31,14 @@ Each task corresponds to a single unit test case (`it()` block) in a BDD-style t
 Before generating tasks, delegate document reading to explore-agent:
 
 1. Spawn **explore-agent** with:
+   - `skill_dir`, `local_dir`: absolute paths, see "Path arguments" in SKILL.md
    - `scope`: `codebase-survey`
    - `directory`: project root
-   - `module`: active module (`active` in `.local/deckrd/session.json`)
+   - `module`: active module (`active` in `<local_dir>/session.json`)
    - `focus`: `specifications,implementation`
    - Role: [`roles/explorer.md`](../roles/explorer.md) (no subagent: follow it yourself, see SKILL.md)
 2. The agent reads `specifications/specifications.md` and `implementation/implementation.md`.
-   Then writes a summary to `.local/deckrd/temp/deckrd-work/codebase-context.md`
+   Then writes a summary to `<local_dir>/temp/deckrd-work/codebase-context.md`
 3. Read the **Summary** returned by the agent
 4. Proceed to task generation using the summary as context
 
@@ -194,7 +195,7 @@ ONLY after all checks pass: proceed to Session Update.
 
 ## Session Update
 
-After completion, update `.local/deckrd/session.json`:
+After completion, update `<local_dir>/session.json`:
 
 ```json
 {

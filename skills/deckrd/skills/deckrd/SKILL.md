@@ -37,14 +37,25 @@ Its procedure is the Role [`references/roles/explorer.md`](references/roles/expl
 The Role sits inside this skill directory.
 A standalone install (`npx skills add`, `gh skill install`) therefore keeps it.
 
-- If you can start a subagent, hand it the Role file and let it run.
-- If you cannot, follow the same Role file yourself, step by step, in the main session:
+**Path arguments.** On every "Spawn" (explore-agent, dr-writer, dr-refiner), also pass two paths:
 
-1. Read `references/roles/explorer.md`.
+- `skill_dir`: this skill directory, the one that holds this `SKILL.md`.
+  You know it from where you loaded this file.
+- `local_dir`: the value of `DECKRD_LOCAL_DATA`, an absolute path.
+  By default it is `.local/deckrd` under the project root.
+
+The Role resolves every path from these two values.
+
+- If you can start a subagent, hand it `skill_dir`, `local_dir` and the Role file.
+  Let it run.
+- If you cannot, follow the same Role file yourself with the same two values.
+  Work step by step in the main session:
+
+1. Read `<skill_dir>/references/roles/explorer.md`.
    Use the `scope`, `directory`, `module` and `focus` given in the reference file.
 2. Survey the project with Read, Grep and Glob (read-only).
 3. Write the findings to the output file the reference file names.
-   Example: `.local/deckrd/temp/deckrd-work/codebase-context.md`.
+   Example: `<local_dir>/temp/deckrd-work/codebase-context.md`.
    Then use its Summary as usual.
 4. Where the reference file says "non-blocking", finish the survey first.
    There is no background agent.

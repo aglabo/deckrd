@@ -184,6 +184,7 @@ After the preconditions pass (and the tasks-step confirmation, if any):
    considered, and which REQ / SPEC / DR it relates to. Use only what the user states
    (or explicitly points to). Do NOT summarize the chat history on your own.
 2. Draft. Spawn **dr-writer** with:
+   - `skill_dir`, `local_dir`: absolute paths, see "Path arguments" in SKILL.md
    - `mode`: `draft`
    - `module_id`, `module_path`: from the session
    - `phase`: `current_step`
@@ -197,7 +198,7 @@ After the preconditions pass (and the tasks-step confirmation, if any):
    - `edit` → collect the corrections and re-run step 2 with `feedback`
    - `no` → delete the draft file and exit without touching `decision-records.md`
    - `yes` → continue
-5. Apply. Spawn **dr-writer** with `mode: apply`, `module_id`, `module_path`, and `draft_file`.
+5. Apply. Spawn **dr-writer** with `skill_dir`, `local_dir`, `mode: apply`, `module_id`, `module_path`, and `draft_file`.
    - `status: id-conflict` → re-run step 2 (the file changed meanwhile)
    - `status: malformed` → report the error; do not fix the file automatically
 6. Report the DR-ID, the file path, the version change, and any warnings. dr-writer runs
@@ -212,6 +213,7 @@ Where agents are not available, the main session runs the same steps of the
 After the preconditions and the argument check pass:
 
 1. Draft. Spawn **dr-refiner** with:
+   - `skill_dir`, `local_dir`: absolute paths, see "Path arguments" in SKILL.md
    - `mode`: `draft`
    - `module_id`, `module_path`: from the session
    - `targets`: the normalized DR-IDs (empty for all)
@@ -231,7 +233,7 @@ After the preconditions and the argument check pass:
    - `edit` → collect the corrections (including "exclude DR-NN") and re-run step 1 with `feedback`
    - `no` → delete the draft file and exit without touching `decision-records.md`
    - `yes` → continue
-5. Apply. Spawn **dr-refiner** with `mode: apply`, `module_id`, `module_path`, and `draft_file`.
+5. Apply. Spawn **dr-refiner** with `skill_dir`, `local_dir`, `mode: apply`, `module_id`, `module_path`, and `draft_file`.
    - `status: conflict` → the file changed after the draft; re-run step 1
    - `status: malformed` → report the error; do not fix the file automatically
 6. Report the refined DR-IDs, the file path, the version change, and the `supersede` findings again.

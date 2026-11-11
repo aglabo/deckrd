@@ -18,19 +18,22 @@ This Role is the **canonical procedure** for building one implementation checkli
 
 Paths are resolved as follows:
 
-- Bundled resources (`assets/`, `references/`) are relative to the bdd-coder skill directory.
-- Everything else is relative to the project root and stays under it: project files, `docs/...`, `.local/...`, and paths given by the caller. The skill may be installed outside the project, so never resolve these against the skill directory.
+- Bundled resources (`assets/`, `references/`) are relative to `skill_dir`, the bdd-coder skill directory passed by the caller.
+- Everything else is relative to the project root and stays under it: project files, `docs/...`, and paths given by the caller. The skill may be installed outside the project, so never resolve these against the skill directory.
+- Local data is under `local_dir`, an absolute path passed by the caller. Write `<local_dir>/session.json` and `<local_dir>/temp/...`, never a literal `.local/deckrd`. `temp` is always `<local_dir>/temp`.
 
 ## Responsibility
 
 Analyze a natural-language implementation request, decompose it into BDD tasks,
-generate an implementation checklist at `.local/deckrd/temp/tasks/<slug>-<adjective>-checklist.md`,
+generate an implementation checklist at `<local_dir>/temp/tasks/<slug>-<adjective>-checklist.md`,
 then invoke `/bdd-coder` with the generated checklist path.
 
 ## Inputs
 
 | Parameter     | Description                                                    |
 | ------------- | -------------------------------------------------------------- |
+| `skill_dir`   | Absolute path of the skill directory (where `SKILL.md` is)     |
+| `local_dir`   | Absolute path of the deckrd local data (`DECKRD_LOCAL_DATA`)   |
 | `instruction` | Natural-language instruction OR Task ID (e.g. `T01-02`)        |
 | `tasks_md`    | Path to tasks.md (required only when instruction is a Task ID) |
 | `directory`   | Repository root (default: current working directory)           |
@@ -47,7 +50,7 @@ Determine input type, then extract task information:
 2. Extract the matching task entry (Target, Scenario, Given/When/Then).
 3. If the task's Scenario lists more than one input (e.g. "A or B", "any of A / B"),
    do NOT expand it into a multi-row Input/Expected table.
-   `tasks.md` is outside `.local/deckrd/temp/tasks/`, so you cannot split it yourself:
+   `tasks.md` is outside `<local_dir>/temp/tasks/`, so you cannot split it yourself:
    write no checklist, stop, and report `BLOCKED` to the caller (see Output Summary).
 4. Use the task entry as the source for checklist generation.
 
@@ -80,7 +83,7 @@ Rules:
 - `<content-slug>`: kebab-case summary of the implementation target (e.g. `add-greeting-function`, `parse-config-file`)
   - Derived from the instruction: verb + noun, max 4 words, lowercase, hyphens only
 - `<random-adjective>`: one random adjective selected via `adjective_random()`
-- Output path: `.local/deckrd/temp/tasks/<content-slug>-<random-adjective>-checklist.md`
+- Output path: `<local_dir>/temp/tasks/<content-slug>-<random-adjective>-checklist.md`
 
 Select the adjective using the Bash tool.
 Always set `SKILL_ROOT` to the absolute path of the bdd-coder skill directory (the directory that holds `SKILL.md`),
@@ -224,15 +227,15 @@ After building the checklist draft, cross-check it against the specification to 
 
 ### Phase 4: Write Checklist
 
-1. Create `.local/deckrd/temp/tasks/` directory if it does not exist.
-2. Write the filled checklist (including any cases added in Phase 3.5 and 3.6) to `.local/deckrd/temp/tasks/<content-slug>-<random-adjective>-checklist.md`.
+1. Create `<local_dir>/temp/tasks/` directory if it does not exist.
+2. Write the filled checklist (including any cases added in Phase 3.5 and 3.6) to `<local_dir>/temp/tasks/<content-slug>-<random-adjective>-checklist.md`.
 3. Report the checklist path to the caller.
 
 ## Constraints
 
 - MUST NOT write implementation code.
 - MUST NOT run tests.
-- MUST NOT modify files outside `.local/deckrd/temp/tasks/`.
+- MUST NOT modify files outside `<local_dir>/temp/tasks/`.
 - Checklist items MUST use concrete values — no `{{...}}` placeholders in the output file.
 - One checklist per invocation. Do not merge multiple requests into one checklist.
 
@@ -241,7 +244,7 @@ After building the checklist draft, cross-check it against the specification to 
 After writing the checklist, report to the caller:
 
 ```bash
-CHECKLIST: .local/deckrd/temp/tasks/<filename>
+CHECKLIST: <local_dir>/temp/tasks/<filename>
 TASKS: <count> targets, <count> scenarios, <count> cases
 COVERAGE: spec gaps added=<N>, category gaps added=<N>
 HANDOFF: /bdd-coder --checklist <path>

@@ -229,16 +229,43 @@ tools: [Read, Write, Edit, Bash, Grep, Glob]
 model: inherit
 ---
 
-Follow the Role [`../skills/{skill}/references/roles/{agent-name}.md`](../skills/{skill}/references/roles/{agent-name}.md).
-This file only wraps it for Claude Code.
+Read `<skill_dir>/references/roles/{agent-name}.md` and follow it.
+`skill_dir` and `local_dir` come from the Inputs table below.
+This file only wraps the Role for Claude Code.
+
+## Inputs
+
+| Parameter   | Description                                              |
+| ----------- | -------------------------------------------------------- |
+| `skill_dir` | Absolute path of the skill directory (has `SKILL.md`)    |
+| `local_dir` | Absolute path of the deckrd local data (`.local/deckrd`) |
 ```
+
+#### Path arguments (`skill_dir` / `local_dir`)
+
+A subagent knows neither where its wrapper file sits nor where the project root is.
+The orchestrator therefore passes two absolute paths on every delegation.
+The Role and the wrapper resolve every path from these two values and never guess.
+
+| Argument    | Value                                                                   | Use                                                                                                              |
+| ----------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `skill_dir` | The skill directory (where `SKILL.md` is), as an absolute path          | Base of every "path relative to the skill directory". The wrapper reads `<skill_dir>/references/roles/<name>.md` |
+| `local_dir` | The value of `DECKRD_LOCAL_DATA` (`.local/deckrd`), as an absolute path | Replaces `.local/deckrd` in a Role: write `<local_dir>/session.json`, `<local_dir>/temp/...`                     |
+
+- A Role never hard-codes `.local/deckrd`. It writes `<local_dir>/...`.
+- `temp` is always `<local_dir>/temp`. A Role does not read `DECKRD_LOCAL_TEMP`.
+  Overriding `DECKRD_LOCAL_TEMP` moves only what the Bash scripts write.
+- The orchestrator knows `skill_dir` when it loads the skill.
+  It takes `local_dir` from `DECKRD_LOCAL_DATA` (`bootstrap.lib.sh`).
+- A Role stays client-neutral. It names the two arguments and never a Claude Code variable.
+- When no subagent is available, the orchestrator follows the Role itself with the same two values.
 
 #### Orchestrator (`SKILL.md` and command references)
 
 Write each phase that uses a Role like this:
 
-> If you can start a subagent, hand it the Role file and let it run.
-> If you cannot, follow the same Role file yourself, step by step.
+> If you can start a subagent, hand it `skill_dir` and `local_dir` and let it run the Role.
+> If you cannot, follow the same Role file yourself with the same two values, step by step.
 
 ### Agent Types in deckrd
 
@@ -257,11 +284,10 @@ Steps live in the Role file `references/roles/explorer.md`.
 **Purpose**: Breaks a request or a tasks.md Target (`T-XX`) into a task list. Each item makes one checklist
 
 **Entry point**: bdd-coder skill Phase 1a, before checklist-builder.
-Writes `${DECKRD_LOCAL_TEMP}/tasklist/<ns>/<module>/<name>.tasklist.md`.
-The default root is `.local/deckrd/temp/tasklist/`.
-Example: `.local/deckrd/temp/tasklist/deckrd/libs/T-01.tasklist.md`.
+Writes `<local_dir>/temp/tasklist/<ns>/<module>/<name>.tasklist.md`.
+Example: `<local_dir>/temp/tasklist/deckrd/libs/T-01.tasklist.md`.
 A natural-language request goes under the active module's directory.
-With no active module, it goes directly under `.local/deckrd/temp/tasklist/`.
+With no active module, it goes directly under `<local_dir>/temp/tasklist/`.
 Only the selected item's `Handoff` goes to checklist-builder, never the task list file.
 Steps live in the Role file `references/roles/tasklist-builder.md`. Never invoked directly by the user.
 

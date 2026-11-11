@@ -15,13 +15,15 @@ color: green
 
 <!-- markdownlint-disable line-length -->
 
-Follow the Role [`../skills/deckrd/references/roles/explorer.md`](../skills/deckrd/references/roles/explorer.md).
+Read `<skill_dir>/references/roles/explorer.md` and follow it. `skill_dir` and `local_dir` are in the Inputs table.
 The Role holds the full procedure, inputs, outputs, and failure handling. This file only wraps it for Claude Code.
 
 ## Inputs
 
 | Parameter   | Values                                                                          | Description                             |
 | ----------- | ------------------------------------------------------------------------------- | --------------------------------------- |
+| `skill_dir` | Absolute path                                                                   | Skill directory (where `SKILL.md` is)   |
+| `local_dir` | Absolute path                                                                   | Deckrd local data (`DECKRD_LOCAL_DATA`) |
 | `directory` | Path string                                                                     | Root directory to investigate           |
 | `scope`     | `codebase-extraction` / `codebase-survey` / `prior-art` / `pattern-detection`   | Investigation mode                      |
 | `focus`     | Comma-separated keywords (optional)                                             | Narrow the investigation to these areas |

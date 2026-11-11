@@ -43,21 +43,22 @@ Before collecting user input, delegate codebase investigation to explore-agent:
 
 <!-- textlint-disable ja-technical-writing/sentence-length -->
 
-1. Read `.local/deckrd/session.json` to confirm the active module
+1. Read `<local_dir>/session.json` to confirm the active module
 2. Check for existing `requirements.md` under the active module path
    - If found: treat this session as a **revision** of existing requirements.
      Before Phase 3 overwrites the file, copy its frontmatter `version` and its
      entire `## Change History` table to
-     `.local/deckrd/temp/deckrd-work/requirements-baseline.md`.
+     `<local_dir>/temp/deckrd-work/requirements-baseline.md`.
      Store them as **BASELINE VERSION** and **BASELINE HISTORY**
    - If not found: this is a first generation — leave BASELINE VERSION unset
 3. Spawn **explore-agent** with:
+   - `skill_dir`, `local_dir`: absolute paths, see "Path arguments" in SKILL.md
    - `scope`: `codebase-survey`
    - `directory`: project root
-   - `module`: active module (`active` in `.local/deckrd/session.json`)
+   - `module`: active module (`active` in `<local_dir>/session.json`)
    - `focus`: module name and feature keywords from user input (if available)
    - Role: [`roles/explorer.md`](../roles/explorer.md) (no subagent: follow it yourself, see SKILL.md)
-4. The agent writes findings to `.local/deckrd/temp/deckrd-work/codebase-context.md`
+4. The agent writes findings to `<local_dir>/temp/deckrd-work/codebase-context.md`
 5. Read the **Summary** returned by the agent and store as **CODEBASE CONTEXT** for Phase 3
 6. Proceed to Phase 1 immediately — do NOT wait for the agent to complete Phase 0 before starting Phase 1
 
@@ -309,7 +310,7 @@ bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @requirements <use
 
 ## Session Update
 
-After Phase 5 (or Phase 4 if Phase 5 is skipped), update `.local/deckrd/session.json`:
+After Phase 5 (or Phase 4 if Phase 5 is skipped), update `<local_dir>/session.json`:
 
 ```json
 {
