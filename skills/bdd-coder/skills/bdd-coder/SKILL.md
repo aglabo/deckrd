@@ -100,15 +100,15 @@ Route the input first. Only natural language and Target IDs go through tasklist-
 
 #### Session entry
 
-The skill keeps the work in progress in the `bdd_coder` entry of `.local/deckrd/session.json`,
-so an interrupted session can be resumed. Paths are relative to the repository root.
+The skill keeps the work in progress in the `bdd_coder` entry of `<local_dir>/session.json`,
+so an interrupted session can be resumed. Stored paths start with the `local_dir` value (`<local_dir>` below).
 
 ```json
 {
   "bdd_coder": {
-    "tasklist": ".local/deckrd/temp/tasklist/deckrd/libs/T-01.tasklist.md",
+    "tasklist": "<local_dir>/temp/tasklist/deckrd/libs/T-01.tasklist.md",
     "item": "L-02",
-    "checklist": ".local/deckrd/temp/tasks/parse-config-calm-checklist.md",
+    "checklist": "<local_dir>/temp/tasks/parse-config-calm-checklist.md",
     "status": "in-progress",
     "updated_at": "2026-11-09T00:00:00Z"
   }
@@ -136,14 +136,14 @@ Rules:
      'def nz: if . == "" then null else . end;
       .bdd_coder = {tasklist: ($tl | nz), item: ($item | nz), checklist: ($cl | nz),
                     status: $st, updated_at: $now}' \
-     .local/deckrd/session.json > .local/deckrd/session.json.tmp &&
-    mv .local/deckrd/session.json.tmp .local/deckrd/session.json
+     <local_dir>/session.json > <local_dir>/session.json.tmp &&
+    mv <local_dir>/session.json.tmp <local_dir>/session.json
   ```
 
   Pass an empty string for a `null` field. Do not use `select(. != "")` instead of `nz`:
   an empty value inside `{...}` makes jq output nothing, and the `mv` then empties `session.json`.
   `jaq` accepts the same filter.
-- If `.local/deckrd/session.json` does not exist, do not create it. Warn that the session cannot be
+- If `<local_dir>/session.json` does not exist, do not create it. Warn that the session cannot be
   saved (`/deckrd init` has not run) and continue without it.
 
 | When                                    | Write                                                                        |
@@ -232,7 +232,7 @@ Role: [roles/checklist-builder.md](references/roles/checklist-builder.md).
 | Task ID (e.g. T01-02) | Read tasks.md entry, expand into BDD checklist, generate file |
 | `--checklist <path>`  | Skip checklist-builder, use the specified existing file       |
 
-Output: `.local/deckrd/temp/tasks/<slug>-<adjective>-checklist.md`
+Output: `<local_dir>/temp/tasks/<slug>-<adjective>-checklist.md`
 
 When the checklist path is returned (or given by `--checklist`), keep it as **CHECKLIST PATH**
 and write the [session entry](#session-entry).
@@ -291,7 +291,7 @@ aggregate review over every file changed in Phase 3, not one invocation per task
 | `task_id`       | The Task ID of this invocation, or `N/A` for multiple tasks                    |
 | `changed_files` | Implementation files from the session scope resolved below                     |
 | `test_files`    | Test files from that same scope, split by the ENV PROFILE test-file convention |
-| `env_profile`   | `.local/deckrd/temp/deckrd-work/env-profile.md` (Phase 0 output)               |
+| `env_profile`   | `<local_dir>/temp/deckrd-work/env-profile.md` (Phase 0 output)                 |
 | `coverage_cmd`  | Coverage command from ENV PROFILE                                              |
 
 **Session scope**, in this order:
@@ -379,7 +379,7 @@ and the Status column of the affected Test Targets (Step 3).
 
 Regardless of input type, also update the checklist file:
 
-1. Open `.local/deckrd/temp/tasks/<slug>-<adjective>-checklist.md`
+1. Open `<local_dir>/temp/tasks/<slug>-<adjective>-checklist.md`
 2. For every case reported `DONE` / `DONE_WITH_CONCERNS` in Phase 3, confirm its
    `-R` / `-G` / `-F` items are `[x]`. Check any the bdd-coder instance left behind,
    and list them in the Step 5 report so the gap is visible.
