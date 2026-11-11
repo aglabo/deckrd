@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# plugins/deckrd/skills/deckrd/scripts/libs/config.sh - Configuration management
+# skills/deckrd/skills/deckrd/scripts/libs/config.lib.sh - Configuration management
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #
