@@ -286,4 +286,4 @@ from the generated document.
 After `--to req`: Run `spec` to derive specifications.
 After `--to spec`: Run `impl` to derive implementation plan.
 After `--to impl`: Run `tasks` to derive executable tasks.
-After `--to tasks`: Run `/deckrd-coder` to implement.
+After `--to tasks`: Run `/bdd-coder:bdd-coder` to implement.
