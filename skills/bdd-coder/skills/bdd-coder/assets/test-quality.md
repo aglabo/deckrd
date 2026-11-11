@@ -152,7 +152,7 @@ verdicts. Classify by CC alone and record the score as `cov=N/A`:
 | ≥ 11 | CRITICAL         |
 
 Note in the report that coverage tooling was unavailable.
-The canonical rule is [agents/code-reviewer.md](../../../agents/code-reviewer.md) — Phase 1.3.
+The canonical rule is [references/roles/code-reviewer.md](../references/roles/code-reviewer.md) — Phase 1.3.
 
 ### Reporting format
 

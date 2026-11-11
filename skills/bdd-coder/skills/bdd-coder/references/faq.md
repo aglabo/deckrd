@@ -85,7 +85,7 @@ enum Status {
 - 品質ゲート確認: Lint・型チェック合格確認
 - 進捗管理: TodoWrite で詳細ステップ管理
 
-詳細は [bdd-coder.md](../agents/bdd-coder.md) を参照。
+詳細は [implementer.md](roles/implementer.md) を参照。
 
 ## Q7: 品質ゲートコマンドは何？
 
@@ -114,4 +114,4 @@ enum Status {
 | スキルの全体フロー   | [WORKFLOW.md](./workflow.md)               |
 | 実装ステップの詳細   | [IMPLEMENTATION.md](./implementation.md)   |
 | 問題発生時の対応     | [TROUBLESHOOTING.md](./troubleshooting.md) |
-| bdd-coder の詳細仕様 | [bdd-coder.md](../agents/bdd-coder.md)     |
+| bdd-coder の詳細仕様 | [implementer.md](roles/implementer.md)     |

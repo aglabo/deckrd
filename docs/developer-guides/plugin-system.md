@@ -38,13 +38,14 @@ deckrd uses Claude Code's Agent Skills system to provide modular, composable wor
 skills/{skill-name}/
 ├── .claude-plugin/
 │   └── plugin.json       # Skill metadata
-├── agents/               # Agent definitions
+├── agents/               # Thin wrappers for Claude Code (no procedure)
 │   └── {agent-name}.md
 └── skills/
     └── {skill-name}/
-        ├── SKILL.md      # Skill entrypoint
+        ├── SKILL.md      # Skill entrypoint (orchestrator)
         ├── references/   # Documentation
         │   ├── commands/ # Command docs
+        │   ├── roles/    # Canonical agent procedures (Roles)
         │   └── workflow.md
         ├── scripts/      # Implementation scripts
         │   ├── libs/     # bootstrap.lib.sh, etc.
@@ -193,19 +194,51 @@ update_session() {
 
 ## Agent Definitions
 
-### Agent Structure
+### Role, Wrapper, Orchestrator
 
-Agent definitions are stored as Markdown files under `agents/`:
+The canonical procedure of an agent lives in a **Role file** inside the skill.
+`agents/*.md` is a thin wrapper that loads the Role.
+`gh skill` and `npx skills` copy only the directory that holds `SKILL.md`.
+A Role inside the skill therefore survives every distribution method.
+
+#### Role file (`skills/{skill}/references/roles/{name}.md`)
+
+- Holds the whole procedure: steps, inputs, outputs, and failure handling. Never put procedure in a wrapper.
+- Stays client-neutral:
+  - Point to scripts and reference files by a path relative to the skill directory.
+    This is the Agent Skills way.
+    Do not write Claude Code variables such as `${CLAUDE_PLUGIN_ROOT}`.
+  - Write the action, not the tool name. Write "record it in the checklist file", not "record it with `TodoWrite`".
+  - Never require MCP. Write "use a semantic code search tool if available; otherwise use Grep / Glob".
+- A Role contains neither a `${CLAUDE_` variable nor an `mcp__` tool name.
+
+#### Wrapper (`agents/{name}.md`)
+
+- Holds only three things:
+  - the frontmatter (`name` / `description` / `tools` / `model`)
+  - the instruction to read and follow the Role
+  - an Inputs table
+- Claude Code–specific information goes in the wrapper only.
+  Examples are `mcp__plugin_...` tool names and a Role path built with `${CLAUDE_PLUGIN_ROOT}`.
 
 ```markdown
 ---
 name: { agent-name }
 description: { agent description }
 tools: [Read, Write, Edit, Bash, Grep, Glob]
+model: inherit
 ---
 
-{agent system prompt}
+Follow the Role [`../skills/{skill}/references/roles/{agent-name}.md`](../skills/{skill}/references/roles/{agent-name}.md).
+This file only wraps it for Claude Code.
 ```
+
+#### Orchestrator (`SKILL.md` and command references)
+
+Write each phase that uses a Role like this:
+
+> If you can start a subagent, hand it the Role file and let it run.
+> If you cannot, follow the same Role file yourself, step by step.
 
 ### Agent Types in deckrd
 
@@ -214,6 +247,8 @@ tools: [Read, Write, Edit, Bash, Grep, Glob]
 **Purpose**: Read-only codebase investigation — protects main context window
 
 **Scope**: codebase-extraction, codebase-survey, prior-art, pattern-detection
+
+Steps live in the Role file `references/roles/explorer.md`.
 
 ### Agent Types in bdd-coder
 
@@ -234,9 +269,13 @@ Steps live in the Role file `references/roles/tasklist-builder.md`. Never invoke
 
 **Purpose**: Converts natural-language instructions into BDD implementation checklists
 
+Steps live in the Role file `references/roles/checklist-builder.md`.
+
 #### bdd-coder
 
 **Purpose**: Strict BDD implementation — 1 message = 1 test, Red-Green-Refactor per assertion
+
+Steps live in the Role file `references/roles/implementer.md`.
 
 #### code-reviewer
 
@@ -244,6 +283,7 @@ Steps live in the Role file `references/roles/tasklist-builder.md`. Never invoke
 
 **Entry points**: bdd-coder skill Phase 4 (automatic), or `/bdd-coder:bdd-coder-review` (on demand).
 Reviews the session's changes in aggregate. Never invoked directly by the user.
+Steps live in the Role file `references/roles/code-reviewer.md`.
 
 #### comment-refiner
 
@@ -255,6 +295,8 @@ Steps live in the Role file `references/roles/comment-refiner.md`. Never invoked
 #### explore-agent
 
 **Purpose**: Environment detection — detects language, test framework, and tool commands
+
+Steps live in the Role file `references/roles/explorer.md` of the bdd-coder skill.
 
 ## Integration Points
 

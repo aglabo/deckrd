@@ -15,7 +15,7 @@ color: magenta
 
 <!-- markdownlint-disable line-length -->
 
-Follow the Role [`skills/deckrd/references/roles/dr-writer.md`](../skills/deckrd/references/roles/dr-writer.md).
+Follow the Role [`../skills/deckrd/references/roles/dr-writer.md`](../skills/deckrd/references/roles/dr-writer.md).
 The Role holds the full procedure, inputs, outputs, and failure handling. This file only wraps it for Claude Code.
 
 ## Inputs

@@ -11,21 +11,14 @@ model: inherit
 color: green
 ---
 
-<!-- textlint-disable
-  ja-technical-writing/max-comma,
-  ja-technical-writing/sentence-length,
-  -->
-<!-- markdownlint-disable line-length -->
-
 ## explore-agent (bdd-coder)
 
-Read-only environment detection agent for bdd-coder.
-Detects development environment configuration and writes a profile for the main coding session.
+<!-- markdownlint-disable line-length -->
 
-## Role
+Follow the Role [`../skills/bdd-coder/references/roles/explorer.md`](../skills/bdd-coder/references/roles/explorer.md).
+The Role holds the full procedure, inputs, outputs, and failure handling. This file only wraps it for Claude Code.
 
-Detect the development language, test framework, build tools, and related commands.
-Write the environment profile to `.local/deckrd/temp/deckrd-work/env-profile.md` so the main session does not need to hold raw manifest file contents in context.
+For the Role's "semantic code search tool", use `mcp__plugin_deckrd_cocoindex-code__search`.
 
 ## Inputs
 
@@ -35,103 +28,4 @@ Write the environment profile to `.local/deckrd/temp/deckrd-work/env-profile.md`
 | `scope`     | `pattern-detection`                | Always `pattern-detection` for this agent |
 | `focus`     | e.g., `test-framework,build-tools` | Comma-separated areas to detect           |
 
-## Detection Steps
-
-### Step 1: Read Profile (if exists)
-
-Read `.deckrd/profile.json`:
-
-- `project`: project name
-- `language`: primary language
-
-If found, load the corresponding language rule file.
-Path: `../skills/bdd-coder/assets/languages/<language>.md`
-
-### Step 1.5: MCP-Accelerated Code Analysis (if target symbols are known)
-
-When the caller provides target function/class names, use MCP tools BEFORE reading files:
-
-1. `mcp__plugin_deckrd_cocoindex-code__search` — find existing implementations by concept
-   when exact names are unknown:
-
-   ```bash
-   query: "path normalization utility"
-   ```
-
-Use MCP results to populate the environment profile. Fall back to `Read`/`Grep`/`Glob` only when MCP returns insufficient detail.
-
-### Step 2: Dynamic Detection
-
-If profile is absent or incomplete, detect from manifest files:
-
-| File                          | Language / Tool      |
-| ----------------------------- | -------------------- |
-| `package.json`                | Node.js / TypeScript |
-| `Cargo.toml`                  | Rust                 |
-| `setup.py` / `pyproject.toml` | Python               |
-| `go.mod`                      | Go                   |
-| `build.gradle`                | Java / Kotlin        |
-| `*.sh` / `.shellcheckrc`      | Shell (Bash)         |
-
-> **Note:** `bash` is treated as an alias for `shell`. When the profile specifies `language: bash`, load `languages/shell.md` instead.
-
-### Step 3: Tool Command Detection
-
-For each detected language, identify:
-
-| Tool        | Detection method                                            |
-| ----------- | ----------------------------------------------------------- |
-| Test runner | `vitest`, `jest`, `pytest`, `cargo test`, `shellspec`       |
-| Lint        | `eslint`, `clippy`, `flake8`, `golangci-lint`, `shellcheck` |
-| Type check  | `tsc --noEmit`, `mypy`, `bash -n` (syntax check)            |
-| Build       | `tsc`, `cargo build`, `go build`, `bash -n`                 |
-| Format      | `prettier`, `rustfmt`, `black`, `shfmt`                     |
-
-Read config files to confirm exact commands and configuration.
-Examples: `vitest.config.*`, `.eslintrc.*`, `pyproject.toml`
-
-### Step 4: Write Output
-
-Write the environment profile to `.local/deckrd/temp/deckrd-work/env-profile.md`:
-
-```markdown
-# Environment Profile
-
-generated: <timestamp>
-directory: <directory>
-
-## Project
-
-- Language: <language>
-- Project: <name>
-
-## Commands
-
-| Tool       | Command   |
-| ---------- | --------- |
-| test       | <command> |
-| lint       | <command> |
-| type-check | <command> |
-| build      | <command> |
-| format     | <command> |
-
-## Notes
-
-<Any relevant observations about the environment>
-```
-
-Return the **Commands table** and language name to the main session.
-
-## Constraints
-
-<!-- textlint-disable @textlint-ja/ai-writing/no-ai-list-formatting -->
-
-- **Read-only**: MUST NOT use `Write` or `Edit` on any file except `.local/deckrd/temp/deckrd-work/env-profile.md`
-- **No session files**: MUST NOT read or write `session.json`
-- **No side effects**: MUST NOT run commands that modify the filesystem or network
-
-<!-- textlint-enable @textlint-ja/ai-writing/no-ai-list-formatting -->
-
-- Allowed tools: `Read`, `Grep`, `Glob`, `Bash` (read-only only), `mcp__plugin_deckrd_cocoindex-code__search`
-- MCP tools are preferred for symbol/caller lookups — use Read/Grep only as fallback
-- Output file exception: MAY write to `.local/deckrd/temp/deckrd-work/env-profile.md`
+Return only the summary defined by the Role.

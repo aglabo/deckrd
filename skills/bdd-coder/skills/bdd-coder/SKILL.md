@@ -58,6 +58,21 @@ bdd-coder is an orchestration layer with the following fixed phase order:
 | 5     | Done Check                         | bdd-coder                            | Confirm all checklist items complete; write back tasks.md, task list, session                 |
 | 6     | Session End                        | bdd-coder                            | Reset state; remind user to commit manually                                                   |
 
+### Roles and subagents
+
+The procedure of each agent lives in a Role file under [references/roles/](references/roles/):
+
+- explore-agent → [explorer.md](references/roles/explorer.md)
+- tasklist-builder → [tasklist-builder.md](references/roles/tasklist-builder.md)
+- checklist-builder → [checklist-builder.md](references/roles/checklist-builder.md)
+- bdd-coder → [implementer.md](references/roles/implementer.md)
+- code-reviewer → [code-reviewer.md](references/roles/code-reviewer.md)
+
+Wherever a phase says "Spawn", do this:
+
+- If you can start a subagent, hand it the Role file and let it run.
+- If you cannot, follow the same Role file yourself, step by step.
+
 Gate Rule: phases must run in order. No skipping.
 
 All tests MUST pass at Phase 4. No exceptions.
@@ -162,7 +177,7 @@ Only `--resume` reuses the recorded checklist as is. If tasks.md has changed, ru
 #### Phase 1a: Tasklist Build
 
 Spawn **tasklist-builder** with `instruction`, and `tasks_md` for a Target ID.
-Agent definition: [agents/tasklist-builder.md](../../agents/tasklist-builder.md).
+Role: [roles/tasklist-builder.md](references/roles/tasklist-builder.md).
 
 | Returned status              | Handling                                                                   |
 | ---------------------------- | -------------------------------------------------------------------------- |
@@ -202,6 +217,7 @@ Output (under `${DECKRD_LOCAL_TEMP}`, default `.local/deckrd/temp`):
 #### Phase 1b: Checklist Build
 
 Spawn **checklist-builder** with the routed input.
+Role: [roles/checklist-builder.md](references/roles/checklist-builder.md).
 
 | Input type            | checklist-builder behavior                                    |
 | --------------------- | ------------------------------------------------------------- |
@@ -280,7 +296,7 @@ The per-task CRAP gate and the Phase 4 CRAP gate are intentionally separate.
 Do not remove either as a duplicate. 理由: [workflow.md](references/workflow.md) — Phase 4。
 
 Checklist items, CRAP thresholds, and failure handling: [workflow.md](references/workflow.md) — Phase 4.
-Agent definition: [agents/code-reviewer.md](../../agents/code-reviewer.md).
+Role: [roles/code-reviewer.md](references/roles/code-reviewer.md).
 
 The same review is available on demand as `/bdd-coder:bdd-coder-review`; inside this flow it runs here.
 
@@ -396,10 +412,11 @@ After all write-backs complete, output the STATUS WRITE-BACK and CHECKLIST BACKF
 - Write-back formats: [write-back-format.md](references/write-back-format.md)
 - Error recovery: [troubleshooting.md](references/troubleshooting.md)
 - Q&A: [faq.md](references/faq.md)
-- BDD sub-agent: [agents/bdd-coder.md](../../agents/bdd-coder.md)
-- Code reviewer: [agents/code-reviewer.md](../../agents/code-reviewer.md)
+- BDD implementer: [roles/implementer.md](references/roles/implementer.md)
+- Code reviewer: [roles/code-reviewer.md](references/roles/code-reviewer.md)
+- Environment explorer: [roles/explorer.md](references/roles/explorer.md)
 - On-demand review command: [bdd-coder-review/SKILL.md](../bdd-coder-review/SKILL.md)
-- Task list builder: [agents/tasklist-builder.md](../../agents/tasklist-builder.md) — procedure in [roles/tasklist-builder.md](references/roles/tasklist-builder.md)
+- Task list builder: [roles/tasklist-builder.md](references/roles/tasklist-builder.md)
 - Task list template: [assets/templates/tasklist.tpl.md](assets/templates/tasklist.tpl.md)
-- Checklist builder: [agents/checklist-builder.md](../../agents/checklist-builder.md)
+- Checklist builder: [roles/checklist-builder.md](references/roles/checklist-builder.md)
 - Checklist template: [assets/templates/implementation-checklist.tpl.md](assets/templates/implementation-checklist.tpl.md)

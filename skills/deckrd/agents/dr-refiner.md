@@ -16,7 +16,7 @@ color: magenta
 
 <!-- markdownlint-disable line-length -->
 
-Follow the Role [`skills/deckrd/references/roles/dr-refiner.md`](../skills/deckrd/references/roles/dr-refiner.md).
+Follow the Role [`../skills/deckrd/references/roles/dr-refiner.md`](../skills/deckrd/references/roles/dr-refiner.md).
 The Role holds the full procedure, inputs, outputs, and failure handling. This file only wraps it for Claude Code.
 
 ## Inputs
