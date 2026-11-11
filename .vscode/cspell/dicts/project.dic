@@ -21,6 +21,7 @@ mymod
 myns
 myproject
 mypy
+noqa
 pnpx
 pylint
 pyproject
