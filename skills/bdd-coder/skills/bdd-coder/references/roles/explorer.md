@@ -17,7 +17,10 @@ This Role is the **canonical procedure** for detecting the development environme
 - In Claude Code, the `explore-agent` agent (`agents/explore-agent-coder.md` at the plugin root) loads this Role and runs it in a sub-context.
 - Where agents are not available, the main session follows this Role step by step itself.
 
-All paths below are relative to the bdd-coder skill directory unless they start with `.local/` or `docs/`.
+Paths are resolved as follows:
+
+- Bundled resources (for example `assets/languages/<language>.md`) are relative to the bdd-coder skill directory.
+- Project files (`.deckrd/profile.json`, manifest files, tool configuration files) and `.local/...` are relative to the input `directory`, never to the skill directory. The skill may be installed outside the project.
 
 ## Responsibility
 
@@ -36,7 +39,7 @@ Write the environment profile to `.local/deckrd/temp/deckrd-work/env-profile.md`
 
 ### Step 1: Read Profile (if exists)
 
-Read `.deckrd/profile.json`:
+Read `.deckrd/profile.json` in `directory`:
 
 - `project`: project name
 - `language`: primary language
@@ -58,7 +61,7 @@ Use the results to populate the environment profile. When no such tool is availa
 
 ### Step 2: Dynamic Detection
 
-If profile is absent or incomplete, detect from manifest files:
+If profile is absent or incomplete, detect from manifest files in `directory`:
 
 | File                          | Language / Tool      |
 | ----------------------------- | -------------------- |
@@ -69,7 +72,7 @@ If profile is absent or incomplete, detect from manifest files:
 | `build.gradle`                | Java / Kotlin        |
 | `*.sh` / `.shellcheckrc`      | Shell (Bash)         |
 
-> **Note:** `bash` is treated as an alias for `shell`. When the profile specifies `language: bash`, load `languages/shell.md` instead.
+> **Note:** `bash` is treated as an alias for `shell`. When the profile specifies `language: bash`, load `assets/languages/shell.md` instead.
 
 ### Step 3: Tool Command Detection
 
@@ -83,7 +86,7 @@ For each detected language, identify:
 | Build       | `tsc`, `cargo build`, `go build`, `bash -n`                 |
 | Format      | `prettier`, `rustfmt`, `black`, `shfmt`                     |
 
-Read config files to confirm exact commands and configuration.
+Read the project's config files (in `directory`) to confirm exact commands and configuration.
 Examples: `vitest.config.*`, `.eslintrc.*`, `pyproject.toml`
 
 ### Step 4: Write Output
