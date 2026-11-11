@@ -175,6 +175,22 @@ _count_outputs_after_broken_session() {
   _count_files_named "$_OUTPUT_FILE_NAME"
 }
 
+# _run_generate_doc_with_type - 指定した doc type (@ 付き) で main を --verbose 起動する
+#
+# prompt_path は設定ダンプ (stderr) に出るので、どの prompt が解決されたかを見られる。
+#
+# @arg $1 string @ 付き doc type
+# @return generate-doc.sh の終了ステータス
+_run_generate_doc_with_type() {
+  local _stub_dir
+  _stub_dir="$(_install_ai_cli_stubs)"
+
+  SESSION_FILE="$(_write_session 'type-session.json' "$_VALID_SESSION_JSON")" \
+    DECKRD_DOCS="${DECKRD_DOCS_DIR}" \
+    PATH="${_stub_dir}:${PATH}" \
+    bash "${SUBCOMMANDS_DIR}/generate-doc.sh" "$1" "test" --verbose </dev/null
+}
+
 # ============================================================================
 # テスト本体
 # ============================================================================
@@ -210,6 +226,43 @@ Describe "T-SUB-MAINF: generate-doc.sh main"
       It "Then: [Normal] T-SUB-MAINF-04: --verbose 有り → stderr に設定ダンプを出す"
         When run _run_generate_doc_with_valid_session --verbose
         The stderr should include "$_CONFIG_DUMP_MARKER"
+      End
+    End
+  End
+
+  Describe "Given: @ 付きの doc type を渡したサブプロセス実行"
+    Describe "When: 正常系 (別名 / 長名)"
+      It "Then: [Normal] T-SUB-MAINF-05: @impl → implementation.prompt.md を解決して exit 0"
+        When run _run_generate_doc_with_type @impl
+        The status should equal 0
+        The output should equal 'STUB AI RESPONSE'
+        The stderr should include 'implementation.prompt.md'
+        The stderr should not include 'Prompt file not found'
+      End
+
+      It "Then: [Normal] T-SUB-MAINF-06: @rev → rev.prompt.md を解決して exit 0"
+        When run _run_generate_doc_with_type @rev
+        The status should equal 0
+        The output should equal 'STUB AI RESPONSE'
+        The stderr should include 'rev.prompt.md'
+      End
+    End
+
+    Describe "When: 異常系 (未知の doc type)"
+      It "Then: [Error] T-SUB-MAINF-07: @bogus → exit 1、normalizer のエラーを stderr に出し stdout は空"
+        When run _run_generate_doc_with_type @bogus
+        The status should equal 1
+        The stderr should include 'Error: unknown doc-type: bogus'
+        The output should equal ''
+      End
+    End
+
+    Describe "When: エッジケース (正本の長名)"
+      It "Then: [Edge] T-SUB-MAINF-08: @decision-record → decision-record.prompt.md を解決して exit 0"
+        When run _run_generate_doc_with_type @decision-record
+        The status should equal 0
+        The output should equal 'STUB AI RESPONSE'
+        The stderr should include 'decision-record.prompt.md'
       End
     End
   End

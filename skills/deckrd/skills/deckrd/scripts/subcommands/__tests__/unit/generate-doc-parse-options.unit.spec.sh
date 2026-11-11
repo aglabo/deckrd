@@ -97,3 +97,46 @@ Describe "T-SUB-PO: generate-doc.sh parse_options の verbose フラグ"
     End
   End
 End
+
+# show_usage は利用者が最初に読むヘルプである。
+# 例は @ 付きの実際に動く呼び出しで、Document Types は正本の長名を並べる。
+Describe "T-SUB-SU: generate-doc.sh show_usage"
+
+  Describe "Given: show_usage の出力"
+    Describe "When: 正常系 (例の書式)"
+      It "Then: [Normal] T-SUB-SU-01: 例が @ 付きの doc type で書かれている"
+        When run show_usage
+        The status should equal 0
+        The output should include 'generate-doc.sh @requirements "user input" --lang ja'
+        The output should include 'generate-doc.sh @specifications @docs/input.md --ai-model claude-sonnet-4-5 --lang en'
+        The output should include 'echo "My requirements" | generate-doc.sh @requirements --lang ja'
+      End
+    End
+
+    Describe "When: 異常系 (廃止オプション)"
+      It "Then: [Error] T-SUB-SU-02: 廃止された --model オプションを案内しない"
+        When run show_usage
+        The output should not include '--model '
+      End
+    End
+
+    Describe "When: エッジケース (Document Types の網羅)"
+      It "Then: [Edge] T-SUB-SU-03: Document Types に rev を載せる"
+        When run show_usage
+        The output should match pattern '*
+  rev *'
+      End
+
+      It "Then: [Edge] T-SUB-SU-04: Document Types に decision-record を載せる"
+        When run show_usage
+        The output should match pattern '*
+  decision-record *'
+      End
+
+      It "Then: [Edge] T-SUB-SU-05: 長名が canonical であると明記する"
+        When run show_usage
+        The output should include 'canonical'
+      End
+    End
+  End
+End
