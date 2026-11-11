@@ -126,6 +126,8 @@ unavailable, code-reviewer applies its own fallback: CC-only classification repo
 
 Spawn **code-reviewer** with:
 
+- `skill_dir`: the bdd-coder skill directory (`../bdd-coder/` from this file), as an absolute path
+- `local_dir`: the value of `DECKRD_LOCAL_DATA` (`.local/deckrd`), as an absolute path
 - `task_id`: resolved in Step 3
 - `changed_files`: implementation files from Step 2
 - `test_files`: test files from Step 2
