@@ -84,7 +84,7 @@ Derive executable BDD-style implementation tasks.
 
 - **Input:** `implementation/implementation.md` + `specifications/specifications.md`
 - **Output:** `tasks/tasks.md`
-- **Next:** (complete — use `/deckrd-coder` to implement)
+- **Next:** (complete — use `/bdd-coder:bdd-coder` to implement)
 
 ## Directory Structure
 
