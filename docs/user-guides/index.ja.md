@@ -2,7 +2,7 @@
 title: deckrd ユーザーガイド インデックス
 description: deckrd フレームワークの概要とユーザーガイド一覧
 type: userguide
-scope: deckrd, deckrd-coder
+scope: deckrd, bdd-coder
 audience:
   - すべてのユーザー
 purpose:
@@ -32,18 +32,18 @@ AI との対話を通じて要件・仕様・実装計画を自動導出しま�
 
 ### deckrd を構成する 3 つの要素
 
-| 要素              | コマンド                  | 役割                                               |
-| ----------------- | ------------------------- | -------------------------------------------------- |
-| **deckrd**        | `/deckrd <command>`       | 要件・仕様・実装計画・タスクの導出（設計フェーズ） |
-| **deckrd-coder**  | `/deckrd-coder <task-id>` | BDD スタイルでの実装（実装フェーズ）               |
-| **IDD Framework** | `/idd/issue:new` など     | GitHub Issue / PR 管理（実行フェーズ）             |
+| 要素              | コマンド                         | 役割                                               |
+| ----------------- | -------------------------------- | -------------------------------------------------- |
+| **deckrd**        | `/deckrd <command>`              | 要件・仕様・実装計画・タスクの導出（設計フェーズ） |
+| **bdd-coder**     | `/bdd-coder:bdd-coder <task-id>` | BDD スタイルでの実装（実装フェーズ）               |
+| **IDD Framework** | `/idd/issue:new` など            | GitHub Issue / PR 管理（実行フェーズ）             |
 
 ### 開発フローの全体像
 
 ```text
   課題定義             設計・計画               実装・リリース
 ┌──────────┐      ┌──────────────────┐      ┌──────────────────┐
-│   IDD    │      │     deckrd       │      │deckrd-coder + IDD│
+│   IDD    │      │     deckrd       │      │bdd-coder + IDD   │
 │          │      │                  │      │                  │
 │issue:new │─────▶│ req→spec→impl    │─────▶│ BDD 実装         │
 │          │      │       →tasks     │      │ commit → PR      │
@@ -60,7 +60,7 @@ AI との対話を通じて要件・仕様・実装計画を自動導出しま�
   全体構成・ワークフロー・コマンド順序を図解で一覧する
 
 - **[クイックスタート](01-quickstart.ja.md)**
-  `init` から `deckrd-coder` まで、最短で動かすためのステップバイステップガイド
+  `init` から `bdd-coder` まで、最短で動かすためのステップバイステップガイド
 
 ### コマンドリファレンス
 

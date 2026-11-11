@@ -2,7 +2,7 @@
 title: deckrd オーバービュー
 description: deckrd フレームワークの全体像を図解で示すリファレンス図集
 type: userguide
-scope: deckrd, deckrd-coder
+scope: deckrd, bdd-coder
 audience:
   - 初めて deckrd を使うユーザー
   - 全体像を把握したい開発者
@@ -38,7 +38,7 @@ meta:
 └────────────────┘
          │
          ▼
-/deckrd-coder <task-id>   ← コードを書く
+/bdd-coder:bdd-coder <task-id>   ← コードを書く
          │
          ▼
       実装完了
@@ -53,9 +53,9 @@ meta:
 │                         Claude Code CLI                         │
 │                                                                 │
 │  ┌──────────────────────┐   ┌────────────────────────────────┐  │
-│  │   deckrd             │   │   deckrd-coder                 │  │
+│  │   deckrd             │   │   bdd-coder                    │  │
 │  │                      │   │                                │  │
-│  │  init / module       │   │  /deckrd-coder <task-id>       │  │
+│  │  init / module       │   │ /bdd-coder:bdd-coder <task-id> │  │
 │  │  req / spec          │   │                                │  │
 │  │  impl / tasks        │   │  Red → Green → Refactor        │  │
 │  │  review / dr / rev   │   │                                │  │
@@ -78,10 +78,10 @@ meta:
 ## 図 3: プラグインの役割分担
 
 ```text
-           deckrd                        deckrd-coder
+           deckrd                        bdd-coder
 ┌────────────────────────┐     ┌────────────────────────┐
 │                        │     │                        │
-│  /deckrd req           │     │  /deckrd-coder T01     │
+│  /deckrd req           │     │ /bdd-coder:bdd-coder   │
 │  /deckrd spec          │────▶│                        │──▶ 実装完了
 │  /deckrd impl          │tasks│  Red   (テスト失敗)    │
 │  /deckrd tasks         │     │  Green (実装)          │
@@ -122,10 +122,10 @@ meta:
 └───────────────────────────────┬─────────────────────────────┘
                                 │
 ┌───────────────────────────────▼─────────────────────────────┐
-│ フェーズ 3: deckrd-coder + IDD — 実装・PR                   │
+│ フェーズ 3: bdd-coder + IDD — 実装・PR                      │
 │                                                             │
-│  /deckrd-coder T01  →  BDD 実装  →  /idd-commit-message     │
-│  /deckrd-coder T02  →  BDD 実装  →  /idd-commit-message     │
+│  /bdd-coder:bdd-coder T01 → BDD 実装 → /idd-commit-message  │
+│  /bdd-coder:bdd-coder T02 → BDD 実装 → /idd-commit-message  │
 │         :                               ▼                   │
 │                               /idd-pr  →  GitHub PR 作成    │
 └─────────────────────────────────────────────────────────────┘
@@ -150,7 +150,7 @@ meta:
 /deckrd tasks
      │
      ▼
-/deckrd-coder <task-id>
+/bdd-coder:bdd-coder <task-id>
 ```
 
 ---
@@ -230,7 +230,7 @@ meta:
                        │
 ┌──────────────────────▼───────────────────────────────┐
 │  Layer 2: プラグイン                                 │
-│   deckrd (設計)   deckrd-coder (実装)   IDD (GitHub) │
+│   deckrd (設計)   bdd-coder (実装)   IDD (GitHub)    │
 └──────────────────────┬───────────────────────────────┘
                        │
 ┌──────────────────────▼───────────────────────────────┐
@@ -250,7 +250,7 @@ meta:
 ## 図 9: ゲートルールとコマンド順序
 
 ```text
-init → module → req → [dr] → spec → impl → tasks → deckrd-coder
+init → module → req → [dr] → spec → impl → tasks → bdd-coder
  ↑必須    ↑必須    ↑必須  ↑任意    ↑必須   ↑必須    ↑必須
                                                review / status: 任意
 ```
@@ -273,5 +273,5 @@ init → module → req → [dr] → spec → impl → tasks → deckrd-coder
                     │                               │
                 複雑な変更                     バグ修正・小変更
                     │                               │
-             deckrd-coder で実装             IDD のみ (issue→PR)
+             bdd-coder で実装                IDD のみ (issue→PR)
 ```

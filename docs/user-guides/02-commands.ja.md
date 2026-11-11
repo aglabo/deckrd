@@ -79,7 +79,7 @@ docs/.deckrd/<ns>/<mod>/  (ディレクトリ作成)
        【BDD 実装フェーズ】
               |
               v
-    /deckrd-coder <task-id>
+    /bdd-coder:bdd-coder <task-id>
               |
               v
           実装完了
@@ -472,7 +472,7 @@ session.json 更新 (current_step: "impl")
 ```
 
 > 注意:
-> `impl` はコードを書かない。設計の文書化のみ (コード実装は `/deckrd-coder` が担当します)。
+> `impl` はコードを書かない。設計の文書化のみ (コード実装は `/bdd-coder:bdd-coder` が担当します)。
 
 ---
 
@@ -782,20 +782,20 @@ requirements/requirements.md を生成
 deckrd のコマンドは、順序通りに実行してください。スキップはできません。
 
 ```text
-init → module → req → [dr] → spec → impl → tasks → deckrd-coder
+init → module → req → [dr] → spec → impl → tasks → bdd-coder
  ↑必須   ↑必須    ↑必須  ↑任意    ↑必須   ↑必須   ↑必須
 ```
 
-| 現在のステップ | 次に実行できるコマンド    |
-| -------------- | ------------------------- |
-| (none)         | `init`                    |
-| init 完了      | `module`                  |
-| module 完了    | `req`                     |
-| req 完了       | `spec`（または `dr`）     |
-| spec 完了      | `impl`（または `dr`）     |
-| impl 完了      | `tasks`（または `dr`）    |
-| tasks 完了     | `/deckrd-coder <task-id>` |
-| 任意           | `review`, `status`, `dr`  |
+| 現在のステップ | 次に実行できるコマンド           |
+| -------------- | -------------------------------- |
+| (none)         | `init`                           |
+| init 完了      | `module`                         |
+| module 完了    | `req`                            |
+| req 完了       | `spec`（または `dr`）            |
+| spec 完了      | `impl`（または `dr`）            |
+| impl 完了      | `tasks`（または `dr`）           |
+| tasks 完了     | `/bdd-coder:bdd-coder <task-id>` |
+| 任意           | `review`, `status`, `dr`         |
 
 ---
 
@@ -810,7 +810,7 @@ init → module → req → [dr] → spec → impl → tasks → deckrd-coder
 /deckrd spec
 /deckrd impl
 /deckrd tasks
-/deckrd-coder <task-id>
+/bdd-coder:bdd-coder <task-id>
 ```
 
 ### 既存コードからドキュメント生成
@@ -822,7 +822,7 @@ init → module → req → [dr] → spec → impl → tasks → deckrd-coder
 /deckrd spec
 /deckrd impl
 /deckrd tasks
-/deckrd-coder <task-id>
+/bdd-coder:bdd-coder <task-id>
 ```
 
 ### ドキュメント品質を高めてから次フェーズへ

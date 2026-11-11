@@ -2,7 +2,7 @@
 title: deckrd クイックスタートガイド
 description:
 type: userguide
-scope: deckrd, deckrd-coder
+scope: deckrd, bdd-coder
 audience:
   - 新規ユーザー
   - 開発者
@@ -25,10 +25,10 @@ deckrd は **Goals → Requirements → Specifications → Implementation → Ta
 
 ## 概要
 
-| プラグイン     | コマンド                  | 目的                           |
-| -------------- | ------------------------- | ------------------------------ |
-| `deckrd`       | `/deckrd <command>`       | 要件・仕様・タスクの段階的導出 |
-| `deckrd-coder` | `/deckrd-coder <task-id>` | BDD スタイルでの実装           |
+| プラグイン  | コマンド                         | 目的                           |
+| ----------- | -------------------------------- | ------------------------------ |
+| `deckrd`    | `/deckrd <command>`              | 要件・仕様・タスクの段階的導出 |
+| `bdd-coder` | `/bdd-coder:bdd-coder <task-id>` | BDD スタイルでの実装           |
 
 ## 典型的なワークフロー
 
@@ -39,7 +39,7 @@ deckrd は **Goals → Requirements → Specifications → Implementation → Ta
 /deckrd spec        # 仕様導出
 /deckrd impl        # 実装計画
 /deckrd tasks       # タスクリスト生成
-/deckrd-coder T01   # BDD 実装
+/bdd-coder:bdd-coder T01   # BDD 実装
 ```
 
 ---
@@ -180,7 +180,7 @@ HTTP クライアントにリトライ機能を追加したい。
 3. `implementation/implementation.md` を生成
 
 > 注意:
-> `impl` はコード設計の文書化です。実際のコードは `/deckrd-coder` が担当します。
+> `impl` はコード設計の文書化です。実際のコードは `/bdd-coder:bdd-coder` が担当します。
 
 ---
 
@@ -210,18 +210,18 @@ T-<Target>-<Scenario>-<Case>
 タスクを 1 つずつ BDD スタイルで実装します。
 
 ```bash
-/deckrd-coder <task-id>
+/bdd-coder:bdd-coder <task-id>
 ```
 
 例:
 
 ```bash
-/deckrd-coder T01-01
+/bdd-coder:bdd-coder T01-01
 ```
 
 **実行フロー**:
 
-deckrd-coder はオーケストレーター専用です。BDD 実装（Red → Green → Refactor）は **bdd-coder** エージェントに委譲します。
+`/bdd-coder:bdd-coder` スキルはオーケストレーター専用です。BDD 実装（Red → Green → Refactor）は **bdd-coder** エージェントに委譲します。
 
 | Phase   | 内容                                                    |
 | ------- | ------------------------------------------------------- |
@@ -289,7 +289,7 @@ req/spec/impl/tasks いずれのステップ中でも実行できます。
 /deckrd spec
 /deckrd impl
 /deckrd tasks
-/deckrd-coder <task-id>
+/bdd-coder:bdd-coder <task-id>
 ```
 
 ---
@@ -299,7 +299,7 @@ req/spec/impl/tasks いずれのステップ中でも実行できます。
 コマンドは順序通りに実行すしてください。スキップは不可です。
 
 ```text
-init → module → req → [dr] → spec → impl → tasks → deckrd-coder
+init → module → req → [dr] → spec → impl → tasks → bdd-coder
 ```
 
 現在のステップを確認するには `/deckrd status` を使用してください。

@@ -82,4 +82,4 @@ bash "<DECKRD_SKILL_DIR>/scripts/project.sh" --project <name> --language <lang>
 - Project settings are stored at `.local/deckrd/.project.json`, together with `.local/deckrd/session.json`
 - This command is project-scoped and does not interact with session state
 - Can be run at any time, before or after `init`
-- `deckrd-coder` reads this project settings in Phase 0 to load language-specific rules
+- `bdd-coder` reads this project settings in Phase 0 to load language-specific rules

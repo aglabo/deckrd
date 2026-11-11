@@ -121,15 +121,15 @@ deckrd works well for:
 - System Design: Capture architectural decisions
 - Documentation: Trace decision-making and rationale
 
-## Integration with deckrd-coder
+## Integration with bdd-coder
 
-After completing the deckrd workflow and generating `tasks.md`, you can use the optional **deckrd-coder** plugin to implement each task automatically using a strict BDD (Red-Green-Refactor) process:
+After completing the deckrd workflow and generating `tasks.md`, you can use the optional **bdd-coder** plugin to implement each task automatically using a strict BDD (Red-Green-Refactor) process:
 
 ```bash
-/deckrd-coder T01-02    # Implement task T01-02
+/bdd-coder:bdd-coder T01-02    # Implement task T01-02
 ```
 
-See the [deckrd-coder plugin](../deckrd-coder/README.md) for details.
+See the [bdd-coder plugin](../bdd-coder/skills/bdd-coder/README.md) for details.
 
 ## Documentation
 

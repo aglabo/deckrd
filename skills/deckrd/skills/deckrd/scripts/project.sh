@@ -11,7 +11,7 @@
 # @brief Configure project settings (project name and language)
 # @description
 #   Creates or updates .local/deckrd/.project.json with project settings.
-#   This enables deckrd-coder to load language-specific rules.
+#   This enables bdd-coder to load language-specific rules.
 #
 # @example
 #   # Configure project with Go language
