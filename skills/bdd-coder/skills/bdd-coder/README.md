@@ -15,14 +15,14 @@ deckrd ワークフローと統合された BDD コーディングスキルで�
 
 ```bash
 # Task ID を指定して実装
-/bdd-coder T01-02
+/bdd-coder:bdd-coder T01-02
 
 # 自然言語で指示
 "グリーティング関数を実装して"
 "implement config file parser"
 
 # 既存チェックリストを使用
-/bdd-coder T01-02 --checklist .local/deckrd/temp/tasks/my-checklist.md
+/bdd-coder:bdd-coder T01-02 --checklist .local/deckrd/temp/tasks/my-checklist.md
 ```
 
 ## 実行フェーズ
@@ -40,10 +40,11 @@ deckrd ワークフローと統合された BDD コーディングスキルで�
 ## 構成
 
 ```text
-skills/bdd-coder/
+skills/bdd-coder/skills/bdd-coder/
 ├── SKILL.md                          # スキル定義
 ├── README.md                         # このファイル
 ├── assets/
+│   ├── dic/                          # 辞書 (hackers.dic)
 │   ├── languages/                    # 言語別ルール (TypeScript/Go/Rust/Shell)
 │   ├── templates/
 │   │   ├── implementation-checklist.tpl.md
@@ -52,11 +53,14 @@ skills/bdd-coder/
 │   ├── test-quality.md               # テスト品質原則 (Host Safety/Idempotency/CRAP)
 │   ├── testing-anti-patterns.md      # BDD を破壊するアンチパターン集
 │   └── pressure-scenarios.md        # BDD 規律を試すプレッシャーシナリオ
+├── scripts/
+│   └── libs/                         # 共通 Shell ライブラリ
 └── references/
     ├── workflow.md                   # 内部フロー詳細
     ├── faq.md                        # よくある質問
     ├── troubleshooting.md            # トラブルシューティング
     ├── implementation.md             # 実装フローリファレンス
+    ├── write-back-format.md          # 書き戻しフォーマット
     ├── guidelines/
     │   └── code-comments.md          # コードコメント ガイドライン (C-1〜C-10)
     └── roles/
