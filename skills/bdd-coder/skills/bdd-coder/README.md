@@ -29,7 +29,7 @@ deckrd ワークフローと統合された BDD コーディングスキルで�
 
 | Phase | 内容                                                                                                          | 担当エージェント                     |
 | ----- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
-| 0     | 開発環境検出 (言語・テストフレームワーク・ツールコマンド)                                                     | explore-agent-coder                  |
+| 0     | 開発環境検出 (言語・テストフレームワーク・ツールコマンド)                                                     | explore-agent                        |
 | 1     | タスクリスト生成 (自然言語・Target ID を 1 項目 = 1 チェックリストに分解) → 選んだ 1 項目のチェックリスト生成 | tasklist-builder + checklist-builder |
 | 2     | タスク依存関係分析 (直列/並列グループ分類)                                                                    | bdd-coder                            |
 | 3     | BDD 実装 (Red → Green → Refactor を1アサーションずつ)                                                         | bdd-coder                            |
@@ -69,12 +69,12 @@ skills/bdd-coder/
 - `bdd-coder-review/SKILL.md` — `/bdd-coder:bdd-coder-review`。code-reviewer を任意のタイミングで起動する
 - `comment-review/SKILL.md` — `/bdd-coder:comment-review`。comment-refiner で既存コメントを見直し、承認後に書き直す
 
-関連エージェント (`skills/bdd-coder/agents/` 配下):
+関連エージェント (手順の正典は `references/roles/` 配下の Role。`skills/bdd-coder/agents/` は Claude Code 用の入れ物):
 
-- `bdd-coder.md` — Red-Green-Refactor 実装エージェント
-- `tasklist-builder.md` — 自然言語・Target ID をタスクリストに分解するエージェント（手順は `references/roles/tasklist-builder.md`）
+- `implementer.md` — Red-Green-Refactor 実装エージェント
+- `tasklist-builder.md` — 自然言語・Target ID をタスクリストに分解するエージェント
 - `checklist-builder.md` — BDD チェックリスト生成エージェント
-- `explore-agent-coder.md` — 開発環境検出エージェント
+- `explorer.md` — 開発環境検出エージェント
 - `code-reviewer.md` — CC/CRAP 算出・codex CLI コードレビューエージェント
 - `comment-refiner.md` — コメントだけを書き直すエージェント（手順は `references/roles/comment-refiner.md`）
 
