@@ -1,10 +1,69 @@
-# CHANGELOG
+---
+title: "CHANGELOG"
+description: "ChangeLog: 0.7.0"
+version: "0.7.0"
+date: "2026-11-11"
+summary:
+  - "0.7.0: standalone skill install, dr-writer / dr-refiner, comment-review / comment-refiner, tasklist-builder, role-based agents with skill_dir / local_dir arguments, generate-doc canonical doc types fix"
+---
 
 <!-- textlint-disable
   ja-technical-writing/sentence-length,
   ja-technical-writing/max-comma,
   -->
 <!-- markdownlint-disable line-length -->
+
+## CHANGELOG
+
+## [0.7.0] - 2026-11-11
+
+### Features
+
+- Support standalone skill installation through `npx skills` and `gh skill install`.
+- Add the `dr-writer` agent and the `/deckrd dr --add` flow: draft exactly one Decision Record, then append it to `decision-records.md` after approval with DR-ID numbering, Supersede handling, a version bump, and a Change History row.
+- Add the `dr-refiner` agent and `/deckrd dr --refine [DR-ID ...]`: rewrite existing Decision Records without changing what was decided, replacing only the approved sections with one PATCH bump and Change History row.
+- Add the Decision Record authoring guideline (`references/guidelines/decision-record-authoring.md`) and rewrite the `decision-record` prompt to generate a single DR section.
+- Add the `comment-review` skill and the `comment-refiner` agent to delete, move, or rewrite code comments without changing code (draft, then apply the approved diff).
+- Add the code comment guideline (`code-comments.md`, rules C-1 to C-10).
+- Add the `tasklist-builder` agent and `tasklist.tpl.md`: break a natural-language request or a `tasks.md` Target ID into a task list in which each item makes one checklist. Re-running the same Target ID returns the existing task list.
+- Run `tasklist-builder` as Phase 1a of `bdd-coder`, before `checklist-builder`.
+- Add `rev` and `decision-record` document types to `normalize-doc-type.lib.sh`.
+
+### Bug Fixes
+
+- Resolve `generate-doc.sh` prompts from canonical document types (`@impl`, `@rev`, `@decision-record`) and report unknown document types as errors (#283).
+- Reject `review` without a phase as an unknown document type in `normalize-doc-type.lib.sh`.
+- Correct role reference links and paths in the Deckrd and bdd-coder agent definitions.
+- Resolve explorer project paths from the input `directory`.
+
+### Refactor
+
+- Move agent procedures into role files under `references/roles/` and reduce the agent definitions to thin wrappers.
+- Add canonical roles: Deckrd `explorer`, `dr-writer`, and `dr-refiner`; bdd-coder `implementer`, `explorer`, `checklist-builder`, `code-reviewer`, `tasklist-builder`, and `comment-refiner`.
+- Let callers run a role themselves when subagents cannot be launched.
+- Pass `skill_dir` and `local_dir` to roles and agents as arguments instead of using fixed `.local/deckrd` paths.
+- Resolve bundled resources (`assets/`, `references/`) from `skill_dir` and local data (session, temp files, task lists, checklists) from `local_dir`.
+- Replace the `<DECKRD_SKILL_DIR>` placeholder in command reference script paths and `generate-doc.sh` instructions.
+- Remove obsolete workspace documents under `docs/.deckrd/`.
+
+### Documentation
+
+- Document the role and thin-wrapper structure and the `skill_dir` and `local_dir` arguments in the developer guides.
+- Sync the command references, README files, and user guides with the implementation: `project` and `review` commands, `module --test-scope`, `status` output, session schema, and `tasks` output.
+- Document `/deckrd update` behavior for existing files and `.gitignore` handling.
+- Add a Release section to the workflow guide, and forbid symbolic links inside `skills/deckrd/skills/deckrd/`.
+- Document the explore-agent fallback when subagents are unavailable.
+- Fix stale path references, session schema, layout, and tool names in the developer guides.
+- Replace gitleaks with betterleaks and correct the textlint config lookup order in the contributing guide.
+- Use `npx -y` in the filesystem MCP server example.
+- Replace `deckrd-coder` references with `bdd-coder` and correct related documentation links.
+- Document the v0.6.0 breaking changes in this changelog (`codex-mcp` removal and the `workspaces/module/module.md` location).
+
+### Tooling
+
+- Add `shdoc` to the project spelling dictionary and a cspell `noqa` directive to the code comment guideline.
+- Correct test and library script path comments.
+- Inline the `allowed-tools` list in the `deckrd-review` skill.
 
 ## [0.6.1] - 2026-11-10
 
