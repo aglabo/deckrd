@@ -855,5 +855,5 @@ Phase / Step のどの段階で発生？
 
 - [WORKFLOW.md](./workflow.md) - Phase 0-6 詳細フロー
 - [IMPLEMENTATION.md](./implementation.md) - Step 1-8 詳細手順
-- [bdd-coder.md](../agents/bdd-coder.md) - BDD エージェント仕様
+- [implementer.md](roles/implementer.md) - BDD エージェント仕様
 - `CLAUDE.md` - プロジェクトルール全般

@@ -129,7 +129,7 @@ Spawn **explore-agent** with:
 - `scope`: `pattern-detection`
 - `directory`: repository root (or sub-package root for monorepos)
 - `focus`: `test-framework,build-tools,lint,type-check`
-- Agent definition: [`plugins/deckrd/agents/explore-agent-coder.md`](../../../../agents/explore-agent-coder.md)
+- Role: [`roles/explorer.md`](roles/explorer.md)
 
 The agent:
 
@@ -358,7 +358,7 @@ code-reviewer は **セッション全体で 1 回だけ** 起動する (タス�
 
 同じレビューは `/bdd-coder:bdd-coder-review` で任意のタイミングでも実行できる。
 
-Agent definition: [../../../../agents/code-reviewer.md](../../../../agents/code-reviewer.md)
+Role: [roles/code-reviewer.md](roles/code-reviewer.md)
 
 失敗時:
 
@@ -387,7 +387,7 @@ Keep deleted paths — code-reviewer reads their patch with `git diff -- <path>`
 
 ### CRAP ゲートが 2 か所にある理由
 
-The per-task CRAP gate in [agents/bdd-coder.md](../../../agents/bdd-coder.md) is the implementer's
+The per-task CRAP gate in [roles/implementer.md](roles/implementer.md) is the implementer's
 own gate over one task. Phase 4 recomputes CRAP across the aggregate diff. The two are
 intentionally separate — do not remove either as a duplicate.
 
