@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# plugins/deckrd/skills/deckrd/scripts/libs/normalize-doc-type.sh - doc-type normalization
+# skills/deckrd/skills/deckrd/scripts/libs/normalize-doc-type.lib.sh - doc-type normalization
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #

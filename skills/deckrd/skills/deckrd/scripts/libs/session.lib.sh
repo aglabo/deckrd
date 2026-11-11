@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# plugins/deckrd/skills/deckrd/scripts/libs/session.sh - Session data management
+# skills/deckrd/skills/deckrd/scripts/libs/session.lib.sh - Session data management
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #

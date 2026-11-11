@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# plugins/deckrd/skills/deckrd/scripts/tests/unit/init-parse-args.spec.sh
+# skills/deckrd/skills/deckrd/scripts/__tests__/unit/init-parse-args.unit.spec.sh
 # @(#) : BDD unit tests for init.sh - parse_args function
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>

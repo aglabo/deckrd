@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# plugins/deckrd/skills/deckrd/tests/module.spec.sh
+# skills/deckrd/skills/deckrd/scripts/__tests__/unit/module.unit.spec.sh
 # @(#) : BDD unit tests for module.sh (モジュールディレクトリ管理)
 #
 # Copyright (c) 2025 atsushifx <https://github.com/atsushifx>

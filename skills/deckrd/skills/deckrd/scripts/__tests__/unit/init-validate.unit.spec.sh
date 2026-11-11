@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# plugins/deckrd/skills/deckrd/scripts/tests/unit/init-validate.spec.sh
+# skills/deckrd/skills/deckrd/scripts/__tests__/unit/init-validate.unit.spec.sh
 # @(#) : BDD unit tests for init.sh - validate_args + validate_language functions
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# plugins/deckrd/skills/deckrd/scripts/libs/validate-env.sh - Environment validation
+# skills/deckrd/skills/deckrd/scripts/libs/validate-env.lib.sh - Environment validation
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #

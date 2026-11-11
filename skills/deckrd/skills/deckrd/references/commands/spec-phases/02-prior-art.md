@@ -30,7 +30,7 @@ Spawn **explore-agent** (non-blocking, parallel with Step 1-2) with:
 - `scope`: `prior-art`
 - `directory`: project root
 - `focus`: feature keywords from REQ SUMMARY
-- Agent definition: [`plugins/deckrd/agents/explore-agent.md`](../../../../../agents/explore-agent.md)
+- Agent definition: [`agents/explore-agent.md`](../../../../../agents/explore-agent.md)
 
 The agent writes findings to `.local/deckrd/temp/deckrd-work/prior-art.md`.
 

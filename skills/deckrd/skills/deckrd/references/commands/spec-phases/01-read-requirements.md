@@ -46,7 +46,7 @@ Spawn **explore-agent** (non-blocking) with:
 - `directory`: project root
 - `module`: active module (`active` in `.local/deckrd/session.json`)
 - `focus`: feature keywords from REQ SUMMARY
-- Agent definition: [`plugins/deckrd/agents/explore-agent.md`](../../../../../agents/explore-agent.md)
+- Agent definition: [`agents/explore-agent.md`](../../../../../agents/explore-agent.md)
 
 The agent writes findings to `.local/deckrd/temp/deckrd-work/codebase-context.md`.
 Proceed to Phase 2 immediately in parallel — do NOT wait for this agent.

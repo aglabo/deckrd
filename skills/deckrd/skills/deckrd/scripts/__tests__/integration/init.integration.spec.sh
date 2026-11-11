@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# plugins/deckrd/skills/deckrd/scripts/tests/integration/init.spec.sh
+# skills/deckrd/skills/deckrd/scripts/__tests__/integration/init.integration.spec.sh
 # @(#) : Integration tests for init.sh - main() full execution (no mocks)
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
