@@ -61,13 +61,15 @@ Store extracted summary as **SPEC SUMMARY** and the version as **SPEC VERSION**.
 
 Spawn **explore-agent** (non-blocking) with:
 
+- `skill_dir`, `local_dir`: absolute paths, see "Path arguments" in SKILL.md
+
 - `scope`: `codebase-survey`
 - `directory`: project root
-- `module`: active module (`active` in `.local/deckrd/session.json`)
+- `module`: active module (`active` in `<local_dir>/session.json`)
 - `focus`: feature keywords from SPEC SUMMARY
 - Role: [`roles/explorer.md`](../roles/explorer.md) (no subagent: follow it yourself, see SKILL.md)
 
-The agent writes findings to `.local/deckrd/temp/deckrd-work/codebase-context.md`.
+The agent writes findings to `<local_dir>/temp/deckrd-work/codebase-context.md`.
 Proceed to Phase B immediately in parallel — do NOT wait for this agent.
 
 Store the agent Summary as **CODEBASE CONTEXT** when it completes:
@@ -86,12 +88,14 @@ CODEBASE CONTEXT:
 
 Spawn **explore-agent** (non-blocking, parallel with A-2) with:
 
+- `skill_dir`, `local_dir`: absolute paths, see "Path arguments" in SKILL.md
+
 - `scope`: `prior-art`
 - `directory`: project root
 - `focus`: feature keywords from SPEC SUMMARY
 - Role: [`roles/explorer.md`](../roles/explorer.md) (no subagent: follow it yourself, see SKILL.md)
 
-The agent writes findings to `.local/deckrd/temp/deckrd-work/prior-art.md`.
+The agent writes findings to `<local_dir>/temp/deckrd-work/prior-art.md`.
 
 Store the agent Summary as **PRIOR ART** when it completes:
 
@@ -408,7 +412,7 @@ bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @implementation @s
 
 ## Session Update
 
-After completion, update `.local/deckrd/session.json`:
+After completion, update `<local_dir>/session.json`:
 
 ```json
 {

@@ -42,13 +42,14 @@ Store extracted summary as **REQ SUMMARY** and the version as **REQ VERSION**.
 
 Spawn **explore-agent** (non-blocking) with:
 
+- `skill_dir`, `local_dir`: absolute paths, see "Path arguments" in SKILL.md
 - `scope`: `codebase-survey`
 - `directory`: project root
-- `module`: active module (`active` in `.local/deckrd/session.json`)
+- `module`: active module (`active` in `<local_dir>/session.json`)
 - `focus`: feature keywords from REQ SUMMARY
 - Role: [`roles/explorer.md`](../../roles/explorer.md) (no subagent: follow it yourself, see SKILL.md)
 
-The agent writes findings to `.local/deckrd/temp/deckrd-work/codebase-context.md`.
+The agent writes findings to `<local_dir>/temp/deckrd-work/codebase-context.md`.
 Proceed to Phase 2 immediately in parallel — do NOT wait for this agent.
 
 Store the agent Summary as **CODEBASE CONTEXT** when it completes:
@@ -67,7 +68,7 @@ Create the ledger directory before the first write — Phase 1 is the first writ
 this two-level module path does not exist on a fresh module:
 
 ```bash
-mkdir -p .local/deckrd/temp/deckrd-work/<namespace>/<module>
+mkdir -p <local_dir>/temp/deckrd-work/<namespace>/<module>
 ```
 
 Append **REQ SUMMARY**, **REQ VERSION**, and **CODEBASE CONTEXT** to the Context Ledger.

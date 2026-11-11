@@ -65,14 +65,15 @@ Phase 3: Review Loop
 
 Delegate deep codebase extraction to explore-agent:
 
-1. Read `.local/deckrd/session.json` to confirm active module
+1. Read `<local_dir>/session.json` to confirm active module
 2. Spawn **explore-agent** with:
+   - `skill_dir`, `local_dir`: absolute paths, see "Path arguments" in SKILL.md
    - `scope`: `codebase-extraction`
    - `directory`: project root
-   - `module`: active module (`active` in `.local/deckrd/session.json`)
+   - `module`: active module (`active` in `<local_dir>/session.json`)
    - `focus`: module name + target document type (e.g., `requirements`, `specifications`)
    - Role: [`roles/explorer.md`](../roles/explorer.md) (no subagent: follow it yourself, see SKILL.md)
-3. The agent writes findings to `.local/deckrd/temp/deckrd-work/codebase-extraction.md`
+3. The agent writes findings to `<local_dir>/temp/deckrd-work/codebase-extraction.md`
 4. Read the **Summary** returned by the agent and store as **EXTRACTION CONTEXT**
 
 ---
@@ -232,7 +233,7 @@ deckrd/assets/
 
 ## Session Update
 
-After Phase 3 approval, update `.local/deckrd/session.json` to mark the target step as completed:
+After Phase 3 approval, update `<local_dir>/session.json` to mark the target step as completed:
 
 **`--to req`**:
 
