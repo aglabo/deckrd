@@ -26,6 +26,7 @@ You will receive:
 7. CODEBASE CONTEXT (optional): Existing architecture, patterns, and integration points discovered during codebase investigation
 8. CONFIRMED DESIGN (optional): User-reviewed and approved design direction including feature decomposition and architecture fit
 9. EXTERNAL DESIGN NOTES (optional): Unit contracts, interaction map, and edge cases produced by the external design dialogue
+10. UNIVERSAL DICTIONARY (optional): The module's `universal-dictionary.md` — the canonical definitions of terms and concepts (UD-NNN)
 
 ## Core Principles
 
@@ -89,6 +90,25 @@ If **FUNCTION DECISIONS** is provided:
 - Carry these into Section 3 (Behavioral Specification) as `<!-- impl-note: ... -->`
   to pass the function names to the `impl` phase without polluting the behavioral spec
 - Do NOT expose function names outside of impl-note comments
+
+---
+
+## Step 0-G: Apply Universal Dictionary
+
+If **UNIVERSAL DICTIONARY** is provided:
+
+- Use every dictionary term with the meaning the dictionary gives it
+- Cite the UD-ID at the term's first use in each section (e.g., `処理権 (UD-004)`)
+- List every cited UD-ID and term in Section 1.3 (Terminology) — IDs and terms only, no definitions
+- Set frontmatter `dictionary` to `universal-dictionary.md v<dictionary version>`
+- Do NOT redefine a dictionary term, paraphrase its definition, or add a per-document glossary
+- Do NOT use a term in a meaning different from the dictionary
+- A concept needed by the specification but absent from the dictionary MUST NOT be defined here.
+  Record it in Section 7 (Open Questions) as "Dictionary candidate: <term>"
+- Obligations, conditions, and concrete values that use a term belong in this specification,
+  not in the dictionary
+
+If **UNIVERSAL DICTIONARY** is not provided, delete the frontmatter `dictionary` line and Section 1.3.
 
 ---
 
@@ -306,6 +326,8 @@ To minimize cleanup, follow these rules during generation:
 
 **Self-check before output**: scan the draft for function names, type annotations,
 file paths, and verbatim FR/NFR copies. Rewrite or remove each before outputting.
+When a dictionary is provided, also check that every cited `UD-NNN` exists in it and
+that no dictionary term is redefined.
 
 ### Split File Rules
 
