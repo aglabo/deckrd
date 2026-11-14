@@ -68,7 +68,7 @@ OUTPUT_FILE=""
 
 ##
 # @description AI model name for commit message generation (default: gpt-6-luna)
-DEFAULT_AI_MODEL="gpt-6-luna"
+DEFAULT_AI_MODEL="gpt-5.6-luna"
 
 ##
 # @description AI model name for commit message generation (set by --model)
