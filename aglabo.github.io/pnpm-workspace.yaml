@@ -22,6 +22,9 @@ overrides:
   postcss-selector-parser@<6.1.5: 6.1.5
   # Dependabot #2 (GHSA-238p-pmpm-9mq7): mermaid@11 が ^0.16 で引くため、修正版の 0.18 系に上げる。
   katex@>=0.11.0 <0.18.2: ^0.18.10
+  # Dependabot #6 (GHSA-r3h5-4585-7x3w): blume が ^11 で引くため、修正版の 11.1.12 以降に上げる。
+  # 11.1.13 は minimumReleaseAge 未満の可能性があるため、下限を 11.1.12 とする。
+  "@astrojs/node@<=11.1.11": ^11.1.12
 
 permissions:
   blume:
