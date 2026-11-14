@@ -197,7 +197,7 @@ Creates `.local/deckrd/session.json` if it does not exist:
 ```json
 {
   "active": null,
-  "lang": "<language>",
+  "prog": "<language>",
   "ai_model": "<ai-model>",
   "modules": {},
   "created_at": "<ISO8601>",
@@ -206,7 +206,8 @@ Creates `.local/deckrd/session.json` if it does not exist:
 ```
 
 - No active module is set — run `module` next to initialize a module.
-- Existing session file is preserved as-is.
+- An existing session file is preserved.
+  An old `lang` that holds a programming language is moved to `prog` ([Session Management](../session.md)).
 
 ## Script
 

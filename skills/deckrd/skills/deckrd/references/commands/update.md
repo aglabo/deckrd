@@ -82,6 +82,12 @@ Like any missing file, `update` reports it as `[local-deckrd] workspaces/README.
 This README path is fixed to where `init` deploys it.
 Overriding `DECKRD_LOCAL_WORKSPACES` does not move it.
 
+An older `session.json` stores the programming language in `lang` instead of `prog`.
+`update` reports such a file as `[session] session.json (lang -> prog)`.
+`--update` moves the value to `prog` and deletes `lang`.
+The other keys are kept.
+The rule is described in [Session Management](../session.md).
+
 ## Output Example
 
 ```bash
@@ -90,12 +96,14 @@ $ /deckrd update
 [docs] rules/deckrd-rule-workflow.md
 [local-deckrd] workspaces/README.md
 [local-deckrd] .gitignore (workspaces rule)
+[session] session.json (lang -> prog)
 
 $ /deckrd update --update
 Updated: [deckrd-rules-index] deckrd-rules-index.md
 Updated: [docs] rules/deckrd-rule-workflow.md
 Updated: [local-deckrd] workspaces/README.md
 Updated: [local-deckrd] .gitignore (workspaces rule)
+Updated: [session] session.json (lang -> prog)
 
 $ /deckrd update
 Assets are up to date.
