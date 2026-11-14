@@ -99,6 +99,7 @@ Document Types (long names are canonical; short names are aliases):
   implementation   Generate implementation guide (alias: impl)
   rev              Reverse-engineer code into a deckrd document
   decision-record  Generate decision record
+  universal-dictionary  Generate universal dictionary (alias: dict)
   review-explore   Review: explore phase (alias: explore)
   review-harden    Review: harden phase (alias: harden)
   review-fix       Review: fix phase (alias: fix)

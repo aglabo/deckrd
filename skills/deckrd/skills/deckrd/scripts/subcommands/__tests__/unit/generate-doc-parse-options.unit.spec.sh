@@ -138,5 +138,22 @@ Describe "T-SUB-SU: generate-doc.sh show_usage"
         The output should include 'canonical'
       End
     End
+
+    Describe "When: 正常系 (universal-dictionary の掲載)"
+      It "Then: [Normal] T-SUB-SU-06: Document Types に universal-dictionary (alias: dict) を載せる"
+        When run show_usage
+        The status should equal 0
+        The output should match pattern '*
+  universal-dictionary *'
+      End
+    End
+
+    Describe "When: 異常系 (alias の独立行)"
+      It "Then: [Error] T-SUB-SU-07: alias の dict を独立した Document Types 行にしない"
+        When run show_usage
+        The output should not match pattern '*
+  dict *'
+      End
+    End
   End
 End
