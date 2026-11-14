@@ -56,6 +56,7 @@ unset _SCRIPT_DIR
 . "${DECKRD_LIB_DIR}/utils.lib.sh"
 . "${DECKRD_LIB_DIR}/asset-diff.lib.sh"
 . "${DECKRD_LIB_DIR}/asset-copy.lib.sh"
+. "${DECKRD_LIB_DIR}/session.lib.sh"
 validate_env || exit 1
 
 . "${DECKRD_LIB_DIR}/ai-runner.lib.sh"
@@ -336,13 +337,18 @@ write_project() {
 }
 
 ##
-# @description Initialize session.json
-# @stderr Progress messages
+# @description Initialize session.json.
+#   A new file records the programming language in `prog`.
+#   An existing file is kept; an older `lang` holding a programming language
+#   is moved to `prog` by session_migrate_lang_to_prog (libs/session.lib.sh)
+# @stderr Progress messages; an `Error:` line when the migration fails
+# @return 0 on success, 1 if the existing session.json cannot be migrated
 init_session() {
   local timestamp
   timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
   if [[ -f "$SESSION_FILE" ]]; then
+    session_migrate_lang_to_prog "$SESSION_FILE" || return 1
     echo "" >&2
     echo "Session preserved: ${SESSION_FILE}" >&2
     return 0
@@ -350,12 +356,12 @@ init_session() {
 
   # shellcheck disable=SC2016
   jq_read -n \
-    --arg lang "${OPTIONS[language]}" \
+    --arg prog "${OPTIONS[language]}" \
     --arg ai_model "${OPTIONS[ai_model]}" \
     --arg timestamp "$timestamp" \
     '{
       active:     null,
-      lang:       $lang,
+      prog:       $prog,
       ai_model:   $ai_model,
       modules:    {},
       created_at: $timestamp,
@@ -407,7 +413,7 @@ main() {
 
   init_directories || exit 1
   write_project
-  init_session
+  init_session || exit 1
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then

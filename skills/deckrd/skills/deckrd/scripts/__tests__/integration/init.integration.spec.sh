@@ -19,6 +19,10 @@ Include "${SHELLSPEC_SPECFILE%/*}/../spec_helper.sh"
 
 SCRIPT="${DECKRD_SCRIPTS_DIR}/init.sh"
 
+# session_query - Print the raw jq result of a filter applied to session.json
+# @arg $1 string jq filter
+session_query() { jq -r "$1" "${DECKRD_LOCAL_DATA}/session.json"; }
+
 # ============================================================================
 # init.sh: main() integration
 # ============================================================================
@@ -166,14 +170,14 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
       The contents of file "${DECKRD_LOCAL_DATA}/.project.json" should include "typescript"
     End
 
-    It "[Normal] T-CLI-MAINI-09: Should: create session.json with v0.1.0 schema (active, lang, modules)"
+    It "[Normal] T-CLI-MAINI-09: Should: create session.json with prog set to the language and no lang key"
       When run bash "$SCRIPT" myapp webapp
       The status should equal 0
-      The stderr should include "Session"
+      The stderr should include "Session created"
       The path "${DECKRD_LOCAL_DATA}/session.json" should be exist
-      The contents of file "${DECKRD_LOCAL_DATA}/session.json" should include "active"
-      The contents of file "${DECKRD_LOCAL_DATA}/session.json" should include "typescript"
-      The contents of file "${DECKRD_LOCAL_DATA}/session.json" should include "modules"
+      The value "$(session_query '.prog')" should equal "typescript"
+      The value "$(session_query 'has("lang")')" should equal "false"
+      The value "$(session_query 'has("active") and has("modules")')" should equal "true"
     End
 
     It "[Normal] T-CLI-MAINI-10: Should: create .gitignore in DECKRD_LOCAL_DATA containing '*kv'"
@@ -279,6 +283,47 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
       The status should equal 0
       The stderr should include "Session preserved"
       The stderr should not include "Rules update available"
+    End
+  End
+
+  Describe "Given: an old-format session.json already exists"
+    Before "setup_deckrd_tmpdir"
+    After "teardown_deckrd_tmpdir"
+
+    It "[Normal] T-CLI-MAINI-67: Should: move lang to prog and keep the other keys when lang is a programming language"
+      printf '%s\n' '{"active":"core/auth","lang":"typescript","ai_model":"sonnet","modules":{"core/auth":{}},"created_at":"2026-01-01T00:00:00Z","updated_at":"2026-01-01T00:00:00Z"}' \
+        >"${DECKRD_LOCAL_DATA}/session.json"
+      # --language go differs from the stored lang, so prog proves it came from lang, not the option
+      When run bash "$SCRIPT" myapp webapp --language go
+      The status should equal 0
+      The stderr should include "Session preserved"
+      The value "$(session_query '.prog')" should equal "typescript"
+      The value "$(session_query 'has("lang")')" should equal "false"
+      The value "$(session_query '.active')" should equal "core/auth"
+      The value "$(session_query '.ai_model')" should equal "sonnet"
+      The value "$(session_query '.modules | has("core/auth")')" should equal "true"
+      The value "$(session_query '.created_at')" should equal "2026-01-01T00:00:00Z"
+    End
+
+    It "[Edge] T-CLI-MAINI-68: Should: leave session.json unchanged when lang is not a programming language"
+      fixture='{"active":null,"lang":"ja","ai_model":"sonnet","modules":{},"created_at":"2026-01-01T00:00:00Z","updated_at":"2026-01-01T00:00:00Z"}'
+      printf '%s\n' "$fixture" >"${DECKRD_LOCAL_DATA}/session.json"
+      When run bash "$SCRIPT" myapp webapp
+      The status should equal 0
+      The stderr should include "Session preserved"
+      The contents of file "${DECKRD_LOCAL_DATA}/session.json" should equal "$fixture"
+    End
+  End
+
+  Describe "Given: an empty session.json already exists"
+    Before "setup_deckrd_tmpdir"
+    After "teardown_deckrd_tmpdir"
+
+    It "[Error] T-CLI-MAINI-69: Should: exit non-zero and report an error when the migration fails"
+      : >"${DECKRD_LOCAL_DATA}/session.json"
+      When run bash "$SCRIPT" myapp webapp
+      The status should be failure
+      The stderr should include "Error:"
     End
   End
 

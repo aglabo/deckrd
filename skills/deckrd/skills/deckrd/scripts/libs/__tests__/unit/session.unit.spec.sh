@@ -266,4 +266,305 @@ Describe "session.sh"
     End
   End
 
+  Describe "T-LIB-SMIG: session_migrate_lang_to_prog"
+    Before "setup_deckrd_tmpdir"
+    After "teardown_deckrd_tmpdir"
+
+    # Helper: entries of DECKRD_LOCAL (including dotfiles), for leftover-file checks
+    session_dir_entries() {
+      ls -A "${DECKRD_LOCAL}"
+    }
+
+    # Helper: session.json normalized with sorted keys, for structural comparison
+    session_json_sorted() {
+      jq -c -S . "${DECKRD_LOCAL}/session.json"
+    }
+
+    Describe "Given: lang にプログラミング言語が入り prog が無い session.json"
+      Describe "When: session_migrate_lang_to_prog を呼ぶ"
+        Describe "Then: Task T-01-01 - lang を prog に移行する"
+          It "[Normal] T-LIB-SMIG-01: lang=typescript が prog=typescript に移り lang が消える"
+            printf '{"lang":"typescript"}' > "${DECKRD_LOCAL}/session.json"
+            When call session_migrate_lang_to_prog "${DECKRD_LOCAL}/session.json"
+            The status should equal 0
+            The result of function session_json_sorted should equal '{"prog":"typescript"}'
+          End
+
+          It "[Normal] T-LIB-SMIG-02: lang 以外のキーは全て保持される"
+            printf '%s' '{"active":"deckrd/core","ai_model":"sonnet","lang":"go","modules":["deckrd/core"],"bdd_coder":{"enabled":true},"created_at":"2026-01-01T00:00:00Z"}' \
+              > "${DECKRD_LOCAL}/session.json"
+            When call session_migrate_lang_to_prog "${DECKRD_LOCAL}/session.json"
+            The status should equal 0
+            The result of function session_json_sorted should equal '{"active":"deckrd/core","ai_model":"sonnet","bdd_coder":{"enabled":true},"created_at":"2026-01-01T00:00:00Z","modules":["deckrd/core"],"prog":"go"}'
+          End
+
+          It "[Normal] T-LIB-SMIG-03: stderr に 1 行だけ出力し stdout は空"
+            printf '{"lang":"python"}' > "${DECKRD_LOCAL}/session.json"
+            When call session_migrate_lang_to_prog "${DECKRD_LOCAL}/session.json"
+            The status should equal 0
+            The output should equal ""
+            The lines of stderr should equal 1
+          End
+        End
+      End
+    End
+
+    Describe "Given: 移行の必要が無い session.json"
+      Describe "When: session_migrate_lang_to_prog を呼ぶ"
+        Describe "Then: Task T-01-02 - 何もせず内容不変で return 0"
+          It "[Normal] T-LIB-SMIG-04: prog が既に存在すれば変更しない"
+            printf '{"lang":"typescript","prog":"go"}' > "${DECKRD_LOCAL}/session.json"
+            before="$(cat "${DECKRD_LOCAL}/session.json")"
+            When call session_migrate_lang_to_prog "${DECKRD_LOCAL}/session.json"
+            The status should equal 0
+            The stderr should equal ""
+            The contents of file "${DECKRD_LOCAL}/session.json" should equal "$before"
+          End
+
+          It "[Normal] T-LIB-SMIG-05: lang キーが無ければ変更しない"
+            printf '{"active":"deckrd/core"}' > "${DECKRD_LOCAL}/session.json"
+            before="$(cat "${DECKRD_LOCAL}/session.json")"
+            When call session_migrate_lang_to_prog "${DECKRD_LOCAL}/session.json"
+            The status should equal 0
+            The stderr should equal ""
+            The contents of file "${DECKRD_LOCAL}/session.json" should equal "$before"
+          End
+
+          It "[Normal] T-LIB-SMIG-06: lang がドキュメント言語コード ja なら変更しない"
+            printf '{"lang":"ja"}' > "${DECKRD_LOCAL}/session.json"
+            before="$(cat "${DECKRD_LOCAL}/session.json")"
+            When call session_migrate_lang_to_prog "${DECKRD_LOCAL}/session.json"
+            The status should equal 0
+            The stderr should equal ""
+            The contents of file "${DECKRD_LOCAL}/session.json" should equal "$before"
+          End
+
+          It "[Normal] T-LIB-SMIG-07: lang が特別値 system なら変更しない"
+            printf '{"lang":"system"}' > "${DECKRD_LOCAL}/session.json"
+            before="$(cat "${DECKRD_LOCAL}/session.json")"
+            When call session_migrate_lang_to_prog "${DECKRD_LOCAL}/session.json"
+            The status should equal 0
+            The stderr should equal ""
+            The contents of file "${DECKRD_LOCAL}/session.json" should equal "$before"
+          End
+        End
+      End
+    End
+
+    Describe "Given: session.json が無い、または JSON オブジェクトとして読めない"
+      Describe "When: session_migrate_lang_to_prog を呼ぶ"
+        Describe "Then: Task T-01-03 - エラーを出して return 1"
+          It "[Error] T-LIB-SMIG-08: 存在しないパスは return 1 でファイルを作らない"
+            When call session_migrate_lang_to_prog "${DECKRD_LOCAL}/missing.json"
+            The status should equal 1
+            The stderr should include "Error"
+            The path "${DECKRD_LOCAL}/missing.json" should not be exist
+          End
+
+          It "[Error] T-LIB-SMIG-09: 不正な JSON は return 1 でファイル不変"
+            printf '{"lang":' > "${DECKRD_LOCAL}/session.json"
+            before="$(cat "${DECKRD_LOCAL}/session.json")"
+            When call session_migrate_lang_to_prog "${DECKRD_LOCAL}/session.json"
+            The status should equal 1
+            The stderr should include "Error"
+            The contents of file "${DECKRD_LOCAL}/session.json" should equal "$before"
+          End
+
+          It "[Error] T-LIB-SMIG-10: JSON 配列 (オブジェクトでない) は return 1 でファイル不変"
+            printf '["typescript"]' > "${DECKRD_LOCAL}/session.json"
+            before="$(cat "${DECKRD_LOCAL}/session.json")"
+            When call session_migrate_lang_to_prog "${DECKRD_LOCAL}/session.json"
+            The status should equal 1
+            The stderr should include "Error"
+            The contents of file "${DECKRD_LOCAL}/session.json" should equal "$before"
+          End
+        End
+      End
+    End
+
+    Describe "Given: 境界値・特殊値の session.json"
+      Describe "When: session_migrate_lang_to_prog を呼ぶ"
+        Describe "Then: Task T-01-04 - 許可リストの完全一致だけを移行する"
+          It "[Edge] T-LIB-SMIG-11: 許可リスト末尾の bash は移行される"
+            printf '{"lang":"bash"}' > "${DECKRD_LOCAL}/session.json"
+            When call session_migrate_lang_to_prog "${DECKRD_LOCAL}/session.json"
+            The status should equal 0
+            The stderr should be present
+            The result of function session_json_sorted should equal '{"prog":"bash"}'
+          End
+
+          It "[Edge] T-LIB-SMIG-12: lang が空文字なら変更しない"
+            printf '{"lang":""}' > "${DECKRD_LOCAL}/session.json"
+            before="$(cat "${DECKRD_LOCAL}/session.json")"
+            When call session_migrate_lang_to_prog "${DECKRD_LOCAL}/session.json"
+            The status should equal 0
+            The stderr should equal ""
+            The contents of file "${DECKRD_LOCAL}/session.json" should equal "$before"
+          End
+
+          It "[Edge] T-LIB-SMIG-13: 前方一致だけの typescripts は変更しない"
+            printf '{"lang":"typescripts"}' > "${DECKRD_LOCAL}/session.json"
+            before="$(cat "${DECKRD_LOCAL}/session.json")"
+            When call session_migrate_lang_to_prog "${DECKRD_LOCAL}/session.json"
+            The status should equal 0
+            The stderr should equal ""
+            The contents of file "${DECKRD_LOCAL}/session.json" should equal "$before"
+          End
+
+          It "[Edge] T-LIB-SMIG-14: 0 バイトのファイルは return 1 で 0 バイトのまま"
+            : > "${DECKRD_LOCAL}/session.json"
+            When call session_migrate_lang_to_prog "${DECKRD_LOCAL}/session.json"
+            The status should equal 1
+            The stderr should include "Error"
+            The file "${DECKRD_LOCAL}/session.json" should be empty file
+          End
+        End
+      End
+    End
+
+    Describe "Given: session.json だけがあるディレクトリ"
+      Describe "When: session_migrate_lang_to_prog で移行する"
+        Describe "Then: Task T-01-05 - 一時ファイル経由で書き込み残骸を残さない"
+          It "[Normal] T-LIB-SMIG-15: 移行後のディレクトリには session.json だけが残る"
+            printf '{"lang":"rust"}' > "${DECKRD_LOCAL}/session.json"
+            When call session_migrate_lang_to_prog "${DECKRD_LOCAL}/session.json"
+            The status should equal 0
+            The stderr should be present
+            The result of function session_json_sorted should equal '{"prog":"rust"}'
+            The result of function session_dir_entries should equal "session.json"
+          End
+        End
+      End
+    End
+
+    Describe "Given: 一度移行した session.json"
+      Describe "When: session_migrate_lang_to_prog を再度呼ぶ"
+        Describe "Then: Task T-01-06 - 2 回目は no-op (冪等)"
+          It "[Normal] T-LIB-SMIG-16: 2 回目は return 0 で stderr 空、内容は 1 回目の結果のまま"
+            printf '{"lang":"typescript"}' > "${DECKRD_LOCAL}/session.json"
+            session_migrate_lang_to_prog "${DECKRD_LOCAL}/session.json" 2>/dev/null
+            after_first="$(cat "${DECKRD_LOCAL}/session.json")"
+            When call session_migrate_lang_to_prog "${DECKRD_LOCAL}/session.json"
+            The status should equal 0
+            The stderr should equal ""
+            The contents of file "${DECKRD_LOCAL}/session.json" should equal "$after_first"
+            The result of function session_json_sorted should equal '{"prog":"typescript"}'
+          End
+        End
+      End
+    End
+  End
+
+  Describe "T-LIB-SLMN: session_lang_migration_needed"
+    Before "setup_deckrd_tmpdir"
+    After "teardown_deckrd_tmpdir"
+
+    Describe "Given: lang にプログラミング言語が入り prog が無い session.json"
+      Describe "When: session_lang_migration_needed を呼ぶ"
+        Describe "Then: Task T-01-01 - 移行が必要なら return 0"
+          It "[Normal] T-LIB-SLMN-01: lang=typescript は return 0 で出力なし、ファイル不変"
+            printf '{"active":"true","lang":"typescript"}' > "${DECKRD_LOCAL}/session.json"
+            before="$(cat "${DECKRD_LOCAL}/session.json")"
+            When call session_lang_migration_needed "${DECKRD_LOCAL}/session.json"
+            The status should equal 0
+            The output should equal ""
+            The stderr should equal ""
+            The contents of file "${DECKRD_LOCAL}/session.json" should equal "$before"
+          End
+        End
+      End
+    End
+
+    Describe "Given: 移行の必要が無い JSON オブジェクトの session.json"
+      Describe "When: session_lang_migration_needed を呼ぶ"
+        Describe "Then: Task T-01-02 - 移行不要なら return 1"
+          It "[Normal] T-LIB-SLMN-02: prog が既にあれば return 1 で出力なし"
+            printf '{"lang":"typescript","prog":"go"}' > "${DECKRD_LOCAL}/session.json"
+            When call session_lang_migration_needed "${DECKRD_LOCAL}/session.json"
+            The status should equal 1
+            The output should equal ""
+            The stderr should equal ""
+          End
+
+          It "[Normal] T-LIB-SLMN-03: lang がドキュメント言語コード ja なら return 1 で出力なし"
+            printf '{"lang":"ja"}' > "${DECKRD_LOCAL}/session.json"
+            When call session_lang_migration_needed "${DECKRD_LOCAL}/session.json"
+            The status should equal 1
+            The output should equal ""
+            The stderr should equal ""
+          End
+
+          It "[Normal] T-LIB-SLMN-04: lang キーが無ければ return 1 で出力なし"
+            printf '{"active":"true"}' > "${DECKRD_LOCAL}/session.json"
+            When call session_lang_migration_needed "${DECKRD_LOCAL}/session.json"
+            The status should equal 1
+            The output should equal ""
+            The stderr should equal ""
+          End
+        End
+      End
+    End
+
+    Describe "Given: session.json が無い、または JSON オブジェクトとして読めない"
+      Describe "When: session_lang_migration_needed を呼ぶ"
+        Describe "Then: Task T-01-03 - エラーを出して return 2"
+          It "[Error] T-LIB-SLMN-05: 存在しないパスは return 2 でファイルを作らない"
+            When call session_lang_migration_needed "${DECKRD_LOCAL}/missing/session.json"
+            The status should equal 2
+            The output should equal ""
+            The stderr should include "Error:"
+            The path "${DECKRD_LOCAL}/missing/session.json" should not be exist
+          End
+
+          It "[Error] T-LIB-SLMN-06: JSON 配列 (オブジェクトでない) は return 2"
+            printf '["lang","typescript"]' > "${DECKRD_LOCAL}/session.json"
+            When call session_lang_migration_needed "${DECKRD_LOCAL}/session.json"
+            The status should equal 2
+            The output should equal ""
+            The stderr should include "Error:"
+          End
+
+          It "[Error] T-LIB-SLMN-07: 不正な JSON (閉じ括弧なし) は return 2"
+            printf '{"lang":"typescript"' > "${DECKRD_LOCAL}/session.json"
+            When call session_lang_migration_needed "${DECKRD_LOCAL}/session.json"
+            The status should equal 2
+            The output should equal ""
+            The stderr should include "Error:"
+          End
+        End
+      End
+    End
+
+    Describe "Given: 境界値・特殊値の session.json"
+      Describe "When: session_lang_migration_needed を呼ぶ"
+        Describe "Then: Task T-01-04 - 許可リストの完全一致だけを移行要とし、空ファイルはエラー"
+          It "[Edge] T-LIB-SLMN-08: 許可リスト末尾の bash は return 0 で出力なし"
+            printf '{"lang":"bash"}' > "${DECKRD_LOCAL}/session.json"
+            When call session_lang_migration_needed "${DECKRD_LOCAL}/session.json"
+            The status should equal 0
+            The output should equal ""
+            The stderr should equal ""
+          End
+
+          It "[Edge] T-LIB-SLMN-09: 前方一致だけの typescripts は return 1 で出力なし"
+            printf '{"lang":"typescripts"}' > "${DECKRD_LOCAL}/session.json"
+            When call session_lang_migration_needed "${DECKRD_LOCAL}/session.json"
+            The status should equal 1
+            The output should equal ""
+            The stderr should equal ""
+          End
+
+          It "[Edge] T-LIB-SLMN-10: 0 バイトのファイルは return 2 で 0 バイトのまま"
+            : > "${DECKRD_LOCAL}/session.json"
+            When call session_lang_migration_needed "${DECKRD_LOCAL}/session.json"
+            The status should equal 2
+            The output should equal ""
+            The stderr should include "Error:"
+            The file "${DECKRD_LOCAL}/session.json" should be empty file
+          End
+        End
+      End
+    End
+  End
+
 End

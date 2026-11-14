@@ -18,6 +18,11 @@ readonly _SESSION_LOADED=1
 # shellcheck disable=SC1091
 . "${DECKRD_LIB_DIR}/kv-store.lib.sh"
 
+# Load utils for jq_read (the lang -> prog migration functions read session.json directly)
+# shellcheck source=skills/deckrd/skills/deckrd/scripts/libs/utils.lib.sh
+# shellcheck disable=SC1091
+. "${DECKRD_LIB_DIR}/utils.lib.sh"
+
 # SESSION_SCHEMA - compatibility shim: exposes _KV_SCHEMA as SESSION_SCHEMA
 # This allows existing code that checks SESSION_SCHEMA[$buffer] to work.
 # shellcheck disable=SC2034
@@ -82,4 +87,76 @@ session_set() {
   local key="$2"
   local value="${3:-}"
   kv_set "$buffer" "$key" "$value"
+}
+
+# session_lang_migration_needed - Tell whether session.json needs the lang -> prog migration
+#
+# Migration is needed when the file is a JSON object with no `prog` key and its
+# `lang` is exactly one of typescript / go / python / rust / shell / bash.
+# Read-only: the file is never modified and nothing is printed on stdout.
+#
+# @arg $1 string session.json file path
+# @stderr One `Error:` line when the return value is 2
+# @return 0 if migration is needed, 1 if the file is a JSON object that needs no
+#         migration, 2 if the file is missing or is not a JSON object (including
+#         an empty file)
+session_lang_migration_needed() {
+  local file="$1"
+
+  if [[ ! -f "$file" ]]; then
+    echo "Error: session_lang_migration_needed: file not found: ${file}" >&2
+    return 2
+  fi
+
+  local check='if type != "object" then error("not an object")
+    elif (has("prog") | not) and (.lang | IN("typescript", "go", "python", "rust", "shell", "bash")) then "migrate"
+    else "skip" end'
+  local verdict
+
+  # An empty file makes jq print nothing and succeed, so it falls into `*` too
+  verdict="$(jq_read -r "$check" "$file" 2>/dev/null)"
+  case "$verdict" in
+  migrate) return 0 ;;
+  skip) return 1 ;;
+  *)
+    echo "Error: session_lang_migration_needed: not a JSON object: ${file}" >&2
+    return 2
+    ;;
+  esac
+}
+
+# session_migrate_lang_to_prog - Move a programming language from `lang` to `prog`
+#
+# Older session.json files stored the programming language in `lang`. When
+# session_lang_migration_needed says migration is needed (`lang` is exactly one of
+# typescript / go / python / rust / shell / bash and there is no `prog` key), the
+# value is moved to `prog` and `lang` is deleted; all other keys are kept. The new
+# content is written to a temporary file in the same directory and then moved over
+# the original.
+# Otherwise (`prog` already present, `lang` absent, or any other `lang` value such
+# as a document language code) the file is left untouched.
+#
+# @arg $1 string session.json file path
+# @stderr One notice line when the file is migrated; an `Error:` line on failure
+# @return 0 on migration or no-op, 1 if the file is missing, is not a JSON object
+#         (including an empty file), or cannot be written
+session_migrate_lang_to_prog() {
+  local file="$1"
+  local tmp="${file}.tmp.$$"
+  local rc=0
+
+  # The predicate prints the `Error:` line itself when it returns 2
+  session_lang_migration_needed "$file" || rc=$?
+  case "$rc" in
+  0) ;;
+  1) return 0 ;;
+  *) return 1 ;;
+  esac
+
+  if ! { jq_read '(. + {prog: .lang}) | del(.lang)' "$file" >"$tmp" && mv -f "$tmp" "$file"; }; then
+    rm -f "$tmp"
+    echo "Error: session_migrate_lang_to_prog: failed to write: ${file}" >&2
+    return 1
+  fi
+  echo "session: migrated programming language from 'lang' to 'prog' in ${file}" >&2
 }
