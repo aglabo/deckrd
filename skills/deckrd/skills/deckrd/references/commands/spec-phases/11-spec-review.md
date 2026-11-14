@@ -32,11 +32,16 @@ Ensure each file contains **only external specification content**.
 
 Read each generated file and flag every passage that matches a removal criterion:
 
-| Criterion                | Examples                                                                   | Action                            |
-| ------------------------ | -------------------------------------------------------------------------- | --------------------------------- |
-| Implementation detail    | Function names, type signatures, file paths, class names                   | Remove or rewrite                 |
-| Requirements restatement | Sentences copied verbatim from `requirements.md`; FR/NFR bullet re-listing | Remove                            |
-| Notes / impl hints       | `<!-- impl: ... -->`, `> Note for impl:` comments                          | **Keep** (pass-through to `impl`) |
+| Criterion                | Examples                                                                                                   | Action                            |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------- | --------------------------------- |
+| Implementation detail    | Function names, type signatures, file paths, class names                                                   | Remove or rewrite                 |
+| Requirements restatement | Sentences copied verbatim from `requirements.md`; FR/NFR bullet re-listing                                 | Remove                            |
+| Notes / impl hints       | `<!-- impl: ... -->`, `> Note for impl:` comments                                                          | **Keep** (pass-through to `impl`) |
+| Missing class            | A row in Sections 3–5 with an empty or unknown `Class`                                                     | Suggest a class                   |
+| Misclassification        | A caller-observable item marked `Guarantee`; an internal property marked `Contract`                        | Suggest the correct class         |
+| Extension overreach      | An `Extension` row with an implementation obligation, or with no source in REQUIREMENTS / confirmed design | Rewrite or remove                 |
+
+Classes follow "Item Classification" in `assets/prompts/specifications.prompt.md`.
 
 **Do NOT remove:**
 
@@ -45,6 +50,7 @@ Read each generated file and flag every passage that matches a removal criterion
 - Interface contracts (pre/post-conditions without code)
 - Cross-unit interaction ordering
 - Notes explicitly marked as implementation hints
+- `Extension` rows that have a source (they record scope excluded from `impl` and `tasks`)
 
 ### Step 11-1b: Dictionary Consistency
 
