@@ -31,6 +31,29 @@ description: Restore each file's baseline history and bump its version after use
 Regeneration during the Phase 11 review loop does not bump.
 Restore and bump after the user approves.
 
+Bump the dictionary first, then the specification files. The specifications
+cite the dictionary's version, so that version must be final before they are bumped.
+
+### Step 12-1: Universal Dictionary
+
+When Phase 9 created or updated `universal-dictionary.md`:
+
+- No **DICTIONARY BASELINE** (first creation) — keep `1.0.0` and the initial row
+- Otherwise write **DICTIONARY BASELINE**'s Change History back, then bump from its
+  baseline version with the dictionary table below and add exactly one row
+
+| Change                                           | Bump  |
+| ------------------------------------------------ | ----- |
+| Meaning of a definition changed, term deprecated | MAJOR |
+| Term added, structural change (item added, etc.) | MINOR |
+| Clarification, relation / evidence added, typo   | PATCH |
+
+The dictionary's Change History row MUST name the documents whose impact was
+checked (from DICTIONARY TERMS) and the result. Skipped in Phase 9 → leave the
+dictionary untouched.
+
+### Step 12-2: Specification Files
+
 On approval, run the steps below for **every file** written in Phase 10 — each
 split file and `specifications-index.md`, not only an unsuffixed
 `specifications.md`. Each file is versioned independently.
@@ -53,21 +76,11 @@ split file and `specifications-index.md`, not only an unsuffixed
 Does `based-on` cite an older version than **REQ VERSION**?
 Then update it and treat the refresh as at least PATCH.
 
-**Universal dictionary** — when Phase 9 created or updated `universal-dictionary.md`:
-
-- No **DICTIONARY BASELINE** (first creation) — keep `1.0.0` and the initial row
-- Otherwise write **DICTIONARY BASELINE**'s Change History back, then bump from its
-  baseline version with the dictionary table below and add exactly one row
-
-| Change                                           | Bump  |
-| ------------------------------------------------ | ----- |
-| Meaning of a definition changed, term deprecated | MAJOR |
-| Term added, structural change (item added, etc.) | MINOR |
-| Clarification, relation / evidence added, typo   | PATCH |
-
-The dictionary's Change History row MUST name the documents whose impact was
-checked (from DICTIONARY TERMS) and the result. Skipped in Phase 9 → leave the
-dictionary untouched.
+Does `dictionary` cite an older version than the dictionary's final version
+from Step 12-1? Phase 10 wrote the pre-bump version, so this happens whenever
+Step 12-1 bumped the dictionary. Update it to
+`universal-dictionary.md v<final version>` and treat the refresh as at least PATCH.
+Files without a `dictionary` line need no change.
 
 A split file left unbumped gives downstream documents no way to identify its
 revision. Skipping any file is a defect.
@@ -77,6 +90,7 @@ See docs/.deckrd/rules/deckrd-rule-document-versioning.md.
 ## Output
 
 Every specification file carries a bumped `version` and one new Change History row.
+Every `dictionary` reference cites the dictionary's final version.
 
 ## Next Phase
 
