@@ -115,7 +115,7 @@ See [Deckrd Commands Reference](./deckrd-commands.md) for detailed command docum
 ```json
 {
   "active": "deckrd/feature-name",
-  "lang": "typescript",
+  "prog": "typescript",
   "ai_model": "sonnet",
   "modules": {
     "deckrd/feature-name": {
