@@ -26,6 +26,7 @@ You will receive:
 7. CODEBASE CONTEXT (optional): Existing architecture, patterns, and integration points discovered during codebase investigation
 8. CONFIRMED DESIGN (optional): User-reviewed and approved design direction including feature decomposition and architecture fit
 9. EXTERNAL DESIGN NOTES (optional): Unit contracts, interaction map, and edge cases produced by the external design dialogue
+10. UNIVERSAL DICTIONARY (optional): The module's `universal-dictionary.md` — the canonical definitions of terms and concepts (UD-NNN)
 
 ## Core Principles
 
@@ -42,6 +43,34 @@ You will receive:
 - **Implementation hints ARE allowed** as HTML comments `<!-- impl-note: ... -->` or
   blockquotes prefixed `> impl-note:`. These are pass-through notes for the `impl` phase
   and are exempt from removal during the review phase.
+
+---
+
+## Item Classification
+
+Classify every specification item (each input/output item in Section 3, each rule in Section 4,
+and each edge case in Section 5) into exactly one class, and record it in the `Class` column.
+
+| Class       | Meaning                                                                                                                                                | Example                                                                           |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------- |
+| `Contract`  | External interface. Inputs, outputs, error states, and ordering observable from outside the module boundary                                            | "when input is empty, the operation returns an error state"                       |
+| `Guarantee` | Implementation guarantee. A property the implementation always upholds that does not appear in the interface shape (invariant, idempotency, atomicity) | "on failure, no partial write remains"                                            |
+| `Extension` | Future extension. Not implemented now. Record only the constraint the current design keeps so that the extension stays possible                        | "output formats may be added later; format selection stays in one decision point" |
+
+Decision criteria:
+
+1. If a caller can observe the item through the module boundary → `Contract`
+2. Else, if the implementation must keep it true for the current scope → `Guarantee`
+3. Else, if it describes a change anticipated beyond the current scope → `Extension`
+
+Constraints:
+
+- Removing or changing a `Contract` item is a breaking change (MAJOR version bump)
+- `Extension` items MUST originate from REQUIREMENTS (Out of Scope / future requirements) or CONFIRMED DESIGN.
+  Do NOT invent extensions
+- `Extension` items are out of scope for `impl` and `tasks`. Do NOT write implementation obligations
+  (MUST / SHALL) for the extended behavior itself; state only what the current design must not block
+- If the class of an item cannot be determined, record it in Section 7 (Open Questions)
 
 ---
 
@@ -72,6 +101,7 @@ If **EXTERNAL DESIGN NOTES** is provided:
 
 - Use the unit contracts (pre/post-conditions, invariants, error cases) as the
   primary source for Section 3 (Behavioral Specification) and Section 4 (Decision Rules)
+- Classify pre-conditions, post-conditions, and error cases as `Contract`, and invariants as `Guarantee`
 - Use the interaction map to populate cross-unit ordering constraints
 - Use the edge case list to populate Section 5 (Edge Cases)
 - Items listed as "Unresolved" in EXTERNAL DESIGN NOTES MUST appear in Section 7 (Open Questions)
@@ -92,6 +122,25 @@ If **FUNCTION DECISIONS** is provided:
 
 ---
 
+## Step 0-G: Apply Universal Dictionary
+
+If **UNIVERSAL DICTIONARY** is provided:
+
+- Use every dictionary term with the meaning the dictionary gives it
+- Cite the UD-ID at the term's first use in each section (e.g., `処理権 (UD-004)`)
+- List every cited UD-ID and term in Section 1.3 (Terminology) — IDs and terms only, no definitions
+- Set frontmatter `dictionary` to `universal-dictionary.md v<dictionary version>`
+- Do NOT redefine a dictionary term, paraphrase its definition, or add a per-document glossary
+- Do NOT use a term in a meaning different from the dictionary
+- A concept needed by the specification but absent from the dictionary MUST NOT be defined here.
+  Record it in Section 7 (Open Questions) as "Dictionary candidate: <term>"
+- Obligations, conditions, and concrete values that use a term belong in this specification,
+  not in the dictionary
+
+If **UNIVERSAL DICTIONARY** is not provided, delete the frontmatter `dictionary` line and Section 1.3.
+
+---
+
 ## Step 0-A: Absorb External API Decisions
 
 If **API DECISIONS** is provided:
@@ -100,7 +149,7 @@ If **API DECISIONS** is provided:
   - Service name and protocol (REST, gRPC, message queue, CLI, etc.)
   - Error handling policy (fatal / non-fatal)
   - Scope boundary (read-only, write, bidirectional)
-- Carry these into Section 3 (Behavioral Specification) as interface constraints
+- Carry these into Section 3 (Behavioral Specification) as interface constraints, classified as `Contract`
 - Do NOT invent API details not present in API DECISIONS or REQUIREMENTS
 
 ---
@@ -152,6 +201,9 @@ Extract only:
    - Identify DRs that affect this specification's behavioral rules
    - Record: DR-ID, Title, Phase, Impact description
    - These MUST appear in Section 2.6 of output
+7. Class of each extracted item (input/output item, rule, edge case)
+   - Apply the criteria in "Item Classification"
+   - Extract `Extension` items only from Out of Scope / future requirements or CONFIRMED DESIGN
 
 ---
 
@@ -210,6 +262,10 @@ Using the TEMPLATE:
 - Express rules in declarative, order-sensitive form
 - Preserve all constraints from REQUIREMENTS
 - Ensure traceability to FR identifiers
+- Fill the `Class` column of every row in Sections 3–5 (`Contract` / `Guarantee` / `Extension`)
+- Order rows within each table as `Contract` → `Guarantee` → `Extension`,
+  except that Section 4 keeps its evaluation order
+- `Extension` rows in Section 4 are not part of the evaluation order: set their Step to `—`
 
 ---
 
@@ -230,6 +286,13 @@ Follow LANG parameter exactly.
 - Do NOT invent Non-Goals not stated in source
 - If REQUIREMENTS lacks Non-Goals, leave section empty with note:
   > "No Non-Goals defined in source REQUIREMENTS."
+
+### Extensions
+
+- `Extension` items MUST originate from REQUIREMENTS (Out of Scope / future requirements) or CONFIRMED DESIGN
+- Each `Extension` row states the anticipated change and the constraint the current design keeps
+- Do NOT write implementation obligations for the extended behavior itself
+- If no source exists, add no `Extension` rows
 
 ### Design Decisions
 
@@ -306,6 +369,10 @@ To minimize cleanup, follow these rules during generation:
 
 **Self-check before output**: scan the draft for function names, type annotations,
 file paths, and verbatim FR/NFR copies. Rewrite or remove each before outputting.
+Also check that every row in Sections 3–5 has a `Class`, and that no `Extension` row
+carries an implementation obligation or lacks a source.
+When a dictionary is provided, also check that every cited `UD-NNN` exists in it and
+that no dictionary term is redefined.
 
 ### Split File Rules
 

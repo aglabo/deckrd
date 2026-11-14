@@ -89,4 +89,4 @@ Append **SPLIT PLAN**, **BASELINE VERSION**, and **BASELINE HISTORY** to the Con
 
 ## Next Phase
 
-[Phase 9: Document Generation](09-generate.md)
+[Phase 9: Universal Dictionary](09-dictionary.md)

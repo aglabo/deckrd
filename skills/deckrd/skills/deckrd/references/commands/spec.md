@@ -46,10 +46,11 @@ Derive technically verifiable behavioral goals and constraints from requirements
 | 6     | `api-decisions`      | [06-api-decisions.md](spec-phases/06-api-decisions.md)           | 外部 API の決定 (対話)        | Phase 5 完了後。ドキュメント生成の前         |
 | 7     | `function-decisions` | [07-function-decisions.md](spec-phases/07-function-decisions.md) | 公開関数の決定 (対話)         | Phase 6 完了後。ドキュメント生成の前         |
 | 8     | `split-assessment`   | [08-split-assessment.md](spec-phases/08-split-assessment.md)     | 分割判定・版の baseline 取得  | Phase 7 完了後。FR 数によらず必ず通る        |
-| 9     | `generate`           | [09-generate.md](spec-phases/09-generate.md)                     | ドキュメント生成              | SPLIT PLAN が確定した後                      |
-| 10    | `spec-review`        | [10-spec-review.md](spec-phases/10-spec-review.md)               | 外部仕様レビューと除去 (対話) | 生成直後。版上げの前                         |
-| 11    | `version-bump`       | [11-version-bump.md](spec-phases/11-version-bump.md)             | 版上げ                        | Phase 10 をユーザーが承認した後              |
-| 12    | `second-opinion`     | [12-second-opinion.md](spec-phases/12-second-opinion.md)         | codex による second opinion   | Phase 11 完了後。`impl` へ移る前             |
+| 9     | `dictionary`         | [09-dictionary.md](spec-phases/09-dictionary.md)                 | 用語辞書の作成・更新 (対話)   | SPLIT PLAN が確定した後。仕様書生成の前      |
+| 10    | `generate`           | [10-generate.md](spec-phases/10-generate.md)                     | ドキュメント生成              | Phase 9 完了後 (スキップ含む)                |
+| 11    | `spec-review`        | [11-spec-review.md](spec-phases/11-spec-review.md)               | 外部仕様レビューと除去 (対話) | 生成直後。版上げの前                         |
+| 12    | `version-bump`       | [12-version-bump.md](spec-phases/12-version-bump.md)             | 版上げ                        | Phase 11 をユーザーが承認した後              |
+| 13    | `second-opinion`     | [13-second-opinion.md](spec-phases/13-second-opinion.md)         | codex による second opinion   | Phase 12 完了後。`impl` へ移る前             |
 
 ## Context Ledger
 
@@ -75,6 +76,8 @@ Derive technically verifiable behavioral goals and constraints from requirements
 | `SPLIT PLAN`            | Phase 8      |
 | `BASELINE VERSION`      | Phase 8      |
 | `BASELINE HISTORY`      | Phase 8      |
+| `DICTIONARY TERMS`      | Phase 9      |
+| `DICTIONARY BASELINE`   | Phase 9      |
 
 `--phase` で単一フェーズを実行するときは、そのフェーズの Preconditions 表に従い、
 このファイルから前提ブロックを読む。ledger に無いものは、生成元フェーズを先に実行する。
@@ -113,6 +116,12 @@ An index file is always created when split:
 docs/.deckrd/<namespace>/<module>/specifications/specifications-index.md
 ```
 
+**Universal dictionary** (Phase 9, created by default; not created when the user skips):
+
+```bash
+docs/.deckrd/<namespace>/<module>/universal-dictionary.md
+```
+
 ## Prompt & Documents
 
 Use prompt and template for writing specifications.md
@@ -124,7 +133,9 @@ Use prompt and template for writing specifications.md
 ```bash
 deckrd/assets/
        ├── prompts/specifications.prompt.md
-       └── templates/specifications.template.md
+       ├── prompts/universal-dictionary.prompt.md
+       ├── templates/specifications.template.md
+       └── templates/universal-dictionary.template.md
 ```
 
 ## Script
@@ -133,6 +144,7 @@ Execute: [generate-doc.sh](../../scripts/subcommands/generate-doc.sh)
 
 ```bash
 bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @specifications @requirements/requirements.md [--lang <lang>] --output "specifications/specifications.md"
+bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @universal-dictionary @requirements/requirements.md [--lang <lang>] --output "universal-dictionary.md"
 ```
 
 > **Note**:
@@ -141,7 +153,7 @@ bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @specifications @r
 
 ## Session Update
 
-After Phase 12 (or Phase 11 if Phase 12 is skipped), update `.local/deckrd/session.json`:
+After Phase 13 (or Phase 12 if Phase 13 is skipped), update `.local/deckrd/session.json`:
 
 ```json
 {
@@ -149,10 +161,13 @@ After Phase 12 (or Phase 11 if Phase 12 is skipped), update `.local/deckrd/sessi
   "completed": ["module", "req", "spec"],
   "documents": {
     "requirements": "requirements.md",
-    "specifications": "specifications.md"
+    "specifications": "specifications.md",
+    "universal_dictionary": "universal-dictionary.md"
   }
 }
 ```
+
+Omit `universal_dictionary` when Phase 9 was skipped and no dictionary exists.
 
 When split, record the index file as the `specifications` entry.
 List each split file under `specifications_files`:
@@ -181,4 +196,4 @@ Run `impl` to derive implementation plan from specifications.
 | 表の「内容」欄を見れば手順は分かる       | 表は目次であり手順ではない。終了条件・質問数の上限・除去基準は本体にしかない |
 | 毎回フェーズファイルを開くのは無駄       | 701 行を常時読むのをやめた分を、必要な 1 本を正確に読むことに使う            |
 | 前に同じフェーズを実行したから覚えている | 手順は更新される。参照した内容が現行版である保証はない                       |
-| 短いフェーズは読まなくても書ける         | Phase 11 は 30 行だが、baseline の復元順序を間違えると版が壊れる             |
+| 短いフェーズは読まなくても書ける         | Phase 12 は 30 行だが、baseline の復元順序を間違えると版が壊れる             |

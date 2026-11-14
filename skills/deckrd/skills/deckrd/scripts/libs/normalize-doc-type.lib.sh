@@ -22,6 +22,7 @@ readonly -a SHORT_TYPES=(
   "spec"
   "impl"
   "task"
+  "dict"
   "explore"
   "harden"
   "fix"
@@ -39,6 +40,7 @@ readonly -a LONG_TYPES=(
   "review-harden"
   "specifications"
   "tasks"
+  "universal-dictionary"
 )
 
 # normalize_doc_type - Normalize short doc-type aliases to canonical long form
@@ -72,7 +74,10 @@ normalize_doc_type() {
   task)
     echo "tasks"
     ;;
-  requirements | specifications | implementation | tasks | rev | decision-record)
+  dict)
+    echo "universal-dictionary"
+    ;;
+  requirements | specifications | implementation | tasks | rev | decision-record | universal-dictionary)
     echo "${doc_type}"
     ;;
   explore)

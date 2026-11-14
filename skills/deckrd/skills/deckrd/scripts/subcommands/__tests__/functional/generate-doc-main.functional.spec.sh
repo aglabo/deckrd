@@ -265,5 +265,23 @@ Describe "T-SUB-MAINF: generate-doc.sh main"
         The stderr should include 'decision-record.prompt.md'
       End
     End
+
+    Describe "When: 正常系 (universal-dictionary)"
+      It "Then: [Normal] T-SUB-MAINF-09: @universal-dictionary → universal-dictionary.prompt.md を解決して exit 0"
+        When run _run_generate_doc_with_type @universal-dictionary
+        The status should equal 0
+        The output should equal 'STUB AI RESPONSE'
+        The stderr should include 'universal-dictionary.prompt.md'
+      End
+    End
+
+    Describe "When: エッジケース (短名 alias)"
+      It "Then: [Edge] T-SUB-MAINF-10: @dict → universal-dictionary.prompt.md を解決して exit 0"
+        When run _run_generate_doc_with_type @dict
+        The status should equal 0
+        The output should equal 'STUB AI RESPONSE'
+        The stderr should include 'universal-dictionary.prompt.md'
+      End
+    End
   End
 End

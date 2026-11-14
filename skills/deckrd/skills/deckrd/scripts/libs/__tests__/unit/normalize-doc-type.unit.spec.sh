@@ -137,4 +137,42 @@ Describe "T-LIB-NDT: normalize_doc_type"
     End
   End
 
+  Describe "universal-dictionary / dict"
+    It "T-LIB-NDT-17: dict → universal-dictionary"
+      When run normalize_doc_type dict
+      The status should equal 0
+      The output should equal "universal-dictionary"
+    End
+
+    It "T-LIB-NDT-18: universal-dictionary → universal-dictionary"
+      When run normalize_doc_type universal-dictionary
+      The status should equal 0
+      The output should equal "universal-dictionary"
+    End
+
+    It "T-LIB-NDT-19: dictionary (未登録の近似エイリアス) → unknown doc-type"
+      When run normalize_doc_type dictionary
+      The status should equal 1
+      The stderr should include "Error: unknown doc-type: dictionary"
+    End
+
+    It "T-LIB-NDT-20: Dict (大文字) → フォーマットエラー"
+      When run normalize_doc_type "Dict"
+      The status should equal 1
+      The stderr should include "Error: doc-type must match"
+    End
+  End
+
+  Describe "型一覧配列への登録"
+    It "T-LIB-NDT-21: LONG_TYPES は tasks の直後に universal-dictionary を含む"
+      When call echo "${LONG_TYPES[*]}"
+      The output should include "tasks universal-dictionary"
+    End
+
+    It "T-LIB-NDT-22: SHORT_TYPES は要素として dict を含む"
+      When call echo " ${SHORT_TYPES[*]} "
+      The output should include " dict "
+    End
+  End
+
 End

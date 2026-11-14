@@ -1,5 +1,5 @@
 ---
-title: "spec Phase 12: Second Opinion via Codex"
+title: "spec Phase 13: Second Opinion via Codex"
 description: Get an independent review of the specifications before transitioning to impl
 ---
 
@@ -9,7 +9,7 @@ description: Get an independent review of the specifications before transitionin
     ja-technical-writing/max-comma -->
 <!-- markdownlint-disable line-length -->
 
-## Phase 12: Second Opinion via Codex
+## Phase 13: Second Opinion via Codex
 
 ## Standalone Invocation
 
@@ -21,11 +21,11 @@ description: Get an independent review of the specifications before transitionin
 
 | 必要な入力                  | 生成元   | 欠けているとき          |
 | --------------------------- | -------- | ----------------------- |
-| 版上げ済みの specifications | Phase 11 | Phase 11 を先に実行する |
+| 版上げ済みの specifications | Phase 12 | Phase 12 を先に実行する |
 
 ## Steps
 
-After Phase 11 completes, invoke `/deckrd:deckrd-review spec` before transitioning to `impl`.
+After Phase 12 completes, invoke `/deckrd:deckrd-review spec` before transitioning to `impl`.
 
 This step is **REQUIRED** when the specifications:
 
@@ -47,7 +47,7 @@ Focus: balanced review — correctness, completeness, consistency across behavio
 
 - Accept: Note which findings to act on before running `impl`
 - Reject: Always provide a rationale — silent rejection is not allowed
-- If findings require revisions, return to Phase 9 and regenerate; then re-run Phases 10-12
+- If findings require revisions, return to Phase 10 and regenerate; then re-run Phases 11-13
 
 See `docs/.deckrd/rules/deckrd-rule-second-opinion.md` for the full rule.
 

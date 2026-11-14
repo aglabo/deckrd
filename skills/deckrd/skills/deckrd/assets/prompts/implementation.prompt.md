@@ -43,6 +43,8 @@ You will receive:
   -- Commit decomposition: what each commit delivers within a phase
   -- Traceability to specifications
 - Do NOT invent phases or commits not confirmed with the user.
+- Do NOT plan phases or commits that implement spec items with `Class = Extension`.
+  Keep only the constraints those rows state (what the current design must not block).
 - Do NOT prescribe code structure beyond what was agreed in the workflow.
 - In single mode, write one complete plan for `implementation.md`.
 - In split mode, write only the portion assigned to the current

@@ -1,6 +1,7 @@
 ---
 title: "Design Specification: {{FEATURE_NAME}}"
 based-on: requirements.md v{{REQ_VERSION}}
+dictionary: universal-dictionary.md v{{UD_VERSION}}
 status: Draft
 version: 1.0.0
 created: "{{ DATE }}"
@@ -18,6 +19,27 @@ This specification defines the **behavioral rules** and
 **classification semantics** of {{FEATURE_NAME}}.
 
 Implementation details are explicitly out of scope.
+
+Every item in Sections 3–5 carries one `Class`:
+
+| Class       | Meaning                                                                                    |
+| ----------- | ------------------------------------------------------------------------------------------ |
+| `Contract`  | External interface observable from outside the module. Changing it is a breaking change    |
+| `Guarantee` | Property the implementation always upholds without appearing in the interface shape        |
+| `Extension` | Future extension. Not implemented now; records only what the current design must not block |
+
+### 1.3 Terminology
+
+Terms follow `universal-dictionary.md`. Their definitions live only there.
+This specification cites them by UD-ID and does not redefine them.
+
+| UD-ID  | Term       |
+| ------ | ---------- |
+| UD-001 | {{TERM_1}} |
+
+<!-- List only the UD-IDs cited in this specification. No definitions.
+     If the module has no universal-dictionary.md, delete this section and the
+     frontmatter `dictionary` line. -->
 
 ---
 
@@ -132,17 +154,25 @@ Implementation details are explicitly out of scope.
 
 ## 3. Behavioral Specification
 
+<!-- Order rows in each table as Contract → Guarantee → Extension. -->
+
 ### 3.1 Input Domain
 
-- Input Type: {{INPUT_TYPE}}
-- Assumptions: {{INPUT_ASSUMPTIONS}}
+| Item             | Class     | Description             |
+| ---------------- | --------- | ----------------------- |
+| {{INPUT_ITEM_1}} | Contract  | {{INPUT_DESCRIPTION_1}} |
+| {{INPUT_ITEM_2}} | Guarantee | {{INPUT_ASSUMPTION_2}}  |
 
 ### 3.2 Output Semantics
 
-- Output Meaning: {{OUTPUT_MEANING}}
-- Possible Outcomes:
-  - {{OUTCOME_1}}
-  - {{OUTCOME_2}}
+| Item            | Class     | Description             |
+| --------------- | --------- | ----------------------- |
+| {{OUTCOME_1}}   | Contract  | {{OUTCOME_MEANING_1}}   |
+| {{OUTCOME_2}}   | Guarantee | {{OUTCOME_MEANING_2}}   |
+| {{EXTENSION_1}} | Extension | {{CONSTRAINT_KEPT_NOW}} |
+
+<!-- Extension rows: state the anticipated change and the constraint the current design keeps.
+     Add them only when REQUIREMENTS (Out of Scope / future) or the confirmed design is the source. -->
 
 ---
 
@@ -151,15 +181,16 @@ Implementation details are explicitly out of scope.
 <!--
 Rule ID format: R-NNN (sequential, stable)
 Rule IDs are referenced in Traceability and Edge Cases.
+Extension rows are not evaluated: set Step to "—" and place them after the evaluated rows.
 -->
 
 Evaluation MUST follow this order:
 
-| Rule ID | Step | Condition       | Outcome      |
-| ------- | ---: | --------------- | ------------ |
-| R-001   |    1 | {{CONDITION_1}} | {{RESULT_1}} |
-| R-002   |    2 | {{CONDITION_2}} | {{RESULT_2}} |
-| R-003   |    3 | {{CONDITION_3}} | {{RESULT_3}} |
+| Rule ID | Step | Class     | Condition       | Outcome      |
+| ------- | ---: | --------- | --------------- | ------------ |
+| R-001   |    1 | Contract  | {{CONDITION_1}} | {{RESULT_1}} |
+| R-002   |    2 | Guarantee | {{CONDITION_2}} | {{RESULT_2}} |
+| R-003   |    — | Extension | {{CONDITION_3}} | {{RESULT_3}} |
 
 No reordering is permitted.
 
@@ -167,10 +198,10 @@ No reordering is permitted.
 
 ## 5. Edge Cases
 
-| Input      | Classification | REQ           | Rationale |
-| ---------- | -------------- | ------------- | --------- |
-| {{EDGE_1}} | {{RESULT_1}}   | {{REQ_F_NNN}} | {{WHY_1}} |
-| {{EDGE_2}} | {{RESULT_2}}   | {{REQ_F_NNN}} | {{WHY_2}} |
+| Input      | Class     | Classification | REQ           | Rationale |
+| ---------- | --------- | -------------- | ------------- | --------- |
+| {{EDGE_1}} | Contract  | {{RESULT_1}}   | {{REQ_F_NNN}} | {{WHY_1}} |
+| {{EDGE_2}} | Guarantee | {{RESULT_2}}   | {{REQ_F_NNN}} | {{WHY_2}} |
 
 ---
 

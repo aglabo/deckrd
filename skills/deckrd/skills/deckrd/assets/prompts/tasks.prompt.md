@@ -154,6 +154,8 @@ Use category prefixes in describe blocks:
    - Input/output constraints
    - Section 4 (Decision Rules): each rule row → candidate task
    - Section 5 (Edge Cases): every row in the edge case table → candidate task
+   - Rows with `Class = Extension` in Sections 3–5 are future extensions: do NOT turn them into tasks.
+     List them in the Coverage Check as `Extension (out of scope)`
    - Section 2.5 (Behavioral Design Decisions): each Active DD row → at least one task
      verifying that the decided behavior is observable
    - Section 2.6 (Related Decision Records): note each DR-ID listed
@@ -243,7 +245,8 @@ Each task MUST include:
 - NEVER leave a required category or equivalence class without a task (MECE — CE violation)
 - NEVER skip error handling scenarios
 - NEVER omit edge case coverage (include boundary values, state transitions, and false-negative verification)
-- NEVER omit a task for any row in spec Section 5 (Edge Cases)
+- NEVER omit a task for any row in spec Section 5 (Edge Cases), except rows with `Class = Extension`
+- NEVER generate a task for a spec row with `Class = Extension`
 - NEVER omit a task for any Active DD in spec Section 2.5
 - NEVER omit a task for any DR listed in spec Section 2.6 that mandates observable behavior
 - NEVER output the document while the Coverage Check section contains `[UNCOVERED]` items
