@@ -1,5 +1,5 @@
 ---
-title: "spec Phase 10: External Spec Review & Cleanup"
+title: "spec Phase 11: External Spec Review & Cleanup"
 description: Strip implementation detail and requirements restatement from each generated file
 ---
 
@@ -9,7 +9,7 @@ description: Strip implementation detail and requirements restatement from each 
     ja-technical-writing/max-comma -->
 <!-- markdownlint-disable line-length -->
 
-## Phase 10: External Spec Review & Cleanup (max 2 rounds)
+## Phase 11: External Spec Review & Cleanup (max 2 rounds)
 
 ## Standalone Invocation
 
@@ -19,16 +19,16 @@ description: Strip implementation detail and requirements restatement from each 
 
 ## Preconditions
 
-| 必要な入力                 | 生成元  | 欠けているとき         |
-| -------------------------- | ------- | ---------------------- |
-| `specifications/` の生成物 | Phase 9 | Phase 9 を先に実行する |
+| 必要な入力                 | 生成元   | 欠けているとき          |
+| -------------------------- | -------- | ----------------------- |
+| `specifications/` の生成物 | Phase 10 | Phase 10 を先に実行する |
 
 ## Steps
 
 After all specification files are written, review each file.
 Ensure each file contains **only external specification content**.
 
-### Step 10-1: Self-Scan
+### Step 11-1: Self-Scan
 
 Read each generated file and flag every passage that matches a removal criterion:
 
@@ -46,7 +46,28 @@ Read each generated file and flag every passage that matches a removal criterion
 - Cross-unit interaction ordering
 - Notes explicitly marked as implementation hints
 
-### Step 10-2: Present Findings to User
+### Step 11-1b: Dictionary Consistency
+
+`universal-dictionary.md` が存在する場合、ルール (`deckrd-rule-document-model.md`) の
+「整合性の検証」に従って次を確かめる。
+
+| 検証       | 確かめること                                                         | 方法     |
+| ---------- | -------------------------------------------------------------------- | -------- |
+| 参照整合性 | 仕様書中の `UD-NNN` がすべて辞書の見出しに存在し、意図した概念を指す | 機械検査 |
+| 定義整合性 | 仕様書が辞書の用語を別の意味で使っていない・定義し直していない       | レビュー |
+| 責務整合性 | 辞書が仕様書の義務・保証・具体値を重複して定義していない             | レビュー |
+
+次のコマンドで参照切れを検出する。出力は空でなければならない。
+
+```bash
+dict=docs/.deckrd/<namespace>/<module>/universal-dictionary.md
+comm -23   <(grep -rhoE "UD-[0-9]{3}" docs/.deckrd/<namespace>/<module>/specifications/ | sort -u)   <(grep -oE "^#{2,6} UD-[0-9]{3} " "$dict" | awk '{print $2}' | sort -u)
+```
+
+指摘は Step 11-2 の提示に含める。辞書に無い新しい概念が見つかった場合は、仕様書で定義せず、
+Phase 9 に戻って辞書へ追加するか、Section 7 (Open Questions) に辞書への追加候補として記録する。
+
+### Step 11-2: Present Findings to User
 
 For each flagged passage, present a concise diff-style summary:
 
@@ -70,7 +91,7 @@ If no issues found:
 [Spec Review] No external-spec violations found in <filename>.
 ```
 
-### Step 10-3: Apply Changes
+### Step 11-3: Apply Changes
 
 For each accepted removal or rewrite:
 
@@ -96,8 +117,8 @@ For each accepted removal or rewrite:
 
 ## Output
 
-Cleaned specification files, and the user's approval that gates Phase 11.
+Cleaned specification files, and the user's approval that gates Phase 12.
 
 ## Next Phase
 
-[Phase 11: Version Bump](11-version-bump.md)
+[Phase 12: Version Bump](12-version-bump.md)
