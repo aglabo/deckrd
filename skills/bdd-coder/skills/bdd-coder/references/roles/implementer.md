@@ -80,26 +80,30 @@ When processing task `T<xx>-<yy>-<zz>`:
 
 ### Phase 2: Assertion Breakdown
 
-1. Identify individual assertions from task content
-2. Create `<local_dir>/temp/bdd-coder/bdd-todo.md`:
+1. Identify the Cases of the Target in checklist order, then the individual assertions of each Case
+2. Create `<local_dir>/temp/bdd-coder/bdd-todo.md`. Every item carries the Case ID (`T-XX-YY-ZZ`) it belongs to:
 
    ```markdown
-   # T02-04-03 Implementation Breakdown
+   # T-02 Implementation Breakdown
 
-   - [ ] testCase1: <description> state: todo
-   - [ ] testCase2: <description> state: todo
+   - [ ] [T-02-04-01] testCase1: <description> state: todo
+   - [ ] [T-02-04-01] testCase2: <description> state: todo
+   - [ ] [T-02-04-02] testCase3: <description> state: todo
    ```
 
 3. State vocabulary: `todo` → `red` → `green` → `done`
 4. Checkbox marker: `- [ ]` while the item is `todo` / `red` / `green`,
    `- [x]` once it reaches `state: done`
+5. Case ID binding: when the caller passes a Target ID (`T-XX`), `<TaskID>` in the steps below is
+   the Case ID of the item being processed (the `[T-XX-YY-ZZ]` tag in `bdd-todo.md`), never the Target ID.
+   Rebind it at step 3.1 for every item. A Case with several assertions keeps the same Case ID for all of them.
 
 ### Phase 3: RED-GREEN-REFACTOR Loop (per Case / assertion)
 
 Repeat steps 3.1–3.7 for each `state: todo` item:
 
 ```text
-3.1 Read next `state: todo` item from `bdd-todo.md`
+3.1 Read next `state: todo` item from `bdd-todo.md`. Bind `<TaskID>` to that item's Case ID.
 
 3.2 Write test code only (apply append-first rule). Do NOT touch implementation:
 
@@ -245,7 +249,14 @@ See: [assets/test-quality.md](../../assets/test-quality.md) — CRAP Score secti
 CC ≥ 11 → `BLOCKED`. CC 6–10 → `DONE_WITH_CONCERNS`. CC 1–5 → pass.
 Same bands as [code-reviewer.md](code-reviewer.md) — Phase 1.3 (CRITICAL / WARN / PASS).
 
-If any gate fails: fix and re-run. 3+ failures → report `BLOCKED` to caller.
+If any gate fails: fix and re-run. On 3+ failures, choose the status by cause:
+
+| Cause                                                                                                                | Status          | Caller action                    |
+| -------------------------------------------------------------------------------------------------------------------- | --------------- | -------------------------------- |
+| Cases remain and the failures come from the size of the invocation (context pressure, repeated retries across Cases) | `NEEDS_CONTEXT` | Split the Target and re-dispatch |
+| The failure would remain after splitting (CRAP / CC limit, type error, broken environment)                           | `BLOCKED`       | Stop and wait for the user       |
+
+A CRAP score above 30 or CC ≥ 11 is always `BLOCKED`. When unsure, report `BLOCKED`.
 
 **After all gates pass** — report to the caller. Do NOT run a code review here: the caller
 (bdd-coder skill Phase 4) runs code-reviewer once over the whole session's changes.
@@ -254,11 +265,11 @@ If any gate fails: fix and re-run. 3+ failures → report `BLOCKED` to caller.
 
 The default is one Target per invocation. Split at a **Case boundary** (never inside a Case) when any of these holds:
 
-| Trigger          | Threshold (guideline)                                                                 |
-| ---------------- | ------------------------------------------------------------------------------------- |
-| Number of Cases  | 30 or more Cases in the Target                                                        |
-| Context size     | Target files plus checklist would use over about half of the context window           |
-| Repeated retries | The same invocation hit 3+ quality-gate failures (report `NEEDS_CONTEXT`, then split) |
+| Trigger          | Threshold (guideline)                                                             |
+| ---------------- | --------------------------------------------------------------------------------- |
+| Number of Cases  | 30 or more Cases in the Target                                                    |
+| Context size     | Target files plus checklist would use over about half of the context window       |
+| Repeated retries | 3+ quality-gate failures caused by invocation size (`NEEDS_CONTEXT`, see Phase 7) |
 
 Splitting rules:
 
