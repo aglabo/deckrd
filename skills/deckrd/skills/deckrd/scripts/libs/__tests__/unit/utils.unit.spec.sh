@@ -57,9 +57,33 @@ _utils_spec_make_target() {
   printf '%s\n' "$1" >"$target"
 }
 
+# _utils_spec_make_dir_target - set $target to dir.json in the spec tmpdir
+#   and create it as an empty directory
+_utils_spec_make_dir_target() {
+  target="${_UTILS_SPEC_TMPDIR}/dir.json"
+  mkdir "$target"
+}
+
 # _utils_spec_tmp_leftovers - list temp files (`*.tmp.*`) left in the spec tmpdir
 _utils_spec_tmp_leftovers() {
   find "$_UTILS_SPEC_TMPDIR" -name '*.tmp.*' -print
+}
+
+# _utils_spec_dir_entries - list the entries of the directory $target points to
+#   (the trailing `/` makes ls follow a symlink to a directory)
+_utils_spec_dir_entries() {
+  ls -A "${target}/"
+}
+
+# _utils_spec_cannot_symlink - succeed if a real symlink cannot be created here
+#   (MSYS may silently copy instead of linking, so the result is checked with -L)
+_utils_spec_cannot_symlink() {
+  local probe rc=0
+  probe="$(mktemp -d)"
+  ln -s "$probe" "${probe}/link" 2>/dev/null
+  [[ -L "${probe}/link" ]] && rc=1
+  rm -rf "$probe"
+  return "$rc"
 }
 
 # _utils_spec_is_tmp_of <target> - succeed if the subject ($_utils_spec_is_tmp_of)
@@ -278,6 +302,28 @@ b"
         The result of function _utils_spec_tmp_leftovers should equal ""
         The stderr should equal ""
       End
+
+      It "Then: [Error] T-LIB-WJF-02-03: target が既存ディレクトリのとき 1 を返し、ディレクトリの中身を変えず tmp を残さない"
+        _utils_spec_make_dir_target
+        printf 'x\n' >"$target/keep.txt"
+        When call write_json_file "$target" -c -n '{"b":2}'
+        The status should equal 1
+        The result of function _utils_spec_dir_entries should equal "keep.txt"
+        The contents of file "$target/keep.txt" should equal "x"
+        The result of function _utils_spec_tmp_leftovers should equal ""
+        The stderr should equal ""
+      End
+
+      It "Then: [Error] T-LIB-WJF-02-04: target が既存ディレクトリのとき jq_read を呼ばず tmp も作らない"
+        _utils_spec_make_dir_target
+        called="${_UTILS_SPEC_TMPDIR}/jq.called"
+        # spy jq: records the call, then runs the real jq
+        jqexe="$(_utils_spec_fake_jq spy ": >'${called}'; exec jq \"\$@\"")"
+        When call write_json_file "$target" -c -n '{"b":2}'
+        The status should equal 1
+        The path "$called" should not be exist
+        The result of function _utils_spec_tmp_leftovers should equal ""
+      End
     End
 
     Describe "When: エッジケース"
@@ -296,6 +342,22 @@ b"
         The status should equal 0
         The contents of file "$target" should equal '{"k":"v"}'
         The result of function _utils_spec_tmp_leftovers should equal ""
+      End
+
+      It "Then: [Edge] T-LIB-WJF-03-03: target がディレクトリへのシンボリックリンクのとき 1 を返し、リンク先の中身を変えず tmp を残さない"
+        Skip if "シンボリックリンクを作れない" _utils_spec_cannot_symlink
+        realdir="${_UTILS_SPEC_TMPDIR}/realdir"
+        target="${_UTILS_SPEC_TMPDIR}/link.json"
+        mkdir "$realdir"
+        printf 'x\n' >"$realdir/keep.txt"
+        ln -s "$realdir" "$target"
+        When call write_json_file "$target" -c -n '{"b":2}'
+        The status should equal 1
+        The path "$target" should be symlink
+        The result of function _utils_spec_dir_entries should equal "keep.txt"
+        The contents of file "$realdir/keep.txt" should equal "x"
+        The result of function _utils_spec_tmp_leftovers should equal ""
+        The stderr should equal ""
       End
     End
 

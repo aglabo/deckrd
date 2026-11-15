@@ -44,15 +44,17 @@ jq_read() {
 # Writes the jq_read output to `<target>.tmp.<pid>` in the same directory, then
 # moves it over the target with `mv -f`. The target can also be a jq input file:
 # jq reads it in full before it is replaced. On failure the target is left as it
-# was and the temp file is removed.
+# was and the temp file is removed. A target that is an existing directory (or a
+# symlink to one) is rejected before jq runs, so no temp file is created.
 #
 # @arg $1 Target file path (created if it does not exist)
 # @arg ... Arguments passed to jq_read
 # @stderr jq messages only; the function itself writes nothing
-# @return 0 on success, 1 if jq_read or mv fails
+# @return 0 on success, 1 if target is an existing directory (or a symlink to one), or if jq_read or mv fails
 write_json_file() {
   local target="$1"
   shift
+  [[ -d "$target" ]] && return 1
   local tmp="${target}.tmp.$$"
   if ! { jq_read "$@" >"$tmp" && mv -f "$tmp" "$target"; }; then
     rm -f "$tmp"

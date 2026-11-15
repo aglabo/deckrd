@@ -301,5 +301,16 @@ Describe "T-CLI-WPJ: init.sh: write_project"
       The path "${_PROJECT_TMPDIR}/missing-dir" should not be exist
       The value "$(_list_project_tmp "$_PROJECT_TMPDIR")" should be blank
     End
+
+    It "[Error] T-CLI-WPJ-13: PROJECT_FILE is a directory -> 1, Error:, no 'Project written', directory unchanged, no tmp left"
+      mkdir "$PROJECT_FILE"
+      When call write_project
+      The status should equal 1
+      The stderr should include "Error: write_project: failed to write: ${PROJECT_FILE}"
+      The stderr should not include "Project written"
+      The path "$PROJECT_FILE" should be directory
+      The value "$(ls -A "$PROJECT_FILE")" should be blank
+      The value "$(_list_project_tmp "$_PROJECT_TMPDIR")" should be blank
+    End
   End
 End

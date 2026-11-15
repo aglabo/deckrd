@@ -353,5 +353,19 @@ Describe "T-CLI-INS: init.sh: init_session"
       The path "${_SESSION_TMPDIR}/missing-dir" should not be exist
       The value "$(_list_session_tmp "$_SESSION_TMPDIR")" should be blank
     End
+
+    It "[Error] T-CLI-INS-18: SESSION_FILE is a directory -> 1, Error:, no 'Session created', directory unchanged, no tmp left"
+      mkdir "$SESSION_FILE"
+      OPTIONS[lang]="ja"
+      OPTIONS[lang_set]=true
+      When call init_session
+      The status should equal 1
+      The stderr should include "Error: init_session: failed to write: ${SESSION_FILE}"
+      The stderr should not include "Session created"
+      The path "$SESSION_FILE" should be directory
+      The value "$(ls -A "$SESSION_FILE")" should be blank
+      The value "$(_list_session_tmp "$_SESSION_TMPDIR")" should be blank
+      The value "$(_list_session_tmp "$SESSION_FILE")" should be blank
+    End
   End
 End
