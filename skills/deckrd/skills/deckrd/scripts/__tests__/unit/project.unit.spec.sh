@@ -440,4 +440,61 @@ JSON
     End
   End
 
+  # write_project writes through write_json_file; a failure is reported and stops main
+  Describe "write_json_file の失敗"
+    _EXISTING_PROJECT='{"project":"oldapp","created_at":"2025-01-01T00:00:00Z"}'
+
+    # Run a snippet in a fresh bash that sources project.sh (main is guarded by
+    # BASH_SOURCE) with write_json_file stubbed to fail. PROJECT_FILE is readonly
+    # in project.sh, so this cannot be done in the spec shell.
+    # @arg $1 string snippet to run after the stub is defined
+    _run_with_failing_write() {
+      SCRIPT="$SCRIPT" bash -c '
+        . "$SCRIPT"
+        validate_env() { return 0; }
+        write_json_file() { return 1; }
+        '"$1"'
+      '
+    }
+    _write_project_with_failing_write() {
+      _run_with_failing_write '
+        args_init
+        OPTIONS[project]=myapp OPTIONS[project_type]="" OPTIONS[prog]=typescript OPTIONS[ai_model]=sonnet
+        write_project'
+    }
+    _main_with_failing_write() {
+      _run_with_failing_write 'main --project myapp'
+    }
+    _list_project_tmp() {
+      find "$DECKRD_LOCAL_DATA" -maxdepth 1 -name '.project.json.tmp*'
+    }
+    _write_existing_project() {
+      mkdir -p "$DECKRD_LOCAL_DATA"
+      printf '%s' "$_EXISTING_PROJECT" >"${DECKRD_LOCAL_DATA}/.project.json"
+    }
+    It "[Error] T-CLI-PRJ-60: .project.json が無く write_json_file が失敗 -> stderr に Error、status 1、ファイル未作成、tmp なし"
+      When call _write_project_with_failing_write
+      The status should equal 1
+      The stderr should include "Error: write_project: failed to write: ${DECKRD_LOCAL_DATA}/.project.json"
+      The path "${DECKRD_LOCAL_DATA}/.project.json" should not be exist
+      The value "$(_list_project_tmp)" should be blank
+    End
+
+    It "[Error] T-CLI-PRJ-61: 既存の .project.json があり write_json_file が失敗 -> status 1、内容は不変、tmp なし"
+      _write_existing_project
+      When call _write_project_with_failing_write
+      The status should equal 1
+      The stderr should include "Error: write_project: failed to write: ${DECKRD_LOCAL_DATA}/.project.json"
+      The contents of file "${DECKRD_LOCAL_DATA}/.project.json" should equal "$_EXISTING_PROJECT"
+      The value "$(_list_project_tmp)" should be blank
+    End
+
+    It "[Error] T-CLI-PRJ-62: write_project が失敗 -> main は exit 1 し、完了メッセージを出さない"
+      When call _main_with_failing_write
+      The status should equal 1
+      The stderr should include "Error: write_project: failed to write"
+      The stdout should not include "Deckrd project configured."
+    End
+  End
+
 End

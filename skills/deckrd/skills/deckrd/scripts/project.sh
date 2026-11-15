@@ -152,7 +152,11 @@ ensure_deckrd_dir() {
 # @description On update, created_at is preserved, and project_type / ai_model are taken
 #   from the existing file when they were not given on the command line
 # @var OPTIONS     project, project_type, prog, ai_model (project_type / ai_model may be updated)
+#   The write goes through write_json_file (temporary file + mv), so a failure
+#   leaves the existing file as it was and no temporary file behind.
 # @var OPTIONS_SET ai_model is `true` when --ai-model was given
+# @stderr An `Error:` line when the write fails
+# @return 0 on success, 1 if the write fails
 write_project() {
   local timestamp
   timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
@@ -170,7 +174,7 @@ write_project() {
   fi
 
   # shellcheck disable=SC2016
-  jq_read -n \
+  write_json_file "$PROJECT_FILE" -n \
     --arg project "${OPTIONS[project]}" \
     --arg project_type "${OPTIONS[project_type]}" \
     --arg prog "${OPTIONS[prog]}" \
@@ -184,7 +188,10 @@ write_project() {
       ai_model:     $ai_model,
       created_at:   $created_at,
       updated_at:   $updated_at
-    }' >"${PROJECT_FILE}.tmp" && mv "${PROJECT_FILE}.tmp" "$PROJECT_FILE"
+    }' || {
+    echo "Error: write_project: failed to write: ${PROJECT_FILE}" >&2
+    return 1
+  }
 }
 
 ##
@@ -210,7 +217,8 @@ display_result() {
 # @stdout Usage (on --help or argument errors) and the configured settings
 # @stderr `Error:` lines on failure
 # @exitcode 0 Success, or usage shown by --help
-# @exitcode 1 Missing jq/jaq, parse error, invalid arguments, or unsupported language
+# @exitcode 1 Missing jq/jaq, parse error, invalid arguments, unsupported language,
+#   or a failure to write the project file
 main() {
   validate_env || exit 1
 
@@ -238,7 +246,7 @@ main() {
 
   # Called without || so that set -e still applies inside these functions
   ensure_deckrd_dir
-  write_project
+  write_project || exit 1
   display_result
 }
 
