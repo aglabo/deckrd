@@ -73,6 +73,23 @@ No announcement = violation. Restart with announcement.
 1. Read `.local/deckrd/session.json` — confirm active module and current step
 2. Validate command order — if out of order, STOP and report
 3. Load the reference listed below — NEVER proceed without it
+4. Resolve the document language (`DOC_LANG`) — see below
+
+**Document language (`DOC_LANG`):**
+
+`--lang` is always the document language, never the programming language (`prog`).
+Resolve it once per command, in this order, and use the first value found:
+
+1. `--lang <lang>` given on this command
+2. `lang` in `.local/deckrd/session.json` (set by `/deckrd init --lang`)
+3. `system`
+
+Then:
+
+- Pass it to every `generate-doc.sh` call as `--lang <DOC_LANG>`. Do not omit it
+- Write every document you write yourself (DRs, spec phase notes, review notes) in `DOC_LANG`
+- Pass it as `lang` to dr-writer and dr-refiner
+- Do not use `prog` or `.project.json` to decide the document language
 
 **Reference selection:**
 
