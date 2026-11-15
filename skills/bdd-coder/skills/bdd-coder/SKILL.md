@@ -9,6 +9,7 @@ description: >
   "implement task T01-02", "run bdd-coder", "start BDD implementation".
   Do NOT commit or push — implementation only, no git operations.
   Do NOT implement multiple tasks in one invocation — one task per call.
+  The dispatch unit for the bdd-coder agent is one Target; each Case keeps its own RGR cycle.
 metadata:
   author: aglabo
   version: 0.7.0
@@ -52,8 +53,8 @@ bdd-coder is an orchestration layer with the following fixed phase order:
 | ----- | ---------------------------------- | ------------------------------------ | --------------------------------------------------------------------------------------------- |
 | 0     | Environment                        | explore-agent                        | Detect language, test framework, lint, type-check setup                                       |
 | 1     | Tasklist Resolve + Checklist Build | tasklist-builder + checklist-builder | Build or restore the task list, pick one item, generate its checklist, save the session entry |
-| 2     | Dependency Map                     | bdd-coder                            | Classify checklist tasks into serial / parallel groups                                        |
-| 3     | bdd-coder Dispatch                 | bdd-coder                            | Spawn bdd-coder per task; collect status reports                                              |
+| 2     | Dependency Map                     | bdd-coder                            | Classify checklist Targets into serial / parallel groups                                      |
+| 3     | bdd-coder Dispatch                 | bdd-coder                            | Spawn bdd-coder per Target (split only large Targets); collect status reports                 |
 | 4     | Quality Gate                       | bdd-coder + code-reviewer            | Global lint + type-check + all tests pass, then code review                                   |
 | 5     | Done Check                         | bdd-coder                            | Confirm all checklist items complete; write back tasks.md, task list, session                 |
 | 6     | Session End                        | bdd-coder                            | Reset state; remind user to commit manually                                                   |
@@ -246,18 +247,34 @@ If checklist-builder reports `BLOCKED` (a Task ID's Case lists more than one inp
 
 ### Phase 3: bdd-coder Dispatch
 
+**The dispatch unit is a Target (`T-XX`).** Spawn one bdd-coder per Target. It runs every Case of that Target
+in order, and each Case keeps its own RED → GREEN → REFACTOR cycle (Cases are never merged into one cycle).
+The role file, checklist, ENV PROFILE and target files are read once per Target instead of once per Case.
+
+Split a Target across several bdd-coder instances only when it is large:
+30 or more Cases, or target files plus checklist near half the context window.
+Split at a Case boundary, Scenario first. Steps: [workflow.md](references/workflow.md) — Phase 3 (Target の分割)
+
 Pass the following context to each bdd-coder instance:
 
-| Item              | Content                              |
-| ----------------- | ------------------------------------ |
-| `skill_dir`       | This skill directory (absolute path) |
-| `local_dir`       | `DECKRD_LOCAL_DATA` (absolute path)  |
-| Task ID           | e.g. `T-01-02-01`                    |
-| Task description  | Full Given/When/Then from checklist  |
-| Quality gate cmds | Commands table from ENV PROFILE      |
-| Checklist path    | Path to generated checklist file     |
+| Item              | Content                                                                          |
+| ----------------- | -------------------------------------------------------------------------------- |
+| `skill_dir`       | This skill directory (absolute path)                                             |
+| `local_dir`       | `DECKRD_LOCAL_DATA` (absolute path)                                              |
+| Target ID         | e.g. `T-01` (plus a Case range when the Target is split)                         |
+| Task description  | Full Given/When/Then of the Target's Cases from the checklist                    |
+| Quality gate cmds | Commands table from ENV PROFILE                                                  |
+| Checklist path    | Path to generated checklist file                                                 |
+| Prior state       | Split parts only: one-line summary of files changed so far. No earlier Case logs |
 
-Do NOT pass: session-wide context, other tasks' info, or session.json.
+Do NOT pass: session-wide context, other Targets' info, the full Case logs of finished Cases, or session.json.
+"1 delegation = 1 task" (`docs/.deckrd/rules/deckrd-rule-bdd-cycle.md`) holds with the Target as the task:
+the checklist handed over contains that Target only.
+
+Each bdd-coder records every finished Case in the `## Case Log` table of `bdd-todo.md`
+(Case ID / RED / GREEN / REFACTOR, see [implementer.md](references/roles/implementer.md)).
+After the last Case of a Target, the agent runs the Target regression tests and reports `REGRESSION`.
+After each Target, verify the changed files with `git status --short` / `git diff --stat`, not from the self-report.
 
 If bdd-coder reports `BLOCKED`:
 
@@ -384,7 +401,7 @@ Regardless of input type, also update the checklist file:
    `-R` / `-G` / `-F` items are `[x]`. Check any the bdd-coder instance left behind,
    and list them in the Step 5 report so the gap is visible.
 3. Check the Scenario and Target refactor items — these belong to this phase, not to
-   the bdd-coder instances, which each see only one Case:
+   the bdd-coder instances, which may each see only part of a Scenario when a Target is split:
    - `[T-XX-YY-TF]` — when every Case under Scenario `T-XX-YY` has `-R` / `-G` / `-F` at `[x]`
    - `[T-XX-CF]` — when every Scenario under Target `T-XX` has its `-TF` at `[x]`
    - A gate that does not hold yet is normal, not an error: leave the item unchecked

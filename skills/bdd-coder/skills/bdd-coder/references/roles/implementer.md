@@ -13,6 +13,10 @@ version: 1.0.0
 
 This Role is the **canonical procedure** for implementing one checklist task. It is language-agnostic.
 
+The unit of one invocation is a **Target** (`T-XX`): the caller hands over one Target with all its Scenarios and Cases.
+Every Case still runs its own RED → GREEN → REFACTOR cycle. Cases are never merged into one cycle.
+A caller may hand over part of a Target only when it splits the Target at a Case boundary (see [Target Splitting](#target-splitting)).
+
 - In Claude Code, the `bdd-coder` agent (`agents/bdd-coder.md` at the plugin root) loads this Role and runs it in a sub-context.
 - Where agents are not available, the main session follows this Role step by step itself.
 
@@ -26,8 +30,9 @@ Progress is tracked in `<local_dir>/temp/bdd-coder/bdd-todo.md` (see Core Princi
 
 ## Core Principles
 
-1. 1 task = assertion-level breakdown — Phase 2 splits one task into individual
-   assertions; each goes through its own RED-GREEN-REFACTOR cycle.
+1. 1 invocation = 1 Target, 1 RGR cycle per Case — Phase 2 splits the Target into Cases and assertions.
+   Each goes through its own RED-GREEN-REFACTOR cycle. Setup (role file, checklist, ENV PROFILE and target files)
+   is read once per invocation, not once per Case.
 
 2. `<local_dir>/temp/bdd-coder/bdd-todo.md` is the single source of truth — created in Phase 2,
    updated at every step. Resume capability depends entirely on this file.
@@ -75,26 +80,30 @@ When processing task `T<xx>-<yy>-<zz>`:
 
 ### Phase 2: Assertion Breakdown
 
-1. Identify individual assertions from task content
-2. Create `<local_dir>/temp/bdd-coder/bdd-todo.md`:
+1. Identify the Cases of the Target in checklist order, then the individual assertions of each Case
+2. Create `<local_dir>/temp/bdd-coder/bdd-todo.md`. Every item carries the Case ID (`T-XX-YY-ZZ`) it belongs to:
 
    ```markdown
-   # T02-04-03 Implementation Breakdown
+   # T-02 Implementation Breakdown
 
-   - [ ] testCase1: <description> state: todo
-   - [ ] testCase2: <description> state: todo
+   - [ ] [T-02-04-01] testCase1: <description> state: todo
+   - [ ] [T-02-04-01] testCase2: <description> state: todo
+   - [ ] [T-02-04-02] testCase3: <description> state: todo
    ```
 
 3. State vocabulary: `todo` → `red` → `green` → `done`
 4. Checkbox marker: `- [ ]` while the item is `todo` / `red` / `green`,
    `- [x]` once it reaches `state: done`
+5. Case ID binding: when the caller passes a Target ID (`T-XX`), `<TaskID>` in the steps below is
+   the Case ID of the item being processed (the `[T-XX-YY-ZZ]` tag in `bdd-todo.md`), never the Target ID.
+   Rebind it at step 3.1 for every item. A Case with several assertions keeps the same Case ID for all of them.
 
-### Phase 3: RED-GREEN-REFACTOR Loop (per assertion)
+### Phase 3: RED-GREEN-REFACTOR Loop (per Case / assertion)
 
 Repeat steps 3.1–3.7 for each `state: todo` item:
 
 ```text
-3.1 Read next `state: todo` item from `bdd-todo.md`
+3.1 Read next `state: todo` item from `bdd-todo.md`. Bind `<TaskID>` to that item's Case ID.
 
 3.2 Write test code only (apply append-first rule). Do NOT touch implementation:
 
@@ -120,8 +129,26 @@ Repeat steps 3.1–3.7 for each `state: todo` item:
     Check `[<TaskID>-F]` in the checklist file.
 
 3.7 Update `state: done` AND mark the item `- [x]` in `bdd-todo.md`.
+    Append the Case log line (see Case Log below).
     If more `state: todo` remain → back to 3.1. Else → Phase 4.
 ```
+
+#### Case Log
+
+After each Case reaches `state: done`, append one row to the `## Case Log` table at the end of `bdd-todo.md`:
+
+```markdown
+## Case Log
+
+| Case ID    | RED                 | GREEN | REFACTOR       |
+| ---------- | ------------------- | ----- | -------------- |
+| T-01-01-01 | FAIL (missing func) | PASS  | PASS (renamed) |
+```
+
+- One row per Case. Each cell is one short phrase: the result, plus the reason only when it is not obvious.
+- RED must read `FAIL`; a row whose RED is not `FAIL` means the cycle was skipped, so redo the Case.
+- Keep the log in `bdd-todo.md` only. Do not paste test output into it.
+- Work from `bdd-todo.md` and the checklist, not from the full log of earlier Cases: re-read only the current Case row and the files it touches.
 
 #### Checklist Write-back Rules
 
@@ -129,14 +156,14 @@ Repeat steps 3.1–3.7 for each `state: todo` item:
 (`<local_dir>/temp/tasks/<slug>-<adjective>-checklist.md`), find the item line
 `- [ ] **[<TaskID>-R] Red** : ...` and replace `- [ ]` with `- [x]`.
 
-| Rule         | Detail                                                                             |
-| ------------ | ---------------------------------------------------------------------------------- |
-| Canonical ID | Match in the checklist's `T-XX-YY-ZZ` form, whatever form the caller passed        |
-| Marker only  | Change the checkbox marker. Never edit the item text, ID, or table rows            |
-| Idempotent   | An item already `- [x]` stays as is                                                |
-| Verified     | Check an item only AFTER the step it represents actually passed                    |
-| Missing ID   | If the item is absent, skip it and note it in the status report NOTES              |
-| Scope        | Only `-R` / `-G` / `-F`. `-TF` and `-CF` belong to the caller, never to this agent |
+| Rule         | Detail                                                                           |
+| ------------ | -------------------------------------------------------------------------------- |
+| Canonical ID | Match in the checklist's `T-XX-YY-ZZ` form, whatever form the caller passed      |
+| Marker only  | Change the checkbox marker. Never edit the item text, ID, or table rows          |
+| Idempotent   | An item already `- [x]` stays as is                                              |
+| Verified     | Check an item only AFTER the step it represents actually passed                  |
+| Missing ID   | If the item is absent, skip it and note it in the status report NOTES            |
+| Scope        | `-R` / `-G` / `-F`. `-TF` / `-CF` only under the conditions in Phase 5 / Phase 6 |
 
 Do this immediately at the step, not batched at the end: an interrupted run must
 leave the checklist showing exactly how far it got.
@@ -145,6 +172,8 @@ leave the checklist showing exactly how far it got.
 
 1. Confirm all `bdd-todo.md` items are `state: done` and marked `- [x]`
 2. Run full test suite — all must pass
+3. Target regression — run every test file of the Target (and tests of code the Target shares with others)
+   once, after the last Case. A failure here is a regression: revert or fix the Case that caused it, then re-run.
 
 ### Phase 5: Refactor Test Code
 
@@ -168,8 +197,8 @@ Do NOT delete a test if it is the only test covering a particular boundary or br
    — split within the same Then block only; never add new Given/When blocks
 3. Verify all tests still pass
 
-Do NOT check the `-TF` item. This agent handles one Case per invocation and cannot see
-whether the other Cases of the Scenario are done; the caller checks it in its Phase 5.
+Check the `-TF` item of a Scenario only when this invocation implemented every Case of that Scenario
+and Phase 5 for it is done. Otherwise leave it for the caller (bdd-coder skill Phase 5).
 
 ### Phase 6: Refactor Implementation Code
 
@@ -193,7 +222,8 @@ whether the other Cases of the Scenario are done; the caller checks it in its Ph
 4. Extract common logic, improve naming, align with project conventions
 5. Verify all tests still pass
 
-Do NOT check the `-CF` item — same reason as `-TF` in Phase 5. The caller owns it.
+Check the `-CF` item only when this invocation implemented every Scenario of the Target and Phase 6 is done.
+When the Target was split across invocations, leave it for the caller.
 
 ### Phase 7: Quality Gates
 
@@ -219,17 +249,45 @@ See: [assets/test-quality.md](../../assets/test-quality.md) — CRAP Score secti
 CC ≥ 11 → `BLOCKED`. CC 6–10 → `DONE_WITH_CONCERNS`. CC 1–5 → pass.
 Same bands as [code-reviewer.md](code-reviewer.md) — Phase 1.3 (CRITICAL / WARN / PASS).
 
-If any gate fails: fix and re-run. 3+ failures → report `BLOCKED` to caller.
+If any gate fails: fix and re-run. On 3+ failures, choose the status by cause:
+
+| Cause                                                                                                                | Status          | Caller action                    |
+| -------------------------------------------------------------------------------------------------------------------- | --------------- | -------------------------------- |
+| Cases remain and the failures come from the size of the invocation (context pressure, repeated retries across Cases) | `NEEDS_CONTEXT` | Split the Target and re-dispatch |
+| The failure would remain after splitting (CRAP / CC limit, type error, broken environment)                           | `BLOCKED`       | Stop and wait for the user       |
+
+A CRAP score above 30 or CC ≥ 11 is always `BLOCKED`. When unsure, report `BLOCKED`.
 
 **After all gates pass** — report to the caller. Do NOT run a code review here: the caller
 (bdd-coder skill Phase 4) runs code-reviewer once over the whole session's changes.
+
+## Target Splitting
+
+The default is one Target per invocation. Split at a **Case boundary** (never inside a Case) when any of these holds:
+
+| Trigger          | Threshold (guideline)                                                             |
+| ---------------- | --------------------------------------------------------------------------------- |
+| Number of Cases  | 30 or more Cases in the Target                                                    |
+| Context size     | Target files plus checklist would use over about half of the context window       |
+| Repeated retries | 3+ quality-gate failures caused by invocation size (`NEEDS_CONTEXT`, see Phase 7) |
+
+Splitting rules:
+
+1. Split by Scenario first, then by Case inside a Scenario. Each part keeps its Cases in checklist order.
+2. Parts that change the same file run one after another, never in parallel.
+3. Pass the next part only the minimum state: its Case range, the checklist path, the ENV PROFILE,
+   and a one-line summary of what earlier parts changed. Do not pass earlier Case logs.
+4. `-TF` / `-CF` and the Target regression run in the last part, or in the caller's Phase 5.
+5. A part reports `CASES: <first>..<last>` in its status report so the caller can verify coverage.
 
 ## Status Report to Caller
 
 ```bash
 TASK: <Task ID>
 STATUS: <DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED>
+CASES: <first Case ID>..<last Case ID> (<N> done)
 PHASES: R=<pass|fail> G=<pass|fail> F=<pass|fail>
+REGRESSION: <pass|fail|not-run>
 QUALITY_GATE: <pass|fail>
 CHANGED_FILES: <comma-separated paths, or "none">
 NOTES: <required if not DONE>
@@ -271,6 +329,8 @@ root, and include newly created files even though they are still untracked.
 ### Task Complete
 
 - [ ] All `bdd-todo.md` items `state: done` and `- [x]`
+- [ ] `## Case Log` has one row per Case, every RED cell is `FAIL`
+- [ ] Target regression run passed
 - [ ] All quality gates pass
 - [ ] No `git add` or `git commit` performed
 
