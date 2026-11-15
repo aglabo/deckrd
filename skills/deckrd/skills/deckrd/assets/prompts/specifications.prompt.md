@@ -272,6 +272,9 @@ Using the TEMPLATE:
 ## Step 3: Apply Language
 
 Follow LANG parameter exactly.
+`LANG` (in PARAMETERS) is the document language. Write all prose of the output in it.
+It is not the programming language of the project: do not pick the language from the source code,
+file names, or the language of the input. Use the system default language only when `LANG` is `system`.
 
 - `ja`: Headings in English, body in Japanese
 - `en`: Use RFC 2119 keywords where appropriate
