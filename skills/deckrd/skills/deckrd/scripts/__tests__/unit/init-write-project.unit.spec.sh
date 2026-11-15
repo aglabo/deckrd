@@ -148,6 +148,16 @@ _mock_mv_fail() {
 }
 
 ##
+# @description Replace write_json_file (utils.lib.sh) with a stub that always
+#   fails. Call it from the example body: the Before hook sources init.sh,
+#   which would redefine the real function over an earlier stub.
+# @return 0
+_mock_write_json_file_fail() {
+  # shellcheck disable=SC2329
+  write_json_file() { return 1; }
+}
+
+##
 # @description Query PROJECT_FILE with jq (compact output, CR stripped).
 # @arg ... jq options and filter (the filter last)
 # @stdout jq result
@@ -223,12 +233,6 @@ Describe "T-CLI-WPJ: init.sh: write_project"
       The stderr should include "  prog:         go"
       The stderr should include "  ai_model:     sonnet"
     End
-
-    It "[Normal] T-CLI-WPJ-12: init.sh does not define _write_json_file (uses write_json_file from utils.lib.sh)"
-      When call type -t _write_json_file
-      The output should be blank
-      The status should be failure
-    End
   End
 
   # Unusual existing files and values
@@ -300,6 +304,15 @@ Describe "T-CLI-WPJ: init.sh: write_project"
       The stderr should not include "Project written"
       The path "${_PROJECT_TMPDIR}/missing-dir" should not be exist
       The value "$(_list_project_tmp "$_PROJECT_TMPDIR")" should be blank
+    End
+
+    It "[Error] T-CLI-WPJ-12: write_json_file fails -> 1, Error:, no 'Project written'"
+      _mock_write_json_file_fail
+      When call write_project
+      The status should equal 1
+      The stdout should be blank
+      The stderr should include "Error: write_project: failed to write: ${PROJECT_FILE}"
+      The stderr should not include "Project written"
     End
 
     It "[Error] T-CLI-WPJ-13: PROJECT_FILE is a directory -> 1, Error:, no 'Project written', directory unchanged, no tmp left"
