@@ -7,7 +7,7 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 
-# OPTIONS is the associative array declared by init.sh (init_vars); shellcheck
+# OPTIONS (and OPTIONS_SET) are associative arrays declared by args_init (args.lib.sh); shellcheck
 # cannot see that declaration, so it misreads the keys and the assignments.
 # shellcheck disable=SC1090,SC2034,SC2154
 
@@ -177,7 +177,7 @@ _project_created_at_fresh() {
 # existing files and values, and write failures (jq / mv / missing directory)
 # that must return 1 with an `Error:` line and leave no tmp file.
 Describe "T-CLI-WPJ: init.sh: write_project"
-  Before "_load_script_with_mocks" "init_vars" "_setup_project"
+  Before "_load_script_with_mocks" "init_vars" "args_init" "_setup_project"
   After "_teardown_project"
 
   # Successful creation and regeneration of .project.json

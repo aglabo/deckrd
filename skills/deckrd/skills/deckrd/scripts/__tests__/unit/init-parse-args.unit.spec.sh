@@ -1,13 +1,19 @@
 #!/usr/bin/env bash
 # skills/deckrd/skills/deckrd/scripts/__tests__/unit/init-parse-args.unit.spec.sh
-# @(#) : BDD unit tests for init.sh - parse_args function
+# @(#) : BDD unit tests for init.sh - main() argument parsing (args.lib.sh)
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 
-# shellcheck disable=SC1090
+# OPTIONS / OPTIONS_SET are declared by args.lib.sh (args_init); shellcheck
+# cannot see that declaration.
+# shellcheck disable=SC1090,SC2154
+
+# ============================================================================
+# Test infrastructure
+# ============================================================================
 
 _RUNTIME_BOOTSTRAP="${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/skills/deckrd/scripts/libs/bootstrap.lib.sh"
 . "$_RUNTIME_BOOTSTRAP" --no-finalize
@@ -15,352 +21,236 @@ unset _RUNTIME_BOOTSTRAP
 
 Include "${SHELLSPEC_SPECFILE%/*}/../spec_helper.sh"
 
+# ============================================================================
+# Target
+# ============================================================================
+
 SCRIPT="${DECKRD_SCRIPTS_DIR}/init.sh"
 
 # ============================================================================
-# init.sh: parse_args
+# Internal helpers
 # ============================================================================
 
-Describe "T-CLI-PA: init.sh: parse_args"
-  load_script_with_mocks() {
-    # shellcheck disable=SC2329
-    validate_env() { return 0; }
-    export -f validate_env
+##
+# @description Source init.sh with the environment validators stubbed out and
+#   replace _run_init_steps with a dumper of the parse result, so `main` runs the
+#   real declarations and parse_args without touching the file system.
+# @stdout (from main) one `key=value` line per dumped item, in this order:
+#   1 project, 2 project_type, 3 prog, 4 lang, 5 ai_model, 6 force,
+#   7 set_prog, 8 set_lang, 9 set_force, 10 show_help,
+#   11 language (`set` when the legacy key OPTIONS[language] exists)
+_load_script_with_dumper() {
+  # shellcheck disable=SC2329
+  validate_env() { return 0; }
+  # shellcheck disable=SC2329
+  validate_ai_model() { return 0; }
+  . "$SCRIPT"
 
-    # shellcheck disable=SC2329
-    validate_ai_model() { return 0; }
-    export -f validate_ai_model
-
-    # shellcheck disable=SC1090
-    . "$SCRIPT"
+  # shellcheck disable=SC2329
+  _run_init_steps() {
+    local k
+    for k in project project_type prog lang ai_model force; do
+      printf '%s=%s\n' "$k" "${OPTIONS[$k]}"
+    done
+    printf 'set_prog=%s\nset_lang=%s\nset_force=%s\n' \
+      "${OPTIONS_SET[prog]:-}" "${OPTIONS_SET[lang]:-}" "${OPTIONS_SET[force]:-}"
+    printf 'show_help=%s\nlanguage=%s\n' "${OPTIONS[SHOW_HELP]:-}" "${OPTIONS[language]+set}"
   }
-  Before "load_script_with_mocks"
-  Before "init_vars"
+}
 
-  Describe "Given: no arguments"
-    It "[Normal] T-CLI-PA-01: Should: return 0 and reset OPTIONS to defaults"
-      When call parse_args
+##
+# @description Expected dump for `main myapp webapp` (every option at its default)
+# @stdout The dump lines
+_default_dump() {
+  printf '%s\n' \
+    project=myapp project_type=webapp prog=typescript lang=system \
+    ai_model=sonnet force=false set_prog= set_lang= set_force= show_help=false language=
+}
+
+##
+# @description Run main with options, then again without any, in the same shell
+# @stdout The dump of the second main only
+_main_with_options_then_defaults() {
+  main myapp webapp --prog go --lang ja --force >/dev/null
+  main myapp webapp
+}
+
+# ============================================================================
+# init.sh: main argument parsing
+# ============================================================================
+
+Describe "T-CLI-PA: init.sh: main argument parsing"
+  Before "_load_script_with_dumper"
+
+  Describe "When: 正常系"
+    It "[Normal] T-CLI-PA-01: main myapp webapp -> positionals set, every option at its default, nothing marked"
+      When run main myapp webapp
       The status should equal 0
-      The value "${OPTIONS[project]}" should equal ""
-      The value "${OPTIONS[project_type]}" should equal ""
-      The value "${OPTIONS[prog]}" should equal "typescript"
-      The value "${OPTIONS[ai_model]}" should equal "sonnet"
-      The value "${OPTIONS[help]}" should equal false
+      The stdout should equal "$(_default_dump)"
     End
 
-    It "[Normal] T-CLI-PA-23: Should: reset OPTIONS[lang] and set flags to defaults"
-      When call parse_args
+    It "[Normal] T-CLI-PA-24: --prog go -> prog=go and marked as given"
+      When run main myapp webapp --prog go
       The status should equal 0
-      The value "${OPTIONS[lang]}" should equal "system"
-      The value "${OPTIONS[prog_set]}" should equal false
-      The value "${OPTIONS[lang_set]}" should equal false
-    End
-  End
-
-  Describe "Given: two positional arguments"
-    It "[Normal] T-CLI-PA-02: Should: set OPTIONS[project] and OPTIONS[project_type]"
-      When call parse_args myapp webapp
-      The status should equal 0
-      The value "${OPTIONS[project]}" should equal "myapp"
-      The value "${OPTIONS[project_type]}" should equal "webapp"
+      The line 3 of stdout should equal "prog=go"
+      The line 7 of stdout should equal "set_prog=true"
     End
 
-    It "[Normal] T-CLI-PA-15: Should: keep OPTIONS[help]=false without help flag"
-      When call parse_args myapp webapp
+    It "[Normal] T-CLI-PA-03: --language python -> prog=python, marked as given, no OPTIONS[language] key"
+      When run main myapp webapp --language python
       The status should equal 0
-      The value "${OPTIONS[help]}" should equal false
-    End
-  End
-
-  Describe "Given: --prog option"
-    It "[Normal] T-CLI-PA-24: Should: set OPTIONS[prog] and OPTIONS[prog_set]=true"
-      When call parse_args myapp webapp --prog go
-      The status should equal 0
-      The value "${OPTIONS[prog]}" should equal "go"
-      The value "${OPTIONS[prog_set]}" should equal true
+      The line 3 of stdout should equal "prog=python"
+      The line 7 of stdout should equal "set_prog=true"
+      The line 11 of stdout should equal "language="
     End
 
-    It "[Normal] T-CLI-PA-26: Should: normalize bash to shell"
-      When call parse_args myapp webapp --prog bash
+    It "[Normal] T-CLI-PA-25: --prog=go (inline form) -> prog=go and marked as given"
+      When run main myapp webapp --prog=go
       The status should equal 0
-      The value "${OPTIONS[prog]}" should equal "shell"
-      The value "${OPTIONS[prog_set]}" should equal true
+      The line 3 of stdout should equal "prog=go"
+      The line 7 of stdout should equal "set_prog=true"
     End
 
-    It "[Normal] T-CLI-PA-36: Should: keep OPTIONS[lang_set]=false and OPTIONS[lang] default for --prog alone"
-      When call parse_args myapp webapp --prog go
+    It "[Normal] T-CLI-PA-26: --prog bash -> normalized to prog=shell, still marked as given"
+      When run main myapp webapp --prog bash
       The status should equal 0
-      The value "${OPTIONS[lang_set]}" should equal false
-      The value "${OPTIONS[lang]}" should equal "system"
-    End
-  End
-
-  Describe "Given: --prog= syntax"
-    It "[Normal] T-CLI-PA-25: Should: set OPTIONS[prog] and OPTIONS[prog_set]=true"
-      When call parse_args myapp webapp --prog=go
-      The status should equal 0
-      The value "${OPTIONS[prog]}" should equal "go"
-      The value "${OPTIONS[prog_set]}" should equal true
+      The line 3 of stdout should equal "prog=shell"
+      The line 7 of stdout should equal "set_prog=true"
     End
 
-    It "[Normal] T-CLI-PA-27: Should: normalize bash to shell"
-      When call parse_args myapp webapp --prog=bash
+    It "[Normal] T-CLI-PA-04: --lang ja -> lang=ja marked as given, prog left at default and unmarked"
+      When run main myapp webapp --lang ja
       The status should equal 0
-      The value "${OPTIONS[prog]}" should equal "shell"
-      The value "${OPTIONS[prog_set]}" should equal true
-    End
-  End
-
-  Describe "Given: --language option"
-    It "[Normal] T-CLI-PA-03: Should: set OPTIONS[prog] and OPTIONS[prog_set]=true"
-      When call parse_args myapp webapp --language go
-      The status should equal 0
-      The value "${OPTIONS[prog]}" should equal "go"
-      The value "${OPTIONS[prog_set]}" should equal true
+      The line 3 of stdout should equal "prog=typescript"
+      The line 4 of stdout should equal "lang=ja"
+      The line 7 of stdout should equal "set_prog="
+      The line 8 of stdout should equal "set_lang=true"
     End
 
-    It "[Normal] T-CLI-PA-37: Should: not set the legacy key OPTIONS[language]"
-      When call parse_args myapp webapp --language go
+    It "[Normal] T-CLI-PA-08: --ai-model claude-sonnet-4-5 -> ai_model=claude-sonnet-4-5"
+      When run main myapp webapp --ai-model claude-sonnet-4-5
       The status should equal 0
-      The value "${OPTIONS[language]+set}" should equal ""
-    End
-  End
-
-  Describe "Given: --lang option (document language)"
-    It "[Normal] T-CLI-PA-04: Should: set OPTIONS[lang] and OPTIONS[lang_set]=true without changing OPTIONS[prog]"
-      When call parse_args myapp webapp --lang rust
-      The status should equal 0
-      The value "${OPTIONS[lang]}" should equal "rust"
-      The value "${OPTIONS[lang_set]}" should equal true
-      The value "${OPTIONS[prog]}" should equal "typescript"
-      The value "${OPTIONS[prog_set]}" should equal false
+      The line 5 of stdout should equal "ai_model=claude-sonnet-4-5"
     End
 
-    It "[Edge] T-CLI-PA-33: Should: keep --lang bash as bash (bash to shell applies to prog only)"
-      When call parse_args myapp webapp --lang bash
+    It "[Normal] T-CLI-PA-18: --force -> force=true marked as given, positionals intact"
+      When run main myapp webapp --force
       The status should equal 0
-      The value "${OPTIONS[lang]}" should equal "bash"
-      The value "${OPTIONS[prog]}" should equal "typescript"
+      The line 1 of stdout should equal "project=myapp"
+      The line 6 of stdout should equal "force=true"
+      The line 9 of stdout should equal "set_force=true"
     End
 
-    It "[Normal] T-CLI-PA-35: Should: keep OPTIONS[prog_set]=false and OPTIONS[prog] default for --lang alone"
-      When call parse_args myapp webapp --lang ja
+    It "[Normal] T-CLI-PA-13: -h -> exit 0 with Usage on stderr, init steps not run"
+      When run main -h
       The status should equal 0
-      The value "${OPTIONS[prog_set]}" should equal false
-      The value "${OPTIONS[prog]}" should equal "typescript"
+      The stderr should include "Usage: init.sh"
+      The stdout should equal ""
+    End
+
+    It "[Normal] T-CLI-PA-38: main with options, then main without -> second run back to defaults, nothing marked"
+      When run _main_with_options_then_defaults
+      The status should equal 0
+      The stdout should equal "$(_default_dump)"
     End
   End
 
-  Describe "Given: --lang= syntax (document language)"
-    It "[Normal] T-CLI-PA-28: Should: set OPTIONS[lang] and OPTIONS[lang_set]=true without changing OPTIONS[prog]"
-      When call parse_args myapp webapp --lang=ja
-      The status should equal 0
-      The value "${OPTIONS[lang]}" should equal "ja"
-      The value "${OPTIONS[lang_set]}" should equal true
-      The value "${OPTIONS[prog]}" should equal "typescript"
-    End
-  End
-
-  Describe "Given: --prog and --lang together"
-    It "[Edge] T-CLI-PA-34: Should: set both OPTIONS[prog] and OPTIONS[lang] with both flags true"
-      When call parse_args myapp webapp --prog go --lang ja
-      The status should equal 0
-      The value "${OPTIONS[prog]}" should equal "go"
-      The value "${OPTIONS[lang]}" should equal "ja"
-      The value "${OPTIONS[prog_set]}" should equal true
-      The value "${OPTIONS[lang_set]}" should equal true
-    End
-  End
-
-  Describe "Given: --language= syntax"
-    It "[Normal] T-CLI-PA-05: Should: set OPTIONS[prog] and OPTIONS[prog_set]=true"
-      When call parse_args myapp webapp --language=python
-      The status should equal 0
-      The value "${OPTIONS[prog]}" should equal "python"
-      The value "${OPTIONS[prog_set]}" should equal true
-    End
-  End
-
-  Describe "Given: --language bash (alias)"
-    It "[Normal] T-CLI-PA-06: Should: normalize bash to shell"
-      When call parse_args myapp webapp --language bash
-      The status should equal 0
-      The value "${OPTIONS[prog]}" should equal "shell"
-    End
-  End
-
-  Describe "Given: --language=bash (alias, = syntax)"
-    It "[Normal] T-CLI-PA-07: Should: normalize bash to shell"
-      When call parse_args myapp webapp --language=bash
-      The status should equal 0
-      The value "${OPTIONS[prog]}" should equal "shell"
-    End
-  End
-
-  Describe "Given: --ai-model option"
-    It "[Normal] T-CLI-PA-08: Should: set OPTIONS[ai_model]"
-      When call parse_args myapp webapp --ai-model claude-sonnet-4-5
-      The status should equal 0
-      The value "${OPTIONS[ai_model]}" should equal "claude-sonnet-4-5"
-    End
-  End
-
-  Describe "Given: --ai-model= syntax"
-    It "[Normal] T-CLI-PA-09: Should: set OPTIONS[ai_model]"
-      When call parse_args myapp webapp --ai-model=claude-sonnet-4-5
-      The status should equal 0
-      The value "${OPTIONS[ai_model]}" should equal "claude-sonnet-4-5"
-    End
-  End
-
-  Describe "Given: unknown option"
-    It "[Error] T-CLI-PA-10: Should: return 1 and set PARSE_ARGS_ERROR"
-      When call parse_args myapp webapp --unknown
+  Describe "When: 異常系"
+    It "[Error] T-CLI-PA-10: --unknown -> exit 1, library error reported, Usage shown"
+      When run main myapp webapp --unknown
       The status should equal 1
-      The variable PARSE_ARGS_ERROR should include "Unknown option"
+      The stderr should include "Error: Unknown option: --unknown"
+      The stderr should include "Usage: init.sh"
     End
-  End
 
-  Describe "Given: --prog without value"
-    It "[Error] T-CLI-PA-29: Should: return 1 and set PARSE_ARGS_ERROR"
-      When call parse_args myapp webapp --prog
+    It "[Error] T-CLI-PA-39: third positional extra -> exit 1, Unexpected argument, no Usage"
+      When run main myapp webapp extra
       The status should equal 1
-      The variable PARSE_ARGS_ERROR should include "requires a value"
+      The stderr should include "Error: Unexpected argument: extra"
+      The stderr should not include "Usage:"
     End
-  End
 
-  Describe "Given: --language without value"
-    It "[Error] T-CLI-PA-11: Should: return 1 and set PARSE_ARGS_ERROR"
-      When call parse_args myapp webapp --language
+    It "[Error] T-CLI-PA-29: --prog without a value -> exit 1, requires a value, no Usage"
+      When run main myapp webapp --prog
       The status should equal 1
-      The variable PARSE_ARGS_ERROR should include "requires a value"
+      The stderr should include "Error: --prog requires a value"
+      The stderr should not include "Usage:"
     End
-  End
 
-  Describe "Given: --lang with missing or empty value"
-    It "[Error] T-CLI-PA-30: Should: return 1 and set PARSE_ARGS_ERROR for --lang as last argument"
-      When call parse_args myapp webapp --lang
+    It "[Error] T-CLI-PA-20: --force=yes -> exit 1, flag does not take a value, no Usage"
+      When run main myapp webapp --force=yes
       The status should equal 1
-      The variable PARSE_ARGS_ERROR should include "requires a value"
+      The stderr should include "Error: --force does not take a value"
+      The stderr should not include "Usage:"
+    End
+  End
+
+  Describe "When: エッジケース"
+    It "[Edge] T-CLI-PA-33: --lang bash -> lang=bash kept as is (bash to shell applies to prog only)"
+      When run main myapp webapp --lang bash
+      The status should equal 0
+      The line 3 of stdout should equal "prog=typescript"
+      The line 4 of stdout should equal "lang=bash"
     End
 
-    It "[Error] T-CLI-PA-31: Should: return 1 and set PARSE_ARGS_ERROR for --lang= with empty value"
-      When call parse_args myapp webapp --lang=
+    It "[Edge] T-CLI-PA-31: --lang= (empty inline value) -> exit 1, requires a value"
+      When run main myapp webapp --lang=
       The status should equal 1
-      The variable PARSE_ARGS_ERROR should include "requires a value"
+      The stderr should include "Error: --lang requires a value"
     End
 
-    It "[Error] T-CLI-PA-32: Should: return 1 and set PARSE_ARGS_ERROR for --lang with empty string"
-      When call parse_args myapp webapp --lang ""
+    It "[Edge] T-CLI-PA-21: --force between positionals -> force=true, positionals in order"
+      When run main myapp --force webapp
+      The status should equal 0
+      The line 1 of stdout should equal "project=myapp"
+      The line 2 of stdout should equal "project_type=webapp"
+      The line 6 of stdout should equal "force=true"
+    End
+
+    It "[Edge] T-CLI-PA-40: --unknown=x -> exit 1, error names the option without the value, Usage shown"
+      When run main myapp webapp --unknown=x
       The status should equal 1
-      The variable PARSE_ARGS_ERROR should include "requires a value"
+      The line 1 of stderr should equal "Error: Unknown option: --unknown"
+      The stderr should include "Usage: init.sh"
     End
   End
 
-  Describe "Given: --ai-model without value"
-    It "[Error] T-CLI-PA-12: Should: return 1 and set PARSE_ARGS_ERROR"
-      When call parse_args myapp webapp --ai-model
+End
+
+# ============================================================================
+# init.sh: structure after the args.lib.sh migration
+# ============================================================================
+
+Describe "T-CLI-STR: init.sh: structure after the args.lib.sh migration"
+  Before "_load_script_with_dumper"
+
+  Describe "When: 正常系"
+    It "[Normal] T-CLI-STR-01: after sourcing init.sh -> library API defined and parse_args is the library's"
+      When call declare -F args_init args_value args_flag args_positional parse_args
+      The status should equal 0
+      The lines of stdout should equal 5
+      Assert eval '[[ "$(declare -f parse_args)" == *_args_option* ]]'
+    End
+  End
+
+  Describe "When: 異常系"
+    It "[Error] T-CLI-STR-02: after sourcing init.sh -> the removed local parser helpers are undefined"
+      When call declare -F _require_option_value _set_prog_option _set_lang_option _normalize_prog_option
       The status should equal 1
-      The variable PARSE_ARGS_ERROR should include "requires a value"
+      The stdout should equal ""
     End
   End
 
-  Describe "Given: --help option"
-    It "[Normal] T-CLI-PA-13: Should: set OPTIONS[help]=true and return 0 for --help"
-      When call parse_args --help
-      The status should equal 0
-      The value "${OPTIONS[help]}" should equal true
-      The stderr should equal ""
-    End
-  End
-
-  Describe "Given: -h option"
-    It "[Normal] T-CLI-PA-14: Should: set OPTIONS[help]=true and return 0 for -h"
-      When call parse_args -h
-      The status should equal 0
-      The value "${OPTIONS[help]}" should equal true
-      The stderr should equal ""
-    End
-  End
-
-  Describe "Given: --force option"
-    It "[Normal] T-CLI-PA-17: Should: default OPTIONS[force] to false"
-      When call parse_args myapp webapp
-      The status should equal 0
-      The value "${OPTIONS[force]}" should equal false
-    End
-
-    It "[Normal] T-CLI-PA-18: Should: set OPTIONS[force]=true for --force after positional arguments"
-      When call parse_args myapp webapp --force
-      The status should equal 0
-      The value "${OPTIONS[force]}" should equal true
-      The value "${OPTIONS[project]}" should equal "myapp"
-      The value "${OPTIONS[project_type]}" should equal "webapp"
-    End
-
-    It "[Normal] T-CLI-PA-19: Should: set OPTIONS[force]=true for --force before positional arguments"
-      When call parse_args --force myapp webapp
-      The status should equal 0
-      The value "${OPTIONS[force]}" should equal true
-      The value "${OPTIONS[project]}" should equal "myapp"
-      The value "${OPTIONS[project_type]}" should equal "webapp"
-    End
-
-    It "[Error] T-CLI-PA-20: Should: return 1 with Unknown option for --force=yes"
-      When call parse_args myapp webapp --force=yes
+  Describe "When: エッジケース"
+    It "[Edge] T-CLI-STR-03: unset OPTIONS; init_vars -> OPTIONS stays undeclared (args_init owns it)"
+      _init_vars_without_options() {
+        unset OPTIONS
+        init_vars
+        declare -p OPTIONS
+      }
+      When call _init_vars_without_options
       The status should equal 1
-      The variable PARSE_ARGS_ERROR should equal "Unknown option: --force=yes"
-      The value "${OPTIONS[force]}" should equal false
-    End
-
-    It "[Edge] T-CLI-PA-21: Should: set OPTIONS[force]=true for --force between positional arguments"
-      When call parse_args myapp --force webapp
-      The status should equal 0
-      The value "${OPTIONS[force]}" should equal true
-      The value "${OPTIONS[project]}" should equal "myapp"
-      The value "${OPTIONS[project_type]}" should equal "webapp"
+      The stderr should include "OPTIONS"
     End
   End
-
-  Describe "Given: repeated calls"
-    # shellcheck disable=SC2329
-    _parse_help_then_positional() {
-      parse_args -h
-      parse_args myapp webapp
-    }
-
-    # shellcheck disable=SC2329
-    _parse_force_then_positional() {
-      parse_args --force myapp webapp
-      parse_args myapp webapp
-    }
-
-    # shellcheck disable=SC2329
-    _parse_prog_lang_then_positional() {
-      parse_args myapp webapp --prog go --lang ja
-      parse_args myapp webapp
-    }
-
-    It "[Normal] T-CLI-PA-16: Should: reset OPTIONS[help] to false on next call"
-      When call _parse_help_then_positional
-      The status should equal 0
-      The value "${OPTIONS[help]}" should equal false
-    End
-
-    It "[Normal] T-CLI-PA-22: Should: reset OPTIONS[force] to false on next call"
-      When call _parse_force_then_positional
-      The status should equal 0
-      The value "${OPTIONS[force]}" should equal false
-    End
-
-    It "[Normal] T-CLI-PA-38: Should: reset OPTIONS[prog], OPTIONS[lang] and their set flags on next call"
-      When call _parse_prog_lang_then_positional
-      The status should equal 0
-      The value "${OPTIONS[prog]}" should equal "typescript"
-      The value "${OPTIONS[lang]}" should equal "system"
-      The value "${OPTIONS[prog_set]}" should equal false
-      The value "${OPTIONS[lang_set]}" should equal false
-    End
-  End
-
 End
