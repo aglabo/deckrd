@@ -128,14 +128,54 @@ validate_language() {
 }
 
 ##
+# @description Check that an option received a non-empty value
+# @arg $1 string Option name
+# @arg $2 string Option value
+# @return 0 if the value is non-empty, 1 otherwise
+# @var PARSE_ARGS_ERROR set to error description on failure
+_require_option_value() {
+  [[ -n "$2" ]] && return 0
+  PARSE_ARGS_ERROR="${1} requires a value"
+  return 1
+}
+
+##
+# @description Set the programming language option (bash normalized to shell) and mark it as explicitly given
+# @arg $1 string Programming language value
+# @var OPTIONS sets keys prog and prog_set
+_set_prog_option() {
+  OPTIONS[prog]="$1"
+  OPTIONS[prog_set]=true
+  _normalize_prog_option
+}
+
+##
+# @description Set the document language option (no normalization) and mark it as explicitly given
+# @arg $1 string Document language value
+# @var OPTIONS sets keys lang and lang_set
+_set_lang_option() {
+  OPTIONS[lang]="$1"
+  OPTIONS[lang_set]=true
+}
+
+##
+# @description Normalize the programming language alias bash to shell
+# @var OPTIONS key prog is rewritten when it equals bash
+_normalize_prog_option() {
+  if [[ "${OPTIONS[prog]}" == "bash" ]]; then
+    OPTIONS[prog]="shell"
+  fi
+}
+
+##
 # @description Parse command-line arguments and options
 # @return 0 on success or help request, 1 on error (no output; caller handles usage and error message)
 # @var PARSE_ARGS_ERROR set to error description on failure
-# @var OPTIONS reset to defaults, then filled from args (keys: project, project_type, language, ai_model, help, force)
+# @var OPTIONS reset to defaults, then filled from args (keys: project, project_type, prog, lang, prog_set, lang_set, ai_model, help, force)
 parse_args() {
   local positional=()
   PARSE_ARGS_ERROR=""
-  OPTIONS=([project]="" [project_type]="" [language]=typescript [ai_model]=sonnet [help]=false [force]=false)
+  OPTIONS=([project]="" [project_type]="" [prog]=typescript [lang]=system [prog_set]=false [lang_set]=false [ai_model]=sonnet [help]=false [force]=false)
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -143,25 +183,27 @@ parse_args() {
       OPTIONS[help]=true
       return 0
       ;;
-    --language | --lang)
-      if [[ -z "${2:-}" ]]; then
-        PARSE_ARGS_ERROR="${1} requires a value"
-        return 1
-      fi
-      OPTIONS[language]="$2"
-      [[ "${OPTIONS[language]}" == "bash" ]] && OPTIONS[language]="shell"
+    --prog | --language)
+      _require_option_value "$1" "${2:-}" || return 1
+      _set_prog_option "$2"
       shift 2
       ;;
-    --language=* | --lang=*)
-      OPTIONS[language]="${1#*=}"
-      [[ "${OPTIONS[language]}" == "bash" ]] && OPTIONS[language]="shell"
+    --prog=* | --language=*)
+      _set_prog_option "${1#*=}"
+      shift
+      ;;
+    --lang)
+      _require_option_value "$1" "${2:-}" || return 1
+      _set_lang_option "$2"
+      shift 2
+      ;;
+    --lang=*)
+      _require_option_value --lang "${1#*=}" || return 1
+      _set_lang_option "${1#*=}"
       shift
       ;;
     --ai-model)
-      if [[ -z "${2:-}" ]]; then
-        PARSE_ARGS_ERROR="--ai-model requires a value"
-        return 1
-      fi
+      _require_option_value "$1" "${2:-}" || return 1
       OPTIONS[ai_model]="$2"
       shift 2
       ;;
@@ -315,7 +357,7 @@ write_project() {
   jq_read -n \
     --arg project "${OPTIONS[project]}" \
     --arg project_type "${OPTIONS[project_type]}" \
-    --arg language "${OPTIONS[language]}" \
+    --arg language "${OPTIONS[prog]}" \
     --arg ai_model "${OPTIONS[ai_model]}" \
     --arg created_at "$created_at" \
     --arg updated_at "$timestamp" \
@@ -332,7 +374,7 @@ write_project() {
   echo "Project written: ${PROJECT_FILE}" >&2
   echo "  project:      ${OPTIONS[project]}" >&2
   echo "  project_type: ${OPTIONS[project_type]}" >&2
-  echo "  language:     ${OPTIONS[language]}" >&2
+  echo "  language:     ${OPTIONS[prog]}" >&2
   echo "  ai_model:     ${OPTIONS[ai_model]}" >&2
 }
 
@@ -356,7 +398,7 @@ init_session() {
 
   # shellcheck disable=SC2016
   jq_read -n \
-    --arg prog "${OPTIONS[language]}" \
+    --arg prog "${OPTIONS[prog]}" \
     --arg ai_model "${OPTIONS[ai_model]}" \
     --arg timestamp "$timestamp" \
     '{
@@ -400,8 +442,8 @@ main() {
     exit 1
   }
 
-  validate_language "${OPTIONS[language]}" || {
-    echo "Error: Unsupported language: ${OPTIONS[language]}. Supported: ${SUPPORTED_LANGUAGES[*]}" >&2
+  validate_language "${OPTIONS[prog]}" || {
+    echo "Error: Unsupported language: ${OPTIONS[prog]}. Supported: ${SUPPORTED_LANGUAGES[*]}" >&2
     exit 1
   }
 

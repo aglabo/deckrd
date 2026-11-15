@@ -43,9 +43,17 @@ Describe "T-CLI-PA: init.sh: parse_args"
       The status should equal 0
       The value "${OPTIONS[project]}" should equal ""
       The value "${OPTIONS[project_type]}" should equal ""
-      The value "${OPTIONS[language]}" should equal "typescript"
+      The value "${OPTIONS[prog]}" should equal "typescript"
       The value "${OPTIONS[ai_model]}" should equal "sonnet"
       The value "${OPTIONS[help]}" should equal false
+    End
+
+    It "[Normal] T-CLI-PA-23: Should: reset OPTIONS[lang] and set flags to defaults"
+      When call parse_args
+      The status should equal 0
+      The value "${OPTIONS[lang]}" should equal "system"
+      The value "${OPTIONS[prog_set]}" should equal false
+      The value "${OPTIONS[lang_set]}" should equal false
     End
   End
 
@@ -64,27 +72,112 @@ Describe "T-CLI-PA: init.sh: parse_args"
     End
   End
 
-  Describe "Given: --language option"
-    It "[Normal] T-CLI-PA-03: Should: set OPTIONS[language]"
-      When call parse_args myapp webapp --language go
+  Describe "Given: --prog option"
+    It "[Normal] T-CLI-PA-24: Should: set OPTIONS[prog] and OPTIONS[prog_set]=true"
+      When call parse_args myapp webapp --prog go
       The status should equal 0
-      The value "${OPTIONS[language]}" should equal "go"
+      The value "${OPTIONS[prog]}" should equal "go"
+      The value "${OPTIONS[prog_set]}" should equal true
+    End
+
+    It "[Normal] T-CLI-PA-26: Should: normalize bash to shell"
+      When call parse_args myapp webapp --prog bash
+      The status should equal 0
+      The value "${OPTIONS[prog]}" should equal "shell"
+      The value "${OPTIONS[prog_set]}" should equal true
+    End
+
+    It "[Normal] T-CLI-PA-36: Should: keep OPTIONS[lang_set]=false and OPTIONS[lang] default for --prog alone"
+      When call parse_args myapp webapp --prog go
+      The status should equal 0
+      The value "${OPTIONS[lang_set]}" should equal false
+      The value "${OPTIONS[lang]}" should equal "system"
     End
   End
 
-  Describe "Given: --lang alias"
-    It "[Normal] T-CLI-PA-04: Should: set OPTIONS[language]"
+  Describe "Given: --prog= syntax"
+    It "[Normal] T-CLI-PA-25: Should: set OPTIONS[prog] and OPTIONS[prog_set]=true"
+      When call parse_args myapp webapp --prog=go
+      The status should equal 0
+      The value "${OPTIONS[prog]}" should equal "go"
+      The value "${OPTIONS[prog_set]}" should equal true
+    End
+
+    It "[Normal] T-CLI-PA-27: Should: normalize bash to shell"
+      When call parse_args myapp webapp --prog=bash
+      The status should equal 0
+      The value "${OPTIONS[prog]}" should equal "shell"
+      The value "${OPTIONS[prog_set]}" should equal true
+    End
+  End
+
+  Describe "Given: --language option"
+    It "[Normal] T-CLI-PA-03: Should: set OPTIONS[prog] and OPTIONS[prog_set]=true"
+      When call parse_args myapp webapp --language go
+      The status should equal 0
+      The value "${OPTIONS[prog]}" should equal "go"
+      The value "${OPTIONS[prog_set]}" should equal true
+    End
+
+    It "[Normal] T-CLI-PA-37: Should: not set the legacy key OPTIONS[language]"
+      When call parse_args myapp webapp --language go
+      The status should equal 0
+      The value "${OPTIONS[language]+set}" should equal ""
+    End
+  End
+
+  Describe "Given: --lang option (document language)"
+    It "[Normal] T-CLI-PA-04: Should: set OPTIONS[lang] and OPTIONS[lang_set]=true without changing OPTIONS[prog]"
       When call parse_args myapp webapp --lang rust
       The status should equal 0
-      The value "${OPTIONS[language]}" should equal "rust"
+      The value "${OPTIONS[lang]}" should equal "rust"
+      The value "${OPTIONS[lang_set]}" should equal true
+      The value "${OPTIONS[prog]}" should equal "typescript"
+      The value "${OPTIONS[prog_set]}" should equal false
+    End
+
+    It "[Edge] T-CLI-PA-33: Should: keep --lang bash as bash (bash to shell applies to prog only)"
+      When call parse_args myapp webapp --lang bash
+      The status should equal 0
+      The value "${OPTIONS[lang]}" should equal "bash"
+      The value "${OPTIONS[prog]}" should equal "typescript"
+    End
+
+    It "[Normal] T-CLI-PA-35: Should: keep OPTIONS[prog_set]=false and OPTIONS[prog] default for --lang alone"
+      When call parse_args myapp webapp --lang ja
+      The status should equal 0
+      The value "${OPTIONS[prog_set]}" should equal false
+      The value "${OPTIONS[prog]}" should equal "typescript"
+    End
+  End
+
+  Describe "Given: --lang= syntax (document language)"
+    It "[Normal] T-CLI-PA-28: Should: set OPTIONS[lang] and OPTIONS[lang_set]=true without changing OPTIONS[prog]"
+      When call parse_args myapp webapp --lang=ja
+      The status should equal 0
+      The value "${OPTIONS[lang]}" should equal "ja"
+      The value "${OPTIONS[lang_set]}" should equal true
+      The value "${OPTIONS[prog]}" should equal "typescript"
+    End
+  End
+
+  Describe "Given: --prog and --lang together"
+    It "[Edge] T-CLI-PA-34: Should: set both OPTIONS[prog] and OPTIONS[lang] with both flags true"
+      When call parse_args myapp webapp --prog go --lang ja
+      The status should equal 0
+      The value "${OPTIONS[prog]}" should equal "go"
+      The value "${OPTIONS[lang]}" should equal "ja"
+      The value "${OPTIONS[prog_set]}" should equal true
+      The value "${OPTIONS[lang_set]}" should equal true
     End
   End
 
   Describe "Given: --language= syntax"
-    It "[Normal] T-CLI-PA-05: Should: set OPTIONS[language]"
+    It "[Normal] T-CLI-PA-05: Should: set OPTIONS[prog] and OPTIONS[prog_set]=true"
       When call parse_args myapp webapp --language=python
       The status should equal 0
-      The value "${OPTIONS[language]}" should equal "python"
+      The value "${OPTIONS[prog]}" should equal "python"
+      The value "${OPTIONS[prog_set]}" should equal true
     End
   End
 
@@ -92,7 +185,7 @@ Describe "T-CLI-PA: init.sh: parse_args"
     It "[Normal] T-CLI-PA-06: Should: normalize bash to shell"
       When call parse_args myapp webapp --language bash
       The status should equal 0
-      The value "${OPTIONS[language]}" should equal "shell"
+      The value "${OPTIONS[prog]}" should equal "shell"
     End
   End
 
@@ -100,7 +193,7 @@ Describe "T-CLI-PA: init.sh: parse_args"
     It "[Normal] T-CLI-PA-07: Should: normalize bash to shell"
       When call parse_args myapp webapp --language=bash
       The status should equal 0
-      The value "${OPTIONS[language]}" should equal "shell"
+      The value "${OPTIONS[prog]}" should equal "shell"
     End
   End
 
@@ -128,9 +221,37 @@ Describe "T-CLI-PA: init.sh: parse_args"
     End
   End
 
+  Describe "Given: --prog without value"
+    It "[Error] T-CLI-PA-29: Should: return 1 and set PARSE_ARGS_ERROR"
+      When call parse_args myapp webapp --prog
+      The status should equal 1
+      The variable PARSE_ARGS_ERROR should include "requires a value"
+    End
+  End
+
   Describe "Given: --language without value"
     It "[Error] T-CLI-PA-11: Should: return 1 and set PARSE_ARGS_ERROR"
       When call parse_args myapp webapp --language
+      The status should equal 1
+      The variable PARSE_ARGS_ERROR should include "requires a value"
+    End
+  End
+
+  Describe "Given: --lang with missing or empty value"
+    It "[Error] T-CLI-PA-30: Should: return 1 and set PARSE_ARGS_ERROR for --lang as last argument"
+      When call parse_args myapp webapp --lang
+      The status should equal 1
+      The variable PARSE_ARGS_ERROR should include "requires a value"
+    End
+
+    It "[Error] T-CLI-PA-31: Should: return 1 and set PARSE_ARGS_ERROR for --lang= with empty value"
+      When call parse_args myapp webapp --lang=
+      The status should equal 1
+      The variable PARSE_ARGS_ERROR should include "requires a value"
+    End
+
+    It "[Error] T-CLI-PA-32: Should: return 1 and set PARSE_ARGS_ERROR for --lang with empty string"
+      When call parse_args myapp webapp --lang ""
       The status should equal 1
       The variable PARSE_ARGS_ERROR should include "requires a value"
     End
@@ -214,6 +335,12 @@ Describe "T-CLI-PA: init.sh: parse_args"
       parse_args myapp webapp
     }
 
+    # shellcheck disable=SC2329
+    _parse_prog_lang_then_positional() {
+      parse_args myapp webapp --prog go --lang ja
+      parse_args myapp webapp
+    }
+
     It "[Normal] T-CLI-PA-16: Should: reset OPTIONS[help] to false on next call"
       When call _parse_help_then_positional
       The status should equal 0
@@ -224,6 +351,15 @@ Describe "T-CLI-PA: init.sh: parse_args"
       When call _parse_force_then_positional
       The status should equal 0
       The value "${OPTIONS[force]}" should equal false
+    End
+
+    It "[Normal] T-CLI-PA-38: Should: reset OPTIONS[prog], OPTIONS[lang] and their set flags on next call"
+      When call _parse_prog_lang_then_positional
+      The status should equal 0
+      The value "${OPTIONS[prog]}" should equal "typescript"
+      The value "${OPTIONS[lang]}" should equal "system"
+      The value "${OPTIONS[prog_set]}" should equal false
+      The value "${OPTIONS[lang_set]}" should equal false
     End
   End
 

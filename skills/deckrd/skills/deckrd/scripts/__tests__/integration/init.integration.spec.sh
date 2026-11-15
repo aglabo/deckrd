@@ -362,8 +362,8 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
       The stderr should include "python"
     End
 
-    It "[Normal] T-CLI-MAINI-20: --lang rust (alias)"
-      When run bash "$SCRIPT" myapp webapp --lang rust
+    It "[Normal] T-CLI-MAINI-20: --language rust"
+      When run bash "$SCRIPT" myapp webapp --language rust
       The status should equal 0
       The stderr should include "rust"
     End
