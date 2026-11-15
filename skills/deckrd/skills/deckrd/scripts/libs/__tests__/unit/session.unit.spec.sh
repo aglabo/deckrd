@@ -305,6 +305,14 @@ Describe "session.sh"
             The output should equal ""
             The lines of stderr should equal 1
           End
+
+          It "[Normal] T-LIB-SMIG-17: stderr の notice 行は文言が完全一致する"
+            printf '{"lang":"python"}' > "${DECKRD_LOCAL}/session.json"
+            When call session_migrate_lang_to_prog "${DECKRD_LOCAL}/session.json"
+            The status should equal 0
+            The output should equal ""
+            The stderr should equal "session: migrated programming language from 'lang' to 'prog' in ${DECKRD_LOCAL}/session.json"
+          End
         End
       End
     End
@@ -449,6 +457,54 @@ Describe "session.sh"
             The stderr should equal ""
             The contents of file "${DECKRD_LOCAL}/session.json" should equal "$after_first"
             The result of function session_json_sorted should equal '{"prog":"typescript"}'
+          End
+        End
+      End
+    End
+
+    Describe "Given: 移行が必要な session.json と書き込みに失敗する環境"
+      Describe "When: session_migrate_lang_to_prog を呼ぶ"
+        Describe "Then: Task T-01-08 - エラー行を出し return 1、ファイル不変、tmp を残さない"
+          It "[Error] T-LIB-SMIG-18: mv が失敗すると return 1 でエラー行を出し、内容不変で tmp も残らない"
+            printf '{"lang":"typescript"}' > "${DECKRD_LOCAL}/session.json"
+            # shellcheck disable=SC2329
+            mv() { return 1; }
+            When call session_migrate_lang_to_prog "${DECKRD_LOCAL}/session.json"
+            The status should equal 1
+            The stderr should equal "Error: session_migrate_lang_to_prog: failed to write: ${DECKRD_LOCAL}/session.json"
+            The contents of file "${DECKRD_LOCAL}/session.json" should equal '{"lang":"typescript"}'
+            The result of function session_dir_entries should equal "session.json"
+          End
+
+          It "[Error] T-LIB-SMIG-19: 移行フィルタの jq_read が失敗すると return 1 でエラー行を出し、内容不変で tmp も残らない"
+            printf '{"lang":"go"}' > "${DECKRD_LOCAL}/session.json"
+            # Fail only the migration filter; session_lang_migration_needed still needs the real jq
+            # shellcheck disable=SC2329
+            jq_read() {
+              local arg
+              for arg in "$@"; do
+                [[ "$arg" == '(. + {prog: .lang}) | del(.lang)' ]] && return 1
+              done
+              (
+                set -o pipefail
+                "${jqexe:-jq}" "$@" | tr -d '\r'
+              )
+            }
+            When call session_migrate_lang_to_prog "${DECKRD_LOCAL}/session.json"
+            The status should equal 1
+            The stderr should equal "Error: session_migrate_lang_to_prog: failed to write: ${DECKRD_LOCAL}/session.json"
+            The contents of file "${DECKRD_LOCAL}/session.json" should equal '{"lang":"go"}'
+            The result of function session_dir_entries should equal "session.json"
+          End
+
+          It "[Error] T-LIB-SMIG-20: write_json_file が失敗すると return 1 でエラー行を出し、内容不変"
+            printf '{"lang":"shell"}' > "${DECKRD_LOCAL}/session.json"
+            # shellcheck disable=SC2329
+            write_json_file() { return 1; }
+            When call session_migrate_lang_to_prog "${DECKRD_LOCAL}/session.json"
+            The status should equal 1
+            The stderr should equal "Error: session_migrate_lang_to_prog: failed to write: ${DECKRD_LOCAL}/session.json"
+            The contents of file "${DECKRD_LOCAL}/session.json" should equal '{"lang":"shell"}'
           End
         End
       End

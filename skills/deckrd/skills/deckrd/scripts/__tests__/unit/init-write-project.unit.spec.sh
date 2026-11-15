@@ -223,6 +223,12 @@ Describe "T-CLI-WPJ: init.sh: write_project"
       The stderr should include "  prog:         go"
       The stderr should include "  ai_model:     sonnet"
     End
+
+    It "[Normal] T-CLI-WPJ-12: init.sh does not define _write_json_file (uses write_json_file from utils.lib.sh)"
+      When call type -t _write_json_file
+      The output should be blank
+      The status should be failure
+    End
   End
 
   # Unusual existing files and values

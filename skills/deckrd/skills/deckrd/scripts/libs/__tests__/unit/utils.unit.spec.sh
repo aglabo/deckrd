@@ -50,6 +50,25 @@ _utils_spec_pipefail_state() {
   fi
 }
 
+# _utils_spec_make_target <content> - set $target to data.json in the spec tmpdir
+#   and write <content> plus a newline to it
+_utils_spec_make_target() {
+  target="${_UTILS_SPEC_TMPDIR}/data.json"
+  printf '%s\n' "$1" >"$target"
+}
+
+# _utils_spec_tmp_leftovers - list temp files (`*.tmp.*`) left in the spec tmpdir
+_utils_spec_tmp_leftovers() {
+  find "$_UTILS_SPEC_TMPDIR" -name '*.tmp.*' -print
+}
+
+# _utils_spec_is_tmp_of <target> - succeed if the subject ($_utils_spec_is_tmp_of)
+#   is "<target>.tmp.<digits>"; used with `should satisfy`
+_utils_spec_is_tmp_of() {
+  local subject="${_utils_spec_is_tmp_of:-}"
+  [[ "$subject" == "$1".tmp.* && "${subject#"$1".tmp.}" =~ ^[0-9]+$ ]]
+}
+
 Describe "utils.lib.sh"
 
   Before "_utils_spec_setup"
@@ -195,6 +214,88 @@ b"
         When call strip_suffix "$1" "$2"
         The status should equal 0
         The output should equal "$3"
+      End
+    End
+
+  End
+
+  # Target: write_json_file
+  # Responsibility: write jq_read output to a temp file next to the target and
+  # replace the target with mv -f, leaving the target intact on failure.
+  Describe "T-LIB-WJF: write_json_file"
+
+    Describe "When: 正常系"
+      It "Then: [Normal] T-LIB-WJF-01-01: 別入力 (-n) の出力で既存 target の内容が置き換わる"
+        _utils_spec_make_target '{"a":1}'
+        When call write_json_file "$target" -c -n '{"b":2}'
+        The status should equal 0
+        The contents of file "$target" should equal '{"b":2}'
+        The result of function _utils_spec_tmp_leftovers should equal ""
+      End
+
+      It "Then: [Normal] T-LIB-WJF-01-02: target 自身を入力にしても読み込み後に置き換わる"
+        _utils_spec_make_target '{"a":1}'
+        # shellcheck disable=SC2016  # $x is a jq variable
+        When call write_json_file "$target" -c --arg x 1 '.x = $x' "$target"
+        The status should equal 0
+        The contents of file "$target" should equal '{"a":1,"x":"1"}'
+        The result of function _utils_spec_tmp_leftovers should equal ""
+      End
+
+      It "Then: [Normal] T-LIB-WJF-01-03: 同じディレクトリの \${target}.tmp.<pid> を mv -f で target に置き換える"
+        _utils_spec_make_target '{"a":1}'
+        mv_args="${_UTILS_SPEC_TMPDIR}/mv.args"
+        # shellcheck disable=SC2329  # shadows the external mv for this example
+        mv() {
+          printf '%s\n' "$@" >"$mv_args"
+          command mv "$@"
+        }
+        When call write_json_file "$target" -c -n '{"b":2}'
+        The status should equal 0
+        The line 1 of contents of file "$mv_args" should equal "-f"
+        The line 2 of contents of file "$mv_args" should satisfy _utils_spec_is_tmp_of "$target"
+        The line 3 of contents of file "$mv_args" should equal "$target"
+      End
+    End
+
+    Describe "When: 異常系"
+      It "Then: [Error] T-LIB-WJF-02-01: 不正なフィルタで jq_read が失敗すると 1 を返し target を保ち tmp を残さない"
+        _utils_spec_make_target '{"a":1}'
+        When call write_json_file "$target" -c '.[' "$target"
+        The status should equal 1
+        The contents of file "$target" should equal '{"a":1}'
+        The result of function _utils_spec_tmp_leftovers should equal ""
+        The stderr should be present
+      End
+
+      It "Then: [Error] T-LIB-WJF-02-02: mv が失敗すると 1 を返し target を保ち tmp を残さず、自身は何も出力しない"
+        _utils_spec_make_target '{"a":1}'
+        # shellcheck disable=SC2329  # shadows the external mv for this example
+        mv() { return 1; }
+        When call write_json_file "$target" -c -n '{"b":2}'
+        The status should equal 1
+        The contents of file "$target" should equal '{"a":1}'
+        The result of function _utils_spec_tmp_leftovers should equal ""
+        The stderr should equal ""
+      End
+    End
+
+    Describe "When: エッジケース"
+      It "Then: [Edge] T-LIB-WJF-03-01: target 自身が不正な JSON かつ入力のとき 1 を返し target を切り詰めない"
+        _utils_spec_make_target 'not json'
+        When call write_json_file "$target" -c '.x = 1' "$target"
+        The status should equal 1
+        The contents of file "$target" should equal 'not json'
+        The result of function _utils_spec_tmp_leftovers should equal ""
+        The stderr should be present
+      End
+
+      It "Then: [Edge] T-LIB-WJF-03-02: target が存在しない場合は新規作成される"
+        target="${_UTILS_SPEC_TMPDIR}/new.json"
+        When call write_json_file "$target" -c -n '{"k":"v"}'
+        The status should equal 0
+        The contents of file "$target" should equal '{"k":"v"}'
+        The result of function _utils_spec_tmp_leftovers should equal ""
       End
     End
 

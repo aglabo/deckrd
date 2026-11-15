@@ -344,31 +344,12 @@ init_directories() {
 }
 
 ##
-# @description Write jq output to a JSON file through a temporary file.
-#   jq writes to `<file>.tmp.$$` in the same directory, which is then moved
-#   over the target, so a failed write never leaves a partial file.
-#   Used by write_project (.project.json) and init_session (session.json).
-# @arg $1 string Target file path
-# @arg ... Arguments passed to jq_read (options, filter, optional input file)
-# @return 0 on success, 1 if jq or mv fails (the temporary file is removed)
-_write_json_file() {
-  local target="$1"
-  shift
-  local tmp="${target}.tmp.$$"
-
-  if ! { jq_read "$@" >"$tmp" && mv -f "$tmp" "$target"; }; then
-    rm -f "$tmp"
-    return 1
-  fi
-}
-
-##
 # @description Write .project.json with project settings.
 #   Keys: project, project_type, prog (programming language), ai_model,
 #   created_at (kept from an existing file, or the current time when missing),
 #   updated_at.
 #   The whole object is regenerated, so an older `language` key is dropped.
-#   The write goes through a temporary file and mv (_write_json_file), so a
+#   The write goes through a temporary file and mv (write_json_file), so a
 #   failure leaves neither a partial file nor a temporary file.
 # @stderr Progress messages, or an `Error:` line when the write fails
 #         ("Project written" is not printed then)
@@ -386,7 +367,7 @@ write_project() {
   created_at="${created_at:-$timestamp}"
 
   # shellcheck disable=SC2016
-  _write_json_file "$PROJECT_FILE" -n \
+  write_json_file "$PROJECT_FILE" -n \
     --arg project "${OPTIONS[project]}" \
     --arg project_type "${OPTIONS[project_type]}" \
     --arg prog "${OPTIONS[prog]}" \
@@ -423,7 +404,7 @@ _init_session_preserve() {
   session_migrate_lang_to_prog "$SESSION_FILE" || return 1
   if [[ "${OPTIONS[lang_set]}" == true ]]; then
     # shellcheck disable=SC2016
-    _write_json_file "$SESSION_FILE" --arg lang "${OPTIONS[lang]}" '.lang = $lang' "$SESSION_FILE" || {
+    write_json_file "$SESSION_FILE" --arg lang "${OPTIONS[lang]}" '.lang = $lang' "$SESSION_FILE" || {
       echo "Error: init_session: failed to write lang: ${SESSION_FILE}" >&2
       return 1
     }
@@ -440,7 +421,7 @@ _init_session_preserve() {
 #   is moved to `prog` by session_migrate_lang_to_prog (libs/session.lib.sh).
 #   When --lang was given, `lang` is then set to that value (other keys kept);
 #   without --lang the file is otherwise untouched.
-#   Every write goes through a temporary file and mv (_write_json_file), so
+#   Every write goes through a temporary file and mv (write_json_file), so
 #   a failure leaves neither a partial session.json nor a temporary file.
 # @stderr Progress messages; an `Error:` line when creating the new file, the
 #         migration, or the lang write fails ("Session created" is not printed
@@ -458,7 +439,7 @@ init_session() {
   timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
   # shellcheck disable=SC2016
-  _write_json_file "$SESSION_FILE" -n \
+  write_json_file "$SESSION_FILE" -n \
     --arg prog "${OPTIONS[prog]}" \
     --arg lang "${OPTIONS[lang]}" \
     --arg lang_set "${OPTIONS[lang_set]}" \

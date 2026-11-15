@@ -18,7 +18,8 @@ readonly _SESSION_LOADED=1
 # shellcheck disable=SC1091
 . "${DECKRD_LIB_DIR}/kv-store.lib.sh"
 
-# Load utils for jq_read (the lang -> prog migration functions read session.json directly)
+# Load utils for jq_read / write_json_file (the lang -> prog migration functions read
+# and rewrite session.json directly)
 # shellcheck source=skills/deckrd/skills/deckrd/scripts/libs/utils.lib.sh
 # shellcheck disable=SC1091
 . "${DECKRD_LIB_DIR}/utils.lib.sh"
@@ -131,8 +132,9 @@ session_lang_migration_needed() {
 # session_lang_migration_needed says migration is needed (`lang` is exactly one of
 # typescript / go / python / rust / shell / bash and there is no `prog` key), the
 # value is moved to `prog` and `lang` is deleted; all other keys are kept. The new
-# content is written to a temporary file in the same directory and then moved over
-# the original.
+# content is written through write_json_file (libs/utils.lib.sh): a temporary file
+# in the same directory is moved over the original, and the temporary file is
+# removed on failure.
 # Otherwise (`prog` already present, `lang` absent, or any other `lang` value such
 # as a document language code) the file is left untouched.
 #
@@ -142,7 +144,6 @@ session_lang_migration_needed() {
 #         (including an empty file), or cannot be written
 session_migrate_lang_to_prog() {
   local file="$1"
-  local tmp="${file}.tmp.$$"
   local rc=0
 
   # The predicate prints the `Error:` line itself when it returns 2
@@ -153,8 +154,7 @@ session_migrate_lang_to_prog() {
   *) return 1 ;;
   esac
 
-  if ! { jq_read '(. + {prog: .lang}) | del(.lang)' "$file" >"$tmp" && mv -f "$tmp" "$file"; }; then
-    rm -f "$tmp"
+  if ! write_json_file "$file" '(. + {prog: .lang}) | del(.lang)' "$file"; then
     echo "Error: session_migrate_lang_to_prog: failed to write: ${file}" >&2
     return 1
   fi

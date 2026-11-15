@@ -39,6 +39,27 @@ jq_read() {
   )
 }
 
+# write_json_file - Replace a file with jq_read output via a temp file
+#
+# Writes the jq_read output to `<target>.tmp.<pid>` in the same directory, then
+# moves it over the target with `mv -f`. The target can also be a jq input file:
+# jq reads it in full before it is replaced. On failure the target is left as it
+# was and the temp file is removed.
+#
+# @arg $1 Target file path (created if it does not exist)
+# @arg ... Arguments passed to jq_read
+# @stderr jq messages only; the function itself writes nothing
+# @return 0 on success, 1 if jq_read or mv fails
+write_json_file() {
+  local target="$1"
+  shift
+  local tmp="${target}.tmp.$$"
+  if ! { jq_read "$@" >"$tmp" && mv -f "$tmp" "$target"; }; then
+    rm -f "$tmp"
+    return 1
+  fi
+}
+
 # normalize_dir_path - Normalize a directory path to `/` separators
 #
 # Replaces every `\` with `/`, collapses repeated `/` into one (except a leading
