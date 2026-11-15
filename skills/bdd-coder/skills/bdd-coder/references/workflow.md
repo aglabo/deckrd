@@ -30,7 +30,7 @@ Phase 1: タスクリスト作成 + チェックリスト作成 (tasklist-builde
     ↓
 Phase 2: タスク分析・依存関係マッピング
     ↓
-Phase 3: bdd-coder ディスパッチ (独立タスクは並列実行可能)
+Phase 3: bdd-coder ディスパッチ (Target 単位。独立した Target は並列実行可能)
     ↓
 Phase 4: グローバル品質ゲート (Lint + 型チェック + テスト)
     ↓
@@ -44,7 +44,7 @@ Phase 6: ワークフロー終了
 | Phase 0 | 開発言語・環境を把握               | explore-agent                        | ENV PROFILE (env-profile.md)                                                                                                                        |
 | Phase 1 | タスクリストとチェックリストを生成 | tasklist-builder + checklist-builder | `<local_dir>/temp/tasklist/<ns>/<module>/<name>.tasklist.md`, `<local_dir>/temp/tasks/<slug>-<adjective>-checklist.md`, session.json の `bdd_coder` |
 | Phase 2 | 依存関係を分析                     | bdd-coder                            | 実行グループ (直列 / 並列)                                                                                                                          |
-| Phase 3 | bdd-coder に委譲                   | bdd-coder                            | 各タスクのステータスレポート                                                                                                                        |
+| Phase 3 | bdd-coder に委譲 (Target 単位)     | bdd-coder                            | 各 Target のステータスと Case ログ                                                                                                                  |
 | Phase 4 | 全体品質を検証                     | bdd-coder                            | 品質ゲート合格確認                                                                                                                                  |
 | Phase 5 | 完了状態を確認                     | bdd-coder                            | セッション終了前の最終確認                                                                                                                          |
 | Phase 6 | セッション終了                     | bdd-coder                            | 開発ツール・状態をリセット                                                                                                                          |
@@ -262,56 +262,100 @@ bdd-coder から bdd-coder エージェントへ効率的に情報を受け渡�
 
 実行内容:
 
-1. 各タスクが変更するファイルを特定
-2. ファイル競合の有無でタスクを分類:
+1. 各 Target が変更するファイルを特定
+2. ファイル競合の有無で Target を分類:
    - 直列実行グループ: 共有ファイルがある、または前段タスクの出力に依存する
    - 並列実行グループ: 独立したファイル群を変更する (競合なし)
 3. 実行順序・グループを決定
 
-出力: 実行グループ定義 (例: Group-A: 並列[T-01-01, T-01-02], Group-B: 直列[T-01-03])
+出力: 実行グループ定義 (例: Group-A: 並列[T-01, T-02], Group-B: 直列[T-03])
+
+同じファイルを変更する Case は並列に実行しない。Target 内の Case は常に直列とする。
 
 ## Phase 3: bdd-coder ディスパッチ
 
 Phase 2 の実行グループに従って bdd-coder を起動する。
+
+### ディスパッチ単位
+
+**既定の単位は Target (`T-XX`) とする。** 1 つの bdd-coder が Target の全 Case を順に実装する。
+Case ごとの RED → GREEN → REFACTOR は変えない。
+
+- 複数の Case を 1 サイクルにまとめない
+- GREEN を書く前に RED を確認する
+- 各 Case のあとにテストが PASS することを確認する
+
+ロール・チェックリスト・ENV PROFILE・対象ファイルの読み込みは Target ごとに 1 回で済む。
+Case ごとに起動する方式は、Case 数に比例してトークンと時間が増えるため既定にしない。
 
 ### ディスパッチ方式
 
 **直列実行 (依存関係あり) :**
 
 ```bash
-bdd-coder(T-01-01) → 完了待ち → bdd-coder(T-01-02) → 完了待ち → ...
+bdd-coder(T-01) → 完了待ち → bdd-coder(T-02) → 完了待ち → ...
 ```
 
-**並列実行 (独立タスク) :**
+**並列実行 (独立 Target) :**
 
 ```bash
-bdd-coder(T-01-01) ┐
-bdd-coder(T-01-02) ├→ 全完了待ち → 次グループへ
-bdd-coder(T-01-03) ┘
+bdd-coder(T-01) ┐
+bdd-coder(T-02) ├→ 全完了待ち → 次グループへ
+bdd-coder(T-03) ┘
 ```
+
+### Target の分割
+
+大きな Target だけ、Case の境界で複数の bdd-coder に分ける。次のいずれかに当てはまるときに分割する。
+
+| 条件                   | 目安                                                             |
+| ---------------------- | ---------------------------------------------------------------- |
+| Case 数                | 1 Target に 30 Case 以上                                         |
+| コンテキストの大きさ   | 対象ファイルとチェックリストでコンテキストの約半分を超える       |
+| 品質ゲートの失敗が続く | 1 回の起動で 3 回以上失敗した (`NEEDS_CONTEXT` を受けて分割する) |
+
+手順:
+
+1. Scenario 単位で分け、1 Scenario が大きいときだけ Scenario 内を Case 単位で分ける。Case の途中では分けない
+2. 分けた部分は同じファイルを変更するため、直列に実行する
+3. 次の部分に渡すのは、担当する Case の範囲・チェックリストのパス・ENV PROFILE・
+   前の部分が変更したファイルの 1 行要約だけにする。完了済み Case のログ全文は渡さない
+4. `-TF` / `-CF` と Target のリグレッションは最後の部分、または Phase 5 で行う
+5. 各部分は `CASES: <先頭>..<末尾>` を報告し、オーケストレータが Case の抜け漏れを確認する
 
 ### bdd-coder に渡す情報 (Context Isolation)
 
 各 bdd-coder インスタンスに渡す情報:
 
-| 項目              | 内容                             |
-| ----------------- | -------------------------------- |
-| Task ID           | 例: `T-01-02-01`                 |
-| Task description  | tasks.md の Given/When/Then 全文 |
-| Quality gate cmds | ENV PROFILE のコマンド表         |
-| Checklist path    | チェックリストファイルパス       |
+| 項目              | 内容                                              |
+| ----------------- | ------------------------------------------------- |
+| Target ID         | 例: `T-01` (分割時は Case の範囲を併記)           |
+| Task description  | その Target の Case の Given/When/Then 全文       |
+| Quality gate cmds | ENV PROFILE のコマンド表                          |
+| Checklist path    | チェックリストファイルパス                        |
+| Prior state       | 分割時のみ。前の部分が変更したファイルの 1 行要約 |
 
-**渡さないもの**: セッション全体コンテキスト、他タスクの情報、session.json。
+**渡さないもの**: セッション全体コンテキスト、他 Target の情報、完了済み Case のログ全文、session.json。
+「1 委譲 = 1 タスク」は Target を 1 タスクとして守る。渡すチェックリストはその Target だけを含むものにする。
+
+### Target 完了後の確認
+
+bdd-coder は Target の最後の Case のあと、Target の全テスト (共有コードを使う他のテストも含む) を 1 回実行し、
+結果を `REGRESSION` に報告する。失敗したら原因の Case を戻して直し、再実行する。
+オーケストレータは `git status --short` と `git diff --stat` で実際の変更範囲を確認してから次の Target へ進む。
 
 ### ステータス収集
 
 各 bdd-coder から受け取ったレポートを記録:
 
-| Task ID    | Status             | Changed files                         | Notes                   |
-| ---------- | ------------------ | ------------------------------------- | ----------------------- |
-| T-01-02-01 | DONE               | `src/parser.ts`, `src/parser.spec.ts` |                         |
-| T-01-02-02 | DONE_WITH_CONCERNS | `src/lexer.ts`                        | 既存テスト 2 件が失敗中 |
-| T-01-02-03 | BLOCKED            | (なし)                                | 型エラーが 3 回以上発生 |
+| Target ID | Status             | Cases | Regression | Changed files                         | Notes                   |
+| --------- | ------------------ | ----- | ---------- | ------------------------------------- | ----------------------- |
+| T-01      | DONE               | 12/12 | pass       | `src/parser.ts`, `src/parser.spec.ts` |                         |
+| T-02      | DONE_WITH_CONCERNS | 8/8   | pass       | `src/lexer.ts`                        | 既存テスト 2 件が失敗中 |
+| T-03      | BLOCKED            | 3/9   | fail       | (なし)                                | 型エラーが 3 回以上発生 |
+
+Case ごとの結果は `bdd-todo.md` の `## Case Log` 表 (Case ID / RED / GREEN / REFACTOR) に残る。
+完了済み Case のログ全文は、後続の bdd-coder に渡さない。
 
 Changed files 列は bdd-coder の Status Report の `CHANGED_FILES` 行をそのまま転記する。
 この列の和集合が Phase 4 のレビュー対象になるため、空欄のまま次へ進まない。
