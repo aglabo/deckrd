@@ -118,12 +118,13 @@ docs/.deckrd/<ns>/<mod>/  (ディレクトリ作成)
 ┌─────────────────────────────────┐
 │ project:      myapp             │
 │ project-type: webapp            │
-│ --language:   typescript        │  (省略時: typescript)
+│ --prog:       typescript        │  (省略時: typescript)
+│ --lang:       ja                │  (省略時: system)
 │ --ai-model:   sonnet            │  (省略時: sonnet)
 └─────────────────────────────────┘
              |
              v
-/deckrd init myapp webapp --language typescript
+/deckrd init myapp webapp --prog typescript --lang ja
              |
              v
 ┌─────────────────────────────────────────────────┐
@@ -150,11 +151,12 @@ docs/.deckrd/<ns>/<mod>/  (ディレクトリ作成)
 
 ### Options
 
-| オプション           | デフォルト   | 説明                                          |
-| -------------------- | ------------ | --------------------------------------------- |
-| `--language <lang>`  | `typescript` | `typescript`, `go`, `python`, `rust`, `shell` |
-| `--ai-model <model>` | `sonnet`     | 使用するAIモデル                              |
-| `--force`            | —            | 配置済みアセットをすべて同梱版で上書きする    |
+| オプション                    | デフォルト   | 説明                                                                         |
+| ----------------------------- | ------------ | ---------------------------------------------------------------------------- |
+| `--prog <lang>`, `--language` | `typescript` | プログラミング言語: `typescript`, `go`, `python`, `rust`, `shell`            |
+| `--lang <lang>`               | `system`     | ドキュメントを書く言語: `system`, `en`, `ja` など。指定時だけ session に保存 |
+| `--ai-model <model>`          | `sonnet`     | 使用するAIモデル                                                             |
+| `--force`                     | —            | 配置済みアセットをすべて同梱版で上書きする                                   |
 
 `--force` を付けると、`.gitignore` やユーザーが編集したファイルも含め、すべてのアセットを上書きします。
 既存の `session.json` は保持されます。
@@ -163,8 +165,9 @@ docs/.deckrd/<ns>/<mod>/  (ディレクトリ作成)
 
 ```bash
 /deckrd init myapp webapp                              # 最小構成
-/deckrd init myapp lib --language go                   # Go プロジェクト
-/deckrd init myapp webapp --language typescript --ai-model claude-sonnet-4-5
+/deckrd init myapp lib --prog go                       # Go プロジェクト
+/deckrd init myapp lib --prog go --lang ja             # ドキュメントは日本語
+/deckrd init myapp webapp --prog typescript --ai-model claude-sonnet-4-5
 /deckrd init myapp webapp --force                      # アセットを同梱版に戻す
 ```
 
