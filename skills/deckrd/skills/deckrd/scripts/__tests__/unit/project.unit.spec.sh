@@ -30,6 +30,29 @@ Describe "T-CLI-PRJ: project.sh"
   _project_created_at() {
     jq -r '.created_at' "${DECKRD_LOCAL_DATA}/.project.json"
   }
+  _project_ai_model() {
+    jq -r '.ai_model' "${DECKRD_LOCAL_DATA}/.project.json"
+  }
+  # Fixture: an existing .project.json whose ai_model is "opus"
+  _setup_existing_opus_project() {
+    mkdir -p "$DECKRD_LOCAL_DATA"
+    cat >"${DECKRD_LOCAL_DATA}/.project.json" <<'JSON'
+{
+  "project": "oldapp",
+  "project_type": "",
+  "prog": "typescript",
+  "ai_model": "opus",
+  "created_at": "2025-01-01T00:00:00Z",
+  "updated_at": "2025-01-01T00:00:00Z"
+}
+JSON
+  }
+  # Succeeds only if project.sh parses via args.lib.sh and no longer defines parse_options
+  _uses_args_lib() {
+    grep -qE '^[[:space:]]+args_init$' "$1" &&
+      grep -qF 'parse_args "$@"' "$1" &&
+      ! grep -q '^parse_options()' "$1"
+  }
 
   Describe "引数なしの場合"
     It "T-CLI-PRJ-01: エラーメッセージを出力してexit 1する"
@@ -145,6 +168,7 @@ Describe "T-CLI-PRJ: project.sh"
     It "[Error] T-CLI-PRJ-29: --prog の値が無い場合はexit 1する"
       When run bash "$SCRIPT" --project myapp --prog
       The status should equal 1
+      The output should include "Usage:"
       The stderr should include "--prog requires a value"
     End
 
@@ -228,10 +252,10 @@ Describe "T-CLI-PRJ: project.sh"
       The output should include "Usage:"
     End
 
-    It "[Error] T-CLI-PRJ-28: --lang=go (= 構文) は Unknown option として exit 1する"
+    It "[Error] T-CLI-PRJ-28: --lang=go (= 構文) はオプション名 --lang の Unknown option として exit 1する"
       When run bash "$SCRIPT" --project myapp --lang=go
       The status should equal 1
-      The stderr should include "Unknown option: --lang=go"
+      The stderr should equal "Error: Unknown option: --lang"
       The output should include "Usage:"
     End
 
@@ -245,10 +269,11 @@ Describe "T-CLI-PRJ: project.sh"
   End
 
   Describe "言語オプションのエッジケース"
-    It "[Edge] T-CLI-PRJ-31: --prog= (空値) はサポート外としてexit 1する"
+    It "[Edge] T-CLI-PRJ-31: --prog= (空値) は値の欠落としてexit 1する"
       When run bash "$SCRIPT" --project myapp --prog=
       The status should equal 1
-      The stderr should include "Unsupported language"
+      The output should include "Usage:"
+      The stderr should include "--prog requires a value"
     End
 
     It "[Edge] T-CLI-PRJ-32: --language と --prog を両方指定すると後勝ちになる"
@@ -375,79 +400,44 @@ JSON
     End
   End
 
-  Describe "_require_value ヘルパー"
-    # Load only the helper definition, without sourcing the rest of project.sh
-    _load_require_value() {
-      eval "$(sed -n '/^_require_value()/,/^}/p' "$SCRIPT")"
-    }
-    BeforeAll "_load_require_value"
-
-    It "[Normal] T-CLI-PRJ-47: 非空の値なら何も出力せず return 0 する"
-      When run _require_value --project myapp
+  Describe "args.lib.sh による引数解析"
+    It "[Normal] T-CLI-PRJ-55: --project= / --project-type= / --ai-model= (= 構文) を受け付けて出力に表示する"
+      When run bash "$SCRIPT" --project=myapp --project-type=webapp --ai-model=opus
       The status should equal 0
-      The output should equal ""
-      The stderr should equal ""
+      The output should include "  project:      myapp"
+      The output should include "  project_type: webapp"
+      The output should include "  ai_model:     opus"
     End
 
-    It "[Error] T-CLI-PRJ-48: 空の値なら stderr にエラーを出して return 1 する"
-      When run _require_value --project ""
+    It "[Error] T-CLI-PRJ-56: --project= (空値) は値の欠落としてexit 1する"
+      When run bash "$SCRIPT" --project=
       The status should equal 1
-      The output should equal ""
-      The stderr should equal "Error: --project requires a value"
+      The output should include "Usage:"
+      The stderr should include "--project requires a value"
     End
 
-    # Runs the helper under `set -u` with the value argument omitted
-    _require_value_nounset() {
-      set -u
-      _require_value "$@"
-    }
-
-    It "[Edge] T-CLI-PRJ-49: 第 2 引数を省略しても set -u で落ちず、空として return 1 する"
-      When run _require_value_nounset --ai-model
-      The status should equal 1
-      The output should equal ""
-      The stderr should equal "Error: --ai-model requires a value"
-    End
-
-    It "[Edge] T-CLI-PRJ-50: 1 文字の値 (非空の最小長) は受理し、何も出力せず return 0 する"
-      When run _require_value --prog x
-      The status should equal 0
-      The output should equal ""
-      The stderr should equal ""
-    End
-
-    It "[Edge] T-CLI-PRJ-51: 空白 1 文字は空ではないので受理し、何も出力せず return 0 する"
-      When run _require_value --project " "
-      The status should equal 0
-      The output should equal ""
-      The stderr should equal ""
-    End
-
-    It "[Edge] T-CLI-PRJ-52: ダッシュで始まる値も空チェックのみで受理し、何も出力せず return 0 する"
-      When run _require_value --project --prog
-      The status should equal 0
-      The output should equal ""
-      The stderr should equal ""
-    End
-
-    It "[Error] T-CLI-PRJ-53: オプション名はハードコードされず、渡した名前がそのままメッセージに出る"
-      When run _require_value --project-type ""
-      The status should equal 1
-      The output should equal ""
-      The stderr should equal "Error: --project-type requires a value"
-    End
-
-    # Succeeds only if both functions are defined and _require_value comes first
-    _require_value_precedes_parse_options() {
-      local helper_line parse_line
-      helper_line=$(grep -n '^_require_value()' "$1" | head -n 1 | cut -d: -f1)
-      parse_line=$(grep -n '^parse_options()' "$1" | head -n 1 | cut -d: -f1)
-      [[ -n "$helper_line" && -n "$parse_line" ]] && ((helper_line < parse_line))
-    }
-
-    It "[Normal] T-CLI-PRJ-54: _require_value() は parse_options() より前の行で定義されている"
-      When call _require_value_precedes_parse_options "$SCRIPT"
+    It "[Normal] T-CLI-PRJ-59: project.sh は args_init と parse_args を使い parse_options を定義しない"
+      When call _uses_args_lib "$SCRIPT"
       The status should be success
     End
   End
+
+  Describe "既存の .project.json の ai_model 引き継ぎ"
+    Before "_setup_existing_opus_project"
+
+    It "[Normal] T-CLI-PRJ-57: --ai-model sonnet を明示すると既存の opus を上書きして sonnet を書く"
+      When run bash "$SCRIPT" --project myapp --ai-model sonnet
+      The status should equal 0
+      The output should include "  ai_model:     sonnet"
+      The result of function _project_ai_model should equal "sonnet"
+    End
+
+    It "[Normal] T-CLI-PRJ-58: --ai-model を省略すると既存の opus を維持する"
+      When run bash "$SCRIPT" --project myapp
+      The status should equal 0
+      The output should include "  ai_model:     opus"
+      The result of function _project_ai_model should equal "opus"
+    End
+  End
+
 End
