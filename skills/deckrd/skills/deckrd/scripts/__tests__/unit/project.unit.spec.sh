@@ -374,4 +374,80 @@ JSON
       The stderr should include "jq or jaq is required"
     End
   End
+
+  Describe "_require_value ヘルパー"
+    # Load only the helper definition, without sourcing the rest of project.sh
+    _load_require_value() {
+      eval "$(sed -n '/^_require_value()/,/^}/p' "$SCRIPT")"
+    }
+    BeforeAll "_load_require_value"
+
+    It "[Normal] T-CLI-PRJ-47: 非空の値なら何も出力せず return 0 する"
+      When run _require_value --project myapp
+      The status should equal 0
+      The output should equal ""
+      The stderr should equal ""
+    End
+
+    It "[Error] T-CLI-PRJ-48: 空の値なら stderr にエラーを出して return 1 する"
+      When run _require_value --project ""
+      The status should equal 1
+      The output should equal ""
+      The stderr should equal "Error: --project requires a value"
+    End
+
+    # Runs the helper under `set -u` with the value argument omitted
+    _require_value_nounset() {
+      set -u
+      _require_value "$@"
+    }
+
+    It "[Edge] T-CLI-PRJ-49: 第 2 引数を省略しても set -u で落ちず、空として return 1 する"
+      When run _require_value_nounset --ai-model
+      The status should equal 1
+      The output should equal ""
+      The stderr should equal "Error: --ai-model requires a value"
+    End
+
+    It "[Edge] T-CLI-PRJ-50: 1 文字の値 (非空の最小長) は受理し、何も出力せず return 0 する"
+      When run _require_value --prog x
+      The status should equal 0
+      The output should equal ""
+      The stderr should equal ""
+    End
+
+    It "[Edge] T-CLI-PRJ-51: 空白 1 文字は空ではないので受理し、何も出力せず return 0 する"
+      When run _require_value --project " "
+      The status should equal 0
+      The output should equal ""
+      The stderr should equal ""
+    End
+
+    It "[Edge] T-CLI-PRJ-52: ダッシュで始まる値も空チェックのみで受理し、何も出力せず return 0 する"
+      When run _require_value --project --prog
+      The status should equal 0
+      The output should equal ""
+      The stderr should equal ""
+    End
+
+    It "[Error] T-CLI-PRJ-53: オプション名はハードコードされず、渡した名前がそのままメッセージに出る"
+      When run _require_value --project-type ""
+      The status should equal 1
+      The output should equal ""
+      The stderr should equal "Error: --project-type requires a value"
+    End
+
+    # Succeeds only if both functions are defined and _require_value comes first
+    _require_value_precedes_parse_options() {
+      local helper_line parse_line
+      helper_line=$(grep -n '^_require_value()' "$1" | head -n 1 | cut -d: -f1)
+      parse_line=$(grep -n '^parse_options()' "$1" | head -n 1 | cut -d: -f1)
+      [[ -n "$helper_line" && -n "$parse_line" ]] && ((helper_line < parse_line))
+    }
+
+    It "[Normal] T-CLI-PRJ-54: _require_value() は parse_options() より前の行で定義されている"
+      When call _require_value_precedes_parse_options "$SCRIPT"
+      The status should be success
+    End
+  End
 End

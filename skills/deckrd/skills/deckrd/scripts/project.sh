@@ -45,11 +45,10 @@ _SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "${_SCRIPT_DIR}/libs/bootstrap.lib.sh"
 unset _SCRIPT_DIR
 
-# Validate environment (requires jq or jaq)
+# validate_env runs in main, not at source time (requires jq or jaq)
 # shellcheck disable=SC1091
 . "${DECKRD_LIB_DIR}/validate-env.lib.sh"
 . "${DECKRD_LIB_DIR}/utils.lib.sh"
-validate_env || exit 1
 
 ##
 # @description Project file path
@@ -76,6 +75,10 @@ PROG="typescript"
 ##
 # @description AI model (default: sonnet)
 AI_MODEL="sonnet"
+
+##
+# @description Set to true by parse_options when -h/--help is given
+SHOW_HELP=false
 
 # ============================================================================
 # Functions
@@ -110,7 +113,7 @@ EOF
 ##
 # @description Validate language against supported list
 # @arg $1 string Language to validate
-# @return 0 if valid, exits on invalid
+# @return 0 if valid, 1 if unsupported (prints error to stderr)
 validate_language() {
   local lang="$1" supported
   for supported in "${SUPPORTED_LANGUAGES[@]}"; do
@@ -119,7 +122,7 @@ validate_language() {
     fi
   done
   echo "Error: Unsupported language: ${lang}. Supported: ${SUPPORTED_LANGUAGES[*]}" >&2
-  exit 1
+  return 1
 }
 
 ##
@@ -134,19 +137,32 @@ normalize_language() {
 }
 
 ##
+# @description Require a non-empty value for a command-line option
+# @arg $1 string Option name (e.g. --project)
+# @arg $2 string Option value
+# @return 0 if the value is non-empty, 1 if empty (prints error to stderr)
+_require_value() {
+  if [[ -z "${2:-}" ]]; then
+    echo "Error: $1 requires a value" >&2
+    return 1
+  fi
+  return 0
+}
+
+##
 # @description Parse command-line options
+# @arg $@ Command-line arguments
+# @set SHOW_HELP true when -h/--help is given
+# @return 0 on success (including -h/--help), 1 on invalid arguments (prints error to stderr)
 parse_options() {
   while [[ $# -gt 0 ]]; do
     case "$1" in
     -h | --help)
-      show_usage
-      exit 0
+      SHOW_HELP=true
+      return 0
       ;;
     --project)
-      if [[ -z "${2:-}" ]]; then
-        echo "Error: --project requires a value" >&2
-        exit 1
-      fi
+      _require_value "$1" "${2:-}" || return 1
       PROJECT_NAME="$2"
       shift 2
       ;;
@@ -155,10 +171,7 @@ parse_options() {
       shift
       ;;
     --project-type)
-      if [[ -z "${2:-}" ]]; then
-        echo "Error: --project-type requires a value" >&2
-        exit 1
-      fi
+      _require_value "$1" "${2:-}" || return 1
       PROJECT_TYPE="$2"
       shift 2
       ;;
@@ -167,10 +180,7 @@ parse_options() {
       shift
       ;;
     --prog | --language)
-      if [[ -z "${2:-}" ]]; then
-        echo "Error: ${1} requires a value" >&2
-        exit 1
-      fi
+      _require_value "$1" "${2:-}" || return 1
       PROG="$(normalize_language "$2")"
       shift 2
       ;;
@@ -179,10 +189,7 @@ parse_options() {
       shift
       ;;
     --ai-model)
-      if [[ -z "${2:-}" ]]; then
-        echo "Error: --ai-model requires a value" >&2
-        exit 1
-      fi
+      _require_value "$1" "${2:-}" || return 1
       AI_MODEL="$2"
       shift 2
       ;;
@@ -193,12 +200,12 @@ parse_options() {
     -*)
       echo "Error: Unknown option: $1" >&2
       show_usage
-      exit 1
+      return 1
       ;;
     *)
       echo "Error: Unexpected argument: $1" >&2
       show_usage
-      exit 1
+      return 1
       ;;
     esac
   done
@@ -206,20 +213,21 @@ parse_options() {
 
 ##
 # @description Validate required parameters are set
+# @return 0 if valid, 1 if missing or invalid (prints error to stderr)
 validate_required_params() {
   if [[ -z "$PROJECT_NAME" ]]; then
     echo "Error: --project is required" >&2
-    exit 1
+    return 1
   fi
   if [[ ! "$PROJECT_NAME" =~ ^${SYMBOL}$ ]]; then
     echo "Error: project name '${PROJECT_NAME}' contains invalid characters" >&2
     echo "  Allowed: a-z, hyphen (-), underscore (_)" >&2
-    exit 1
+    return 1
   fi
   if [[ -n "$PROJECT_TYPE" && ! "$PROJECT_TYPE" =~ ^${SYMBOL}$ ]]; then
     echo "Error: project type '${PROJECT_TYPE}' contains invalid characters" >&2
     echo "  Allowed: a-z, hyphen (-), underscore (_)" >&2
-    exit 1
+    return 1
   fi
 }
 
@@ -277,13 +285,34 @@ display_result() {
   echo "  project:      .local/deckrd/.project.json"
 }
 
+##
+# @description Main entry point: parse options, validate them, and write the project file
+# @description Every exit of the script happens here; the other functions only return
+# @arg $@ Command-line arguments
+# @stdout Usage (on --help or argument errors) and the configured settings
+# @stderr Error message on failure
+# @exitcode 0 Success, or usage shown by --help
+# @exitcode 1 Missing jq/jaq, invalid arguments, or unsupported language
+main() {
+  validate_env || exit 1
+  parse_options "$@" || exit 1
+  if [[ "$SHOW_HELP" == true ]]; then
+    show_usage
+    exit 0
+  fi
+  validate_required_params || exit 1
+  validate_language "$PROG" || exit 1
+
+  # Called without || so that set -e still applies inside these functions
+  ensure_deckrd_dir
+  write_project
+  display_result
+}
+
 # ============================================================================
 # Main Execution
 # ============================================================================
 
-parse_options "$@"
-validate_required_params
-validate_language "$PROG"
-ensure_deckrd_dir
-write_project
-display_result
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  main "$@"
+fi
