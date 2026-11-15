@@ -59,6 +59,7 @@ unset _SCRIPT_DIR
 . "${DECKRD_LIB_DIR}/utils.lib.sh"
 . "${DECKRD_LIB_DIR}/asset-copy.lib.sh"
 . "${DECKRD_LIB_DIR}/session.lib.sh"
+. "${DECKRD_LIB_DIR}/args.lib.sh"
 validate_env || exit 1
 
 # Label reported for an old local gitignore that lacks the workspaces rule
@@ -93,40 +94,6 @@ Options:
                 to the source's mtime
   -h, --help    Show this help message
 EOF
-}
-
-##
-# @description Parse command-line options into a caller-provided associative array
-#   The array is reset on every call. Help returns immediately without output,
-#   so arguments after it are not checked; the caller shows usage.
-# @arg $1 Name of an associative array to fill (nameref): keys update, help, error
-# @arg $@ CLI arguments
-# @return 0 on success (including help), 1 on invalid argument (error key set)
-parse_args() {
-  local -n _opts_ref="$1"
-  shift
-  _opts_ref=(['update']=false ['help']=false ['error']="")
-
-  while [[ $# -gt 0 ]]; do
-    case "$1" in
-    -h | --help)
-      _opts_ref['help']=true
-      return 0
-      ;;
-    --update)
-      _opts_ref['update']=true
-      shift
-      ;;
-    -*)
-      _opts_ref['error']="Unknown option: $1"
-      return 1
-      ;;
-    *)
-      _opts_ref['error']="Unexpected argument: $1"
-      return 1
-      ;;
-    esac
-  done
 }
 
 ##
@@ -295,15 +262,26 @@ print_updated_assets() {
 # Main Execution
 # ============================================================================
 
+##
+# @description Entry point: option declarations (args_init, args_flag) -> parse_args -> help
+#   -> session.json check -> init_asset_dirs -> print_updated_assets
+# @arg $@ string Command-line arguments (see show_usage)
+# @var OPTIONS Parse result (libs/args.lib.sh): update, SHOW_HELP
+# @exitcode 0 Success, or help shown
+# @exitcode 1 Parse error, or session.json not found
+# @stdout Output of print_updated_assets
+# @stderr Usage and `Error:` lines
 main() {
-  local -A opts
-  parse_args opts "$@" || {
-    echo "Error: ${opts[error]}" >&2
+  args_init
+  args_flag update --update
+
+  parse_args "$@" || {
+    echo "Error: ${ARGS_ERROR}" >&2
     show_usage
     exit 1
   }
 
-  if [[ "${opts[help]}" == true ]]; then
+  if [[ "${OPTIONS[SHOW_HELP]}" == true ]]; then
     show_usage
     exit 0
   fi
@@ -314,7 +292,7 @@ main() {
   fi
 
   init_asset_dirs
-  print_updated_assets "${opts[update]}"
+  print_updated_assets "${OPTIONS[update]}"
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # src: ./skills/deckrd/skills/deckrd/scripts/__tests__/unit/update.unit.spec.sh
-# @(#) : BDD unit tests for update.sh - parse_args function
+# @(#) : BDD unit tests for update.sh - main() argument parsing (args.lib.sh)
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #
@@ -22,127 +22,162 @@ SCRIPT="${DECKRD_SCRIPTS_DIR}/update.sh"
 # ============================================================================
 
 ##
-# @description Source update.sh to load its functions (main is guarded)
+# @description Point DECKRD_LOCAL_DATA at a fresh temp dir holding session.json,
+#   source update.sh (main is guarded), and stub the steps after argument parsing
+#   so `main` runs the real declarations and the library parse_args without
+#   touching the deployed assets.
+#   DECKRD_LOCAL_DATA is set before sourcing: update.sh finalizes the bootstrap
+#   variables as readonly.
+# @stdout (from main) `update_mode=<value>` handed to print_updated_assets
 _load_update_script() {
+  DECKRD_LOCAL_DATA="$(mktemp -d "${SHELLSPEC_TMPBASE}/update-unit.XXXXXX")"
+  printf '{}\n' >"${DECKRD_LOCAL_DATA}/session.json"
   . "$SCRIPT"
+
+  # shellcheck disable=SC2329
+  init_asset_dirs() { :; }
+  # shellcheck disable=SC2329
+  print_updated_assets() { printf 'update_mode=%s\n' "$1"; }
 }
 
 ##
-# @description Call parse_args with a fresh options array and copy its elements
-#   into plain variables (ShellSpec cannot address associative-array elements)
-# @arg $@ CLI arguments passed to parse_args
-# @set OPT_UPDATE OPT_HELP OPT_ERROR Element values, or `<unset>` when missing
-# @return The status of parse_args
-_call_parse_args() {
-  declare -A opts
-  _parse_args_into opts "$@"
-}
-
-##
-# @description Like _call_parse_args, but the options array already holds stale values
-#   (help=true, error="stale") from an earlier call
-# @arg $@ CLI arguments passed to parse_args
-# @set OPT_UPDATE OPT_HELP OPT_ERROR Element values, or `<unset>` when missing
-# @return The status of parse_args
-_call_parse_args_prefilled() {
-  # shellcheck disable=SC2034 # read by parse_args through its nameref
-  declare -A opts=([help]=true [error]="stale")
-  _parse_args_into opts "$@"
-}
-
-##
-# @description Run parse_args on the named array and copy its elements into OPT_* variables
-# @arg $1 Name of the associative array passed to parse_args
-# @arg $@ CLI arguments passed to parse_args
-# @return The status of parse_args
-# shellcheck disable=SC2034 # OPT_* are read by ShellSpec `The variable`
-_parse_args_into() {
-  local -n _arr_ref="$1"
-  local rc=0
-  parse_args "$@" || rc=$?
-  OPT_UPDATE="${_arr_ref[update]-<unset>}"
-  OPT_HELP="${_arr_ref[help]-<unset>}"
-  OPT_ERROR="${_arr_ref[error]-<unset>}"
-  return "$rc"
+# @description Run main twice in the current shell: first with --update (output
+#   discarded), then with no arguments, so the second call shows whether the
+#   parse state of the first call leaks into it.
+# @stdout (from the second main) `update_mode=<value>`
+_main_update_then_default() {
+  main --update >/dev/null
+  main
 }
 
 # ============================================================================
-# update.sh: parse_args
+# update.sh: main argument parsing
 # ============================================================================
 
-Describe "T-CLI-UPA: update.sh: parse_args"
+Describe "T-CLI-UPA: update.sh: main argument parsing"
   Before "_load_update_script"
 
   Describe "When: 正常系"
-    It "[Normal] T-CLI-UPA-01: Should: return 0 and fill update=true, help=false, error=empty for --update"
-      When call _call_parse_args --update
+    It "[Normal] T-CLI-UPA-10: Should: hand true to print_updated_assets for --update"
+      When run main --update
       The status should equal 0
-      The variable OPT_UPDATE should equal "true"
-      The variable OPT_HELP should equal "false"
-      The variable OPT_ERROR should equal ""
-    End
-
-    It "[Normal] T-CLI-UPA-02: Should: return 0 and fill help=true without output for -h"
-      When call _call_parse_args -h
-      The status should equal 0
-      The variable OPT_HELP should equal "true"
-      The stdout should equal ""
+      The stdout should equal "update_mode=true"
       The stderr should equal ""
     End
 
-    It "[Normal] T-CLI-UPA-03: Should: return 0 and fill help=true without output for --help"
-      When call _call_parse_args --help
+    It "[Normal] T-CLI-UPA-11: Should: show usage and stop for --help"
+      When run main --help
       The status should equal 0
-      The variable OPT_HELP should equal "true"
-      The stdout should equal ""
-      The stderr should equal ""
+      The stderr should include "Usage: update.sh"
+      The stdout should not include "update_mode="
     End
 
-    It "[Normal] T-CLI-UPA-09: Should: leave UPDATE_MODE, HELP_REQUESTED and PARSE_ARGS_ERROR undefined"
-      When call _call_parse_args --update
+    It "[Normal] T-CLI-UPA-12: Should: show usage and stop for -h"
+      When run main -h
       The status should equal 0
-      The variable UPDATE_MODE should be undefined
-      The variable HELP_REQUESTED should be undefined
-      The variable PARSE_ARGS_ERROR should be undefined
+      The stderr should include "Usage: update.sh"
+      The stdout should not include "update_mode="
     End
   End
 
   Describe "When: 異常系"
-    It "[Error] T-CLI-UPA-04: Should: return 1 and fill error with Unknown option for --unknown"
-      When call _call_parse_args --unknown
+    It "[Error] T-CLI-UPA-20: Should: report the unknown option with usage and exit 1"
+      When run main --unknown
       The status should equal 1
-      The variable OPT_ERROR should equal "Unknown option: --unknown"
+      The line 1 of stderr should equal "Error: Unknown option: --unknown"
+      The stderr should include "Usage: update.sh"
+      The stdout should be blank
     End
 
-    It "[Error] T-CLI-UPA-05: Should: return 1 and fill error with Unexpected argument for a positional argument"
-      When call _call_parse_args foo
+    It "[Error] T-CLI-UPA-21: Should: report the unexpected positional argument with usage and exit 1"
+      When run main foo
       The status should equal 1
-      The variable OPT_ERROR should equal "Unexpected argument: foo"
+      The line 1 of stderr should equal "Error: Unexpected argument: foo"
+      The stderr should include "Usage: update.sh"
+      The stdout should be blank
+    End
+
+    It "[Error] T-CLI-UPA-22: Should: reject a value given to the --update flag with usage and exit 1"
+      When run main --update=yes
+      The status should equal 1
+      The line 1 of stderr should equal "Error: --update does not take a value"
+      The stderr should include "Usage: update.sh"
+      The stdout should be blank
     End
   End
 
   Describe "When: エッジケース"
-    It "[Edge] T-CLI-UPA-06: Should: return 0 and fill the defaults when no CLI argument is given"
-      When call _call_parse_args
+    It "[Edge] T-CLI-UPA-30: Should: hand false to print_updated_assets when no arguments are given"
+      When run main
       The status should equal 0
-      The variable OPT_UPDATE should equal "false"
-      The variable OPT_HELP should equal "false"
-      The variable OPT_ERROR should equal ""
+      The stdout should equal "update_mode=false"
+      The stderr should equal ""
     End
 
-    It "[Edge] T-CLI-UPA-07: Should: return 0 with help=true and ignore an invalid option after -h"
-      When call _call_parse_args -h --unknown
+    It "[Edge] T-CLI-UPA-31: Should: show usage and exit 0 when -h precedes an unknown option"
+      When run main -h --unknown
       The status should equal 0
-      The variable OPT_HELP should equal "true"
-      The variable OPT_ERROR should equal ""
+      The stderr should include "Usage: update.sh"
+      The stderr should not include "Error:"
+      The stdout should not include "update_mode="
     End
 
-    It "[Edge] T-CLI-UPA-08: Should: reset stale help and error values on every call"
-      When call _call_parse_args_prefilled --update
+    It "[Edge] T-CLI-UPA-32: Should: report the unknown option and exit 1 when it precedes -h"
+      When run main --unknown -h
+      The status should equal 1
+      The line 1 of stderr should equal "Error: Unknown option: --unknown"
+      The stdout should be blank
+    End
+
+    It "[Edge] T-CLI-UPA-33: Should: hand true to print_updated_assets when --update is repeated"
+      When run main --update --update
       The status should equal 0
-      The variable OPT_UPDATE should equal "true"
-      The variable OPT_HELP should equal "false"
-      The variable OPT_ERROR should equal ""
+      The stdout should equal "update_mode=true"
+      The stderr should equal ""
+    End
+  End
+
+  Describe "When: FN確認"
+    It "[Normal] T-CLI-UPA-40: Should: use the args.lib.sh parse_args, not the old nameref parser"
+      When call declare -f parse_args
+      The status should equal 0
+      The stdout should include "SHOW_HELP"
+      The stdout should not include "_opts_ref"
+    End
+
+    It "[Normal] T-CLI-UPA-41: Should: declare options via args_flag, with no local opts array in main"
+      When call declare -f main
+      The status should equal 0
+      The stdout should include "args_flag update --update"
+      The stdout should not include "opts["
+    End
+  End
+
+  Describe "When: 状態遷移"
+    It "[Edge] T-CLI-UPA-50: Should: hand false to the second main after main --update in the same shell"
+      When call _main_update_then_default
+      The status should equal 0
+      The stdout should equal "update_mode=false"
+      The stderr should equal ""
+    End
+
+    Context "session.json is absent"
+      _remove_session_json() { rm -f "${DECKRD_LOCAL_DATA}/session.json"; }
+      Before "_remove_session_json"
+
+      It "[Edge] T-CLI-UPA-51: Should: show usage and exit 0 on --help before the session check"
+        When run main --help
+        The status should equal 0
+        The stderr should include "Usage:"
+        The stderr should not include "session not found"
+      End
+
+      It "[Edge] T-CLI-UPA-52: Should: exit 1 with session not found on --update after a successful parse"
+        When run main --update
+        The status should equal 1
+        The stderr should include "Error: session not found"
+        The stdout should not include "update_mode="
+      End
     End
   End
 End
