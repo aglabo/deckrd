@@ -55,15 +55,17 @@ description: Session file location, schema, and state transition rules
 
 ### `prog` and `lang`
 
-`prog` holds the programming language that `init` received with `--language`.
+`prog` holds the programming language that `init` received with `--prog` (alias `--language`).
 bdd-coder reads it to choose its language rules.
-`lang` holds the document language that `generate-doc.sh` passes to the AI as `LANG:`.
+`lang` holds the document language that `init` received with `--lang`.
+`generate-doc.sh` passes it to the AI as `LANG:` unless `--lang` is given on the command.
 When `lang` is absent, `system` is used.
+In every deckrd command and script, `--lang` means the document language only.
 
 Older session files stored the programming language in `lang`.
 `init` (when the session already exists) and `update` move such a value to `prog`.
 They do this only when `prog` is absent and `lang` is a supported programming language.
-The supported values are the same as `init --language` (`bash` included).
+The supported values are the same as `init --prog` (`bash` included).
 Every other key is kept.
 
 ### `bdd_coder` (written by bdd-coder)
