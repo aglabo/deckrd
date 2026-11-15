@@ -26,8 +26,9 @@
 #
 # @example
 #   init.sh myapp webapp
-#   init.sh myapp webapp --language go
-#   init.sh myapp lib --language typescript --ai-model claude-sonnet-4-5
+#   init.sh myapp webapp --prog go
+#   init.sh myapp lib --prog go --lang ja
+#   init.sh myapp lib --prog typescript --ai-model claude-sonnet-4-5
 #   init.sh myapp webapp --force
 #
 # @exitcode 0 Success
@@ -94,9 +95,11 @@ Arguments:
   <project-type>  Project type (e.g. webapp, lib, cli, api)
 
 Options:
-  --language <lang>, --lang   Programming language (default: typescript)
+  --prog <lang>, --language   Programming language (default: typescript)
                               Supported: ${SUPPORTED_LANGUAGES[*]}
                               Alias: bash → shell
+  --lang <lang>               Document language (default: system)
+                              e.g. system, en, ja (saved to session.json only when given)
   --ai-model <model>          AI model (default: sonnet)
                               Supported: gpt-*, o1-*, claude-*, haiku, sonnet, opus
   --force                     Overwrite all assets, including .gitignore files and user-edited files
@@ -107,8 +110,9 @@ Project file:
 
 Example:
   init.sh myapp webapp
-  init.sh myapp lib --language go
-  init.sh voift webapp --language typescript --ai-model claude-sonnet-4-5
+  init.sh myapp lib --prog go
+  init.sh myapp lib --prog go --lang ja
+  init.sh voift webapp --prog typescript --ai-model claude-sonnet-4-5
   init.sh myapp webapp --force
 EOF
 }
@@ -340,7 +344,10 @@ init_directories() {
 }
 
 ##
-# @description Write .project.json with project settings
+# @description Write .project.json with project settings.
+#   Keys: project, project_type, prog (programming language), ai_model,
+#   created_at (kept from an existing file), updated_at.
+#   The whole object is regenerated, so an older `language` key is dropped
 # @stderr Progress messages
 write_project() {
   local timestamp
@@ -357,14 +364,14 @@ write_project() {
   jq_read -n \
     --arg project "${OPTIONS[project]}" \
     --arg project_type "${OPTIONS[project_type]}" \
-    --arg language "${OPTIONS[prog]}" \
+    --arg prog "${OPTIONS[prog]}" \
     --arg ai_model "${OPTIONS[ai_model]}" \
     --arg created_at "$created_at" \
     --arg updated_at "$timestamp" \
     '{
       project:      $project,
       project_type: $project_type,
-      language:     $language,
+      prog:         $prog,
       ai_model:     $ai_model,
       created_at:   $created_at,
       updated_at:   $updated_at
@@ -374,23 +381,37 @@ write_project() {
   echo "Project written: ${PROJECT_FILE}" >&2
   echo "  project:      ${OPTIONS[project]}" >&2
   echo "  project_type: ${OPTIONS[project_type]}" >&2
-  echo "  language:     ${OPTIONS[prog]}" >&2
+  echo "  prog:         ${OPTIONS[prog]}" >&2
   echo "  ai_model:     ${OPTIONS[ai_model]}" >&2
 }
 
 ##
 # @description Initialize session.json.
-#   A new file records the programming language in `prog`.
+#   A new file records the programming language in `prog`, and the document
+#   language in `lang` only when --lang was given (OPTIONS[lang_set]).
 #   An existing file is kept; an older `lang` holding a programming language
-#   is moved to `prog` by session_migrate_lang_to_prog (libs/session.lib.sh)
-# @stderr Progress messages; an `Error:` line when the migration fails
+#   is moved to `prog` by session_migrate_lang_to_prog (libs/session.lib.sh).
+#   When --lang was given, `lang` is then set to that value (other keys kept,
+#   written via a temporary file and mv); without --lang the file is untouched
+# @stderr Progress messages; an `Error:` line when the migration or the lang write fails
 # @return 0 on success, 1 if the existing session.json cannot be migrated
+#         or `lang` cannot be written to it
 init_session() {
   local timestamp
   timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
   if [[ -f "$SESSION_FILE" ]]; then
     session_migrate_lang_to_prog "$SESSION_FILE" || return 1
+    if [[ "${OPTIONS[lang_set]}" == true ]]; then
+      local tmp="${SESSION_FILE}.tmp.$$"
+      # shellcheck disable=SC2016
+      if ! { jq_read --arg lang "${OPTIONS[lang]}" '.lang = $lang' "$SESSION_FILE" >"$tmp" &&
+        mv -f "$tmp" "$SESSION_FILE"; }; then
+        rm -f "$tmp"
+        echo "Error: init_session: failed to write lang: ${SESSION_FILE}" >&2
+        return 1
+      fi
+    fi
     echo "" >&2
     echo "Session preserved: ${SESSION_FILE}" >&2
     return 0
@@ -399,16 +420,18 @@ init_session() {
   # shellcheck disable=SC2016
   jq_read -n \
     --arg prog "${OPTIONS[prog]}" \
+    --arg lang "${OPTIONS[lang]}" \
+    --arg lang_set "${OPTIONS[lang_set]}" \
     --arg ai_model "${OPTIONS[ai_model]}" \
     --arg timestamp "$timestamp" \
-    '{
-      active:     null,
-      prog:       $prog,
-      ai_model:   $ai_model,
-      modules:    {},
-      created_at: $timestamp,
-      updated_at: $timestamp
-    }' >"$SESSION_FILE"
+    '{active: null, prog: $prog}
+      + (if $lang_set == "true" then {lang: $lang} else {} end)
+      + {
+        ai_model:   $ai_model,
+        modules:    {},
+        created_at: $timestamp,
+        updated_at: $timestamp
+      }' >"$SESSION_FILE"
 
   echo "" >&2
   echo "Session created: ${SESSION_FILE}" >&2

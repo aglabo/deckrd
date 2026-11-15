@@ -23,6 +23,14 @@ SCRIPT="${DECKRD_SCRIPTS_DIR}/init.sh"
 # @arg $1 string jq filter
 session_query() { jq -r "$1" "${DECKRD_LOCAL_DATA}/session.json"; }
 
+# project_query - Print the raw jq result of a filter applied to .project.json
+# @arg $1 string jq filter
+project_query() { jq -r "$1" "${DECKRD_LOCAL_DATA}/.project.json"; }
+
+# write_session_fixture - Write a JSON fixture to session.json before running init.sh
+# @arg $1 string JSON text
+write_session_fixture() { printf '%s\n' "$1" >"${DECKRD_LOCAL_DATA}/session.json"; }
+
 # ============================================================================
 # init.sh: main() integration
 # ============================================================================
@@ -71,6 +79,43 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
       The status should equal 0
       The output should be blank
       The stderr should match pattern "*--force*Overwrite all assets*"
+    End
+
+    It "[Normal] T-CLI-MAINI-84: Should: describe --prog as the programming language option"
+      When run bash "$SCRIPT" --help
+      The status should equal 0
+      The output should be blank
+      The stderr should match pattern "*--prog <lang>, --language*Programming language (default: typescript)*"
+    End
+
+    It "[Normal] T-CLI-MAINI-85: Should: describe --lang as the document language option"
+      When run bash "$SCRIPT" --help
+      The status should equal 0
+      The output should be blank
+      The stderr should match pattern "*--lang <lang>*Document language (default: system)*"
+    End
+
+    It "[Normal] T-CLI-MAINI-86: Should: use --prog in the usage examples"
+      When run bash "$SCRIPT" --help
+      The status should equal 0
+      The output should be blank
+      The stderr should include "init.sh myapp lib --prog go"
+      The stderr should not include "--language go"
+    End
+
+    It "[Error] T-CLI-MAINI-87: Should: not list --lang as an alias of the programming language option"
+      When run bash "$SCRIPT" --help
+      The status should equal 0
+      The output should be blank
+      The stderr should not include "--language <lang>, --lang"
+    End
+
+    It "[Edge] T-CLI-MAINI-88: Should: keep the supported language list and the bash alias note"
+      When run bash "$SCRIPT" --help
+      The status should equal 0
+      The output should be blank
+      The stderr should include "Supported: typescript go python rust shell"
+      The stderr should include "Alias: bash → shell"
     End
   End
 
@@ -160,14 +205,15 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
       The path "${DECKRD_LOCAL_DATA}/workspaces/README.md" should be file
     End
 
-    It "[Normal] T-CLI-MAINI-08: Should: create .project.json with project, project-type, language"
+    It "[Normal] T-CLI-MAINI-08: Should: create .project.json with project, project-type, prog"
       When run bash "$SCRIPT" myapp webapp
       The status should equal 0
       The stderr should include "Project written"
       The path "${DECKRD_LOCAL_DATA}/.project.json" should be exist
-      The contents of file "${DECKRD_LOCAL_DATA}/.project.json" should include "myapp"
-      The contents of file "${DECKRD_LOCAL_DATA}/.project.json" should include "webapp"
-      The contents of file "${DECKRD_LOCAL_DATA}/.project.json" should include "typescript"
+      The value "$(project_query '.project')" should equal "myapp"
+      The value "$(project_query '.project_type')" should equal "webapp"
+      The value "$(project_query '.prog')" should equal "typescript"
+      The value "$(project_query 'has("language")')" should equal "false"
     End
 
     It "[Normal] T-CLI-MAINI-09: Should: create session.json with prog set to the language and no lang key"
@@ -315,6 +361,68 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
     End
   End
 
+  Describe "Given: session.json already exists and --lang is given"
+    Before "setup_deckrd_tmpdir"
+    After "teardown_deckrd_tmpdir"
+
+    # New-format session (prog + document lang) with an active module
+    SESSION_PROG_LANG_EN='{"active":"core/auth","prog":"go","lang":"en","ai_model":"sonnet","modules":{"core/auth":{}},"created_at":"2026-01-01T00:00:00Z","updated_at":"2026-01-01T00:00:00Z"}'
+    # Old-format session: the programming language is still stored in lang
+    SESSION_OLD_LANG_TS='{"active":"core/auth","lang":"typescript","ai_model":"sonnet","modules":{"core/auth":{}},"created_at":"2026-01-01T00:00:00Z","updated_at":"2026-01-01T00:00:00Z"}'
+    # New-format session without a lang key
+    SESSION_PROG_NO_LANG='{"active":null,"prog":"go","ai_model":"sonnet","modules":{},"created_at":"2026-01-01T00:00:00Z","updated_at":"2026-01-01T00:00:00Z"}'
+
+    It "[Normal] T-CLI-MAINI-77: Should: overwrite lang, keep the other keys, and leave no temporary file"
+      write_session_fixture "$SESSION_PROG_LANG_EN"
+      When run bash "$SCRIPT" myapp webapp --lang ja
+      The status should equal 0
+      The stderr should include "Session preserved"
+      The value "$(session_query '.lang')" should equal "ja"
+      The value "$(session_query '.prog')" should equal "go"
+      The value "$(session_query '.active')" should equal "core/auth"
+      The value "$(session_query '.modules | has("core/auth")')" should equal "true"
+      The value "$(session_query '.created_at')" should equal "2026-01-01T00:00:00Z"
+      The value "$(find "${DECKRD_LOCAL_DATA}" -maxdepth 1 -name 'session.json.tmp*')" should be blank
+    End
+
+    It "[Normal] T-CLI-MAINI-78: Should: migrate an old lang to prog first, then set lang from --lang"
+      write_session_fixture "$SESSION_OLD_LANG_TS"
+      When run bash "$SCRIPT" myapp webapp --lang ja
+      The status should equal 0
+      The stderr should include "Session preserved"
+      The value "$(session_query '.prog')" should equal "typescript"
+      The value "$(session_query '.lang')" should equal "ja"
+      The value "$(session_query '.active')" should equal "core/auth"
+      The value "$(session_query '.created_at')" should equal "2026-01-01T00:00:00Z"
+    End
+
+    It "[Normal] T-CLI-MAINI-79: Should: add lang to a session.json that has no lang key"
+      write_session_fixture "$SESSION_PROG_NO_LANG"
+      When run bash "$SCRIPT" myapp webapp --lang en
+      The status should equal 0
+      The stderr should include "Session preserved"
+      The value "$(session_query '.lang')" should equal "en"
+      The value "$(session_query '.prog')" should equal "go"
+      The value "$(session_query '.ai_model')" should equal "sonnet"
+      The value "$(session_query '.created_at')" should equal "2026-01-01T00:00:00Z"
+    End
+  End
+
+  Describe "Given: session.json already exists and --lang is omitted"
+    Before "setup_deckrd_tmpdir"
+    After "teardown_deckrd_tmpdir"
+
+    SESSION_PROG_LANG_JA='{"active":null,"prog":"go","lang":"ja","ai_model":"sonnet","modules":{},"created_at":"2026-01-01T00:00:00Z","updated_at":"2026-01-01T00:00:00Z"}'
+
+    It "[Edge] T-CLI-MAINI-80: Should: leave session.json unchanged even when --prog is given"
+      write_session_fixture "$SESSION_PROG_LANG_JA"
+      When run bash "$SCRIPT" myapp webapp --prog rust
+      The status should equal 0
+      The stderr should include "Session preserved"
+      The contents of file "${DECKRD_LOCAL_DATA}/session.json" should equal "$SESSION_PROG_LANG_JA"
+    End
+  End
+
   Describe "Given: an empty session.json already exists"
     Before "setup_deckrd_tmpdir"
     After "teardown_deckrd_tmpdir"
@@ -324,6 +432,14 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
       When run bash "$SCRIPT" myapp webapp
       The status should be failure
       The stderr should include "Error:"
+    End
+
+    It "[Error] T-CLI-MAINI-81: Should: exit non-zero without writing lang when the migration fails"
+      : >"${DECKRD_LOCAL_DATA}/session.json"
+      When run bash "$SCRIPT" myapp webapp --lang ja
+      The status should be failure
+      The stderr should include "Error:"
+      The file "${DECKRD_LOCAL_DATA}/session.json" should be empty file
     End
   End
 
@@ -353,25 +469,32 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
     It "[Normal] T-CLI-MAINI-18: --language go"
       When run bash "$SCRIPT" myapp webapp --language go
       The status should equal 0
-      The stderr should include "go"
+      The stderr should include "  prog:         go"
     End
 
     It "[Normal] T-CLI-MAINI-19: --language python"
       When run bash "$SCRIPT" myapp webapp --language python
       The status should equal 0
-      The stderr should include "python"
+      The stderr should include "  prog:         python"
     End
 
     It "[Normal] T-CLI-MAINI-20: --language rust"
       When run bash "$SCRIPT" myapp webapp --language rust
       The status should equal 0
-      The stderr should include "rust"
+      The stderr should include "  prog:         rust"
     End
 
     It "[Normal] T-CLI-MAINI-21: --language=python (= syntax)"
       When run bash "$SCRIPT" myapp webapp --language=python
       The status should equal 0
-      The stderr should include "python"
+      The stderr should include "  prog:         python"
+    End
+
+    It "[Edge] T-CLI-MAINI-73: Should: write the normalized alias (--language bash) as prog shell"
+      When run bash "$SCRIPT" myapp webapp --language bash
+      The status should equal 0
+      The stderr should include "Project written"
+      The value "$(project_query '.prog')" should equal "shell"
     End
 
     It "[Error] T-CLI-MAINI-22: --language cobol (unsupported)"
@@ -379,6 +502,95 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
       The status should equal 1
       The output should be blank
       The stderr should include "Unsupported language"
+    End
+  End
+
+  Describe "Given: --prog option"
+    Before "setup_deckrd_tmpdir"
+    After "teardown_deckrd_tmpdir"
+
+    It "[Normal] T-CLI-MAINI-70: Should: write the programming language to .project.json under the prog key"
+      When run bash "$SCRIPT" myapp webapp --prog go
+      The status should equal 0
+      The stderr should include "Project written"
+      The value "$(project_query '.prog')" should equal "go"
+      The value "$(project_query 'has("language")')" should equal "false"
+    End
+
+    It "[Normal] T-CLI-MAINI-71: Should: show the programming language as prog: in the stderr summary"
+      When run bash "$SCRIPT" myapp webapp --prog go
+      The status should equal 0
+      The stderr should include "  prog:         go"
+      The stderr should not include "  language:"
+    End
+
+    It "[Error] T-CLI-MAINI-74: Should: exit 1 without writing .project.json for --prog cobol (unsupported)"
+      When run bash "$SCRIPT" myapp webapp --prog cobol
+      The status should equal 1
+      The output should be blank
+      The stderr should include "Unsupported language: cobol"
+      The path "${DECKRD_LOCAL_DATA}/.project.json" should not be exist
+    End
+  End
+
+  Describe "Given: --lang option (document language)"
+    Before "setup_deckrd_tmpdir"
+    After "teardown_deckrd_tmpdir"
+
+    It "[Normal] T-CLI-MAINI-75: Should: write lang to a new session.json alongside prog"
+      When run bash "$SCRIPT" myapp webapp --lang ja
+      The status should equal 0
+      The stderr should include "Session created"
+      The value "$(session_query '.lang')" should equal "ja"
+      The value "$(session_query '.prog')" should equal "typescript"
+      The value "$(session_query '.active')" should equal "null"
+      The value "$(session_query '.modules')" should equal "{}"
+      The value "$(session_query '.ai_model')" should equal "sonnet"
+    End
+
+    It "[Normal] T-CLI-MAINI-76: Should: not write lang to a new session.json when --lang is omitted"
+      When run bash "$SCRIPT" myapp webapp --prog go
+      The status should equal 0
+      The stderr should include "Session created"
+      The value "$(session_query '.prog')" should equal "go"
+      The value "$(session_query 'has("lang")')" should equal "false"
+    End
+
+    It "[Edge] T-CLI-MAINI-82: Should: write lang when --lang system is given explicitly (same as the default)"
+      When run bash "$SCRIPT" myapp webapp --lang system
+      The status should equal 0
+      The stderr should include "Session created"
+      The value "$(session_query '.lang')" should equal "system"
+    End
+
+    It "[Edge] T-CLI-MAINI-83: Should: write --lang bash as is, without programming language normalization"
+      When run bash "$SCRIPT" myapp webapp --lang bash
+      The status should equal 0
+      The stderr should include "Session created"
+      The value "$(session_query '.lang')" should equal "bash"
+      The value "$(session_query '.prog')" should equal "typescript"
+    End
+  End
+
+  Describe "Given: an old-format .project.json with a language key already exists"
+    # Old .project.json written before the language -> prog rename
+    OLD_PROJECT_JSON='{"project":"old","project_type":"lib","language":"go","ai_model":"sonnet","created_at":"2026-01-01T00:00:00Z","updated_at":"2026-01-01T00:00:00Z"}'
+
+    setup_old_project_json() {
+      setup_deckrd_tmpdir
+      printf '%s\n' "$OLD_PROJECT_JSON" >"${DECKRD_LOCAL_DATA}/.project.json"
+    }
+    Before "setup_old_project_json"
+    After "teardown_deckrd_tmpdir"
+
+    It "[Edge] T-CLI-MAINI-72: Should: replace the language key with prog and keep created_at"
+      When run bash "$SCRIPT" myapp webapp --prog rust
+      The status should equal 0
+      The stderr should include "Project written"
+      The value "$(project_query '.prog')" should equal "rust"
+      The value "$(project_query 'has("language")')" should equal "false"
+      The value "$(project_query '.created_at')" should equal "2026-01-01T00:00:00Z"
+      The value "$(project_query '.project')" should equal "myapp"
     End
   End
 
@@ -411,11 +623,11 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
     Before "setup_deckrd_tmpdir"
     After "teardown_deckrd_tmpdir"
 
-    It "[Normal] T-CLI-MAINI-26: default language is typescript"
+    It "[Normal] T-CLI-MAINI-26: default prog is typescript"
       When run bash "$SCRIPT" myapp webapp
       The status should equal 0
       The stderr should include "Init complete"
-      The contents of file "${DECKRD_LOCAL_DATA}/.project.json" should include "typescript"
+      The value "$(project_query '.prog')" should equal "typescript"
     End
 
     It "[Normal] T-CLI-MAINI-27: default ai_model is sonnet"

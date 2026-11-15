@@ -43,6 +43,12 @@ readonly _BROKEN_SESSION_JSON='{ "active": "deckrd/subcommands"'
 # active が deckrd/subcommands なので deckrd_base は DECKRD_DOCS_DIR 配下 (tmpdir) を指す
 readonly _VALID_SESSION_JSON='{ "active": "deckrd/subcommands", "ai_model": "sonnet", "lang": "en" }'
 
+# _PROG_ONLY_SESSION_JSON - lang キーを持たず prog だけを持つセッション本文 (prog を LANG に流用しないことを見る)
+readonly _PROG_ONLY_SESSION_JSON='{ "active": "deckrd/subcommands", "ai_model": "sonnet", "prog": "typescript" }'
+
+# _EMPTY_LANG_SESSION_JSON - lang が空文字のセッション本文 (空文字は未設定として既定値に倒れることを見る)
+readonly _EMPTY_LANG_SESSION_JSON='{ "active": "deckrd/subcommands", "ai_model": "sonnet", "lang": "", "prog": "typescript" }'
+
 # _CONFIG_DUMP_MARKER - 設定ダンプが走ったことを示す印。
 # kv_init がスキーマの全キーを積むため、config_all は bash のハッシュ順に依らず
 # 必ずこのキーを出す。他の stderr 出力（例: generate-doc.sh の
@@ -191,6 +197,53 @@ _run_generate_doc_with_type() {
     bash "${SUBCOMMANDS_DIR}/generate-doc.sh" "$1" "test" --verbose </dev/null
 }
 
+# _capture_file_path - run_ai の stub が AI 入力を書き出す捕捉ファイルのパスを返す
+#
+# @return 0 always
+# @stdout DECKRD_TMPDIR 配下の捕捉ファイルの絶対パス
+_capture_file_path() {
+  printf '%s' "${DECKRD_TMPDIR}/ai-input.capture"
+}
+
+# _run_generate_doc_capturing_ai_input - run_ai を差し替えて main を起動し、AI 入力を捕捉する
+#
+# main はガードの内側なので、bash -c の中で generate-doc.sh を source してから
+# run_ai を上書きし、main を呼ぶ（bash -c では $0 が "_" なのでガードは発火しない）。
+# stub は stdin を全部読む。読み残すと build_ai_input 側が EPIPE で落ち、pipefail で
+# 失敗扱いになる。実 AI CLI は一切起動しない。
+#
+# @arg $1 string 書き出す session.json の本文
+# @arg $@ string generate-doc.sh へ追加で渡す引数（省略可）
+# @return generate-doc.sh の終了ステータス
+# @stdout generate-doc.sh の標準出力
+# @stderr generate-doc.sh の標準エラー出力
+_run_generate_doc_capturing_ai_input() {
+  local _session
+  _session="$(_write_session 'capture-session.json' "$1")"
+  shift
+
+  # shellcheck disable=SC2016 # $1 / $CAPTURE はサブプロセス側で展開させる
+  SESSION_FILE="$_session" \
+    DECKRD_DOCS="${DECKRD_DOCS_DIR}" \
+    CAPTURE="$(_capture_file_path)" \
+    bash -c '. "$1"; shift; run_ai() { cat >"$CAPTURE"; printf "%s\n" "STUB AI RESPONSE"; }; main "$@"' \
+    _ "${SUBCOMMANDS_DIR}/generate-doc.sh" @requirements "test" "$@" </dev/null
+}
+
+# _captured_lang_lines - AI 入力を捕捉し、その中の LANG: 行だけを返す
+#
+# 行全体が "LANG: <値>" のものだけを拾う。部分一致にすると LANG: en が
+# LANG: english も受け入れてしまう。起動の出力は捨てる（結果は捕捉ファイルで見る）。
+#
+# @arg $1 string 書き出す session.json の本文
+# @arg $@ string generate-doc.sh へ追加で渡す引数（省略可）
+# @return 0 always
+# @stdout 捕捉した AI 入力のうち "LANG: " で始まる行（無ければ空）
+_captured_lang_lines() {
+  _run_generate_doc_capturing_ai_input "$@" >/dev/null 2>&1 || true
+  grep -x 'LANG: .*' "$(_capture_file_path)" 2>/dev/null || true
+}
+
 # ============================================================================
 # テスト本体
 # ============================================================================
@@ -281,6 +334,52 @@ Describe "T-SUB-MAINF: generate-doc.sh main"
         The status should equal 0
         The output should equal 'STUB AI RESPONSE'
         The stderr should include 'universal-dictionary.prompt.md'
+      End
+    End
+  End
+
+  Describe "Given: run_ai を差し替えて AI 入力を捕捉するサブプロセス実行"
+    Describe "When: 正常系"
+      It "Then: [Normal] T-SUB-MAINF-11: --lang 省略、session lang=en → AI 入力の LANG: 行が LANG: en"
+        When call _captured_lang_lines "$_VALID_SESSION_JSON"
+        The output should equal 'LANG: en'
+      End
+
+      It "Then: [Normal] T-SUB-MAINF-12: --lang ja、session lang=en → LANG: ja が session を上書きする"
+        When call _captured_lang_lines "$_VALID_SESSION_JSON" --lang ja
+        The output should equal 'LANG: ja'
+      End
+
+      It "Then: [Normal] T-SUB-MAINF-13: --lang=ja、session lang=en → = 形式でも LANG: ja が session を上書きする"
+        When call _captured_lang_lines "$_VALID_SESSION_JSON" --lang=ja
+        The output should equal 'LANG: ja'
+      End
+    End
+
+    Describe "When: 異常系"
+      It "Then: [Error] T-SUB-MAINF-14: --lang (値なし) → exit 1、stderr にエラーを出し run_ai を呼ばない"
+        When run _run_generate_doc_capturing_ai_input "$_VALID_SESSION_JSON" --lang
+        The status should equal 1
+        The stderr should include 'Error: --lang requires a value'
+        The path "$(_capture_file_path)" should not be exist
+      End
+    End
+
+    Describe "When: エッジケース"
+      It "Then: [Edge] T-SUB-MAINF-15: session に lang キー無し (prog のみ) → 既定値の LANG: system"
+        When call _captured_lang_lines "$_PROG_ONLY_SESSION_JSON"
+        The output should equal 'LANG: system'
+      End
+
+      It "Then: [Edge] T-SUB-MAINF-16: session に lang キー無し (prog=typescript) → prog の値を LANG に流用しない"
+        When call _captured_lang_lines "$_PROG_ONLY_SESSION_JSON"
+        The lines of output should equal 1
+        The output should not include 'LANG: typescript'
+      End
+
+      It "Then: [Edge] T-SUB-MAINF-17: session の lang が空文字 → 既定値の LANG: system"
+        When call _captured_lang_lines "$_EMPTY_LANG_SESSION_JSON"
+        The output should equal 'LANG: system'
       End
     End
   End
