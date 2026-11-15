@@ -34,11 +34,11 @@ description: Reference table of all deckrd commands
 
 ## Utility
 
-| Command                                      | Description                                  |
-| -------------------------------------------- | -------------------------------------------- |
-| `status`                                     | Display current workflow progress and status |
-| `update`                                     | List assets that are missing or outdated     |
-| `update --update`                            | Copy missing and outdated assets from source |
-| `review`                                     | Show review command usage                    |
-| `review <doc> [--phase <p>]`                 | Review document with phase-specific analysis |
-| `project --project <name> --language <lang>` | Configure project settings                   |
+| Command                                  | Description                                  |
+| ---------------------------------------- | -------------------------------------------- |
+| `status`                                 | Display current workflow progress and status |
+| `update`                                 | List assets that are missing or outdated     |
+| `update --update`                        | Copy missing and outdated assets from source |
+| `review`                                 | Show review command usage                    |
+| `review <doc> [--phase <p>]`             | Review document with phase-specific analysis |
+| `project --project <name> --prog <lang>` | Configure project settings                   |

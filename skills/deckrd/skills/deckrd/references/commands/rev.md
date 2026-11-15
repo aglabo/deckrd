@@ -132,6 +132,7 @@ Execute based on `--to` value:
 
 ```bash
 bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @rev "<context>" \
+  --lang <DOC_LANG> \
   --output "requirements/requirements.md"
 ```
 
@@ -139,6 +140,7 @@ bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @rev "<context>" \
 
 ```bash
 bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @rev "<context>" \
+  --lang <DOC_LANG> \
   --output "specifications/specifications.md"
 ```
 
@@ -146,6 +148,7 @@ bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @rev "<context>" \
 
 ```bash
 bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @rev "<context>" \
+  --lang <DOC_LANG> \
   --output "implementation/implementation.md"
 ```
 
@@ -153,6 +156,7 @@ bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @rev "<context>" \
 
 ```bash
 bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @rev "<context>" \
+  --lang <DOC_LANG> \
   --output "tasks/tasks.md"
 ```
 

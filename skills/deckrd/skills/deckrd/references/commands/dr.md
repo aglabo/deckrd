@@ -188,7 +188,7 @@ After the preconditions pass (and the tasks-step confirmation, if any):
    - `mode`: `draft`
    - `module_id`, `module_path`: from the session
    - `phase`: `current_step`
-   - `lang`: the project's document language (default: language of existing DRs)
+   - `lang`: `DOC_LANG` (`--lang`, else session `lang`; see SKILL.md). When neither is set, the language of existing DRs
    - `decision_context`: the decision collected in step 1
    - Agent definition: [`agents/dr-writer.md`](../../../../agents/dr-writer.md)
 3. Handle the result.
@@ -217,7 +217,7 @@ After the preconditions and the argument check pass:
    - `mode`: `draft`
    - `module_id`, `module_path`: from the session
    - `targets`: the normalized DR-IDs (empty for all)
-   - `lang`: the project's document language (default: language of existing DRs)
+   - `lang`: `DOC_LANG` (`--lang`, else session `lang`; see SKILL.md). When neither is set, the language of existing DRs
    - Agent definition: [`agents/dr-refiner.md`](../../../../agents/dr-refiner.md)
 2. Handle the result.
    - `status: no-change` → report that nothing needs rewriting, list any `supersede` findings, and exit. No file changes

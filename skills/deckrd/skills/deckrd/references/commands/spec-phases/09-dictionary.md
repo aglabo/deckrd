@@ -108,7 +108,7 @@ Create / update universal-dictionary.md with these terms? (Y / edit / skip)
 ```bash
 bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @universal-dictionary \
   @requirements/requirements.md \
-  [--lang <lang>] \
+  --lang <DOC_LANG> \
   --output "universal-dictionary.md"
 ```
 
