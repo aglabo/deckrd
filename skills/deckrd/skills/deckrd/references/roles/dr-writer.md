@@ -42,7 +42,7 @@ confirmation, or decide whether the user approves the draft. The caller
 | `module_id`        | both         | `<namespace>/<module>` (the caller reads it from the session)                                                                      |
 | `module_path`      | both         | `docs/.deckrd/<namespace>/<module>` (`session.modules[active].path`)                                                               |
 | `phase`            | draft        | `req` / `spec` / `impl` / `tasks` (`current_step`)                                                                                 |
-| `lang`             | draft        | `system` / `en` / `ja` / other. Default: language of existing DRs, else `system`                                                   |
+| `lang`             | draft        | `system` / `en` / `ja` / other. Default: `DOC_LANG` from the caller; when unset, language of existing DRs, else `system`           |
 | `decision_context` | draft        | The decision the user stated: what was decided, why, alternatives, related IDs. Never a summary of the whole chat made on your own |
 | `feedback`         | draft (redo) | User's correction requests for a previous draft (optional)                                                                         |
 | `draft_file`       | apply        | Path of the approved draft written by `draft`                                                                                      |
