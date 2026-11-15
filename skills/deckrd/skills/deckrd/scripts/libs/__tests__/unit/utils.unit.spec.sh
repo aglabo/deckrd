@@ -87,10 +87,11 @@ _utils_spec_cannot_symlink() {
 }
 
 # _utils_spec_is_tmp_of <target> - succeed if the subject ($_utils_spec_is_tmp_of)
-#   is "<target>.tmp.<digits>"; used with `should satisfy`
+#   is "<target>.tmp.XXXXXX" as made by mktemp (6 chars of [A-Za-z0-9]);
+#   used with `should satisfy`
 _utils_spec_is_tmp_of() {
   local subject="${_utils_spec_is_tmp_of:-}"
-  [[ "$subject" == "$1".tmp.* && "${subject#"$1".tmp.}" =~ ^[0-9]+$ ]]
+  [[ "$subject" == "$1".tmp.* && "${subject#"$1".tmp.}" =~ ^[A-Za-z0-9]{6}$ ]]
 }
 
 Describe "utils.lib.sh"
@@ -266,9 +267,19 @@ b"
         The result of function _utils_spec_tmp_leftovers should equal ""
       End
 
-      It "Then: [Normal] T-LIB-WJF-01-03: 同じディレクトリの \${target}.tmp.<pid> を mv -f で target に置き換える"
+      It "Then: [Normal] T-LIB-WJF-01-03: 同じディレクトリに mktemp \"\${target}.tmp.XXXXXX\" で作った tmp を mv -f で target に置き換える"
         _utils_spec_make_target '{"a":1}'
+        mktemp_args="${_UTILS_SPEC_TMPDIR}/mktemp.args"
+        mktemp_out="${_UTILS_SPEC_TMPDIR}/mktemp.out"
         mv_args="${_UTILS_SPEC_TMPDIR}/mv.args"
+        # shellcheck disable=SC2329  # shadows the external mktemp for this example
+        mktemp() {
+          local out
+          printf '%s\n' "$@" >"$mktemp_args"
+          out="$(command mktemp "$@")" || return
+          printf '%s\n' "$out" >"$mktemp_out"
+          printf '%s\n' "$out"
+        }
         # shellcheck disable=SC2329  # shadows the external mv for this example
         mv() {
           printf '%s\n' "$@" >"$mv_args"
@@ -276,9 +287,13 @@ b"
         }
         When call write_json_file "$target" -c -n '{"b":2}'
         The status should equal 0
+        The lines of contents of file "$mktemp_args" should equal 1
+        The line 1 of contents of file "$mktemp_args" should equal "${target}.tmp.XXXXXX"
         The line 1 of contents of file "$mv_args" should equal "-f"
+        The line 2 of contents of file "$mv_args" should equal "$(cat "$mktemp_out" 2>/dev/null)"
         The line 2 of contents of file "$mv_args" should satisfy _utils_spec_is_tmp_of "$target"
         The line 3 of contents of file "$mv_args" should equal "$target"
+        The contents of file "$target" should equal '{"b":2}'
       End
     End
 
@@ -324,6 +339,21 @@ b"
         The path "$called" should not be exist
         The result of function _utils_spec_tmp_leftovers should equal ""
       End
+
+      It "Then: [Error] T-LIB-WJF-02-05: mktemp が失敗すると 1 を返し、jq_read を呼ばず target を保ち tmp を残さない"
+        _utils_spec_make_target '{"a":1}'
+        called="${_UTILS_SPEC_TMPDIR}/jq.called"
+        # spy jq: records the call, then runs the real jq
+        jqexe="$(_utils_spec_fake_jq spy ": >'${called}'; exec jq \"\$@\"")"
+        # shellcheck disable=SC2329  # shadows the external mktemp for this example
+        mktemp() { return 1; }
+        When call write_json_file "$target" -c -n '{"b":2}'
+        The status should equal 1
+        The contents of file "$target" should equal '{"a":1}'
+        The path "$called" should not be exist
+        The result of function _utils_spec_tmp_leftovers should equal ""
+        The stderr should equal ""
+      End
     End
 
     Describe "When: エッジケース"
@@ -358,6 +388,15 @@ b"
         The contents of file "$realdir/keep.txt" should equal "x"
         The result of function _utils_spec_tmp_leftovers should equal ""
         The stderr should equal ""
+      End
+
+      It "Then: [Edge] T-LIB-WJF-03-04: target の親ディレクトリが存在しないとき mktemp が失敗し 1 を返し、何も作らない"
+        target="${_UTILS_SPEC_TMPDIR}/missing/new.json"
+        When call write_json_file "$target" -c -n '{"k":"v"}'
+        The status should equal 1
+        The path "${_UTILS_SPEC_TMPDIR}/missing" should not be exist
+        The result of function _utils_spec_tmp_leftovers should equal ""
+        The stderr should be present
       End
     End
 

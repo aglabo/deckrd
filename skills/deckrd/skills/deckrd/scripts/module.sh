@@ -432,21 +432,24 @@ EOF
 ##
 # @description Update session.json with active module
 # @description Records the module test scope alongside the workflow state
+# @description Writes through write_json_file, so a failed write leaves no partial file or temp file
 # @arg $1 string Normalized module path
 # @arg $2 string Resolved test scope
+# @stdout "Session updated" summary (only when the write succeeds)
+# @stderr Error message when session.json cannot be written ("Session updated" is not printed)
+# @return 0 on success, 1 if the session.json write fails
 update_session() {
   local path="$1"
   local scope="$2"
   local timestamp
   timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+  local -a jq_args=(--arg path "$path" --arg scope "$scope" --arg timestamp "$timestamp")
 
   mkdir -p "$DECKRD_LOCAL_DATA"
 
   if [[ -f "$SESSION_FILE" ]]; then
     # shellcheck disable=SC2016
-    jq_read --arg path "$path" \
-      --arg scope "$scope" \
-      --arg timestamp "$timestamp" \
+    write_json_file "$SESSION_FILE" "${jq_args[@]}" \
       '.active = $path |
         .updated_at = $timestamp |
         .modules[$path] = {
@@ -455,14 +458,10 @@ update_session() {
           documents: {},
           test_scope: $scope
         }' \
-      "$SESSION_FILE" >"${SESSION_FILE}.tmp" &&
-      mv "${SESSION_FILE}.tmp" "$SESSION_FILE"
+      "$SESSION_FILE"
   else
     # shellcheck disable=SC2016
-    jq_read -n \
-      --arg path "$path" \
-      --arg scope "$scope" \
-      --arg timestamp "$timestamp" \
+    write_json_file "$SESSION_FILE" -n "${jq_args[@]}" \
       '{
         active:      $path,
         modules:     {
@@ -475,8 +474,11 @@ update_session() {
         },
         created_at:  $timestamp,
         updated_at:  $timestamp
-      }' >"$SESSION_FILE"
-  fi
+      }'
+  fi || {
+    echo "Error: update_session: failed to write: ${SESSION_FILE}" >&2
+    return 1
+  }
 
   echo ""
   echo "Session updated: ${SESSION_FILE}"
@@ -490,7 +492,7 @@ update_session() {
 # @stdout Usage (on --help or argument errors), progress messages, and the session summary
 # @stderr Error message on failure
 # @exitcode 0 Success, or usage shown by --help
-# @exitcode 1 Missing jq/jaq, invalid arguments, or a module creation/scope resolution failure
+# @exitcode 1 Missing jq/jaq, invalid arguments, a module creation/scope resolution failure, or a session.json write failure
 main() {
   local normalized scope
 
@@ -541,7 +543,7 @@ main() {
 
   scope=$(resolve_test_scope "$normalized" "$scope") || exit 1
   create_module_meta "$normalized" "$scope"
-  update_session "$normalized" "$scope"
+  update_session "$normalized" "$scope" || exit 1
 }
 
 # ============================================================================
