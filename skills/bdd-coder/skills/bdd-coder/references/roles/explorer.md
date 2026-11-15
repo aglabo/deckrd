@@ -42,7 +42,11 @@ Write the environment profile to `<local_dir>/temp/deckrd-work/env-profile.md` s
 
 ### Step 1: Read Profile (if exists)
 
-Read `.deckrd/profile.json` in `directory`:
+First read `prog` from `<local_dir>/session.json`. `/deckrd init` writes the programming language there.
+If `prog` has a value, use it as the primary language and load `assets/languages/<prog>.md`.
+Do not use the session's `lang` key: it holds the document language (e.g. `ja`), not a programming language.
+
+If `prog` is absent, read `.deckrd/profile.json` in `directory`:
 
 - `project`: project name
 - `language`: primary language

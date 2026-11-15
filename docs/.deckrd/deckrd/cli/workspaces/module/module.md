@@ -19,6 +19,7 @@ deckrd プラグインのコマンドエントリポイント。init / module / 
 | `DEPE`  | init.sh / update.sh asset deploy (e2e)                  |
 | `DTS`   | `derive_test_scope` (module.sh)                         |
 | `GDN`   | `_get_default_ns` (module.sh)                           |
+| `INS`   | `init_session` (init.sh)                                |
 | `MAINI` | init.sh: main() integration (integration)               |
 | `MIV`   | `init_vars` (module.sh)                                 |
 | `MMT`   | create_module_meta と CLI 連携                          |
@@ -39,3 +40,4 @@ deckrd プラグインのコマンドエントリポイント。init / module / 
 | `VAN`   | `validate_and_normalize` (module.sh)                    |
 | `VL`    | `validate_language` (init.sh)                           |
 | `VNF`   | `validate_and_normalize_with_fallback` (module.sh)      |
+| `WPJ`   | `write_project` (init.sh)                               |

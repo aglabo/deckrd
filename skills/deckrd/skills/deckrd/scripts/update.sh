@@ -18,10 +18,13 @@
 #   Each is printed as `[label] dst_rel` (destination relative path,
 #   `.org` dropped).
 #   It also reports an existing `.local/deckrd/.gitignore` that lacks the
-#   `!/workspaces/` rule as `[local-deckrd] .gitignore (workspaces rule)`.
+#   `!/workspaces/` rule as `[local-deckrd] .gitignore (workspaces rule)`, and a
+#   session.json that still keeps the programming language in `lang` (no `prog`)
+#   as `[session] session.json (lang -> prog)`.
 #   Deployed files are not modified unless --update is given, in which case
-#   each listed file is copied from its source and the workspaces rule
-#   block of the template is appended to the old gitignore.
+#   each listed file is copied from its source, the workspaces rule
+#   block of the template is appended to the old gitignore, and `lang` in
+#   session.json is moved to `prog`.
 #   With --update, a deployed file that has the same content as its source
 #   but is older also gets the source's mtime (copy_assets ->
 #   sync_asset_mtimes); it is not listed and its content is not changed.
@@ -32,7 +35,8 @@
 # @exitcode 0 Success
 # @exitcode 1 Error during execution
 #
-# @stdout Assets as `[label] dst_rel` (or `Updated: [label] dst_rel` with --update), one per line
+# @stdout Assets as `[label] dst_rel` (or `Updated: [label] dst_rel` with --update), one per line,
+#   including the local gitignore and session.json migration labels
 # @stderr Usage and error messages
 #
 # @author atsushifx
@@ -54,10 +58,13 @@ unset _SCRIPT_DIR
 . "${DECKRD_LIB_DIR}/validate-env.lib.sh"
 . "${DECKRD_LIB_DIR}/utils.lib.sh"
 . "${DECKRD_LIB_DIR}/asset-copy.lib.sh"
+. "${DECKRD_LIB_DIR}/session.lib.sh"
 validate_env || exit 1
 
 # Label reported for an old local gitignore that lacks the workspaces rule
 readonly WORKSPACES_RULE_LABEL='[local-deckrd] .gitignore (workspaces rule)'
+# Label reported for a session.json that still keeps the programming language in lang
+readonly SESSION_MIGRATION_LABEL='[session] session.json (lang -> prog)'
 
 # ============================================================================
 # Functions
@@ -74,14 +81,16 @@ List asset files that are missing from each deployed directory, or are
 older than and differ from their source, including files in subdirectories
 such as rules/ and workspaces/README.md. An existing deployed .gitignore is
 never overwritten; an existing .local/deckrd/.gitignore that lacks the
-workspaces rule is listed instead.
+workspaces rule is listed instead, and so is a session.json that keeps
+the programming language in lang instead of prog.
 Deployed files are not modified unless --update is given.
 
 Options:
   --update      Copy each listed file from its source, append the
-                workspaces rule block to the old .gitignore, and set the
-                mtime of each deployed file that has the same content as
-                its source but is older to the source's mtime
+                workspaces rule block to the old .gitignore, move lang to
+                prog in session.json, and set the mtime of each deployed
+                file that has the same content as its source but is older
+                to the source's mtime
   -h, --help    Show this help message
 EOF
 }
@@ -175,6 +184,35 @@ print_workspaces_rule() {
 }
 
 ##
+# @description Print (and in update mode, migrate) the session.json that still keeps the
+#   programming language in `lang`
+#   session_lang_migration_needed decides whether the migration is needed; in update mode
+#   session_migrate_lang_to_prog moves `lang` to `prog` and keeps the other keys.
+# @arg $1 true to migrate session.json, false to only list it
+# @stdout SESSION_MIGRATION_LABEL (`Updated: ` prefixed in update mode) when the migration
+#   is needed
+# @stderr `Error:` line from session.lib.sh when session.json cannot be checked or migrated
+#   (exits 1); the migration notice line in update mode
+# @return 0 when session.json was reported, 1 otherwise
+print_session_migration() {
+  local update_mode="$1" session="${DECKRD_LOCAL_DATA}/session.json" rc=0
+  session_lang_migration_needed "$session" || rc=$?
+  # 2 (missing or not a JSON object): the predicate has already printed the `Error:` line
+  case "$rc" in
+  0) ;;
+  1) return 1 ;;
+  *) exit 1 ;;
+  esac
+  if [[ "$update_mode" != true ]]; then
+    printf '%s\n' "$SESSION_MIGRATION_LABEL"
+    return 0
+  fi
+  session_migrate_lang_to_prog "$session" ||
+    exit 1
+  printf 'Updated: %s\n' "$SESSION_MIGRATION_LABEL"
+}
+
+##
 # @description Print the destination relative paths of the assets of one ASSET_TARGETS entry
 #   List mode maps each path from list_asset_files to its destination by dropping `.org`.
 #   Update mode copies with copy_assets, which already prints destination relative paths.
@@ -223,12 +261,16 @@ print_target_assets() {
 
 ##
 # @description Print (and in update mode, copy) the assets of every ASSET_TARGETS entry,
-#   then the local gitignore that lacks the workspaces rule (appended to in update mode).
-#   The two parts are delegated to print_target_assets and print_workspaces_rule.
+#   then the local gitignore that lacks the workspaces rule (appended to in update mode),
+#   then the session.json that needs the lang -> prog migration (migrated in update mode).
+#   The three parts are delegated to print_target_assets, print_workspaces_rule, and
+#   print_session_migration.
 # @arg $1 true to copy the listed assets, false to only list them
 # @stdout `[label] dst_rel` (`Updated: [label] dst_rel` in update mode) per listed asset,
-#   WORKSPACES_RULE_LABEL for the local gitignore, or `Assets are up to date.` when none
-# @stderr Error message when a file cannot be copied or the local gitignore cannot be read (exits 1)
+#   WORKSPACES_RULE_LABEL for the local gitignore, SESSION_MIGRATION_LABEL for session.json,
+#   or `Assets are up to date.` when none
+# @stderr Error message when a file cannot be copied, the local gitignore cannot be read,
+#   or session.json cannot be checked or migrated (exits 1)
 print_updated_assets() {
   local update_mode="$1" entry count=0
 
@@ -237,6 +279,10 @@ print_updated_assets() {
   done
 
   if print_workspaces_rule "$update_mode"; then
+    count=$((count + 1))
+  fi
+
+  if print_session_migration "$update_mode"; then
     count=$((count + 1))
   fi
 

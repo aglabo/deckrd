@@ -148,7 +148,7 @@ Then execute:
 ```bash
 bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @requirements \
   "<USER_INPUT>" \
-  [--lang <lang>] \
+  --lang <DOC_LANG> \
   --output "requirements/requirements.md"
 ```
 
@@ -305,7 +305,7 @@ deckrd/assets/
 Execute: [generate-doc.sh](../../scripts/subcommands/generate-doc.sh)
 
 ```bash
-bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @requirements <user_input> [--lang <lang>] --output "requirements/requirements.md"
+bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @requirements <user_input> --lang <DOC_LANG> --output "requirements/requirements.md"
 ```
 
 ## Session Update

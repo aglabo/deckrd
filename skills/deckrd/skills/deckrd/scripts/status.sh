@@ -83,7 +83,7 @@ main() {
   init_vars
   check_session || exit 1
 
-  local active lang ai_model created updated current_step completed
+  local active prog lang ai_model created updated current_step completed
 
   active=$(jq_read -r '.active // empty' "$SESSION_FILE")
   if [[ -z "$active" ]]; then
@@ -93,6 +93,7 @@ main() {
     exit 1
   fi
 
+  prog=$(jq_read -r '.prog // "unknown"' "$SESSION_FILE")
   lang=$(jq_read -r '.lang // "system"' "$SESSION_FILE")
   ai_model=$(jq_read -r '.ai_model // "unknown"' "$SESSION_FILE")
   created=$(jq_read -r '.created_at // "unknown"' "$SESSION_FILE")
@@ -110,6 +111,7 @@ main() {
   echo "Module Path:   ${DECKRD_DOCS}/$active"
   echo ""
   echo "Configuration:"
+  echo "  Program:     $prog"
   echo "  Language:    $lang"
   echo "  AI Model:    $ai_model"
   echo ""

@@ -143,8 +143,8 @@ deckrd/assets/
 Execute: [generate-doc.sh](../../scripts/subcommands/generate-doc.sh)
 
 ```bash
-bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @specifications @requirements/requirements.md [--lang <lang>] --output "specifications/specifications.md"
-bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @universal-dictionary @requirements/requirements.md [--lang <lang>] --output "universal-dictionary.md"
+bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @specifications @requirements/requirements.md --lang <DOC_LANG> --output "specifications/specifications.md"
+bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @universal-dictionary @requirements/requirements.md --lang <DOC_LANG> --output "universal-dictionary.md"
 ```
 
 > **Note**:

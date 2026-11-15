@@ -317,7 +317,7 @@ Execute:
 ```bash
 bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @implementation \
   @specifications/specifications.md \
-  [--lang <lang>] \
+  --lang <DOC_LANG> \
   --output "implementation/implementation.md"
 # When split: use implementation-1.md, implementation-2.md, ...
 ```
@@ -404,7 +404,7 @@ deckrd/assets/
 Execute: [generate-doc.sh](../../scripts/subcommands/generate-doc.sh)
 
 ```bash
-bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @implementation @specifications/specifications.md [--lang <lang>] --output "implementation/implementation.md"
+bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @implementation @specifications/specifications.md --lang <DOC_LANG> --output "implementation/implementation.md"
 ```
 
 > **Note**: The `@` prefix resolves to the active module's document path:

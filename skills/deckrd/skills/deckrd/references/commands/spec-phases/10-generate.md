@@ -56,7 +56,7 @@ For **each file** in SPLIT PLAN, execute:
 ```bash
 bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @specifications \
   @requirements/requirements.md \
-  [--lang <lang>] \
+  --lang <DOC_LANG> \
   --output "specifications/<filename>"
 ```
 

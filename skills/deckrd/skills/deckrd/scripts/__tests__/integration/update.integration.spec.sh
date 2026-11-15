@@ -228,6 +228,12 @@ dangling_symlink_unsupported() {
   return "$rc"
 }
 
+# Helper: overwrite session.json (created by setup_update_env) with the given content
+# @arg $1 session.json content (one line)
+write_session() {
+  printf '%s\n' "$1" >"${DECKRD_LOCAL_DATA}/session.json"
+}
+
 # Helper: print the mtime of a file as epoch seconds
 #
 # @arg $1 File path
@@ -508,6 +514,57 @@ Describe "T-CLI-UPDI: update.sh: list outdated assets"
       The status should equal 0
       The output should equal "Assets are up to date."
       The contents of file "${DECKRD_DOCS_DIR}/.gitignore" should equal "old"
+    End
+  End
+
+  Describe "Given: session.json with a programming language in lang and no prog"
+    Before "setup_update_env" "write_session '{\"lang\":\"bash\"}'"
+    After "teardown_update_env"
+
+    It "[Normal] T-CLI-UPDI-19: Should: exit 0, print the session migration label, and leave session.json unchanged"
+      When run bash "$SCRIPT"
+      The status should equal 0
+      The output should equal "[session] session.json (lang -> prog)"
+      The contents of file "${DECKRD_LOCAL_DATA}/session.json" should equal '{"lang":"bash"}'
+    End
+  End
+
+  Describe "Given: one outdated asset and a session.json that needs the lang -> prog migration"
+    Before "setup_update_env" "write_session '{\"lang\":\"bash\"}'"
+    After "teardown_update_env"
+
+    setup_outdated_with_session_migration() {
+      make_asset docs "$DECKRD_DOCS_DIR" rules/a.md new old "$NEW_MTIME" "$OLD_MTIME"
+    }
+    Before "setup_outdated_with_session_migration"
+
+    It "[Normal] T-CLI-UPDI-22: Should: exit 0, print the outdated asset then the session migration label, and not print up to date"
+      When run bash "$SCRIPT"
+      The status should equal 0
+      The output should equal "$(printf '%s\n' '[docs] rules/a.md' '[session] session.json (lang -> prog)')"
+    End
+  End
+
+  Describe "Given: session.json whose lang is a document language code"
+    Before "setup_update_env" "write_session '{\"lang\":\"ja\"}'"
+    After "teardown_update_env"
+
+    It "[Edge] T-CLI-UPDI-20: Should: exit 0 and print up to date when lang is not a programming language"
+      When run bash "$SCRIPT"
+      The status should equal 0
+      The output should equal "Assets are up to date."
+    End
+  End
+
+  Describe "Given: session.json that is not a JSON object"
+    Before "setup_update_env" "write_session '[]'"
+    After "teardown_update_env"
+
+    It "[Error] T-CLI-UPDI-21: Should: exit 1, stderr includes Error, stdout is blank when session.json is not a JSON object"
+      When run bash "$SCRIPT"
+      The status should equal 1
+      The output should be blank
+      The stderr should include "Error"
     End
   End
 
@@ -1005,6 +1062,44 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
       The status should equal 0
       The output should equal "Assets are up to date."
       The value "$(file_mtime "${DECKRD_DOCS_DIR}/rules/a.md")" should equal "$(epoch_of "$NEW_MTIME")"
+    End
+  End
+
+  Describe "Given: session.json with a programming language in lang, no prog, and another key"
+    Before "setup_update_env" "write_session '{\"lang\":\"bash\",\"active\":\"core\"}'"
+    After "teardown_update_env"
+
+    It "[Normal] T-CLI-UPDA-30: Should: exit 0, print Updated: with the session migration label, and move lang to prog"
+      When run bash "$SCRIPT" --update
+      The status should equal 0
+      The output should equal "Updated: [session] session.json (lang -> prog)"
+      The stderr should include "migrated"
+      The value "$(jq -c . "${DECKRD_LOCAL_DATA}/session.json")" should equal '{"active":"core","prog":"bash"}'
+    End
+  End
+
+  Describe "Given: session.json that already has prog and a document language code in lang"
+    Before "setup_update_env" "write_session '{\"prog\":\"bash\",\"lang\":\"ja\"}'"
+    After "teardown_update_env"
+
+    It "[Edge] T-CLI-UPDA-31: Should: exit 0, print up to date, and leave session.json unchanged when prog already exists"
+      When run bash "$SCRIPT" --update
+      The status should equal 0
+      The output should equal "Assets are up to date."
+      The contents of file "${DECKRD_LOCAL_DATA}/session.json" should equal '{"prog":"bash","lang":"ja"}'
+    End
+  End
+
+  Describe "Given: session.json that is not a JSON object"
+    Before "setup_update_env" "write_session '[]'"
+    After "teardown_update_env"
+
+    It "[Error] T-CLI-UPDA-32: Should: exit 1, stderr includes Error, stdout is blank, and leave session.json unchanged"
+      When run bash "$SCRIPT" --update
+      The status should equal 1
+      The output should be blank
+      The stderr should include "Error"
+      The contents of file "${DECKRD_LOCAL_DATA}/session.json" should equal '[]'
     End
   End
 

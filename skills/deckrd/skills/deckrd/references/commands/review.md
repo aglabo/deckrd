@@ -68,7 +68,7 @@ Review Phases:
 Options:
   --phase <p>       Review phase: explore, harden, fix (default: explore)
   --output <file>   Output file path (default: stdout)
-  --lang <lang>     Output language (default: session setting)
+  --lang <lang>     Document language (default: session `lang`, else system)
 ```
 
 ### Review Mode
@@ -98,7 +98,7 @@ Options:
 | -------- | -------- | ------- | ---------------------- |
 | --phase  | No*      | explore | explore / harden / fix |
 | --output | No       | stdout  | Output file path       |
-| --lang   | No       | session | Output language        |
+| --lang   | No       | session | Document language      |
 
 - When `doc_phase` is specified, `--phase` is optional (default: explore)
 - When `@doc_path` is specified, `--phase` is required
@@ -314,5 +314,5 @@ Execute: [generate-doc.sh](../../scripts/subcommands/generate-doc.sh)
 For review mode:
 
 ```bash
-bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @review-<phase> @<document> [--lang <lang>] [--output <file>]
+bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @review-<phase> @<document> --lang <DOC_LANG> [--output <file>]
 ```

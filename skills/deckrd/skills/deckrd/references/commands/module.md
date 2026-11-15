@@ -142,7 +142,7 @@ AI runs: bash module.sh auth/user-login
 ```json
 {
   "active": "<namespace>/<module>",
-  "lang": "<language>",
+  "prog": "<language>",
   "ai_model": "<model>",
   "modules": {
     "<namespace>/<module>": {

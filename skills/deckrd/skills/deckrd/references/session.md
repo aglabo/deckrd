@@ -19,7 +19,8 @@ description: Session file location, schema, and state transition rules
 ```json
 {
   "active": "<namespace>/<module>",
-  "lang": "typescript",
+  "lang": "ja",
+  "prog": "typescript",
   "ai_model": "sonnet",
   "created_at": "2025-01-01T00:00:00Z",
   "updated_at": "2025-01-01T00:00:00Z",
@@ -42,7 +43,8 @@ description: Session file location, schema, and state transition rules
 | Field                    | Type   | Description                                    |
 | ------------------------ | ------ | ---------------------------------------------- |
 | `active`                 | string | Currently active module path                   |
-| `lang`                   | string | Programming language (e.g. `typescript`, `go`) |
+| `prog`                   | string | Programming language (e.g. `typescript`, `go`) |
+| `lang`                   | string | Document language (optional, default `system`) |
 | `ai_model`               | string | AI model identifier (e.g. `sonnet`)            |
 | `modules`                | object | Per-module session states                      |
 | `modules.*.current_step` | string | Last completed step                            |
@@ -50,6 +52,21 @@ description: Session file location, schema, and state transition rules
 | `modules.*.documents`    | object | Generated document paths                       |
 | `modules.*.test_scope`   | string | Test scope set by `module` (2-4 `A-Z0-9`)      |
 | `bdd_coder`              | object | bdd-coder work in progress (optional)          |
+
+### `prog` and `lang`
+
+`prog` holds the programming language that `init` received with `--prog` (alias `--language`).
+bdd-coder reads it to choose its language rules.
+`lang` holds the document language that `init` received with `--lang`.
+`generate-doc.sh` passes it to the AI as `LANG:` unless `--lang` is given on the command.
+When `lang` is absent, `system` is used.
+In every deckrd command and script, `--lang` means the document language only.
+
+Older session files stored the programming language in `lang`.
+`init` (when the session already exists) and `update` move such a value to `prog`.
+They do this only when `prog` is absent and `lang` is a supported programming language.
+The supported values are the same as `init --prog` (`bash` included).
+Every other key is kept.
 
 ### `bdd_coder` (written by bdd-coder)
 
@@ -100,7 +117,7 @@ It is allowed in `req`, `spec`, `impl` and `tasks`.
 ```json
 {
   "active": null,
-  "lang": "typescript",
+  "prog": "typescript",
   "ai_model": "sonnet",
   "modules": {},
   "created_at": "2025-01-01T00:00:00Z",
@@ -113,7 +130,7 @@ It is allowed in `req`, `spec`, `impl` and `tasks`.
 ```json
 {
   "active": "agt-kind/is-collection",
-  "lang": "typescript",
+  "prog": "typescript",
   "ai_model": "sonnet",
   "modules": {
     "agt-kind/is-collection": {
@@ -133,7 +150,7 @@ After `req` command:
 ```json
 {
   "active": "agt-kind/is-collection",
-  "lang": "typescript",
+  "prog": "typescript",
   "ai_model": "sonnet",
   "modules": {
     "agt-kind/is-collection": {

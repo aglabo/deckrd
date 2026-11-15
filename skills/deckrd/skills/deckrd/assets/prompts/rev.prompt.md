@@ -34,6 +34,25 @@ TARGET:             {{TARGET}}
 
 ---
 
+## Parameters
+
+- `LANG`: system | en | ja | other
+
+## Language Rules
+
+`LANG` (in PARAMETERS) is the document language. Write all prose of the output in it.
+It is not the programming language of the project: do not pick the language from the source code,
+file names, or the language of the input. Use the system default language only when `LANG` is `system`.
+
+| LANG   | Rule                                                  |
+| ------ | ----------------------------------------------------- |
+| system | System default language                               |
+| en     | English with RFC 2119 keywords (SHALL / SHOULD / MAY) |
+| ja     | 本文は日本語、見出しは英語、技術用語は英語可          |
+| other  | Use literally                                         |
+
+---
+
 ## Rules
 
 ### General Rules

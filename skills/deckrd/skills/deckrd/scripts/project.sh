@@ -8,17 +8,17 @@
 # https://opensource.org/licenses/MIT
 #
 # @file project.sh
-# @brief Configure project settings (project name and language)
+# @brief Configure project settings (project name and programming language)
 # @description
 #   Creates or updates .local/deckrd/.project.json with project settings.
-#   This enables bdd-coder to load language-specific rules.
+#   This enables bdd-coder to load programming-language-specific rules.
 #
 # @example
 #   # Configure project with Go language
-#   project.sh --project myapp --language go
+#   project.sh --project myapp --prog go
 #
 #   # Configure project with TypeScript
-#   project.sh --project myapp --language typescript
+#   project.sh --project myapp --prog typescript
 #
 # @exitcode 0 Success
 # @exitcode 1 Error during execution
@@ -71,7 +71,7 @@ PROJECT_TYPE=""
 
 ##
 # @description Programming language (default: typescript)
-LANGUAGE="typescript"
+PROG="typescript"
 
 ##
 # @description AI model (default: sonnet)
@@ -92,7 +92,7 @@ Configure project settings for deckrd.
 Options:
   --project <name>              Project name (required)
   --project-type <type>         Project type (e.g. lib, cli, api)
-  --language <lang>, --lang     Programming language (default: typescript)
+  --prog <lang>, --language     Programming language (default: typescript)
                                 Supported: ${SUPPORTED_LANGUAGES[*]}
                                 Alias: bash → shell
   --ai-model <model>            AI model (default: sonnet)
@@ -102,8 +102,8 @@ Project file:
   .local/deckrd/.project.json
 
 Example:
-  project.sh --project myapp --language go
-  project.sh --project voift --project-type webapp --language typescript --ai-model sonnet
+  project.sh --project myapp --prog go
+  project.sh --project voift --project-type webapp --prog typescript --ai-model sonnet
 EOF
 }
 
@@ -112,7 +112,7 @@ EOF
 # @arg $1 string Language to validate
 # @return 0 if valid, exits on invalid
 validate_language() {
-  local lang="$1"
+  local lang="$1" supported
   for supported in "${SUPPORTED_LANGUAGES[@]}"; do
     if [[ "$lang" == "$supported" ]]; then
       return 0
@@ -120,6 +120,17 @@ validate_language() {
   done
   echo "Error: Unsupported language: ${lang}. Supported: ${SUPPORTED_LANGUAGES[*]}" >&2
   exit 1
+}
+
+##
+# @description Normalize language aliases (bash -> shell)
+# @arg $1 string Language name
+# @stdout Normalized language name
+normalize_language() {
+  case "$1" in
+  bash) echo "shell" ;;
+  *) echo "$1" ;;
+  esac
 }
 
 ##
@@ -155,18 +166,16 @@ parse_options() {
       PROJECT_TYPE="${1#*=}"
       shift
       ;;
-    --language | --lang)
+    --prog | --language)
       if [[ -z "${2:-}" ]]; then
         echo "Error: ${1} requires a value" >&2
         exit 1
       fi
-      LANGUAGE="$2"
-      [[ "$LANGUAGE" == "bash" ]] && LANGUAGE="shell"
+      PROG="$(normalize_language "$2")"
       shift 2
       ;;
-    --language=* | --lang=*)
-      LANGUAGE="${1#*=}"
-      [[ "$LANGUAGE" == "bash" ]] && LANGUAGE="shell"
+    --prog=* | --language=*)
+      PROG="$(normalize_language "${1#*=}")"
       shift
       ;;
     --ai-model)
@@ -242,14 +251,14 @@ write_project() {
   jq_read -n \
     --arg project "$PROJECT_NAME" \
     --arg project_type "$PROJECT_TYPE" \
-    --arg language "$LANGUAGE" \
+    --arg prog "$PROG" \
     --arg ai_model "$AI_MODEL" \
     --arg created_at "$created_at" \
     --arg updated_at "$timestamp" \
     '{
       project:      $project,
       project_type: $project_type,
-      language:     $language,
+      prog:         $prog,
       ai_model:     $ai_model,
       created_at:   $created_at,
       updated_at:   $updated_at
@@ -263,7 +272,7 @@ display_result() {
   echo ""
   echo "  project:      ${PROJECT_NAME}"
   echo "  project_type: ${PROJECT_TYPE}"
-  echo "  language:     ${LANGUAGE}"
+  echo "  prog:         ${PROG}"
   echo "  ai_model:     ${AI_MODEL}"
   echo "  project:      .local/deckrd/.project.json"
 }
@@ -274,7 +283,7 @@ display_result() {
 
 parse_options "$@"
 validate_required_params
-validate_language "$LANGUAGE"
+validate_language "$PROG"
 ensure_deckrd_dir
 write_project
 display_result

@@ -122,6 +122,9 @@ For each INCONSISTENT entry in DICTIONARY TERMS:
 ## Step 4: Apply Language
 
 Follow the LANG parameter exactly.
+`LANG` (in PARAMETERS) is the document language. Write all prose of the output in it.
+It is not the programming language of the project: do not pick the language from the source code,
+file names, or the language of the input. Use the system default language only when `LANG` is `system`.
 
 - `ja`: Body in Japanese, technical terms may stay in English. Translate headings, and use the Japanese item labels
   (抽象度・立場・確定状況・上位概念・構成要素・状態・対立・区別・関連・定義根拠・関連規則) and the Japanese

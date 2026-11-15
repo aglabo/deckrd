@@ -247,7 +247,7 @@ See [MCP Servers Reference](../specs/mcp-servers.md) for detailed information ab
 ```json
 {
   "active": "deckrd/feature-name",
-  "lang": "typescript",
+  "prog": "typescript",
   "ai_model": "sonnet",
   "modules": {
     "deckrd/feature-name": {

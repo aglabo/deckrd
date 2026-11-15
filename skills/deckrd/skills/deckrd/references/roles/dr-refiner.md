@@ -42,7 +42,7 @@ or decide whether the user approves the result. The caller ([dr command](../comm
 | `module_id`   | both         | `<namespace>/<module>` (the caller reads it from the session)                            |
 | `module_path` | both         | `docs/.deckrd/<namespace>/<module>` (`session.modules[active].path`)                     |
 | `targets`     | draft        | DR-IDs to refine (already validated by the caller). Empty = every DR section in the file |
-| `lang`        | draft        | `system` / `en` / `ja` / other. Default: language of existing DRs                        |
+| `lang`        | draft        | `system` / `en` / `ja` / other. Default: `DOC_LANG`, else language of existing DRs       |
 | `answers`     | draft (redo) | User's answers to the `ask` questions of a previous run, keyed by DR-ID and rule ID      |
 | `feedback`    | draft (redo) | User's correction requests for a previous draft, such as "exclude DR-03" (optional)      |
 | `draft_file`  | apply        | Path of the approved draft written by `draft`                                            |

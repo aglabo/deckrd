@@ -20,6 +20,17 @@ Describe "T-CLI-PRJ: project.sh"
   Before "setup_deckrd_tmpdir"
   After "teardown_deckrd_tmpdir"
 
+  # Internal helpers: read fields of the generated .project.json
+  _project_prog() {
+    jq -r '.prog' "${DECKRD_LOCAL_DATA}/.project.json"
+  }
+  _project_has_language() {
+    jq 'has("language")' "${DECKRD_LOCAL_DATA}/.project.json"
+  }
+  _project_created_at() {
+    jq -r '.created_at' "${DECKRD_LOCAL_DATA}/.project.json"
+  }
+
   Describe "引数なしの場合"
     It "T-CLI-PRJ-01: エラーメッセージを出力してexit 1する"
       When run bash "$SCRIPT"
@@ -38,6 +49,36 @@ Describe "T-CLI-PRJ: project.sh"
     It "[Normal] T-CLI-PRJ-21: ヘルプに .local/deckrd/.project.json が含まれる"
       When run bash "$SCRIPT" --help
       The output should include ".local/deckrd/.project.json"
+    End
+
+    It "[Normal] T-CLI-PRJ-43: ヘルプが --prog を programming language オプションとして記載する"
+      When run bash "$SCRIPT" --help
+      The status should equal 0
+      The output should include "--prog <lang>, --language"
+      The output should include "Programming language (default: typescript)"
+    End
+
+    It "[Edge] T-CLI-PRJ-46: ヘルプがサポート言語一覧と bash エイリアス注記を維持する"
+      When run bash "$SCRIPT" --help
+      The status should equal 0
+      The output should include "Supported: typescript go python rust shell"
+      The output should include "Alias: bash → shell"
+    End
+
+    It "[Normal] T-CLI-PRJ-44: ヘルプの例が --prog を使う"
+      When run bash "$SCRIPT" --help
+      The status should equal 0
+      The output should include "project.sh --project myapp --prog go"
+    End
+
+    # Count help lines with a standalone --lang token (--language excluded)
+    _help_lang_token_count() {
+      bash "$SCRIPT" --help | grep -cE -- '--lang([^u]|$)' || true
+    }
+
+    It "[Error] T-CLI-PRJ-45: ヘルプに単独トークンの --lang を記載しない"
+      When call _help_lang_token_count
+      The output should equal "0"
     End
   End
 
@@ -61,68 +102,88 @@ Describe "T-CLI-PRJ: project.sh"
 
   Describe "正常系"
     It "T-CLI-PRJ-05: exit 0する"
-      When run bash "$SCRIPT" --project myapp --language go
+      When run bash "$SCRIPT" --project myapp --prog go
       The status should equal 0
       The output should include "myapp"
     End
 
     It "T-CLI-PRJ-06: project が出力に含まれる"
-      When run bash "$SCRIPT" --project myapp --language go
-      The output should include "myapp"
+      When run bash "$SCRIPT" --project myapp --prog go
+      The output should include "  project:      myapp"
     End
 
-    It "T-CLI-PRJ-07: language が出力に含まれる"
-      When run bash "$SCRIPT" --project myapp --language go
+    It "T-CLI-PRJ-07: prog が出力に含まれる"
+      When run bash "$SCRIPT" --project myapp --prog go
       The output should include "go"
     End
 
     It "T-CLI-PRJ-08: 結果サマリーを出力する"
-      When run bash "$SCRIPT" --project myapp --language typescript
+      When run bash "$SCRIPT" --project myapp --prog typescript
       The output should include "myapp"
       The output should include "typescript"
     End
 
     It "[Normal] T-CLI-PRJ-22: project: 行に .local/deckrd/.project.json が含まれる"
-      When run bash "$SCRIPT" --project myapp --language go
+      When run bash "$SCRIPT" --project myapp --prog go
       The output should include "project:      .local/deckrd/.project.json"
     End
   End
 
-  Describe "--language オプション"
+  Describe "--prog オプション"
+    It "[Normal] T-CLI-PRJ-23: --prog go を受け付けて prog: 行に表示する"
+      When run bash "$SCRIPT" --project myapp --prog go
+      The status should equal 0
+      The output should include "  prog:         go"
+    End
+
+    It "[Normal] T-CLI-PRJ-24: --prog=rust (= 構文) を受け付けて prog: 行に表示する"
+      When run bash "$SCRIPT" --project myapp --prog=rust
+      The status should equal 0
+      The output should include "  prog:         rust"
+    End
+
+    It "[Error] T-CLI-PRJ-29: --prog の値が無い場合はexit 1する"
+      When run bash "$SCRIPT" --project myapp --prog
+      The status should equal 1
+      The stderr should include "--prog requires a value"
+    End
+
+    It "[Error] T-CLI-PRJ-30: --prog にサポート外の言語を指定するとexit 1する"
+      When run bash "$SCRIPT" --project myapp --prog cobol
+      The status should equal 1
+      The stderr should include "Unsupported language: cobol"
+    End
+  End
+
+  Describe "--language エイリアス"
     It "T-CLI-PRJ-09: typescript を指定できる"
       When run bash "$SCRIPT" --project myapp --language typescript
       The status should equal 0
-      The output should include "typescript"
+      The output should include "  prog:         typescript"
     End
 
     It "T-CLI-PRJ-10: python を指定できる"
       When run bash "$SCRIPT" --project myapp --language python
       The status should equal 0
-      The output should include "python"
+      The output should include "  prog:         python"
     End
 
     It "T-CLI-PRJ-11: rust を指定できる"
       When run bash "$SCRIPT" --project myapp --language rust
       The status should equal 0
-      The output should include "rust"
+      The output should include "  prog:         rust"
     End
 
     It "T-CLI-PRJ-12: shell を指定できる"
       When run bash "$SCRIPT" --project myapp --language shell
       The status should equal 0
-      The output should include "shell"
+      The output should include "  prog:         shell"
     End
 
-    It "T-CLI-PRJ-13: bash を指定すると shell として扱われる"
-      When run bash "$SCRIPT" --project myapp --language bash
+    It "[Normal] T-CLI-PRJ-25: --language=typescript (= 構文) を受け付けて prog: 行に表示する"
+      When run bash "$SCRIPT" --project myapp --language=typescript
       The status should equal 0
-      The output should include "shell"
-    End
-
-    It "T-CLI-PRJ-14: bash エイリアス (= 構文) を指定すると shell として扱われる"
-      When run bash "$SCRIPT" --project myapp --language=bash
-      The status should equal 0
-      The output should include "shell"
+      The output should include "  prog:         typescript"
     End
 
     It "T-CLI-PRJ-15: サポート外の言語はexit 1する"
@@ -132,11 +193,121 @@ Describe "T-CLI-PRJ: project.sh"
     End
   End
 
-  Describe "--lang エイリアス"
-    It "T-CLI-PRJ-16: --lang でも言語を指定できる"
-      When run bash "$SCRIPT" --project myapp --lang go
+  Describe "bash → shell 正規化"
+    It "[Normal] T-CLI-PRJ-26: --prog bash は shell に正規化される"
+      When run bash "$SCRIPT" --project myapp --prog bash
       The status should equal 0
-      The output should include "go"
+      The output should include "  prog:         shell"
+    End
+
+    It "[Normal] T-CLI-PRJ-27: --prog=bash (= 構文) は shell に正規化される"
+      When run bash "$SCRIPT" --project myapp --prog=bash
+      The status should equal 0
+      The output should include "  prog:         shell"
+    End
+
+    It "T-CLI-PRJ-13: --language bash は shell に正規化される"
+      When run bash "$SCRIPT" --project myapp --language bash
+      The status should equal 0
+      The output should include "  prog:         shell"
+    End
+
+    It "T-CLI-PRJ-14: --language=bash (= 構文) は shell に正規化され language: 行を表示しない"
+      When run bash "$SCRIPT" --project myapp --language=bash
+      The status should equal 0
+      The output should include "  prog:         shell"
+      The output should not include "language:"
+    End
+  End
+
+  Describe "--lang は受け付けない"
+    It "[Error] T-CLI-PRJ-16: --lang は Unknown option として exit 1する"
+      When run bash "$SCRIPT" --project myapp --lang go
+      The status should equal 1
+      The stderr should include "Unknown option: --lang"
+      The output should include "Usage:"
+    End
+
+    It "[Error] T-CLI-PRJ-28: --lang=go (= 構文) は Unknown option として exit 1する"
+      When run bash "$SCRIPT" --project myapp --lang=go
+      The status should equal 1
+      The stderr should include "Unknown option: --lang=go"
+      The output should include "Usage:"
+    End
+
+    It "[Error] T-CLI-PRJ-36: --lang go では .project.json を作らない"
+      When run bash "$SCRIPT" --project myapp --lang go
+      The status should equal 1
+      The stderr should include "Unknown option: --lang"
+      The output should include "Usage:"
+      The path "${DECKRD_LOCAL_DATA}/.project.json" should not be exist
+    End
+  End
+
+  Describe "言語オプションのエッジケース"
+    It "[Edge] T-CLI-PRJ-31: --prog= (空値) はサポート外としてexit 1する"
+      When run bash "$SCRIPT" --project myapp --prog=
+      The status should equal 1
+      The stderr should include "Unsupported language"
+    End
+
+    It "[Edge] T-CLI-PRJ-32: --language と --prog を両方指定すると後勝ちになる"
+      When run bash "$SCRIPT" --project myapp --language go --prog rust
+      The status should equal 0
+      The output should include "  prog:         rust"
+    End
+
+    It "[Edge] T-CLI-PRJ-33: 言語オプションを省略すると typescript になる"
+      When run bash "$SCRIPT" --project myapp
+      The status should equal 0
+      The output should include "  prog:         typescript"
+    End
+  End
+
+  Describe ".project.json の内容"
+    It "[Normal] T-CLI-PRJ-34: --prog go は prog キーに go を書く"
+      When run bash "$SCRIPT" --project myapp --prog go
+      The status should equal 0
+      The output should include "myapp"
+      The result of function _project_prog should equal "go"
+    End
+
+    It "[Normal] T-CLI-PRJ-35: --prog go は language キーを書かない"
+      When run bash "$SCRIPT" --project myapp --prog go
+      The status should equal 0
+      The output should include "myapp"
+      The result of function _project_has_language should equal "false"
+    End
+
+    It "[Edge] T-CLI-PRJ-37: --prog=bash は正規化後の shell を prog キーに書く"
+      When run bash "$SCRIPT" --project myapp --prog=bash
+      The status should equal 0
+      The output should include "myapp"
+      The result of function _project_prog should equal "shell"
+    End
+
+    It "[Edge] T-CLI-PRJ-38: 言語オプションを省略すると既定値 typescript を prog キーに書く"
+      When run bash "$SCRIPT" --project myapp
+      The status should equal 0
+      The output should include "myapp"
+      The result of function _project_prog should equal "typescript"
+    End
+  End
+
+  Describe "結果表示"
+    It "[Normal] T-CLI-PRJ-40: --prog go は prog: 行を表示し language: 行を表示しない"
+      When run bash "$SCRIPT" --project myapp --prog go
+      The status should equal 0
+      The output should include "  prog:         go"
+      The output should not include "language:"
+    End
+
+    It "[Error] T-CLI-PRJ-41: --prog cobol は検証で失敗し結果を表示しない"
+      When run bash "$SCRIPT" --project myapp --prog cobol
+      The status should equal 1
+      The stderr should include "Unsupported language: cobol"
+      The output should not include "prog:"
+      The output should not include "Deckrd project configured."
     End
   End
 
@@ -169,9 +340,18 @@ JSON
     }
 
     It "T-CLI-PRJ-19: exit 0する"
-      When run bash "$SCRIPT" --project newapp --language typescript
+      When run bash "$SCRIPT" --project newapp --prog typescript
       The status should equal 0
       The output should include "newapp"
+    End
+
+    It "[Normal] T-CLI-PRJ-39: 旧形式の language キーを prog に置き換え、created_at を維持する"
+      When run bash "$SCRIPT" --project newapp --prog typescript
+      The status should equal 0
+      The output should include "newapp"
+      The result of function _project_prog should equal "typescript"
+      The result of function _project_has_language should equal "false"
+      The result of function _project_created_at should equal "2025-01-01T00:00:00Z"
     End
   End
 

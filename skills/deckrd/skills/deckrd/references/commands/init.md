@@ -24,12 +24,13 @@ Bootstrap and initialize a DECKRD project.
 
 <!-- markdownlint-disable line-length MD060 -->
 
-| Option                        | Default      | Description                                                                            |
-| ----------------------------- | ------------ | -------------------------------------------------------------------------------------- |
-| `--language <lang>`, `--lang` | `typescript` | Programming language: `typescript`, `go`, `python`, `rust`, `shell` (alias: `bash`)    |
-| `--ai-model <model>`          | `sonnet`     | AI model: `claude-*`, `haiku`, `sonnet`, `opus`, `gpt-*`, `o1-*`, `<provider>/<model>` |
-| `--force`                     | —            | Overwrite every asset file, including `.gitignore` files and user edits                |
-| `-h`, `--help`                | —            | Show usage information                                                                 |
+| Option                        | Default      | Description                                                                                            |
+| ----------------------------- | ------------ | ------------------------------------------------------------------------------------------------------ |
+| `--prog <lang>`, `--language` | `typescript` | Programming language: `typescript`, `go`, `python`, `rust`, `shell` (alias: `bash`)                    |
+| `--lang <lang>`               | `system`     | Document language: `system`, `en`, `ja`, or any language name. Saved to `session.json` only when given |
+| `--ai-model <model>`          | `sonnet`     | AI model: `claude-*`, `haiku`, `sonnet`, `opus`, `gpt-*`, `o1-*`, `<provider>/<model>`                 |
+| `--force`                     | —            | Overwrite every asset file, including `.gitignore` files and user edits                                |
+| `-h`, `--help`                | —            | Show usage information                                                                                 |
 
 <!-- markdownlint-enable line-length MD060 -->
 
@@ -39,11 +40,14 @@ Bootstrap and initialize a DECKRD project.
 # Minimum (defaults: typescript, sonnet)
 /deckrd init myapp webapp
 
-# Specify language
-/deckrd init myapp lib --language go
+# Specify the programming language
+/deckrd init myapp lib --prog go
 
-# Specify both language and AI model
-/deckrd init voift webapp --language typescript --ai-model claude-sonnet-4-5
+# Write documents in Japanese
+/deckrd init myapp lib --prog go --lang ja
+
+# Specify both programming language and AI model
+/deckrd init voift webapp --prog typescript --ai-model claude-sonnet-4-5
 
 # Reset every deployed asset to the bundled version
 /deckrd init myapp webapp --force
@@ -181,7 +185,7 @@ Creates or updates `.local/deckrd/.project.json`:
 {
   "project": "<project>",
   "project_type": "<project-type>",
-  "language": "<language>",
+  "prog": "<prog>",
   "ai_model": "<ai-model>",
   "created_at": "<ISO8601>",
   "updated_at": "<ISO8601>"
@@ -189,6 +193,7 @@ Creates or updates `.local/deckrd/.project.json`:
 ```
 
 - Existing file: `created_at` is preserved, all other fields updated.
+- The programming language is stored in `prog`. An older `language` key is dropped when the file is rewritten.
 
 ### Phase 3: Initialize session.json
 
@@ -197,7 +202,8 @@ Creates `.local/deckrd/session.json` if it does not exist:
 ```json
 {
   "active": null,
-  "lang": "<language>",
+  "prog": "<prog>",
+  "lang": "<lang>",
   "ai_model": "<ai-model>",
   "modules": {},
   "created_at": "<ISO8601>",
@@ -206,7 +212,10 @@ Creates `.local/deckrd/session.json` if it does not exist:
 ```
 
 - No active module is set — run `module` next to initialize a module.
-- Existing session file is preserved as-is.
+- `lang` is written only when `--lang` is given. Without it the key is omitted and document generation uses `system`.
+- An existing session file is preserved.
+  An old `lang` that holds a programming language is moved to `prog` ([Session Management](../session.md)).
+  When `--lang` is given, `lang` is then set to that value; other keys are kept.
 
 ## Script
 

@@ -53,6 +53,10 @@ instead of silently switching personas.
 
 ## Language Rules
 
+`LANG` (in PARAMETERS) is the document language. Write all prose of the output in it.
+It is not the programming language of the project: do not pick the language from the source code,
+file names, or the language of the input. Use the system default language only when `LANG` is `system`.
+
 | LANG   | Rule                                                  |
 | ------ | ----------------------------------------------------- |
 | system | System default language                               |

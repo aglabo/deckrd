@@ -48,14 +48,14 @@ See [Deckrd Commands Reference](./deckrd-commands.md) for detailed command docum
 #### 1. Initialize New Feature
 
 ```bash
-# Initialize the project (writes language and AI model)
+# Initialize the project (writes programming language, document language and AI model)
 /deckrd init <project> <type>
 
 # Register a module and make it the active one
 /deckrd module <namespace>/<module>
 
 # Session file: .local/deckrd/session.json
-# init writes: active (null), lang, ai_model
+# init writes: active (null), prog, ai_model (lang only when --lang is given)
 # module writes: modules[<path>] and sets active
 ```
 
@@ -115,7 +115,7 @@ See [Deckrd Commands Reference](./deckrd-commands.md) for detailed command docum
 ```json
 {
   "active": "deckrd/feature-name",
-  "lang": "typescript",
+  "prog": "typescript",
   "ai_model": "sonnet",
   "modules": {
     "deckrd/feature-name": {

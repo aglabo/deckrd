@@ -1,18 +1,18 @@
 ---
 title: project Command
-description: Configure project settings including name and development language
+description: Configure project settings including name and programming language
 ---
 
 <!-- markdownlint-disable line-length-->
 
 ## project Command
 
-Configure project settings (project name and development language).
+Configure project settings (project name and programming language).
 
 ## Usage
 
 ```bash
-/deckrd project --project <name> [--project-type <type>] [--language <lang>] [--ai-model <model>]
+/deckrd project --project <name> [--project-type <type>] [--prog <lang>] [--ai-model <model>]
 ```
 
 ## Parameters
@@ -21,13 +21,16 @@ Configure project settings (project name and development language).
 | ----------------------------- | -------- | ----------------------------------------------------------------------------------------------------------- |
 | `--project <name>`            | Yes      | Project name                                                                                                |
 | `--project-type <type>`       | No       | Project type (e.g. `webapp`, `lib`, `cli`). When omitted on an existing file, the stored value is kept      |
-| `--language <lang>`, `--lang` | No       | Development language (default: `typescript`): `go`, `typescript`, `python`, `rust`, `shell` (alias: `bash`) |
+| `--prog <lang>`, `--language` | No       | Programming language (default: `typescript`): `go`, `typescript`, `python`, `rust`, `shell` (alias: `bash`) |
 | `--ai-model <model>`          | No       | AI model (default: `sonnet`). When left at the default on an existing file, the stored model is kept        |
 | `-h`, `--help`                | No       | Show usage information                                                                                      |
 
+`--lang` is not accepted (`Error: Unknown option: --lang`).
+`--lang` always means the document language in deckrd; set it with `/deckrd init --lang <lang>`.
+
 ## Actions
 
-1. Validate `--project` and `--language` parameters (exit 1 if missing or unsupported)
+1. Validate `--project` and `--prog` parameters (exit 1 if missing or unsupported)
 2. Create `.local/deckrd/` directory if it does not exist
 3. Write or update `.local/deckrd/.project.json`:
    - New file: write all fields including `created_at` and `updated_at`
@@ -39,7 +42,7 @@ Configure project settings (project name and development language).
 {
   "project": "<project-name>",
   "project_type": "<project-type>",
-  "language": "<language>",
+  "prog": "<prog>",
   "ai_model": "<ai-model>",
   "created_at": "<ISO8601 timestamp>",
   "updated_at": "<ISO8601 timestamp>"
@@ -55,7 +58,7 @@ Deckrd project configured.
 
   project:      <project>
   project_type: <project-type>
-  language:     <language>
+  prog:         <prog>
   ai_model:     <ai-model>
   project:      .local/deckrd/.project.json
 ```
@@ -65,7 +68,7 @@ Deckrd project configured.
 Execute: [scripts/project.sh](../../scripts/project.sh)
 
 ```bash
-bash "<DECKRD_SKILL_DIR>/scripts/project.sh" --project <name> --language <lang>
+bash "<DECKRD_SKILL_DIR>/scripts/project.sh" --project <name> --prog <lang>
 ```
 
 > **Note**: `<DECKRD_SKILL_DIR>` is a placeholder; see SKILL.md.
@@ -76,6 +79,7 @@ bash "<DECKRD_SKILL_DIR>/scripts/project.sh" --project <name> --language <lang>
 | --------------------------------------------------------- | ---------------------------- | --------------------------------------------------------- |
 | `Error: --project is required`                            | `--project` not specified    | Add `--project <name>`                                    |
 | `Error: Unsupported language: <lang>. Supported: go, ...` | Language not in allowed list | Use one of: `go`, `typescript`, `python`, `rust`, `shell` |
+| `Error: Unknown option: --lang`                           | `--lang` given to `project`  | Use `--prog` for the programming language                 |
 
 ## Notes
 
@@ -83,3 +87,4 @@ bash "<DECKRD_SKILL_DIR>/scripts/project.sh" --project <name> --language <lang>
 - This command is project-scoped and does not interact with session state
 - Can be run at any time, before or after `init`
 - `bdd-coder` reads this project settings in Phase 0 to load language-specific rules
+- Older files store the programming language in `language`. `project` rewrites the file with `prog` and drops `language`

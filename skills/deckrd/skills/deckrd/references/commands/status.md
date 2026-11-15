@@ -36,6 +36,7 @@ Completed:     module, req
 Module Path:   docs/.deckrd/agt-kind/is-collection  (DECKRD_DOCS_DIR default)
 
 Configuration:
+  Program:     typescript
   Language:    ja
   AI Model:    claude-sonnet-4-5
 

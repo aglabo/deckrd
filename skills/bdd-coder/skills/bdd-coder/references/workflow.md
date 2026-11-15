@@ -135,7 +135,8 @@ Spawn **explore-agent** with:
 
 The agent:
 
-1. Reads `.deckrd/profile.json` if present (`project`, `language`)
+1. Reads `prog` from `<local_dir>/session.json`.
+   Without `prog`, reads `.deckrd/profile.json` (`project`, `language`)
 
 2. Loads the language rule file if language is found:
    `plugins/deckrd/skills/bdd-coder/assets/languages/<language>.md`

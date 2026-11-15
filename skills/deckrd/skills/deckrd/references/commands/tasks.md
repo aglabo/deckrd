@@ -215,7 +215,7 @@ After completion, update `<local_dir>/session.json`:
 Execute: [generate-doc.sh](../../scripts/subcommands/generate-doc.sh)
 
 ```bash
-bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @tasks [--lang <lang>] --output "tasks/tasks.md"
+bash "<DECKRD_SKILL_DIR>/scripts/subcommands/generate-doc.sh" @tasks --lang <DOC_LANG> --output "tasks/tasks.md"
 ```
 
 ## Next Step

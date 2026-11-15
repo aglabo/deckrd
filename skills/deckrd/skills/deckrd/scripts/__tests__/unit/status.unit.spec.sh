@@ -46,13 +46,30 @@ _SENTINEL_DOCS='/deckrd-sentinel/status-docs-override'
 
 # _write_valid_session - active モジュールを持つ session.json を一時ディレクトリへ書く
 #
+# prog / lang はどちらも書かない。
+#
 # @return 0 always
 _write_valid_session() {
+  _write_session_with_config '' ''
+}
+
+# _write_session_with_config - prog / lang を持つ session.json を一時ディレクトリへ書く
+#
+# 空文字の引数はキーを書かない (キー欠落) ことを意味する。
+#
+# @arg $1 string  prog の値。空ならキーを省く
+# @arg $2 string  lang の値。空ならキーを省く
+# @return 0 always
+_write_session_with_config() {
+  local config=''
+  [[ -n "$1" ]] && config+="  \"prog\": \"$1\","$'\n'
+  [[ -n "$2" ]] && config+="  \"lang\": \"$2\","$'\n'
+
   mkdir -p "$DECKRD_LOCAL"
   cat >"${DECKRD_LOCAL}/session.json" <<JSON
 {
   "active": "${_ACTIVE_MODULE}",
-  "modules": {
+${config}  "modules": {
     "${_ACTIVE_MODULE}": {
       "current_step": "req",
       "completed": ["module", "req"]
@@ -241,6 +258,52 @@ Describe "T-CLI-ST: status.sh"
         When run bash "$SCRIPT"
         The status should equal 0
         The output should include "$(_expect_module_path "$DECKRD_DOCS_DIR")"
+      End
+    End
+  End
+
+  Describe "Given: session.json に prog と lang がある"
+    Before "setup_deckrd_tmpdir"
+    After "teardown_deckrd_tmpdir"
+
+    Before "_write_session_with_config deckrd ja"
+
+    Describe "When: run status"
+      It "[Normal] T-CLI-ST-08: Should: exit with status 0 and display Program from session.json on the line before Language"
+        When run bash "$SCRIPT"
+        The status should equal 0
+        The output should include "  Program:     deckrd"$'\n'"  Language:    ja"
+      End
+    End
+  End
+
+  Describe "Given: session.json に lang はあるが prog が無い"
+    Before "setup_deckrd_tmpdir"
+    After "teardown_deckrd_tmpdir"
+
+    Before "_write_session_with_config '' ja"
+
+    Describe "When: run status"
+      It "[Error] T-CLI-ST-09: Should: exit with status 0 and display 'unknown' as Program when prog is missing"
+        When run bash "$SCRIPT"
+        The status should equal 0
+        The output should include "  Program:     unknown"
+      End
+    End
+  End
+
+  Describe "Given: session.json に prog はあるが lang が無い"
+    Before "setup_deckrd_tmpdir"
+    After "teardown_deckrd_tmpdir"
+
+    Before "_write_session_with_config deckrd ''"
+
+    Describe "When: run status"
+      It "[Edge] T-CLI-ST-10: Should: keep Language as the document language ('system') even when prog is set"
+        When run bash "$SCRIPT"
+        The status should equal 0
+        The output should include "  Language:    system"
+        The output should not include "  Language:    deckrd"
       End
     End
   End
