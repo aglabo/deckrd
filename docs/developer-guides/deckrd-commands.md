@@ -60,7 +60,11 @@ tree there
 
 ### /deckrd init
 
-**Usage**: `/deckrd init <project> <project-type> [--force]`
+**Usage**: `/deckrd init <project> <project-type> [--prog <lang>] [--lang <lang>] [--ai-model <model>] [--force]`
+
+**Languages**: `--prog` (alias `--language`) is the programming language and goes to `prog`.
+`--lang` is the document language; it is saved to `session.json` as `lang` only when given.
+Every document command passes `--lang`, else session `lang`, else `system`, to the AI
 
 **Purpose**: Bootstrap the project. Writes `.local/deckrd/.project.json`, initializes the session,
 and deploys bundled rules and templates
@@ -72,7 +76,7 @@ overwritten with the bundled version, `.gitignore` files and user edits included
 the bundled asset source tree (for example through a symbolic link) or that is an existing
 directory is skipped silently
 ([init.md](../../skills/deckrd/skills/deckrd/references/commands/init.md)).
-`.local/deckrd/.project.json` is rewritten on every run: `project`, `project_type`, `language`,
+`.local/deckrd/.project.json` is rewritten on every run: `project`, `project_type`, `prog`,
 and `ai_model` take the new values; only `created_at` is kept
 
 **Example**:
