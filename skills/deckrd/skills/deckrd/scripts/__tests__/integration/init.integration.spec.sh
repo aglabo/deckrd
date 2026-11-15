@@ -940,6 +940,17 @@ Describe "T-CLI-MAINI: init.sh: main() integration"
         The stderr should not include "Init complete"
         The path "${DECKRD_LOCAL_DATA}/.project.json" should not be exist
       End
+
+      It "[Error] T-CLI-MAINI-89: Should: exit 1 and not create session.json when .project.json cannot be written"
+        export PROJECT_FILE="${DECKRD_TMPDIR}/blocker/.project.json"
+        When run bash "$SCRIPT" myapp webapp
+        The status should equal 1
+        The output should be blank
+        The stderr should include "Init complete."
+        The stderr should include "Error: write_project: failed to write: ${PROJECT_FILE}"
+        The stderr should not include "Session created"
+        The path "${DECKRD_LOCAL_DATA}/session.json" should not be exist
+      End
     End
 
     Describe "When: the path itself is an existing regular file"

@@ -344,24 +344,49 @@ init_directories() {
 }
 
 ##
+# @description Write jq output to a JSON file through a temporary file.
+#   jq writes to `<file>.tmp.$$` in the same directory, which is then moved
+#   over the target, so a failed write never leaves a partial file.
+#   Used by write_project (.project.json) and init_session (session.json).
+# @arg $1 string Target file path
+# @arg ... Arguments passed to jq_read (options, filter, optional input file)
+# @return 0 on success, 1 if jq or mv fails (the temporary file is removed)
+_write_json_file() {
+  local target="$1"
+  shift
+  local tmp="${target}.tmp.$$"
+
+  if ! { jq_read "$@" >"$tmp" && mv -f "$tmp" "$target"; }; then
+    rm -f "$tmp"
+    return 1
+  fi
+}
+
+##
 # @description Write .project.json with project settings.
 #   Keys: project, project_type, prog (programming language), ai_model,
-#   created_at (kept from an existing file), updated_at.
-#   The whole object is regenerated, so an older `language` key is dropped
-# @stderr Progress messages
+#   created_at (kept from an existing file, or the current time when missing),
+#   updated_at.
+#   The whole object is regenerated, so an older `language` key is dropped.
+#   The write goes through a temporary file and mv (_write_json_file), so a
+#   failure leaves neither a partial file nor a temporary file.
+# @stderr Progress messages, or an `Error:` line when the write fails
+#         ("Project written" is not printed then)
+# @return 0 on success, 1 if jq or mv fails
 write_project() {
   local timestamp
   timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-  local created_at
+  # Keep created_at from an existing file; fall back to the current time when
+  # the file is missing, is not valid JSON, or has no created_at.
+  local created_at=""
   if [[ -f "$PROJECT_FILE" ]]; then
-    created_at=$(jq_read -r '.created_at // empty' "$PROJECT_FILE" 2>/dev/null || echo "$timestamp")
-  else
-    created_at="$timestamp"
+    created_at=$(jq_read -r '.created_at // empty' "$PROJECT_FILE" 2>/dev/null)
   fi
+  created_at="${created_at:-$timestamp}"
 
   # shellcheck disable=SC2016
-  jq_read -n \
+  _write_json_file "$PROJECT_FILE" -n \
     --arg project "${OPTIONS[project]}" \
     --arg project_type "${OPTIONS[project_type]}" \
     --arg prog "${OPTIONS[prog]}" \
@@ -375,7 +400,10 @@ write_project() {
       ai_model:     $ai_model,
       created_at:   $created_at,
       updated_at:   $updated_at
-    }' >"${PROJECT_FILE}.tmp" && mv "${PROJECT_FILE}.tmp" "$PROJECT_FILE"
+    }' || {
+    echo "Error: write_project: failed to write: ${PROJECT_FILE}" >&2
+    return 1
+  }
 
   echo "" >&2
   echo "Project written: ${PROJECT_FILE}" >&2
@@ -386,39 +414,51 @@ write_project() {
 }
 
 ##
+# @description Keep an existing session.json (the existing-file path of init_session).
+#   Moves an older programming-language `lang` to `prog`
+#   (session_migrate_lang_to_prog), then sets `lang` when --lang was given.
+# @stderr Migration notice, "Session preserved", or an `Error:` line on failure
+# @return 0 on success, 1 if the migration or the lang write fails
+_init_session_preserve() {
+  session_migrate_lang_to_prog "$SESSION_FILE" || return 1
+  if [[ "${OPTIONS[lang_set]}" == true ]]; then
+    # shellcheck disable=SC2016
+    _write_json_file "$SESSION_FILE" --arg lang "${OPTIONS[lang]}" '.lang = $lang' "$SESSION_FILE" || {
+      echo "Error: init_session: failed to write lang: ${SESSION_FILE}" >&2
+      return 1
+    }
+  fi
+  echo "" >&2
+  echo "Session preserved: ${SESSION_FILE}" >&2
+}
+
+##
 # @description Initialize session.json.
 #   A new file records the programming language in `prog`, and the document
 #   language in `lang` only when --lang was given (OPTIONS[lang_set]).
 #   An existing file is kept; an older `lang` holding a programming language
 #   is moved to `prog` by session_migrate_lang_to_prog (libs/session.lib.sh).
-#   When --lang was given, `lang` is then set to that value (other keys kept,
-#   written via a temporary file and mv); without --lang the file is untouched
-# @stderr Progress messages; an `Error:` line when the migration or the lang write fails
-# @return 0 on success, 1 if the existing session.json cannot be migrated
-#         or `lang` cannot be written to it
+#   When --lang was given, `lang` is then set to that value (other keys kept);
+#   without --lang the file is otherwise untouched.
+#   Every write goes through a temporary file and mv (_write_json_file), so
+#   a failure leaves neither a partial session.json nor a temporary file.
+# @stderr Progress messages; an `Error:` line when creating the new file, the
+#         migration, or the lang write fails ("Session created" is not printed
+#         when the new file cannot be written)
+# @return 0 on success, 1 if session.json cannot be created (write or mv
+#         fails), the existing file cannot be migrated, or `lang` cannot be
+#         written to it
 init_session() {
+  if [[ -f "$SESSION_FILE" ]]; then
+    _init_session_preserve
+    return
+  fi
+
   local timestamp
   timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-  if [[ -f "$SESSION_FILE" ]]; then
-    session_migrate_lang_to_prog "$SESSION_FILE" || return 1
-    if [[ "${OPTIONS[lang_set]}" == true ]]; then
-      local tmp="${SESSION_FILE}.tmp.$$"
-      # shellcheck disable=SC2016
-      if ! { jq_read --arg lang "${OPTIONS[lang]}" '.lang = $lang' "$SESSION_FILE" >"$tmp" &&
-        mv -f "$tmp" "$SESSION_FILE"; }; then
-        rm -f "$tmp"
-        echo "Error: init_session: failed to write lang: ${SESSION_FILE}" >&2
-        return 1
-      fi
-    fi
-    echo "" >&2
-    echo "Session preserved: ${SESSION_FILE}" >&2
-    return 0
-  fi
-
   # shellcheck disable=SC2016
-  jq_read -n \
+  _write_json_file "$SESSION_FILE" -n \
     --arg prog "${OPTIONS[prog]}" \
     --arg lang "${OPTIONS[lang]}" \
     --arg lang_set "${OPTIONS[lang_set]}" \
@@ -431,10 +471,24 @@ init_session() {
         modules:    {},
         created_at: $timestamp,
         updated_at: $timestamp
-      }' >"$SESSION_FILE"
+      }' || {
+    echo "Error: init_session: failed to write: ${SESSION_FILE}" >&2
+    return 1
+  }
 
   echo "" >&2
   echo "Session created: ${SESSION_FILE}" >&2
+}
+
+##
+# @description Run the init steps in order: init_directories, write_project,
+#   init_session. Stops at the first step that fails, so a later step never
+#   runs after an earlier failure (e.g. no session.json when .project.json
+#   cannot be written).
+# @stderr Progress messages and the `Error:` line of the failing step
+# @return 0 when every step succeeds, 1 when any step fails
+_run_init_steps() {
+  init_directories && write_project && init_session
 }
 
 # ============================================================================
@@ -476,9 +530,7 @@ main() {
   }
   unset _ai_model_errmsg
 
-  init_directories || exit 1
-  write_project
-  init_session || exit 1
+  _run_init_steps || exit 1
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
