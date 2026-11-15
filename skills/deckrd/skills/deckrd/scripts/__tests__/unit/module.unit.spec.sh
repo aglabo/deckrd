@@ -95,11 +95,29 @@ Describe "module.sh"
       After "teardown_deckrd_tmpdir"
 
       Describe "When: run with 'a/b c/d'"
-        It "[Error] T-CLI-MOD-14: Should: exit with status 1 and output 'Multiple module paths specified' error and Usage"
+        It "[Error] T-CLI-MOD-14: Should: exit with status 1 and output 'Unexpected argument: c/d' error and Usage"
           When run bash "$SCRIPT" a/b c/d
           The status should equal 1
           The output should include "Usage:"
-          The stderr should include "Multiple module paths specified"
+          The stderr should include "Unexpected argument: c/d"
+        End
+      End
+    End
+
+    # --------------------------------------------------------------------------
+    # Given: a value attached to a flag option
+    # --------------------------------------------------------------------------
+
+    Describe "Given: a value attached to a flag option"
+      Before "setup_deckrd_tmpdir"
+      After "teardown_deckrd_tmpdir"
+
+      Describe "When: run with 'myns/mymod --force=x'"
+        It "[Error] T-CLI-MOD-16: Should: exit with status 1 and output '--force does not take a value' error and Usage"
+          When run bash "$SCRIPT" myns/mymod --force=x
+          The status should equal 1
+          The output should include "Usage:"
+          The stderr should include "--force does not take a value"
         End
       End
     End
@@ -1324,6 +1342,15 @@ Describe "module.sh"
       Describe "When: run module.sh with --test-scope"
         It "[Normal] T-CLI-MMT-02: Should: exit with status 0 and write module.md declaring the explicit test_scope"
           When run bash "$SCRIPT" myns/mymod --test-scope XY
+          The status should equal 0
+          The output should include "module.md"
+          The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/workspaces/module/module.md" should include "test_scope: XY"
+        End
+      End
+
+      Describe "When: run module.sh with the inline form --test-scope=XY"
+        It "[Normal] T-CLI-MMT-10: Should: exit with status 0 and write module.md declaring the inline test_scope"
+          When run bash "$SCRIPT" myns/mymod --test-scope=XY
           The status should equal 0
           The output should include "module.md"
           The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/workspaces/module/module.md" should include "test_scope: XY"

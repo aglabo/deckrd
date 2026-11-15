@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 # skills/deckrd/skills/deckrd/scripts/__tests__/unit/module-parse-args.unit.spec.sh
-# @(#) : BDD unit tests for module.sh - init_vars / parse_args functions
+# @(#) : BDD unit tests for module.sh - init_vars / main() argument parsing (args.lib.sh)
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 
-# shellcheck disable=SC1090
+# OPTIONS / OPTIONS_SET are declared by args.lib.sh (args_init); shellcheck
+# cannot see that declaration.
+# shellcheck disable=SC1090,SC2154
 
 _RUNTIME_BOOTSTRAP="${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/skills/deckrd/scripts/libs/bootstrap.lib.sh"
 . "$_RUNTIME_BOOTSTRAP" --no-finalize
@@ -33,6 +35,57 @@ load_script_with_mocks() {
   . "$SCRIPT"
 }
 
+##
+# @description Source module.sh with validate_env stubbed and replace the steps
+#   after argument parsing, so `main` runs the real declarations and the library
+#   parse_args without touching the file system.
+# @stdout (from main) one `key=value` line per dumped item, in this order:
+#   1 subcommand, 2 module_path, 3 force, 4 test_scope, 5 set_module_path,
+#   6 set_force, 7 set_test_scope, 8 show_help,
+#   9 help (`set` when the legacy key OPTIONS[help] exists)
+_load_script_with_dumper() {
+  load_script_with_mocks
+
+  # shellcheck disable=SC2329
+  validate_and_normalize_with_fallback() { printf '%s\n' "$1"; }
+  # shellcheck disable=SC2329
+  create_module_dirs() {
+    printf 'subcommand=%s\n' "${SUBCOMMAND:-}"
+    local k
+    for k in module_path force test_scope; do
+      printf '%s=%s\n' "$k" "${OPTIONS[$k]:-}"
+    done
+    printf 'set_module_path=%s\nset_force=%s\nset_test_scope=%s\n' \
+      "${OPTIONS_SET[module_path]:-}" "${OPTIONS_SET[force]:-}" "${OPTIONS_SET[test_scope]:-}"
+    printf 'show_help=%s\nhelp=%s\n' "${OPTIONS[SHOW_HELP]:-}" "${OPTIONS[help]+set}"
+  }
+  # shellcheck disable=SC2329
+  read_declared_scope() { :; }
+  # shellcheck disable=SC2329
+  resolve_test_scope() { echo "XX"; }
+  # shellcheck disable=SC2329
+  create_module_meta() { :; }
+  # shellcheck disable=SC2329
+  update_session() { :; }
+}
+
+##
+# @description Expected dump for `main myns/mymod` (every option at its default)
+# @stdout The dump lines
+_default_dump() {
+  printf '%s\n' \
+    subcommand= module_path=myns/mymod force=false test_scope= \
+    set_module_path=true set_force= set_test_scope= show_help=false help=
+}
+
+##
+# @description Run main with every option, then again with defaults, in the same shell
+# @stdout The dump of the second main only
+_main_with_options_then_defaults() {
+  main create myns/mymod --force --test-scope XY >/dev/null
+  main myns/mymod
+}
+
 # ============================================================================
 # module.sh: init_vars
 # ============================================================================
@@ -40,20 +93,21 @@ load_script_with_mocks() {
 ##
 # init_vars sets the script configuration variables.
 # SESSION_FILE honors a non-empty preset value (mock / override); the other
-# variables are reset to their defaults on every call.
+# variables are reset to their defaults on every call. OPTIONS / OPTIONS_SET
+# are not declared here: args_init (libs/args.lib.sh) owns them.
 Describe "T-CLI-MIV: module.sh: init_vars"
   Before "load_script_with_mocks"
 
   Describe "Given: SESSION_FILE is unset"
-    It "[Normal] T-CLI-MIV-01: Should: set default configuration variables"
-      unset SESSION_FILE
+    It "[Normal] T-CLI-MIV-01: Should: set default configuration variables and leave OPTIONS undeclared"
+      unset OPTIONS SESSION_FILE
       When call init_vars
       The status should equal 0
       The value "$SESSION_FILE" should equal "${DECKRD_LOCAL_DATA}/session.json"
       The value "${SUBDIRS[*]}" should equal "requirements specifications implementation tasks workspaces"
       The value "$MODULE_META_SUBPATH" should equal "workspaces/module/module.md"
       The value "$SUBCOMMAND" should equal ""
-      The value "$(declare -p OPTIONS 2>&1)" should start with "declare -A OPTIONS"
+      The value "$(declare -p OPTIONS >/dev/null 2>&1 && echo declared || echo undeclared)" should equal "undeclared"
     End
   End
 
@@ -83,150 +137,199 @@ Describe "T-CLI-MIV: module.sh: init_vars"
 End
 
 # ============================================================================
-# module.sh: parse_args
+# module.sh: main argument parsing
 # ============================================================================
 
 ##
-# parse_args stores the arguments in OPTIONS / SUBCOMMAND and reports errors
-# through PARSE_ARGS_ERROR + return 1. It never exits and never prints usage;
-# the caller decides how to report.
-Describe "T-CLI-MPA: module.sh: parse_args"
-  Before "load_script_with_mocks"
-  Before "init_vars"
+# main declares the options with args.lib.sh and parses them with the library
+# parse_args. Errors print "Error: ${ARGS_ERROR}" on stderr plus usage on stdout
+# and exit 1; --help prints usage and exits 0.
+Describe "T-CLI-MPA: module.sh: main argument parsing"
+  Before "_load_script_with_dumper"
 
-  Describe "Given: valid arguments"
-    Describe "When: parse_args is called"
-      It "[Normal] T-CLI-MPA-01: Should: reset OPTIONS to defaults with no arguments"
-        When call parse_args
-        The status should equal 0
-        The output should equal ""
-        The value "${OPTIONS[module_path]}" should equal ""
-        The value "${OPTIONS[force]}" should equal false
-        The value "${OPTIONS[test_scope]}" should equal ""
-        The value "${OPTIONS[help]}" should equal false
-        The value "$SUBCOMMAND" should equal ""
-      End
+  Describe "When: 正常系"
+    It "[Normal] T-CLI-MPA-02: main myns/mymod -> module path set, every option at its default"
+      When run main myns/mymod
+      The status should equal 0
+      The stdout should equal "$(_default_dump)"
+    End
 
-      It "[Normal] T-CLI-MPA-02: Should: store the module path in OPTIONS[module_path]"
-        When call parse_args myns/mymod
-        The status should equal 0
-        The output should equal ""
-        The value "${OPTIONS[module_path]}" should equal "myns/mymod"
-        The value "$SUBCOMMAND" should equal ""
-      End
+    It "[Normal] T-CLI-MPA-03: main create myns/mymod -> SUBCOMMAND=create, create shifted off"
+      When run main create myns/mymod
+      The status should equal 0
+      The line 1 of stdout should equal "subcommand=create"
+      The line 2 of stdout should equal "module_path=myns/mymod"
+    End
 
-      It "[Normal] T-CLI-MPA-03: Should: set SUBCOMMAND=create for a leading create"
-        When call parse_args create myns/mymod
-        The status should equal 0
-        The output should equal ""
-        The value "$SUBCOMMAND" should equal "create"
-        The value "${OPTIONS[module_path]}" should equal "myns/mymod"
-      End
+    It "[Normal] T-CLI-MPA-04: --force -> force=true and marked as given"
+      When run main myns/mymod --force
+      The status should equal 0
+      The line 3 of stdout should equal "force=true"
+      The line 6 of stdout should equal "set_force=true"
+    End
 
-      It "[Normal] T-CLI-MPA-04: Should: set OPTIONS[force]=true for --force"
-        When call parse_args myns/mymod --force
-        The status should equal 0
-        The output should equal ""
-        The value "${OPTIONS[force]}" should equal true
-      End
+    It "[Normal] T-CLI-MPA-05: --test-scope XY -> test_scope=XY and marked as given"
+      When run main myns/mymod --test-scope XY
+      The status should equal 0
+      The line 4 of stdout should equal "test_scope=XY"
+      The line 7 of stdout should equal "set_test_scope=true"
+    End
 
-      It "[Normal] T-CLI-MPA-05: Should: set OPTIONS[test_scope] for --test-scope"
-        When call parse_args myns/mymod --test-scope XY
-        The status should equal 0
-        The output should equal ""
-        The value "${OPTIONS[test_scope]}" should equal "XY"
-      End
+    It "[Normal] T-CLI-MPA-15: --test-scope=XY (inline form) -> test_scope=XY and marked as given"
+      When run main myns/mymod --test-scope=XY
+      The status should equal 0
+      The line 4 of stdout should equal "test_scope=XY"
+      The line 7 of stdout should equal "set_test_scope=true"
+    End
 
-      It "[Normal] T-CLI-MPA-06: Should: set OPTIONS[help]=true without printing usage"
-        When call parse_args --help
-        The status should equal 0
-        The output should equal ""
-        The value "${OPTIONS[help]}" should equal true
-      End
+    It "[Normal] T-CLI-MPA-06: --help -> exit 0 with Usage on stdout, later steps not run"
+      When run main --help
+      The status should equal 0
+      The stdout should include "Usage: module.sh"
+      The stdout should not include "module_path="
+    End
+
+    It "[Normal] T-CLI-MPA-21: --help -> Usage lists <namespace>/<module> with --force and --test-scope"
+      When run main --help
+      The status should equal 0
+      The stdout should include "module.sh <namespace>/<module> [--force] [--test-scope <SCOPE>]"
+    End
+
+    It "[Normal] T-CLI-MPA-22: --help -> Usage lists <module> with --force and --test-scope"
+      When run main --help
+      The status should equal 0
+      The stdout should include "module.sh <module> [--force] [--test-scope <SCOPE>]"
+    End
+
+    It "[Normal] T-CLI-MPA-23: --help -> Usage lists create <namespace>/<module> with --force and --test-scope"
+      When run main --help
+      The status should equal 0
+      The stdout should include "module.sh create <namespace>/<module> [--force] [--test-scope <SCOPE>]"
+    End
+
+    It "[Normal] T-CLI-MPA-24: --help -> Usage lists create <module> with --force and --test-scope"
+      When run main --help
+      The status should equal 0
+      The stdout should include "module.sh create <module> [--force] [--test-scope <SCOPE>]"
+    End
+
+    It "[Normal] T-CLI-MPA-25: --help -> Options documents the inline form --test-scope=<SCOPE>"
+      When run main --help
+      The status should equal 0
+      The stdout should include "--test-scope=<SCOPE>"
+    End
+
+    It "[Normal] T-CLI-MPA-20: main myns/mymod -> help reported via SHOW_HELP, legacy key OPTIONS[help] absent"
+      When run main myns/mymod
+      The status should equal 0
+      The line 8 of stdout should equal "show_help=false"
+      The line 9 of stdout should equal "help="
     End
   End
 
-  Describe "Given: invalid arguments"
-    Describe "When: parse_args is called"
-      It "[Error] T-CLI-MPA-07: Should: report a missing --test-scope value"
-        When call parse_args myns/mymod --test-scope
-        The status should equal 1
-        The output should equal ""
-        The error should equal ""
-        The value "$PARSE_ARGS_ERROR" should equal "--test-scope requires a value"
-      End
+  Describe "When: 異常系"
+    It "[Error] T-CLI-MPA-08: --bogus -> exit 1, library error on stderr, Usage on stdout"
+      When run main myns/mymod --bogus
+      The status should equal 1
+      The stderr should include "Error: Unknown option: --bogus"
+      The stdout should include "Usage:"
+    End
 
-      It "[Error] T-CLI-MPA-08: Should: report an unknown option"
-        When call parse_args myns/mymod --bogus
-        The status should equal 1
-        The output should equal ""
-        The error should equal ""
-        The value "$PARSE_ARGS_ERROR" should equal "Unknown option: --bogus"
-      End
+    It "[Error] T-CLI-MPA-26: --bogus -> exit 1, Usage on stdout lists <module> with --force and --test-scope"
+      When run main myns/mymod --bogus
+      The status should equal 1
+      The stdout should include "module.sh <module> [--force] [--test-scope <SCOPE>]"
+      The stderr should be present
+    End
 
-      It "[Error] T-CLI-MPA-09: Should: report multiple module paths"
-        When call parse_args a/b c/d
-        The status should equal 1
-        The output should equal ""
-        The error should equal ""
-        The value "$PARSE_ARGS_ERROR" should equal "Multiple module paths specified"
-      End
+    It "[Error] T-CLI-MPA-09: a/b c/d -> exit 1, Unexpected argument for the second path, Usage on stdout"
+      When run main a/b c/d
+      The status should equal 1
+      The stderr should include "Error: Unexpected argument: c/d"
+      The stdout should include "Usage:"
+    End
+
+    It "[Error] T-CLI-MPA-07: trailing --test-scope -> exit 1, requires a value, Usage on stdout"
+      When run main myns/mymod --test-scope
+      The status should equal 1
+      The stderr should include "Error: --test-scope requires a value"
+      The stdout should include "Usage:"
+    End
+
+    It "[Error] T-CLI-MPA-16: --force=x -> exit 1, flag does not take a value, Usage on stdout"
+      When run main myns/mymod --force=x
+      The status should equal 1
+      The stderr should include "Error: --force does not take a value"
+      The stdout should include "Usage:"
+    End
+
+    It "[Error] T-CLI-MPA-01: no arguments -> exit 1, module path required, Usage on stdout, later steps not run"
+      When run main
+      The status should equal 1
+      The stderr should include "Error: <namespace>/<module> is required"
+      The stdout should include "Usage:"
+      The stdout should not include "module_path="
+    End
+
+    It "[Error] T-CLI-MPA-18: module.sh source -> no local parse_args definition (the library's is used)"
+      When call grep -c '^parse_args()' "$SCRIPT"
+      The status should equal 1
+      The stdout should equal 0
+    End
+
+    It "[Error] T-CLI-MPA-19: module.sh source -> no PARSE_ARGS_ERROR / OPTIONS[help] references left"
+      When call grep -cE 'PARSE_ARGS_ERROR|OPTIONS\[help\]' "$SCRIPT"
+      The status should equal 1
+      The stdout should equal 0
     End
   End
 
-  Describe "Given: edge-case arguments"
-    Describe "When: parse_args is called"
-      It "[Edge] T-CLI-MPA-10: Should: reject an empty --test-scope value"
-        When call parse_args myns/mymod --test-scope ""
-        The status should equal 1
-        The output should equal ""
-        The value "$PARSE_ARGS_ERROR" should equal "--test-scope requires a value"
-      End
-
-      It "[Edge] T-CLI-MPA-11: Should: accept create alone with an empty module path"
-        When call parse_args create
-        The status should equal 0
-        The output should equal ""
-        The value "$SUBCOMMAND" should equal "create"
-        The value "${OPTIONS[module_path]}" should equal ""
-        The value "${OPTIONS[force]}" should equal false
-      End
-
-      It "[Edge] T-CLI-MPA-12: Should: stop at --help before a later invalid option"
-        When call parse_args --help --bogus
-        The status should equal 0
-        The output should equal ""
-        The value "${OPTIONS[help]}" should equal true
-        The value "$PARSE_ARGS_ERROR" should equal ""
-      End
-
-      It "[Edge] T-CLI-MPA-13: Should: treat a non-leading create as a second module path"
-        When call parse_args myns/mymod create
-        The status should equal 1
-        The output should equal ""
-        The value "$PARSE_ARGS_ERROR" should equal "Multiple module paths specified"
-      End
+  Describe "When: エッジケース"
+    It "[Edge] T-CLI-MPA-10: --test-scope \"\" (empty separate value) -> exit 1, requires a value, Usage on stdout"
+      When run main myns/mymod --test-scope ""
+      The status should equal 1
+      The stderr should include "Error: --test-scope requires a value"
+      The stdout should include "Usage:"
     End
-  End
 
-  Describe "Given: values left over from a previous call"
-    ##
-    # @description Parse a full argument set, then parse again with no arguments
-    parse_args_twice() {
-      parse_args create myns/mymod --force --test-scope XY
-      parse_args
-    }
+    It "[Edge] T-CLI-MPA-17: --test-scope= (empty inline value) -> exit 1, requires a value, Usage on stdout"
+      When run main myns/mymod --test-scope=
+      The status should equal 1
+      The stderr should include "Error: --test-scope requires a value"
+      The stdout should include "Usage:"
+    End
 
-    Describe "When: parse_args is called again with no arguments"
-      It "[Edge] T-CLI-MPA-14: Should: reset OPTIONS and SUBCOMMAND"
-        When call parse_args_twice
-        The status should equal 0
-        The output should equal ""
-        The value "${OPTIONS[module_path]}" should equal ""
-        The value "${OPTIONS[force]}" should equal false
-        The value "${OPTIONS[test_scope]}" should equal ""
-        The value "$SUBCOMMAND" should equal ""
-      End
+    It "[Edge] T-CLI-MPA-11: create alone -> create shifted off, exit 1, module path required"
+      When run main create
+      The status should equal 1
+      The stderr should include "Error: <namespace>/<module> is required"
+      The stdout should include "Usage:"
+    End
+
+    It "[Edge] T-CLI-MPA-13: myns/mymod create -> non-leading create is a positional, exit 1, Unexpected argument"
+      When run main myns/mymod create
+      The status should equal 1
+      The stderr should include "Error: Unexpected argument: create"
+      The stdout should include "Usage:"
+    End
+
+    It "[Edge] T-CLI-MPA-14: main with every option, then main without -> second run back to defaults, nothing left marked"
+      When run _main_with_options_then_defaults
+      The status should equal 0
+      The stdout should equal "$(_default_dump)"
+    End
+
+    It "[Edge] T-CLI-MPA-12: --help --bogus -> help stops parsing first, exit 0, no error"
+      When run main --help --bogus
+      The status should equal 0
+      The stdout should include "Usage: module.sh"
+      The stderr should not include "Error:"
+    End
+
+    It "[Edge] T-CLI-MPA-27: --help -> Usage line 1 matches exactly, nothing missing or trailing"
+      When run main --help
+      The status should equal 0
+      The line 1 of stdout should equal "Usage: module.sh <namespace>/<module> [--force] [--test-scope <SCOPE>]"
     End
   End
 End

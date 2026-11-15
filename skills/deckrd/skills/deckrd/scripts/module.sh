@@ -18,13 +18,16 @@
 #     - Case-sensitive: uppercase letters and digits are not allowed
 #
 # @usage
-#   module.sh <namespace>/<module> [--force]
-#   module.sh create <namespace>/<module> [--force]
-#   module.sh create <module> [--force]
+#   module.sh <namespace>/<module> [--force] [--test-scope <SCOPE>]
+#   module.sh <module> [--force] [--test-scope <SCOPE>]
+#   module.sh create <namespace>/<module> [--force] [--test-scope <SCOPE>]
+#   module.sh create <module> [--force] [--test-scope <SCOPE>]
+#   (--test-scope also accepts the inline form --test-scope=<SCOPE>)
 #
 # @example
 #   module.sh agt-kind/is-collection
 #   module.sh myns/mymod --force
+#   module.sh myns/mymod --test-scope=MYM
 #   module.sh create myns/mymod
 #   module.sh create myfeature
 #
@@ -50,6 +53,7 @@ unset _SCRIPT_DIR
 # validate_env runs in main, not at source time (requires jq or jaq)
 . "${DECKRD_LIB_DIR}/validate-env.lib.sh"
 . "${DECKRD_LIB_DIR}/utils.lib.sh"
+. "${DECKRD_LIB_DIR}/args.lib.sh"
 
 # ============================================================================
 # Script Configuration
@@ -66,24 +70,24 @@ unset _SCRIPT_DIR
 ##
 # @description Initialize script configuration variables
 # @description SESSION_FILE uses ${VAR:-default} to allow external override (mock)
-# @description OPTIONS is declared here and filled by parse_args
+# @description OPTIONS / OPTIONS_SET are not declared here: args_init (libs/args.lib.sh) owns them
 # @description SUBCOMMAND is reset on every call
 init_vars() {
   SESSION_FILE="${SESSION_FILE:-${DECKRD_LOCAL_DATA}/session.json}"
   SUBDIRS=("requirements" "specifications" "implementation" "tasks" "workspaces")
   MODULE_META_SUBPATH="workspaces/module/module.md"
-  declare -gA OPTIONS=()
   SUBCOMMAND=""
 }
 
 ##
 # @description Show usage information
+# @stdout Usage text (stdout, also when reporting argument errors)
 show_usage() {
   cat <<EOF
-Usage: module.sh <namespace>/<module> [--force]
-       module.sh <module> [--force]
-       module.sh create <namespace>/<module> [--force]
-       module.sh create <module> [--force]
+Usage: module.sh <namespace>/<module> [--force] [--test-scope <SCOPE>]
+       module.sh <module> [--force] [--test-scope <SCOPE>]
+       module.sh create <namespace>/<module> [--force] [--test-scope <SCOPE>]
+       module.sh create <module> [--force] [--test-scope <SCOPE>]
 
 Initialize DECKRD module directory structure and update session.
 
@@ -96,9 +100,10 @@ Arguments:
                         Allowed: a-z, hyphen, underscore (lowercase only)
 
 Options:
-  --force   Re-initialize even if module directory already exists
+  --force               Re-initialize even if module directory already exists
   --test-scope <SCOPE>  Test ID scope (2-4 uppercase alphanumerics); derived from the module name if omitted
-  -h, --help  Show this help message
+                        Also accepts the inline form --test-scope=<SCOPE>
+  -h, --help            Show this help message
 
 Created directories:
   docs/.deckrd/<namespace>/<module>/
@@ -113,60 +118,6 @@ Created directories:
 Session file:
   .local/deckrd/session.json
 EOF
-}
-
-##
-# @description Parse command-line arguments into OPTIONS / SUBCOMMAND
-# @description Never exits or prints usage; the caller reports errors and help
-# @arg $@ Command-line arguments
-# @var OPTIONS reset to defaults, then filled from args (keys: module_path, force, test_scope, help)
-# @var SUBCOMMAND "create" when the first argument is create, otherwise empty
-# @var PARSE_ARGS_ERROR set to the error description on failure
-# @return 0 on success (including -h/--help), 1 on invalid arguments
-parse_args() {
-  PARSE_ARGS_ERROR=""
-  OPTIONS=([module_path]="" [force]=false [test_scope]="" [help]=false)
-  SUBCOMMAND=""
-
-  # Only the first argument can be the "create" subcommand
-  if [[ $# -gt 0 && "$1" == "create" ]]; then
-    # shellcheck disable=SC2034 # read by callers; "create" is an alias for the default action
-    SUBCOMMAND="create"
-    shift
-  fi
-
-  while [[ $# -gt 0 ]]; do
-    case "$1" in
-    -h | --help)
-      OPTIONS[help]=true
-      return 0
-      ;;
-    --force)
-      OPTIONS[force]=true
-      shift
-      ;;
-    --test-scope)
-      if [[ $# -lt 2 || -z "$2" ]]; then
-        PARSE_ARGS_ERROR="--test-scope requires a value"
-        return 1
-      fi
-      OPTIONS[test_scope]="$2"
-      shift 2
-      ;;
-    -*)
-      PARSE_ARGS_ERROR="Unknown option: $1"
-      return 1
-      ;;
-    *)
-      if [[ -n "${OPTIONS[module_path]}" ]]; then
-        PARSE_ARGS_ERROR="Multiple module paths specified"
-        return 1
-      fi
-      OPTIONS[module_path]="$1"
-      shift
-      ;;
-    esac
-  done
 }
 
 ##
@@ -546,13 +497,29 @@ main() {
   validate_env || exit 1
   init_vars
 
+  # Only the first argument can be the "create" subcommand; it is shifted off
+  # before parsing, so a later "create" is an unexpected positional argument
+  # shellcheck disable=SC2034 # SUBCOMMAND is informational; "create" is an alias for the default action
+  if [[ "${1:-}" == "create" ]]; then
+    SUBCOMMAND="create"
+    shift
+  else
+    SUBCOMMAND=""
+  fi
+
+  # Options are declared on every call: args_init resets OPTIONS / OPTIONS_SET
+  args_init
+  args_positional module_path
+  args_flag force --force
+  args_value test_scope "" --test-scope
+
   parse_args "$@" || {
-    echo "Error: ${PARSE_ARGS_ERROR}" >&2
+    echo "Error: ${ARGS_ERROR}" >&2
     show_usage
     exit 1
   }
 
-  if [[ "${OPTIONS[help]}" == true ]]; then
+  if [[ "${OPTIONS[SHOW_HELP]}" == true ]]; then
     show_usage
     exit 0
   fi
