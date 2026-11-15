@@ -37,6 +37,7 @@ Describe "T-CLI-VA: init.sh: validate_args"
   }
   Before "load_script_with_mocks"
   Before "init_vars"
+  Before "args_init"
 
   Describe "Given: valid OPTIONS[project] and OPTIONS[project_type]"
     It "[Normal] T-CLI-VA-01: Should: return 0"

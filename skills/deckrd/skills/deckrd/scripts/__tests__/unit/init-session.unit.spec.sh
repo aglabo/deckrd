@@ -7,7 +7,7 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 
-# OPTIONS is the associative array declared by init.sh (init_vars); shellcheck
+# OPTIONS (and OPTIONS_SET) are associative arrays declared by args_init (args.lib.sh); shellcheck
 # cannot see that declaration, so it misreads the keys and the assignments.
 # shellcheck disable=SC1090,SC2034,SC2154
 
@@ -69,15 +69,15 @@ _load_script_with_mocks() {
 ##
 # @description Create a per-example temp dir and point SESSION_FILE into it.
 #   Sets the default OPTIONS used by every case (prog=typescript, ai_model=sonnet,
-#   lang=system, lang_set=false); examples override what they need.
-# @set _SESSION_TMPDIR, SESSION_FILE, OPTIONS[prog|lang|lang_set|ai_model]
+#   lang=system); OPTIONS_SET[lang] stays unset (args_init), i.e. --lang not given.
+#   Examples override what they need.
+# @set _SESSION_TMPDIR, SESSION_FILE, OPTIONS[prog|lang|ai_model]
 # @return 0
 _setup_session() {
   _SESSION_TMPDIR="$(mktemp -d)"
   SESSION_FILE="${_SESSION_TMPDIR}/session.json"
   OPTIONS[prog]="typescript"
   OPTIONS[lang]="system"
-  OPTIONS[lang_set]=false
   OPTIONS[ai_model]="sonnet"
 }
 
@@ -156,19 +156,19 @@ _session_query() {
 
 # init_session creates session.json (prog, optional lang, ai_model, timestamps)
 # or keeps an existing one: an old `lang` holding a programming language is
-# moved to `prog`, and --lang (OPTIONS[lang_set]) overwrites `lang`.
+# moved to `prog`, and --lang (OPTIONS_SET[lang]) overwrites `lang`.
 # Scenarios: new file, existing file with/without --lang, edge values, and
 # write failures (jq / mv / missing directory) that must return 1 with an
 # `Error:` line and leave neither a partial session.json nor a tmp file.
 Describe "T-CLI-INS: init.sh: init_session"
-  Before "_load_script_with_mocks" "init_vars" "_setup_session"
+  Before "_load_script_with_mocks" "init_vars" "args_init" "_setup_session"
   After "_teardown_session"
 
   # Successful creation and update of session.json
   Describe "When: 正常系"
     It "[Normal] T-CLI-INS-01: new file with --lang -> all keys incl. lang, 'Session created', 0"
       OPTIONS[lang]="ja"
-      OPTIONS[lang_set]=true
+      OPTIONS_SET[lang]=true
       When call init_session
       The status should equal 0
       The stderr should include "Session created"
@@ -191,7 +191,7 @@ Describe "T-CLI-INS: init.sh: init_session"
     It "[Normal] T-CLI-INS-03: existing new-format file with --lang -> lang overwritten, other keys kept, no tmp left"
       _write_session_fixture "$_SESSION_PROG_LANG_EN"
       OPTIONS[lang]="ja"
-      OPTIONS[lang_set]=true
+      OPTIONS_SET[lang]=true
       When call init_session
       The status should equal 0
       The stderr should include "Session preserved"
@@ -202,7 +202,7 @@ Describe "T-CLI-INS: init.sh: init_session"
     It "[Normal] T-CLI-INS-04: existing old-format file with --lang -> lang moved to prog, then lang set"
       _write_session_fixture "$_SESSION_OLD_LANG_TS"
       OPTIONS[lang]="ja"
-      OPTIONS[lang_set]=true
+      OPTIONS_SET[lang]=true
       When call init_session
       The status should equal 0
       The stderr should include "migrated programming language from 'lang' to 'prog'"
@@ -213,14 +213,14 @@ Describe "T-CLI-INS: init.sh: init_session"
     It "[Normal] T-CLI-INS-05: existing file without lang key, with --lang -> lang added"
       _write_session_fixture "$_SESSION_PROG_NO_LANG"
       OPTIONS[lang]="en"
-      OPTIONS[lang_set]=true
+      OPTIONS_SET[lang]=true
       When call init_session
       The status should equal 0
       The stderr should include "Session preserved"
       The value "$(_session_query '[.lang, .prog, .ai_model, .created_at]')" should equal '["en","go","sonnet","2026-01-01T00:00:00Z"]'
     End
 
-    It "[Normal] T-CLI-INS-06: existing new-format file without --lang -> file byte-identical, 'Session preserved'"
+    It "[Normal] T-CLI-INS-06: existing new-format file without --lang (OPTIONS_SET[lang] unset) -> file byte-identical, 'Session preserved'"
       _write_session_fixture "$_SESSION_PROG_LANG_EN"
       OPTIONS[prog]="rust"
       When call init_session
@@ -243,7 +243,7 @@ Describe "T-CLI-INS: init.sh: init_session"
   Describe "When: エッジケース"
     It "[Edge] T-CLI-INS-08: new file with explicit --lang system (the default value) -> lang \"system\" written"
       OPTIONS[lang]="system"
-      OPTIONS[lang_set]=true
+      OPTIONS_SET[lang]=true
       When call init_session
       The status should equal 0
       The stderr should include "Session created"
@@ -252,7 +252,7 @@ Describe "T-CLI-INS: init.sh: init_session"
 
     It "[Edge] T-CLI-INS-09: new file with --lang bash -> lang kept as \"bash\" (not normalized), prog unchanged"
       OPTIONS[lang]="bash"
-      OPTIONS[lang_set]=true
+      OPTIONS_SET[lang]=true
       When call init_session
       The status should equal 0
       The stderr should include "Session created"
@@ -266,6 +266,13 @@ Describe "T-CLI-INS: init.sh: init_session"
       The stderr should not include "migrated"
       The contents of file "$SESSION_FILE" should equal "$_SESSION_DOC_LANG_ONLY"
     End
+
+    It "[Edge] T-CLI-INS-20: new file, OPTIONS_SET[lang] unset (args_init only) -> treated as false, 0, no lang key"
+      When call init_session
+      The status should equal 0
+      The stderr should include "Session created"
+      The value "$(_session_query 'has("lang")')" should equal "false"
+    End
   End
 
   # Write failures (existing and new session.json)
@@ -273,7 +280,7 @@ Describe "T-CLI-INS: init.sh: init_session"
     It "[Error] T-CLI-INS-11: existing empty file with --lang -> migration fails, 1, lang not written"
       _write_session_fixture ""
       OPTIONS[lang]="ja"
-      OPTIONS[lang_set]=true
+      OPTIONS_SET[lang]=true
       When call init_session
       The status should equal 1
       The stderr should include "Error: session_lang_migration_needed: not a JSON object"
@@ -285,7 +292,7 @@ Describe "T-CLI-INS: init.sh: init_session"
     It "[Error] T-CLI-INS-12: existing file, jq fails on the lang write -> 1, Error:, file unchanged, no tmp left"
       _write_session_fixture "$_SESSION_PROG_LANG_EN"
       OPTIONS[lang]="ja"
-      OPTIONS[lang_set]=true
+      OPTIONS_SET[lang]=true
       _mock_jq_read_fail_on "lang"
       When call init_session
       The status should equal 1
@@ -298,7 +305,7 @@ Describe "T-CLI-INS: init.sh: init_session"
     It "[Error] T-CLI-INS-13: existing file, mv fails on the lang write -> 1, Error:, file unchanged, no tmp left"
       _write_session_fixture "$_SESSION_PROG_LANG_EN"
       OPTIONS[lang]="ja"
-      OPTIONS[lang_set]=true
+      OPTIONS_SET[lang]=true
       _mock_mv_fail
       When call init_session
       The status should equal 1
@@ -311,7 +318,7 @@ Describe "T-CLI-INS: init.sh: init_session"
     It "[Error] T-CLI-INS-14: existing old-format file, mv fails on the migration -> 1, Error:, neither prog nor lang written, no tmp left"
       _write_session_fixture "$_SESSION_OLD_LANG_TS"
       OPTIONS[lang]="ja"
-      OPTIONS[lang_set]=true
+      OPTIONS_SET[lang]=true
       _mock_mv_fail
       When call init_session
       The status should equal 1
@@ -322,7 +329,7 @@ Describe "T-CLI-INS: init.sh: init_session"
 
     It "[Error] T-CLI-INS-15: new file, jq fails on the create -> 1, Error:, no 'Session created', no file, no tmp left"
       OPTIONS[lang]="ja"
-      OPTIONS[lang_set]=true
+      OPTIONS_SET[lang]=true
       _mock_jq_read_fail_on "-n"
       When call init_session
       The status should equal 1
@@ -334,7 +341,7 @@ Describe "T-CLI-INS: init.sh: init_session"
 
     It "[Error] T-CLI-INS-16: new file, mv fails -> 1, Error:, no 'Session created', no file, no tmp left"
       OPTIONS[lang]="ja"
-      OPTIONS[lang_set]=true
+      OPTIONS_SET[lang]=true
       _mock_mv_fail
       When call init_session
       The status should equal 1
@@ -357,7 +364,7 @@ Describe "T-CLI-INS: init.sh: init_session"
     It "[Error] T-CLI-INS-18: SESSION_FILE is a directory -> 1, Error:, no 'Session created', directory unchanged, no tmp left"
       mkdir "$SESSION_FILE"
       OPTIONS[lang]="ja"
-      OPTIONS[lang_set]=true
+      OPTIONS_SET[lang]=true
       When call init_session
       The status should equal 1
       The stderr should include "Error: init_session: failed to write: ${SESSION_FILE}"
@@ -366,6 +373,15 @@ Describe "T-CLI-INS: init.sh: init_session"
       The value "$(ls -A "$SESSION_FILE")" should be blank
       The value "$(_list_session_tmp "$_SESSION_TMPDIR")" should be blank
       The value "$(_list_session_tmp "$SESSION_FILE")" should be blank
+    End
+
+    It "[Error] T-CLI-INS-19: new file, legacy OPTIONS[lang_set]=true without OPTIONS_SET[lang] -> legacy key ignored, no lang key"
+      OPTIONS[lang]="ja"
+      OPTIONS[lang_set]=true
+      When call init_session
+      The status should equal 0
+      The stderr should include "Session created"
+      The value "$(_session_query 'has("lang")')" should equal "false"
     End
   End
 End

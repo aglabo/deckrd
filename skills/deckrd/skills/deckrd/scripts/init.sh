@@ -58,6 +58,7 @@ unset _SCRIPT_DIR
 . "${DECKRD_LIB_DIR}/asset-diff.lib.sh"
 . "${DECKRD_LIB_DIR}/asset-copy.lib.sh"
 . "${DECKRD_LIB_DIR}/session.lib.sh"
+. "${DECKRD_LIB_DIR}/args.lib.sh"
 validate_env || exit 1
 
 . "${DECKRD_LIB_DIR}/ai-runner.lib.sh"
@@ -71,14 +72,13 @@ validate_env || exit 1
 # @description Asset source/destination path variables and ASSET_TARGETS come from
 #   init_asset_dirs (libs/asset-diff.lib.sh), the single asset target list shared with update
 # @description Path variables use ${VAR:-default} to allow external override (mock)
-# @description OPTIONS is declared here and filled by parse_args
+# @description OPTIONS / OPTIONS_SET are not declared here: args_init (libs/args.lib.sh) owns them
 init_vars() {
   init_asset_dirs
   PROJECT_FILE="${PROJECT_FILE:-${DECKRD_LOCAL_DATA}/.project.json}"
   SESSION_FILE="${SESSION_FILE:-${DECKRD_LOCAL_DATA}/session.json}"
   BASE_SUBDIRS=("notes" "temp")
   SUPPORTED_LANGUAGES=(typescript go python rust shell)
-  declare -gA OPTIONS=()
 }
 
 ##
@@ -129,109 +129,6 @@ validate_language() {
     fi
   done
   return 1
-}
-
-##
-# @description Check that an option received a non-empty value
-# @arg $1 string Option name
-# @arg $2 string Option value
-# @return 0 if the value is non-empty, 1 otherwise
-# @var PARSE_ARGS_ERROR set to error description on failure
-_require_option_value() {
-  [[ -n "$2" ]] && return 0
-  PARSE_ARGS_ERROR="${1} requires a value"
-  return 1
-}
-
-##
-# @description Set the programming language option (bash normalized to shell) and mark it as explicitly given
-# @arg $1 string Programming language value
-# @var OPTIONS sets keys prog and prog_set
-_set_prog_option() {
-  OPTIONS[prog]="$1"
-  OPTIONS[prog_set]=true
-  _normalize_prog_option
-}
-
-##
-# @description Set the document language option (no normalization) and mark it as explicitly given
-# @arg $1 string Document language value
-# @var OPTIONS sets keys lang and lang_set
-_set_lang_option() {
-  OPTIONS[lang]="$1"
-  OPTIONS[lang_set]=true
-}
-
-##
-# @description Normalize the programming language alias bash to shell
-# @var OPTIONS key prog is rewritten when it equals bash
-_normalize_prog_option() {
-  if [[ "${OPTIONS[prog]}" == "bash" ]]; then
-    OPTIONS[prog]="shell"
-  fi
-}
-
-##
-# @description Parse command-line arguments and options
-# @return 0 on success or help request, 1 on error (no output; caller handles usage and error message)
-# @var PARSE_ARGS_ERROR set to error description on failure
-# @var OPTIONS reset to defaults, then filled from args (keys: project, project_type, prog, lang, prog_set, lang_set, ai_model, help, force)
-parse_args() {
-  local positional=()
-  PARSE_ARGS_ERROR=""
-  OPTIONS=([project]="" [project_type]="" [prog]=typescript [lang]=system [prog_set]=false [lang_set]=false [ai_model]=sonnet [help]=false [force]=false)
-
-  while [[ $# -gt 0 ]]; do
-    case "$1" in
-    -h | --help)
-      OPTIONS[help]=true
-      return 0
-      ;;
-    --prog | --language)
-      _require_option_value "$1" "${2:-}" || return 1
-      _set_prog_option "$2"
-      shift 2
-      ;;
-    --prog=* | --language=*)
-      _set_prog_option "${1#*=}"
-      shift
-      ;;
-    --lang)
-      _require_option_value "$1" "${2:-}" || return 1
-      _set_lang_option "$2"
-      shift 2
-      ;;
-    --lang=*)
-      _require_option_value --lang "${1#*=}" || return 1
-      _set_lang_option "${1#*=}"
-      shift
-      ;;
-    --ai-model)
-      _require_option_value "$1" "${2:-}" || return 1
-      OPTIONS[ai_model]="$2"
-      shift 2
-      ;;
-    --ai-model=*)
-      OPTIONS[ai_model]="${1#*=}"
-      shift
-      ;;
-    --force)
-      OPTIONS[force]=true
-      shift
-      ;;
-    -*)
-      PARSE_ARGS_ERROR="Unknown option: $1"
-      return 1
-      ;;
-    *)
-      positional+=("$1")
-      shift
-      ;;
-    esac
-  done
-
-  OPTIONS[project]="${positional[0]:-}"
-  OPTIONS[project_type]="${positional[1]:-}"
 }
 
 ##
@@ -398,11 +295,13 @@ write_project() {
 # @description Keep an existing session.json (the existing-file path of init_session).
 #   Moves an older programming-language `lang` to `prog`
 #   (session_migrate_lang_to_prog), then sets `lang` when --lang was given.
+# @arg $1 string `true` when --lang was given (init_session reads OPTIONS_SET[lang])
 # @stderr Migration notice, "Session preserved", or an `Error:` line on failure
 # @return 0 on success, 1 if the migration or the lang write fails
 _init_session_preserve() {
+  local lang_given="$1"
   session_migrate_lang_to_prog "$SESSION_FILE" || return 1
-  if [[ "${OPTIONS[lang_set]}" == true ]]; then
+  if [[ "$lang_given" == true ]]; then
     # shellcheck disable=SC2016
     write_json_file "$SESSION_FILE" --arg lang "${OPTIONS[lang]}" '.lang = $lang' "$SESSION_FILE" || {
       echo "Error: init_session: failed to write lang: ${SESSION_FILE}" >&2
@@ -416,7 +315,7 @@ _init_session_preserve() {
 ##
 # @description Initialize session.json.
 #   A new file records the programming language in `prog`, and the document
-#   language in `lang` only when --lang was given (OPTIONS[lang_set]).
+#   language in `lang` only when --lang was given (OPTIONS_SET[lang]; unset counts as false).
 #   An existing file is kept; an older `lang` holding a programming language
 #   is moved to `prog` by session_migrate_lang_to_prog (libs/session.lib.sh).
 #   When --lang was given, `lang` is then set to that value (other keys kept);
@@ -430,8 +329,9 @@ _init_session_preserve() {
 #         fails), the existing file cannot be migrated, or `lang` cannot be
 #         written to it
 init_session() {
+  local lang_given="${OPTIONS_SET[lang]:-false}"
   if [[ -f "$SESSION_FILE" ]]; then
-    _init_session_preserve
+    _init_session_preserve "$lang_given"
     return
   fi
 
@@ -442,11 +342,11 @@ init_session() {
   write_json_file "$SESSION_FILE" -n \
     --arg prog "${OPTIONS[prog]}" \
     --arg lang "${OPTIONS[lang]}" \
-    --arg lang_set "${OPTIONS[lang_set]}" \
+    --arg lang_given "$lang_given" \
     --arg ai_model "${OPTIONS[ai_model]}" \
     --arg timestamp "$timestamp" \
     '{active: null, prog: $prog}
-      + (if $lang_set == "true" then {lang: $lang} else {} end)
+      + (if $lang_given == "true" then {lang: $lang} else {} end)
       + {
         ai_model:   $ai_model,
         modules:    {},
@@ -476,21 +376,40 @@ _run_init_steps() {
 # Main Execution
 # ============================================================================
 
+##
+# @description Entry point: init_vars -> option declarations (args_init, args_*) -> parse_args
+#   -> help -> normalize (`--prog bash` becomes `shell`) -> validate -> _run_init_steps
+# @arg $@ string Command-line arguments (see show_usage)
+# @var OPTIONS     Parse result (libs/args.lib.sh): project, project_type, prog, lang,
+#                  ai_model, force, SHOW_HELP
+# @var OPTIONS_SET `true` for each option given on the command line (prog, lang, force)
+# @exitcode 0 Success, or help shown
+# @exitcode 1 Parse error, validation error, or a failing init step
+# @stderr Usage and `Error:` lines, plus the progress messages of the init steps
 main() {
+  local ai_model_errmsg
+
   init_vars
 
+  args_init
+  args_positional project project_type
+  args_value prog typescript --prog --language
+  args_value lang system --lang
+  args_value ai_model sonnet --ai-model
+  args_flag force --force
+
   parse_args "$@" || {
-    echo "Error: ${PARSE_ARGS_ERROR}" >&2
-    if [[ "$PARSE_ARGS_ERROR" == "Unknown option:"* ]]; then
-      show_usage
-    fi
+    echo "Error: ${ARGS_ERROR}" >&2
+    [[ "$ARGS_ERROR" == "Unknown option:"* ]] && show_usage
     exit 1
   }
 
-  if [[ "${OPTIONS[help]}" == true ]]; then
+  if [[ "${OPTIONS[SHOW_HELP]}" == true ]]; then
     show_usage
     exit 0
   fi
+
+  [[ "${OPTIONS[prog]}" == bash ]] && OPTIONS[prog]=shell
 
   validate_args || {
     echo "Error: ${VALIDATE_ARGS_ERROR}" >&2
@@ -505,11 +424,10 @@ main() {
     exit 1
   }
 
-  _ai_model_errmsg=$(validate_ai_model "${OPTIONS[ai_model]}") || {
-    echo "$_ai_model_errmsg" >&2
+  ai_model_errmsg=$(validate_ai_model "${OPTIONS[ai_model]}") || {
+    echo "$ai_model_errmsg" >&2
     exit 1
   }
-  unset _ai_model_errmsg
 
   _run_init_steps || exit 1
 }
