@@ -110,7 +110,8 @@ If it does not, fall back to the common conventions below and **state in the rep
 
 ### Step 3: Resolve `task_id`
 
-Argument → `<local_dir>/temp/bdd-coder/bdd-todo.md` → `N/A`, in that order.
+Argument → the Target ID of the single `<local_dir>/temp/bdd-coder/<scope>/<Target ID>/bdd-todo.md` → `N/A`, in that order.
+If several `bdd-todo.md` files exist, the task is ambiguous: use `N/A`.
 
 `N/A` is normal, not an error: an aggregate review spanning several tasks has no single task ID.
 
