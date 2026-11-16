@@ -12,7 +12,7 @@ description: >
   The dispatch unit for the bdd-coder agent is one Target; each Case keeps its own RGR cycle.
 metadata:
   author: aglabo
-  version: 0.7.0
+  version: 0.8.0
   license: MIT
 ---
 
