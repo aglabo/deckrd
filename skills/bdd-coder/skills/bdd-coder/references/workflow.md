@@ -327,13 +327,17 @@ bdd-coder(T-03) ┘
 
 各 bdd-coder インスタンスに渡す情報:
 
-| 項目              | 内容                                              |
-| ----------------- | ------------------------------------------------- |
-| Target ID         | 例: `T-01` (分割時は Case の範囲を併記)           |
-| Task description  | その Target の Case の Given/When/Then 全文       |
-| Quality gate cmds | ENV PROFILE のコマンド表                          |
-| Checklist path    | チェックリストファイルパス                        |
-| Prior state       | 分割時のみ。前の部分が変更したファイルの 1 行要約 |
+| 項目              | 内容                                                                                    |
+| ----------------- | --------------------------------------------------------------------------------------- |
+| Target ID         | 例: `T-01` (分割時は Case の範囲を併記)                                                 |
+| Task description  | その Target の Case の Given/When/Then 全文                                             |
+| Quality gate cmds | ENV PROFILE のコマンド表                                                                |
+| Checklist path    | チェックリストファイルパス                                                              |
+| `progress_path`   | `<local_dir>/temp/bdd-coder/<scope>/<Target ID>/bdd-todo.md` (Target ごとに 1 ファイル) |
+| Prior state       | 分割時のみ。前の部分が変更したファイルの 1 行要約                                       |
+
+`<scope>` は task list の置かれた `<ns>/<module>` ディレクトリ (`<local_dir>/temp/tasklist/` 以下)。
+module を持たない task list では、`.tasklist.md` を除いた task list のファイル名にする。
 
 **渡さないもの**: セッション全体コンテキスト、他 Target の情報、完了済み Case のログ全文、session.json。
 「1 委譲 = 1 タスク」は Target を 1 タスクとして守る。渡すチェックリストはその Target だけを含むものにする。
@@ -354,7 +358,8 @@ bdd-coder は Target の最後の Case のあと、Target の全テスト (共�
 | T-02      | DONE_WITH_CONCERNS | 8/8   | pass       | `src/lexer.ts`                        | 既存テスト 2 件が失敗中 |
 | T-03      | BLOCKED            | 3/9   | fail       | (なし)                                | 型エラーが 3 回以上発生 |
 
-Case ごとの結果は `bdd-todo.md` の `## Case Log` 表 (Case ID / RED / GREEN / REFACTOR) に残る。
+Case ごとの結果は、Target ごとの `bdd-todo.md` (`progress_path`) に残る。
+記録先は `## Case Log` 表 (Case ID / RED / GREEN / REFACTOR) です。
 完了済み Case のログ全文は、後続の bdd-coder に渡さない。
 
 Changed files 列は bdd-coder の Status Report の `CHANGED_FILES` 行をそのまま転記する。

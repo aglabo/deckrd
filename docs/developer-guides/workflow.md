@@ -360,7 +360,8 @@ temp/idd/
 
 ```text
 .local/deckrd/temp/bdd-coder/
-└── bdd-todo.md                # BDD task progress tracking
+└── <Target ID>/
+    └── bdd-todo.md            # BDD task progress tracking (one file per Target)
 ```
 
 ### Migrating Old Working Files
@@ -374,7 +375,7 @@ No automatic migration is provided. Handle the old files as follows:
   the command that wrote them, so they can be deleted by hand at any time.
 - `temp/bdd-coder/bdd-todo.md`: the only resume checkpoint of an unfinished bdd-coder task.
   Re-running the command does not restore its RED/GREEN/done state. If a task is still in
-  progress, move the file to `.local/deckrd/temp/bdd-coder/bdd-todo.md`; otherwise delete
+  progress, move the file to `.local/deckrd/temp/bdd-coder/<scope>/<Target ID>/bdd-todo.md`; otherwise delete
   it only after the task is complete.
 
 ## Quality Assurance

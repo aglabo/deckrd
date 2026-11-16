@@ -265,13 +265,20 @@ Pass the following context to each bdd-coder instance:
 | Task description  | Full Given/When/Then of the Target's Cases from the checklist                    |
 | Quality gate cmds | Commands table from ENV PROFILE                                                  |
 | Checklist path    | Path to generated checklist file                                                 |
+| `progress_path`   | `<local_dir>/temp/bdd-coder/<scope>/<Target ID>/bdd-todo.md` (one per Target)    |
 | Prior state       | Split parts only: one-line summary of files changed so far. No earlier Case logs |
+
+`<scope>` is the `<ns>/<module>` directory of the task list under `<local_dir>/temp/tasklist/`;
+for a task list with no module it is the task list's file name without `.tasklist.md`.
 
 Do NOT pass: session-wide context, other Targets' info, the full Case logs of finished Cases, or session.json.
 "1 delegation = 1 task" (`docs/.deckrd/rules/deckrd-rule-bdd-cycle.md`) holds with the Target as the task:
 the checklist handed over contains that Target only.
 
-Each bdd-coder records every finished Case in the `## Case Log` table of `bdd-todo.md`
+Targets whose write sets do not overlap may run in parallel: each has its own `progress_path`, so progress files never collide.
+Parts of one split Target share its `progress_path` and run one after another.
+
+Each bdd-coder records every finished Case in the `## Case Log` table of its `bdd-todo.md`
 (Case ID / RED / GREEN / REFACTOR, see [implementer.md](references/roles/implementer.md)).
 After the last Case of a Target, the agent runs the Target regression tests and reports `REGRESSION`.
 After each Target, verify the changed files with `git status --short` / `git diff --stat`, not from the self-report.
