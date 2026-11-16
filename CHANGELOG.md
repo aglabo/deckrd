@@ -1,10 +1,10 @@
 ---
 title: "CHANGELOG"
-description: "ChangeLog: 0.7.0"
-version: "0.7.0"
-date: "2026-11-11"
+description: "ChangeLog: 0.8.0"
+version: "0.8.0"
+date: "2026-11-16"
 summary:
-  - "0.7.0: standalone skill install, dr-writer / dr-refiner, comment-review / comment-refiner, tasklist-builder, role-based agents with skill_dir / local_dir arguments, generate-doc canonical doc types fix"
+  - "0.8.0: Universal Dictionary and spec item classification, separate programming (prog) and document (lang) languages, declarative args.lib.sh parser, atomic JSON writes, per-Target bdd-coder dispatch"
 ---
 
 <!-- textlint-disable
@@ -14,6 +14,56 @@ summary:
 <!-- markdownlint-disable line-length -->
 
 ## CHANGELOG
+
+## [0.8.0] - 2026-11-16
+
+### Features
+
+- Add the Universal Dictionary phase to `/deckrd spec` as Phase 9. The later phases move to Phase 10 (generate), Phase 11 (spec review), Phase 12 (version bump), and Phase 13 (second opinion).
+- Add the `universal-dictionary` prompt and template: terms are grouped by category, carry UD-IDs, and record status, deprecation with replacement UD-IDs, evidence, and DR conflicts.
+- Add the `universal-dictionary` document type (alias `dict`) to `normalize-doc-type.lib.sh` and `generate-doc.sh`.
+- Let the specification prompt and template reference the dictionary (frontmatter and a terminology table with UD-IDs), and check terminology consistency in the spec review. Dictionary sections are omitted when no dictionary exists.
+- Bump the Universal Dictionary version before the specification so that the specification references the dictionary's final version.
+- Classify specification items as `Contract`, `Guarantee`, or `Extension` with a `Class` column in the specification template, and add the classification criteria to the spec review. An `Extension` row needs a source.
+- Exclude `Class = Extension` rows from implementation plan phases and commits, and from `tasks` generation (reported as `Extension (out of scope)` in the Coverage Check).
+- Separate the programming language from the document language. `--prog` (alias `--language`) sets the programming language stored as `prog`; `--lang` sets the document language (`DOC_LANG`) and is written to `session.json` only when specified.
+- Normalize the programming language `bash` to `shell`, and rename the `.project.json` key `language` to `prog`.
+- Migrate legacy `session.json` `lang` values for programming languages to `prog` in `init` and `/deckrd update --update`, and show `Program` and `Language` in `status`.
+- Add the declarative argument parser `libs/args.lib.sh` (`args_init`, `args_flag`, `args_value`, `args_positional`, `parse_args`).
+- Support the inline `--test-scope=XY` form in `module.sh`.
+
+### Bug Fixes
+
+- Write JSON files atomically through `write_json_file`, which uses a `mktemp` temporary file and rejects directories and symbolic links to directories before running `jq`.
+- Report write failures in `init`, `project`, and `module` with an error message and exit status 1, and stop `init` before `session.json` is created when `.project.json` cannot be written.
+- Fix the default AI model of `prepare-commit-msg.sh` from `gpt-6-luna` to `gpt-5.6-luna`.
+
+### Refactor
+
+- Migrate argument parsing in `init.sh`, `module.sh`, `update.sh`, and `project.sh` to `args.lib.sh` and remove their local parsers.
+- Move the atomic JSON write helper into `utils.lib.sh` as `write_json_file` and use it from `init.sh`, `module.sh`, `project.sh`, and `session.lib.sh`.
+- Split `init.sh` into `_run_init_steps` and `_init_session_preserve`, and add a `main` function to `project.sh`.
+
+### Performance
+
+- Dispatch one `bdd-coder` agent per Target instead of per Case. Each Case still runs its own Red-Green-Refactor cycle inside the Target, and the Target gets a regression run, a changed-file check, and split conditions.
+- Clarify Case IDs and the `NEEDS_CONTEXT` / `BLOCKED` status for quality gate failures when a Target is split.
+
+### Documentation
+
+- Document scoped per-Target `progress_path` for `bdd-todo.md` in `bdd-coder`, including how `<scope>` is determined, parallel execution of independent Targets, and sequential execution of split Targets.
+- Make `bdd-coder-review` use the scoped per-Target `bdd-todo.md` paths and set the task ID to `N/A` when several files exist.
+- Document that `bdd-coder` reads the programming language from `prog` in `session.json`, falling back to `.deckrd/profile.json`.
+- Document the `--prog` and `--lang` options, the document language resolution order, and the `lang` to `prog` migration in the command references, `SKILL.md`, prompts, roles, developer guides, and user guides.
+- Define the Universal Dictionary rules (UD-ID numbering, location, authority, status, versioning) in `deckrd-rule-document-model.md` (1.5.2 to 1.6.0) and add them to `deckrd-rules-index.md`.
+- Point the Decision Record location in `docs/.deckrd/README.md` to the per-module `decision-records.md`.
+- Add the `init_session` and `write_project` entries to the `module` workspace document.
+
+### Tooling
+
+- Add the Claude rule `claude-rule-command-execute.md`: pass slash command arguments to the skill unchanged, and ask the user when an explicit flag conflicts with later natural language.
+- Add test target abbreviations (`MAINI`, `UPDA`, `UPDI`) to the cspell dictionary.
+- Upgrade `@astrojs/node` to 11.1.12 in `aglabo.github.io` and pin the minimum version with a pnpm override (Dependabot #6).
 
 ## [0.7.0] - 2026-11-11
 
