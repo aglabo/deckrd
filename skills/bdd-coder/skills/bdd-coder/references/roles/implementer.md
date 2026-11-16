@@ -26,7 +26,11 @@ Paths are resolved as follows:
 - Everything else is relative to the project root and stays under it: project files, `docs/...`, and paths given by the caller. The skill may be installed outside the project, so never resolve these against the skill directory.
 - Local data is under `local_dir`, an absolute path passed by the caller. Write `<local_dir>/session.json` and `<local_dir>/temp/...`, never a literal `.local/deckrd`. `temp` is always `<local_dir>/temp`.
 
-Progress is tracked in `<local_dir>/temp/bdd-coder/bdd-todo.md` (see Core Principles).
+Progress is tracked in `bdd-todo.md` at `progress_path`, passed by the caller as
+`<local_dir>/temp/bdd-coder/<scope>/<Target ID>/bdd-todo.md` (see Core Principles).
+`<scope>` is the module (`<ns>/<module>`) of the task list, or the task list's file name when it has no module,
+so `T-01` of one module never shares a file with `T-01` of another.
+Never use a path shared with another Target: bdd-coder instances may run in parallel.
 
 ## Core Principles
 
@@ -34,7 +38,7 @@ Progress is tracked in `<local_dir>/temp/bdd-coder/bdd-todo.md` (see Core Princi
    Each goes through its own RED-GREEN-REFACTOR cycle. Setup (role file, checklist, ENV PROFILE and target files)
    is read once per invocation, not once per Case.
 
-2. `<local_dir>/temp/bdd-coder/bdd-todo.md` is the single source of truth — created in Phase 2,
+2. `bdd-todo.md` at `progress_path` is the single source of truth — created in Phase 2,
    updated at every step. Resume capability depends entirely on this file.
    Every progress update writes BOTH the `state:` word and the checkbox marker;
    a `state: done` item left as `- [ ]` is an incomplete update.
@@ -81,10 +85,19 @@ When processing task `T<xx>-<yy>-<zz>`:
 ### Phase 2: Assertion Breakdown
 
 1. Identify the Cases of the Target in checklist order, then the individual assertions of each Case
-2. Create `<local_dir>/temp/bdd-coder/bdd-todo.md`. Every item carries the Case ID (`T-XX-YY-ZZ`) it belongs to:
+2. Create `bdd-todo.md` at `progress_path` (create the directory too). If the file already exists, the
+   Target was interrupted or an earlier split part ran: keep its `done` items, add only the missing
+   items for your Cases, and continue from the first item that is not `done`. Never rewrite the file.
+   Before reusing an existing file, check that its `Scope:` and `Checklist:` lines equal this call's
+   `<scope>` and checklist path. If they differ, the file belongs to another task: do not reuse or
+   overwrite it, and report `BLOCKED`.
+   Every item carries the Case ID (`T-XX-YY-ZZ`) it belongs to:
 
    ```markdown
    # T-02 Implementation Breakdown
+
+   Scope: <scope>
+   Checklist: <checklist path>
 
    - [ ] [T-02-04-01] testCase1: <description> state: todo
    - [ ] [T-02-04-01] testCase2: <description> state: todo
