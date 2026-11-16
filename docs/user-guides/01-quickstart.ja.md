@@ -75,7 +75,7 @@ deckrd は **Goals → Requirements → Specifications → Implementation → Ta
 > **旧作業ファイルの移行:** 作業ファイルの置き場所は `temp/deckrd-work/`・`temp/tasks/`・`temp/bdd-coder/` から
 > `.local/deckrd/temp/` に移りました。自動移行はありません。`temp/deckrd-work/` と `temp/tasks/` は
 > コマンドを再実行すれば再生成できるため、削除して構いません。作業途中の bdd-coder タスクがある場合だけ、
-> `temp/bdd-coder/bdd-todo.md` を `.local/deckrd/temp/bdd-coder/bdd-todo.md` へ移動してください。
+> `temp/bdd-coder/bdd-todo.md` を `.local/deckrd/temp/bdd-coder/<scope>/<Target ID>/bdd-todo.md` へ移動してください。
 >
 > **Codex CLI:** `/deckrd:deckrd-review` と bdd-coder のコードレビューは、Codex CLI (`codex exec`) を直接呼び出します。
 > codex-mcp サーバー (`codex mcp-server`) は使えなくなりました。これらのレビューを使う場合は、次の手順で準備してください。
