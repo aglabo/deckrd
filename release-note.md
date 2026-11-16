@@ -81,14 +81,14 @@ v0.8.0 では、用語を一元管理する Universal Dictionary の追加、仕
   - `init.sh` / `module.sh` / `update.sh` / `project.sh` が移行
   - `module --test-scope=XY` のインライン形式に対応
 - `write_json_file` で JSON を一時ファイル経由で書き込み
-  - ディレクトリ、およびディレクトリへのシンボリックリンクへの書き込みを拒否
+  - ディレクトリ、およびディレクトリを指すシンボリックリンクへの書き込みを拒否
   - `init` / `project` / `module` は書き込み失敗時にエラーを出力し、終了ステータス 1 で終了
 
 ### bdd-coder: Target 単位のディスパッチ
 
 - ディスパッチ単位を Case から Target に変更し、エージェント起動回数を削減
   - Target 内では Case ごとに RED → GREEN → REFACTOR を実行
-  - Target 完了後に回帰テストと変更ファイルの確認を実行
+  - Target 完了後に回帰テストを実行し、変更ファイルを確認する
   - 品質ゲートに失敗した場合は、`NEEDS_CONTEXT` / `BLOCKED` を判定して Target を分割
 - 進捗ファイル `bdd-todo.md` を Target ごとの `progress_path` に変更
   - 独立した Target は並列実行でき、分割した Target は順番に実行
