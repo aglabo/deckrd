@@ -1,16 +1,16 @@
 // src: .vscode/cspell.json
 // @(#) : cspell config for user-centric settings
 //
-//
-// Copyright (c) 2025- atsushifx <https://github.com/atsushifx>
+// Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 //
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
+
 {
   "$schema": "https://raw.githubusercontent.com/streetsidesoftware/cspell/main/packages/cspell-types/cspell.schema.json",
   "version": "0.2",
   "import": [
-    "${env:XDG_CONFIG_HOME}/vscode/cspell.config.json"
+    "${env:XDG_CONFIG_HOME}/global-configs/cspell.config.json"
   ],
   "language": "en",
   "caseSensitive": false,
@@ -24,9 +24,9 @@
       "scope": "workspace"
     },
     {
-      "name": "test-target-dic",
-      "description": "test target abbreviations, generated from docs/.deckrd/*/*/module.md",
-      "path": "./cspell/dicts/test-target.dic",
+      "name": "test-id-dic",
+      "description": "test-id dictionary",
+      "path": "./cspell/dicts/test-id.dic",
       "addWords": false,
       "scope": "workspace"
     }
@@ -49,7 +49,7 @@
     "user-dic",
     "textlint-dic",
     "project-dic",
-    "test-target-dic"
+    "test-id-dic"
   ],
   "useGitignore": true
 }
