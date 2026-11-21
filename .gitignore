@@ -105,19 +105,19 @@
 !.vscode/cspell*/**
 
 
-##  Git
-# allow all gitignore
-!**/.gitignore
-
-
 ## ---------------------------------------------------------------
 ##  Project Specific
+
+# Document Site
 !/aglabo.github.io/
 !/aglabo.github.io/**
 !/aglabo.github.io/**/*.json
 !/aglabo.github.io/**/*.ts
 !/aglabo.github.io/**/*.md
 !/aglabo.github.io/**/*.mdx
+
+# deckrd
+!/skills/
 
 ## ---------------------------------------------------------------
 ##  Re-exclude: secrets and generated files
@@ -170,3 +170,8 @@ thumbs.db
 #   node
 **/node_modules/
 **/.pnpm-store/
+
+## Allow ignore setting files
+!**/.gitignore
+!**/*ignore
+
