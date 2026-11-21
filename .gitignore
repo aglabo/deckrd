@@ -1,14 +1,18 @@
 # src: .gitignore
-# @(#) : mainly ignored files and directories
+# @(#) : main ignore settings: for deckrd
 #
-# Copyright (c) 2025- atsushifx <http://github.com/atsushifx>
+# Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 
-
 # default: ignore all files
 *
+
+## Repository Specific
+# Allow Templates (for project-starter-template repo)
+!/templates/
+!/templates/**
 
 ## General
 # Allow README, LICENSE, CONTRIBUTING
@@ -20,6 +24,10 @@
 !.github/
 !.github/**
 
+# Allow profile (organization README)
+!/profile/
+!/profile/**
+
 # Allow other ignore
 !*ignore
 
@@ -28,6 +36,7 @@
 
 # Allow settings
 !**/settings.json
+
 
 ## Root configs
 !**/package.json
@@ -41,12 +50,6 @@
 !**/Release-Note.*
 
 ## Project directories
-# WebSite
-# contents are allowlisted by aglabo.github.io/.gitignore.
-# NOTE: the directory line below must stay - root's `*` matches the directory
-#       itself, and git would never descend to read the nested .gitignore.
-!aglabo.github.io/
-
 # config files
 !configs/
 !configs/**
@@ -67,6 +70,13 @@
 !/scripts/**/*.sh
 !/scripts/**/*.ts
 
+# Documents
+!/docs/
+!/docs/**/
+!/docs/**/*.md
+!/docs/**/*.mdx
+
+
 ## AI Agents
 # General
 !**/AGENT.md
@@ -80,7 +90,6 @@
 !.claude/agents/**
 !.claude/rules/
 !.claude/rules/**
-!.claude/skills
 !.claude/commands/
 !.claude/commands/**
 
@@ -100,34 +109,20 @@
 # allow all gitignore
 !**/.gitignore
 
-## -----------------------------------
-## Repository Specific
-## -----------------------------------
-## Root
-!deckrd.json
-!/.claude-plugin/
-!/.claude-plugin/**
 
-## Deckrd Skills
-!skills/
-!skills/**
-!skills/**/*.json
-!skills/**/*.sh
+## ---------------------------------------------------------------
+##  Project Specific
+!/aglabo.github.io/
+!/aglabo.github.io/**
+!/aglabo.github.io/**/*.json
+!/aglabo.github.io/**/*.ts
+!/aglabo.github.io/**/*.md
+!/aglabo.github.io/**/*.mdx
 
-## Docs
-!docs/
-!docs/**
+## ---------------------------------------------------------------
+##  Re-exclude: secrets and generated files
+##  Must stay last: these rules undo the broad allow rules above
 
-## deckrd local data
-# allowlist details: .local/deckrd/.gitignore
-!/.local/
-!/.local/deckrd/
-
-
-## ------------------------------------------------------------ ##
-##  Re-exclude: secrets and generated files                      ##
-##  Must stay last: these rules undo the broad allow rules above ##
-## ------------------------------------------------------------ ##
 
 #   OS specific files
 .DS_Store
@@ -148,7 +143,7 @@ thumbs.db
 **/*~
 **/*.tmp
 **/*.swp
-# **/*.lock
+# **/*.lock # track *.lock
 
 #   session files
 **/*session.json
