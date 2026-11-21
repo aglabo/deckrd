@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# src: ./runners/exec/shellspec-exec.sh
+# src: runners/exec/shellspec-exec.sh
 # @(#) : shellspec runner
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
@@ -59,7 +59,7 @@ is_test_type() {
   local arg="$1"
   local type
   for type in "${TEST_TYPES[@]}"; do
-    [[ "$arg" == "$type" ]] && return 0
+    [[ $arg == "$type"   ]] && return 0
   done
   return 1
 }
@@ -71,7 +71,7 @@ is_test_type() {
 #
 is_spec_file() {
   local arg="$1"
-  [[ "$arg" == *.spec.sh ]]
+  [[ $arg == *.spec.sh   ]]
 }
 
 #
@@ -81,7 +81,7 @@ is_spec_file() {
 #
 is_spec_glob() {
   local arg="$1"
-  is_glob_pattern "$arg" && [[ "$arg" == *".spec.sh"* ]]
+  is_glob_pattern "$arg" && [[ $arg == *".spec.sh"*   ]]
 }
 
 #
@@ -98,7 +98,7 @@ expand_spec_glob() {
   local -a matches
   # Use compgen -G for glob expansion (handles no-match gracefully)
   mapfile -t matches < <(
-    cd "$SPEC_SEARCH_ROOT" && compgen -G "$norm_pattern" 2>/dev/null || true
+    cd "$SPEC_SEARCH_ROOT" && compgen -G "$norm_pattern" 2> /dev/null || true
   )
 
   local f
@@ -121,7 +121,7 @@ get_spec_files() {
   # It is written as the class [/] rather than a bare slash because MSYS2 rewrites
   # a slash-led token inside an argument into a Windows path before rg sees it
   local type_filter
-  if [[ "$test_type" == "all" ]]; then
+  if [[ $test_type == "all"   ]]; then
     type_filter="[/]${TESTS_DIR}/"
   else
     type_filter="[/]${TESTS_DIR}/${test_type}/"
@@ -140,7 +140,7 @@ parse_options() {
   PARSED_ARGS=()
   local arg
   for arg in "$@"; do
-    if [[ "$arg" == "--integration" ]]; then
+    if [[ $arg == "--integration"   ]]; then
       SKIP_INTEGRATION_TESTS=0
     else
       PARSED_ARGS+=("$arg")
@@ -180,7 +180,7 @@ resolve_spec_files() {
   # Test type -> expand with get_spec_files
   local test_type="$1"
   shift
-  [[ "$test_type" == "system" ]] && SKIP_INTEGRATION_TESTS=0
+  [[ $test_type == "system"   ]] && SKIP_INTEGRATION_TESTS=0
   mapfile -t RESOLVED_SPEC_FILES < <(get_spec_files "$test_type" "$@")
   _drop_empty_mapfile RESOLVED_SPEC_FILES
   return 0
@@ -225,7 +225,7 @@ _resolve_spec_paths() {
 #
 _drop_empty_mapfile() {
   local -n ref_array=$1
-  if [[ ${#ref_array[@]} -eq 1 && -z "${ref_array[0]}" ]]; then
+  if [[ ${#ref_array[@]} -eq 1 && -z ${ref_array[0]}   ]]; then
     ref_array=()
   fi
 }
@@ -273,7 +273,7 @@ main() {
   local -a targets=() options=()
   local arg seen_option=0
   for arg in ${PARSED_ARGS[@]+"${PARSED_ARGS[@]}"}; do
-    [[ $seen_option -eq 0 && "$arg" == -* ]] && seen_option=1
+    [[ $seen_option -eq 0 && $arg == -*   ]] && seen_option=1
     if [[ $seen_option -eq 1 ]]; then
       options+=("$arg")
     else
@@ -289,15 +289,15 @@ main() {
   local status=0
   resolve_spec_files "${targets[@]}" || status=$?
   case "$status" in
-  0) ;;
-  1)
-    printf 'Error: No arguments given.\n' >&2
-    exit 1
-    ;;
-  *)
-    printf "Error: Unknown argument '%s'. Expected a test type, spec file, or glob pattern.\n" "$UNKNOWN_SPEC_ARG" >&2
-    exit 1
-    ;;
+    0) ;;
+    1)
+      printf 'Error: No arguments given.\n' >&2
+      exit 1
+      ;;
+    *)
+      printf "Error: Unknown argument '%s'. Expected a test type, spec file, or glob pattern.\n" "$UNKNOWN_SPEC_ARG" >&2
+      exit 1
+      ;;
   esac
 
   local glob
@@ -316,6 +316,6 @@ main() {
 }
 
 # Execute main only if script is run directly (not sourced)
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+if [[ ${BASH_SOURCE[0]} == "${0}"   ]]; then
   main "$@"
 fi

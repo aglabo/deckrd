@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # src: runners/libs/init-vars.lib.sh
-# @(#) : init-vars.lib.sh - common runner variable initialization library
+# @(#) : common runner variable initialization library
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #
@@ -8,7 +8,7 @@
 # https://opensource.org/licenses/MIT
 
 # Guard against double sourcing
-[[ -n "${_INIT_VARS_LIB_SH:-}" ]] && return 0
+[[ -n ${_INIT_VARS_LIB_SH:-}   ]] && return 0
 readonly _INIT_VARS_LIB_SH=1
 
 # SCRIPT_ROOT: directory of the runner script that sourced this file
@@ -25,4 +25,4 @@ SCRIPT_ROOT="$(cd "$(dirname "${BASH_SOURCE[1]}")" && pwd)"
 # under <project>/runners/, which breaks for callers such as runners/exec/.
 # The subshell is required: without it `||` would bind to `cd` alone and `pwd`
 # would always run, appending a second line when git succeeds.
-PROJECT_ROOT="${PROJECT_ROOT:-$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel 2>/dev/null || (cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd) )}"
+PROJECT_ROOT="${PROJECT_ROOT:-$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel 2> /dev/null || (cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd) )}"

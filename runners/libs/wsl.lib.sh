@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # src: runners/libs/wsl.lib.sh
-# @(#): wsl.lib.sh - WSL delegation library
+# @(#) : WSL delegation library
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #
@@ -8,7 +8,7 @@
 # https://opensource.org/licenses/MIT
 
 # Guard against double sourcing
-[[ -n "${_WSL_LIB_SH:-}" ]] && return 0
+[[ -n ${_WSL_LIB_SH:-}   ]] && return 0
 readonly _WSL_LIB_SH=1
 
 #
@@ -20,8 +20,8 @@ readonly _WSL_LIB_SH=1
 is_windows_host() {
   local __os_name="$1"
   case "$__os_name" in
-  MINGW* | MSYS* | CYGWIN*) return 0 ;;
-  *) return 1 ;;
+    MINGW* | MSYS* | CYGWIN*) return 0 ;;
+    *) return 1 ;;
   esac
 }
 
@@ -30,7 +30,7 @@ is_windows_host() {
 # @exitcode 0 if wsl.exe is callable, 1 otherwise
 #
 is_wsl_available() {
-  command -v wsl.exe >/dev/null 2>&1
+  command -v wsl.exe > /dev/null 2>&1
 }
 
 #

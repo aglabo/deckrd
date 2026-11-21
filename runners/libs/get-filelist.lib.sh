@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # src: runners/libs/get-filelist.lib.sh
-# @(#) : get-filelist.lib.sh — file list and argument normalization library
+# @(#) : file list and argument normalization library
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #
@@ -8,7 +8,7 @@
 # https://opensource.org/licenses/MIT
 
 # Guard against double sourcing
-[[ -n "${_GET_FILELIST_SH:-}" ]] && return 0
+[[ -n ${_GET_FILELIST_SH:-}   ]] && return 0
 readonly _GET_FILELIST_SH=1
 
 #
@@ -53,7 +53,7 @@ normalize_path() {
 #
 is_glob_pattern() {
   local __pattern="$1"
-  [[ "$__pattern" == *'*'* || "$__pattern" == *'?'* ]]
+  [[ $__pattern == *'*'* || $__pattern == *'?'*     ]]
 }
 
 #
@@ -76,7 +76,7 @@ get_filelist() {
     __norm=$(normalize_path "$__f")
     # Strip leading ./ so filter matches rg output (hidden paths have no ./ prefix)
     __norm="${__norm#./}"
-    if [[ "$__norm" == */* ]]; then
+    if [[ $__norm == */*   ]]; then
       __filters+=("$__norm")
     else
       __filters+=("$(args_to_filter "$__norm")")
@@ -85,15 +85,15 @@ get_filelist() {
 
   # Enumerate files; normalize separators and prepend ./
   local __result
-  __result=$(cd "$__root" && rg --files -g "$__pattern" 2>/dev/null | sed 's|\\|/|g; s|^[^./]|./&|' || true)
+  __result=$(cd "$__root" && rg --files -g "$__pattern" 2> /dev/null | sed 's|\\|/|g; s|^[^./]|./&|' || true)
 
   # Apply each filter (AND: narrow results; short-circuit on empty)
   local __pat
   for __pat in "${__filters[@]}"; do
-    [[ -z "$__result" ]] && break
-    __result=$(printf '%s\n' "$__result" | rg "$__pat" 2>/dev/null || true)
+    [[ -z $__result   ]] && break
+    __result=$(printf '%s\n' "$__result" | rg "$__pat" 2> /dev/null || true)
   done
 
-  [[ -z "$__result" ]] && return 0
+  [[ -z $__result   ]] && return 0
   printf '%s\n' "$__result"
 }

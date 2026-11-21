@@ -37,13 +37,13 @@ main() {
   local subcommand="${1:-}"
 
   case "$subcommand" in
-  run | act)
-    shift
-    ;;
-  *)
-    echo "Usage: run-ghalint.sh <run|act> [args...]" >&2
-    return 1
-    ;;
+    run | act)
+      shift
+      ;;
+    *)
+      echo "Usage: run-ghalint.sh <run|act> [args...]" >&2
+      return 1
+      ;;
   esac
 
   local -a args=("$@")
@@ -57,7 +57,7 @@ main() {
   ghalint "$subcommand" --config "$configFile" "${args[@]+"${args[@]}"}"
 }
 
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+if [[ ${BASH_SOURCE[0]} == "${0}"   ]]; then
   main "$@"
   exit $?
 fi
