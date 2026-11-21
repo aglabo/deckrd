@@ -57,12 +57,12 @@ REQ SUMMARY・CONFIRMED DESIGN・EXTERNAL DESIGN NOTES・API DECISIONS・FUNCTIO
 
 候補ごとに、ルールの「新しい概念を見つけたとき」の手順で既存の UD と照合し、次のいずれかに分類する。
 
-| 分類     | 意味                                     | 扱い                                |
-| -------- | ---------------------------------------- | ----------------------------------- |
-| 再利用   | 既存の UD に同じ概念がある               | 既存の UD-ID をそのまま使う         |
-| 新規     | 既存の UD に該当がなく、再利用もできない | 既存の最大番号の次から UD-ID を発行 |
-| 意味変更 | 既存の UD の定義の意味が変わる           | 参照元を列挙して影響を評価する      |
-| 不整合   | 辞書と Accepted の DR の記述が食い違う   | 読み替えず、辞書の不整合節に記録    |
+| 分類     | 意味                                     | 扱い                                                                |
+| -------- | ---------------------------------------- | ------------------------------------------------------------------- |
+| 再利用   | 既存の UD に同じ概念がある               | 既存の UD-ID をそのまま使う                                         |
+| 新規     | 既存の UD に該当がなく、再利用もできない | 用語にふさわしい章を選び、その章コードの最大番号の次で UD-ID を発行 |
+| 意味変更 | 既存の UD の定義の意味が変わる           | 参照元を列挙して影響を評価する                                      |
+| 不整合   | 辞書と Accepted の DR の記述が食い違う   | 読み替えず、辞書の不整合節に記録                                    |
 
 抽出しないもの:
 
@@ -72,7 +72,7 @@ REQ SUMMARY・CONFIRMED DESIGN・EXTERNAL DESIGN NOTES・API DECISIONS・FUNCTIO
 意味変更の候補は、参照元を列挙して影響を受ける文書を控える。
 
 ```bash
-grep -rn "UD-<NNN>" --include=*.md docs/.deckrd/<namespace>/<module>/
+grep -rn "UD-<章コード>-<NNN>" --include=*.md docs/.deckrd/<namespace>/<module>/
 ```
 
 ### Step 9-3: Confirm with the User
@@ -83,14 +83,14 @@ grep -rn "UD-<NNN>" --include=*.md docs/.deckrd/<namespace>/<module>/
 [Universal Dictionary] <namespace>/<module>
 
 NEW:
-  UD-004 処理権     (概念 / サーバー / 確定)
-  UD-005 処理中     (状態 / サーバー / 未確定)
+  UD-CON-004 処理権     (概念 / サーバー / 確定)
+  UD-ST-001 処理中      (状態 / サーバー / 未確定)
 REUSE:
-  UD-001 登録キー
+  UD-CON-001 登録キー
 CHANGED:
-  UD-002 登録要求   — 定義に「再送」を含める (影響: DR-03, specifications.md)
+  UD-CON-002 登録要求   — 定義に「再送」を含める (影響: DR-03, specifications.md)
 INCONSISTENT:
-  UD-003 有効期間   — DR-05 の記述と食い違う
+  UD-CON-003 有効期間   — DR-05 の記述と食い違う
 
 Create / update universal-dictionary.md with these terms? (Y / edit / skip)
 ```
@@ -123,7 +123,7 @@ API DECISIONS、FUNCTION DECISIONS、`decision-records.md` を文脈として渡
 UD-ID の重複を検出する。出力は空でなければならない。
 
 ```bash
-grep -oE "^#{2,6} UD-[0-9]{3} " docs/.deckrd/<namespace>/<module>/universal-dictionary.md \
+grep -oE "^#{2,6} UD-[A-Z][A-Z0-9]{1,5}-[0-9]{3} " docs/.deckrd/<namespace>/<module>/universal-dictionary.md \
   | awk '{print $2}' | sort | uniq -d
 ```
 

@@ -57,17 +57,17 @@ Classes follow "Item Classification" in `assets/prompts/specifications.prompt.md
 `universal-dictionary.md` が存在する場合、ルール (`deckrd-rule-document-model.md`) の
 「整合性の検証」に従って次を確かめる。
 
-| 検証       | 確かめること                                                         | 方法     |
-| ---------- | -------------------------------------------------------------------- | -------- |
-| 参照整合性 | 仕様書中の `UD-NNN` がすべて辞書の見出しに存在し、意図した概念を指す | 機械検査 |
-| 定義整合性 | 仕様書が辞書の用語を別の意味で使っていない・定義し直していない       | レビュー |
-| 責務整合性 | 辞書が仕様書の義務・保証・具体値を重複して定義していない             | レビュー |
+| 検証       | 確かめること                                                                    | 方法     |
+| ---------- | ------------------------------------------------------------------------------- | -------- |
+| 参照整合性 | 仕様書中の `UD-<章コード>-NNN` がすべて辞書の見出しに存在し、意図した概念を指す | 機械検査 |
+| 定義整合性 | 仕様書が辞書の用語を別の意味で使っていない・定義し直していない                  | レビュー |
+| 責務整合性 | 辞書が仕様書の義務・保証・具体値を重複して定義していない                        | レビュー |
 
 次のコマンドで参照切れを検出する。出力は空でなければならない。
 
 ```bash
 dict=docs/.deckrd/<namespace>/<module>/universal-dictionary.md
-comm -23   <(grep -rhoE "UD-[0-9]{3}" docs/.deckrd/<namespace>/<module>/specifications/ | sort -u)   <(grep -oE "^#{2,6} UD-[0-9]{3} " "$dict" | awk '{print $2}' | sort -u)
+comm -23   <(grep -rhoE "UD-[A-Z][A-Z0-9]{1,5}-[0-9]{3}" docs/.deckrd/<namespace>/<module>/specifications/ | sort -u)   <(grep -oE "^#{2,6} UD-[A-Z][A-Z0-9]{1,5}-[0-9]{3} " "$dict" | awk '{print $2}' | sort -u)
 ```
 
 指摘は Step 11-2 の提示に含める。辞書に無い新しい概念が見つかった場合は、仕様書で定義せず、
