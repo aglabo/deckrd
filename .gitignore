@@ -108,6 +108,11 @@
 ## ---------------------------------------------------------------
 ##  Project Specific
 
+# Deckrd
+!/.claude-plugin/
+!/.claude-plugin/*.json
+!/skills/
+
 # Document Site
 !/aglabo.github.io/
 !/aglabo.github.io/**
@@ -116,8 +121,6 @@
 !/aglabo.github.io/**/*.md
 !/aglabo.github.io/**/*.mdx
 
-# deckrd
-!/skills/
 
 ## ---------------------------------------------------------------
 ##  Re-exclude: secrets and generated files
