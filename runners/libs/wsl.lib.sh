@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # src: runners/libs/wsl.lib.sh
-# @(#): wsl.lib.sh - WSL delegation library
+# @(#) : WSL delegation library
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #
@@ -8,7 +8,7 @@
 # https://opensource.org/licenses/MIT
 
 # Guard against double sourcing
-[[ -n "${_WSL_LIB_SH:-}" ]] && return 0
+[[ -n ${_WSL_LIB_SH:-}   ]] && return 0
 readonly _WSL_LIB_SH=1
 
 #
@@ -17,11 +17,12 @@ readonly _WSL_LIB_SH=1
 # @arg $1 string OS name (the value of `uname -s`)
 # @exitcode 0 if the OS name is MINGW*, MSYS* or CYGWIN*, 1 otherwise
 #
-is_windows_host() {
+is_windows_host()
+                  {
   local __os_name="$1"
   case "$__os_name" in
-  MINGW* | MSYS* | CYGWIN*) return 0 ;;
-  *) return 1 ;;
+    MINGW* | MSYS* | CYGWIN*) return 0 ;;
+    *) return 1 ;;
   esac
 }
 
@@ -29,8 +30,9 @@ is_windows_host() {
 # @description Check if wsl.exe can be called from this shell
 # @exitcode 0 if wsl.exe is callable, 1 otherwise
 #
-is_wsl_available() {
-  command -v wsl.exe >/dev/null 2>&1
+is_wsl_available()
+                   {
+  command -v wsl.exe > /dev/null 2>&1
 }
 
 #
@@ -45,7 +47,8 @@ is_wsl_available() {
 # @arg $@ Arguments forwarded to the script
 # @exitcode Exit code of wsl.exe
 #
-exec_in_wsl() {
+exec_in_wsl()
+              {
   local __win_cwd="$1"
   local __script="$2"
   shift 2
@@ -65,7 +68,8 @@ exec_in_wsl() {
 # @stdout One missing command name per line; nothing when all of them are callable
 # @exitcode 0 always
 #
-find_missing_wsl_commands() {
+find_missing_wsl_commands()
+                            {
   # Probe run on the WSL side. It must not be expanded here, so it is single-quoted
   # shellcheck disable=SC2016 # Probe body. $@ and $__command are resolved by bash on the WSL side
   local __probe='for __command in "$@"; do command -v "$__command" >/dev/null 2>&1 || printf "%s\n" "$__command"; done'

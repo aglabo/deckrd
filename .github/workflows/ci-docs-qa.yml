@@ -1,4 +1,4 @@
-# src: ./.github/workflows/ci-docs-qa.yml
+# src: .github/workflows/ci-docs-qa.yml
 # @(#) : Caller workflow for document QA of changed Markdown files
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
@@ -65,6 +65,6 @@ jobs:
     needs: resolve-inputs
     permissions:
       contents: read
-    uses: aglabo/ci-platform/.github/workflows/ru-lint-documents.yml@76bf81b8f8ef67234ab5d3361ba5f30e0646a284 # v0.6.1
+    uses: aglabo/ci-platform/.github/workflows/ru-lint-documents.yml@615596f3e335f51338fb76c360d3434a346f01d9 # v0.8.1
     with:
       commit-count: ${{ needs.resolve-inputs.outputs.commit-count }}

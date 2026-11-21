@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# src: ./runners/exec/shellspec-exec.sh
+# src: runners/exec/shellspec-exec.sh
 # @(#) : shellspec runner
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
@@ -55,11 +55,12 @@ SPEC_SEARCH_ROOT="${SPEC_SEARCH_ROOT:-${PROJECT_ROOT}}"
 # @arg $1 string Argument to check
 # @exitcode 0 if valid test type, 1 otherwise
 #
-is_test_type() {
+is_test_type()
+               {
   local arg="$1"
   local type
   for type in "${TEST_TYPES[@]}"; do
-    [[ "$arg" == "$type" ]] && return 0
+    [[ $arg == "$type"   ]] && return 0
   done
   return 1
 }
@@ -69,9 +70,10 @@ is_test_type() {
 # @arg $1 string Argument to check
 # @exitcode 0 if spec file path, 1 otherwise
 #
-is_spec_file() {
+is_spec_file()
+               {
   local arg="$1"
-  [[ "$arg" == *.spec.sh ]]
+  [[ $arg == *.spec.sh   ]]
 }
 
 #
@@ -79,9 +81,10 @@ is_spec_file() {
 # @arg $1 string Argument to check
 # @exitcode 0 if glob path containing *.spec.sh pattern, 1 otherwise
 #
-is_spec_glob() {
+is_spec_glob()
+               {
   local arg="$1"
-  is_glob_pattern "$arg" && [[ "$arg" == *".spec.sh"* ]]
+  is_glob_pattern "$arg" && [[ $arg == *".spec.sh"*   ]]
 }
 
 #
@@ -90,7 +93,8 @@ is_spec_glob() {
 # @stdout List of matching spec file paths; nothing when no file matches
 # @exitcode 0 always
 #
-expand_spec_glob() {
+expand_spec_glob()
+                   {
   local pattern="$1"
   local norm_pattern
   norm_pattern=$(normalize_path "$pattern")
@@ -98,7 +102,7 @@ expand_spec_glob() {
   local -a matches
   # Use compgen -G for glob expansion (handles no-match gracefully)
   mapfile -t matches < <(
-    cd "$SPEC_SEARCH_ROOT" && compgen -G "$norm_pattern" 2>/dev/null || true
+    cd "$SPEC_SEARCH_ROOT" && compgen -G "$norm_pattern" 2> /dev/null || true
   )
 
   local f
@@ -113,7 +117,8 @@ expand_spec_glob() {
 # @arg $@ Additional file patterns to filter by
 # @stdout List of spec file paths relative to project root
 #
-get_spec_files() {
+get_spec_files()
+                 {
   local test_type="$1"
   shift
   # The leading separator anchors the filter to a whole path component: without it
@@ -121,7 +126,7 @@ get_spec_files() {
   # It is written as the class [/] rather than a bare slash because MSYS2 rewrites
   # a slash-led token inside an argument into a Windows path before rg sees it
   local type_filter
-  if [[ "$test_type" == "all" ]]; then
+  if [[ $test_type == "all"   ]]; then
     type_filter="[/]${TESTS_DIR}/"
   else
     type_filter="[/]${TESTS_DIR}/${test_type}/"
@@ -136,11 +141,12 @@ get_spec_files() {
 # @sideeffect Sets PARSED_ARGS to the remaining arguments (without --integration)
 # @sideeffect Sets SKIP_INTEGRATION_TESTS=0 if --integration found
 #
-parse_options() {
+parse_options()
+                {
   PARSED_ARGS=()
   local arg
   for arg in "$@"; do
-    if [[ "$arg" == "--integration" ]]; then
+    if [[ $arg == "--integration"   ]]; then
       SKIP_INTEGRATION_TESTS=0
     else
       PARSED_ARGS+=("$arg")
@@ -164,7 +170,8 @@ parse_options() {
 # @exitcode 1 no arguments given
 # @exitcode 2 an argument is neither a test type, a spec file nor a glob
 #
-resolve_spec_files() {
+resolve_spec_files()
+                     {
   RESOLVED_SPEC_FILES=()
   UNMATCHED_SPEC_GLOBS=()
   UNKNOWN_SPEC_ARG=''
@@ -180,7 +187,7 @@ resolve_spec_files() {
   # Test type -> expand with get_spec_files
   local test_type="$1"
   shift
-  [[ "$test_type" == "system" ]] && SKIP_INTEGRATION_TESTS=0
+  [[ $test_type == "system"   ]] && SKIP_INTEGRATION_TESTS=0
   mapfile -t RESOLVED_SPEC_FILES < <(get_spec_files "$test_type" "$@")
   _drop_empty_mapfile RESOLVED_SPEC_FILES
   return 0
@@ -194,7 +201,8 @@ resolve_spec_files() {
 # @sideeffect Sets UNKNOWN_SPEC_ARG to the rejected argument (exit code 2)
 # @exitcode 0 on success, 2 on an argument that is neither a spec file nor a glob
 #
-_resolve_spec_paths() {
+_resolve_spec_paths()
+                      {
   local arg
   local -a matches
   for arg in "$@"; do
@@ -223,9 +231,10 @@ _resolve_spec_paths() {
 # @arg $1 Name of the array to normalize
 # @sideeffect Empties the named array when it holds one empty element
 #
-_drop_empty_mapfile() {
+_drop_empty_mapfile()
+                      {
   local -n ref_array=$1
-  if [[ ${#ref_array[@]} -eq 1 && -z "${ref_array[0]}" ]]; then
+  if [[ ${#ref_array[@]} -eq 1 && -z ${ref_array[0]}   ]]; then
     ref_array=()
   fi
 }
@@ -236,7 +245,8 @@ _drop_empty_mapfile() {
 #         normalize_path unchanged unless they contain backslashes)
 # @exitcode Exit code from ShellSpec
 #
-run_shellspec() {
+run_shellspec()
+                {
   local -a normalized_args=()
   local arg
   for arg in "$@"; do
@@ -263,7 +273,8 @@ run_shellspec() {
 #   main a.unit.spec.sh b.unit.spec.sh  # Run several spec files
 #   main test.spec.sh --repair        # Run with ShellSpec options
 #
-main() {
+main()
+       {
   # Called in this shell, not through a pipe or $(): parse_options() reports its
   # result in PARSED_ARGS precisely so that SKIP_INTEGRATION_TESTS survives
   parse_options "$@"
@@ -273,7 +284,7 @@ main() {
   local -a targets=() options=()
   local arg seen_option=0
   for arg in ${PARSED_ARGS[@]+"${PARSED_ARGS[@]}"}; do
-    [[ $seen_option -eq 0 && "$arg" == -* ]] && seen_option=1
+    [[ $seen_option -eq 0 && $arg == -*   ]] && seen_option=1
     if [[ $seen_option -eq 1 ]]; then
       options+=("$arg")
     else
@@ -289,15 +300,15 @@ main() {
   local status=0
   resolve_spec_files "${targets[@]}" || status=$?
   case "$status" in
-  0) ;;
-  1)
-    printf 'Error: No arguments given.\n' >&2
-    exit 1
-    ;;
-  *)
-    printf "Error: Unknown argument '%s'. Expected a test type, spec file, or glob pattern.\n" "$UNKNOWN_SPEC_ARG" >&2
-    exit 1
-    ;;
+    0) ;;
+    1)
+      printf 'Error: No arguments given.\n' >&2
+      exit 1
+      ;;
+    *)
+      printf "Error: Unknown argument '%s'. Expected a test type, spec file, or glob pattern.\n" "$UNKNOWN_SPEC_ARG" >&2
+      exit 1
+      ;;
   esac
 
   local glob
@@ -316,6 +327,6 @@ main() {
 }
 
 # Execute main only if script is run directly (not sourced)
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+if [[ ${BASH_SOURCE[0]} == "${0}"   ]]; then
   main "$@"
 fi

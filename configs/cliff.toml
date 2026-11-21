@@ -1,5 +1,5 @@
-# src: ./configs/cliff.toml
-# @(#): git-cliff configs:
+# src: configs/cliff.toml
+# @(#) : git-cliff configuration
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #
@@ -13,9 +13,9 @@
 # See https://keats.github.io/tera/docs/#introduction
 body = """
 {% if version %}\
-    ## [{{ version | trim_start_matches(pat="v") }}] - {{ timestamp | date(format="%Y-%m-%d") }}
+    ## {{ version | trim_start_matches(pat="v") }} - {{ timestamp | date(format="%Y-%m-%d") }}
 {% else %}\
-    ## [unreleased]
+    ## unreleased
 {% endif %}\
 {% for group, commits in commits | group_by(attribute="group") %}
     ### {{ group | striptags | trim | upper_first }}
@@ -82,15 +82,15 @@ protect_breaking_commits = false
 commit_parsers = [
   { message = "^Initial", skip = true },
 
-  # docs 型（docs: / docs(scope): / docs/config: すべて）
+  # docs type (all of docs: / docs(scope): / docs/config:)
   { message = "^docs", group = "<!-- 02 --> Documentation" },
-  # ﾄﾞhｷLｭ・∂篤g系 scope は型を問わず集約する
+  # Group documentation-related scopes regardless of commit type
   { message = "^\\w+\\((docs|website|user-guide|developer-guide|readme|changelog|license)[/)]", group = "<!-- 02 --> Documentation" },
-  # ﾄﾞhｷLｭ・∂篤gｻTｲCﾄgの依存更新
+  # Dependency updates for the documentation site
   { message = "(?i)^deps.*(docs|website|docusaurus)", group = "<!-- 02 --> Documentation" },
 
   { message = "dependabot", skip = true },
-  # 真のﾏ}ｰ[ｼﾞWｺRﾐ~ｯbﾄg（squash ではない）は変更内容を持たない
+  # A true merge commit (not a squash) carries no changes of its own
   { message = "^Merge branch", skip = true },
 
   { body = ".*security", group = "<!-- 10 --> Security" },

@@ -10,7 +10,7 @@
 # USAGE: dot-source this file, do NOT execute directly.
 #   . "$(dirname "${BASH_SOURCE[0]}")/ai-runner.lib.sh"
 
-if [[ -n "${_AI_RUNNER_LOADED:-}" ]]; then
+if [[ -n ${_AI_RUNNER_LOADED:-}   ]]; then
   return 0
 fi
 readonly _AI_RUNNER_LOADED=1
@@ -21,32 +21,33 @@ readonly _AI_RUNNER_LOADED=1
 # @stdout  string  CLI command name (e.g. "claude", "codex", "gemini")
 # @exitcode 0  Success
 # @exitcode 1  Unknown model / empty argument
-resolve_ai_cli() {
+resolve_ai_cli()
+                 {
   local model="${1:-}"
 
-  if [[ -z "$model" ]]; then
+  if [[ -z $model   ]]; then
     return 1
   fi
 
   case "$model" in
-  anthropic/* | claude-* | default | sonnet | opus | haiku | sonnet-1m | opusplan)
-    echo "claude"
-    ;;
-  openai/* | gpt-* | o1-* | o3-*)
-    echo "codex"
-    ;;
-  googleai/* | google/* | gemini-*)
-    echo "gemini"
-    ;;
-  github/* | github-copilot/* | copilot/*)
-    echo "copilot"
-    ;;
-  opencode/*)
-    echo "opencode"
-    ;;
-  *)
-    return 1
-    ;;
+    anthropic/* | claude-* | default | sonnet | opus | haiku | sonnet-1m | opusplan)
+      echo "claude"
+      ;;
+    openai/* | gpt-* | o1-* | o3-*)
+      echo "codex"
+      ;;
+    googleai/* | google/* | gemini-*)
+      echo "gemini"
+      ;;
+    github/* | github-copilot/* | copilot/*)
+      echo "copilot"
+      ;;
+    opencode/*)
+      echo "opencode"
+      ;;
+    *)
+      return 1
+      ;;
   esac
 
   return 0
@@ -59,21 +60,22 @@ resolve_ai_cli() {
 # @stderr  string  エラーメッセージ（無効な場合）
 # @exitcode 0  有効なモデル識別子
 # @exitcode 1  無効なモデル識別子 or 空引数
-validate_ai_model() {
+validate_ai_model()
+                    {
   local model="${1:-}"
 
-  if [[ -z "$model" ]]; then
+  if [[ -z $model   ]]; then
     echo "Error: AI model is required" >&2
     return 1
   fi
 
   # <provider>/ 形式（モデル部分が空）は無効
-  if [[ "$model" == */ ]]; then
+  if [[ $model == */   ]]; then
     echo "Error: unknown AI model: ${model}" >&2
     return 1
   fi
 
-  if resolve_ai_cli "$model" >/dev/null 2>&1; then
+  if resolve_ai_cli "$model" > /dev/null 2>&1; then
     echo "$model"
     return 0
   fi
@@ -92,16 +94,17 @@ validate_ai_model() {
 # @stderr  string  エラーメッセージ（無効な場合）
 # @exitcode 0  有効
 # @exitcode 1  無効 or 空引数
-resolve_ai_model() {
+resolve_ai_model()
+                   {
   local model="${1:-}"
 
-  if [[ -z "$model" ]]; then
+  if [[ -z $model   ]]; then
     echo "Error: AI model is required" >&2
     return 1
   fi
 
   # <provider>/ 形式（モデル部分が空）は無効
-  if [[ "$model" == */ ]]; then
+  if [[ $model == */   ]]; then
     local provider="${model%/}"
     echo "Error: model name is required after provider: ${provider}" >&2
     return 1
@@ -109,93 +112,93 @@ resolve_ai_model() {
 
   local raw_model
   case "$model" in
-  anthropic/*)
-    raw_model="${model#anthropic/}"
-    case "$raw_model" in
-    claude-*) echo "$raw_model" ;;
+    anthropic/*)
+      raw_model="${model#anthropic/}"
+      case "$raw_model" in
+        claude-*) echo "$raw_model" ;;
+        *)
+          echo "Error: invalid model for anthropic: ${raw_model}" >&2
+          return 1
+          ;;
+      esac
+      ;;
+    claude-* | default | sonnet | opus | haiku | sonnet-1m | opusplan)
+      echo "$model"
+      ;;
+    openai/*)
+      raw_model="${model#openai/}"
+      case "$raw_model" in
+        gpt-* | o1-* | o3-*) echo "$raw_model" ;;
+        *)
+          echo "Error: invalid model for openai: ${raw_model}" >&2
+          return 1
+          ;;
+      esac
+      ;;
+    gpt-* | o1-* | o3-*)
+      echo "$model"
+      ;;
+    googleai/*)
+      raw_model="${model#googleai/}"
+      case "$raw_model" in
+        gemini-*) echo "$raw_model" ;;
+        *)
+          echo "Error: invalid model for google: ${raw_model}" >&2
+          return 1
+          ;;
+      esac
+      ;;
+    google/*)
+      raw_model="${model#google/}"
+      case "$raw_model" in
+        gemini-*) echo "$raw_model" ;;
+        *)
+          echo "Error: invalid model for google: ${raw_model}" >&2
+          return 1
+          ;;
+      esac
+      ;;
+    gemini-*)
+      echo "$model"
+      ;;
+    github/*)
+      raw_model="${model#github/}"
+      case "$raw_model" in
+        claude-* | gpt-* | gemini-* | grok-*) echo "$raw_model" ;;
+        *)
+          echo "Error: invalid model for copilot: ${raw_model}" >&2
+          return 1
+          ;;
+      esac
+      ;;
+    github-copilot/*)
+      raw_model="${model#github-copilot/}"
+      case "$raw_model" in
+        claude-* | gpt-* | gemini-* | grok-*) echo "$raw_model" ;;
+        *)
+          echo "Error: invalid model for copilot: ${raw_model}" >&2
+          return 1
+          ;;
+      esac
+      ;;
+    copilot/*)
+      raw_model="${model#copilot/}"
+      case "$raw_model" in
+        claude-* | gpt-* | gemini-* | grok-*) echo "$raw_model" ;;
+        *)
+          echo "Error: invalid model for copilot: ${raw_model}" >&2
+          return 1
+          ;;
+      esac
+      ;;
+    opencode/*)
+      raw_model="${model#opencode/}"
+      echo "$raw_model"
+      ;;
     *)
-      echo "Error: invalid model for anthropic: ${raw_model}" >&2
+      echo "Error: unknown AI model: ${model}" >&2
       return 1
       ;;
-    esac
-    ;;
-  claude-* | default | sonnet | opus | haiku | sonnet-1m | opusplan)
-    echo "$model"
-    ;;
-  openai/*)
-    raw_model="${model#openai/}"
-    case "$raw_model" in
-    gpt-* | o1-* | o3-*) echo "$raw_model" ;;
-    *)
-      echo "Error: invalid model for openai: ${raw_model}" >&2
-      return 1
-      ;;
-    esac
-    ;;
-  gpt-* | o1-* | o3-*)
-    echo "$model"
-    ;;
-  googleai/*)
-    raw_model="${model#googleai/}"
-    case "$raw_model" in
-    gemini-*) echo "$raw_model" ;;
-    *)
-      echo "Error: invalid model for google: ${raw_model}" >&2
-      return 1
-      ;;
-    esac
-    ;;
-  google/*)
-    raw_model="${model#google/}"
-    case "$raw_model" in
-    gemini-*) echo "$raw_model" ;;
-    *)
-      echo "Error: invalid model for google: ${raw_model}" >&2
-      return 1
-      ;;
-    esac
-    ;;
-  gemini-*)
-    echo "$model"
-    ;;
-  github/*)
-    raw_model="${model#github/}"
-    case "$raw_model" in
-    claude-* | gpt-* | gemini-* | grok-*) echo "$raw_model" ;;
-    *)
-      echo "Error: invalid model for copilot: ${raw_model}" >&2
-      return 1
-      ;;
-    esac
-    ;;
-  github-copilot/*)
-    raw_model="${model#github-copilot/}"
-    case "$raw_model" in
-    claude-* | gpt-* | gemini-* | grok-*) echo "$raw_model" ;;
-    *)
-      echo "Error: invalid model for copilot: ${raw_model}" >&2
-      return 1
-      ;;
-    esac
-    ;;
-  copilot/*)
-    raw_model="${model#copilot/}"
-    case "$raw_model" in
-    claude-* | gpt-* | gemini-* | grok-*) echo "$raw_model" ;;
-    *)
-      echo "Error: invalid model for copilot: ${raw_model}" >&2
-      return 1
-      ;;
-    esac
-    ;;
-  opencode/*)
-    raw_model="${model#opencode/}"
-    echo "$raw_model"
-    ;;
-  *)
-    echo "Error: unknown AI model: ${model}" >&2
-    return 1
-    ;;
   esac
 
   return 0
@@ -213,84 +216,85 @@ resolve_ai_model() {
 # @arg $3  nameref  Array variable to store the command (passed by name)
 # @exitcode 0  Success
 # @exitcode 1  Unknown CLI
-_build_ai_command() {
+_build_ai_command()
+                    {
   local cli="$1"
   local model="$2"
   local -n _cmd_ref="$3"
   local _ai_options=()
 
   case "$cli" in
-  claude)
-    # Claude aliases are passed as-is; claude CLI resolves them natively.
-    case "$model" in
-    default)
-      _ai_options=()
+    claude)
+      # Claude aliases are passed as-is; claude CLI resolves them natively.
+      case "$model" in
+        default)
+          _ai_options=()
+          ;;
+        sonnet-1m)
+          _ai_options=("--model" "sonnet" "--context-window" "1000000")
+          ;;
+        opusplan)
+          _ai_options=("--model" "opusplan" "--thinking")
+          ;;
+        *)
+          _ai_options=("--model" "$model")
+          ;;
+      esac
+      _ai_options+=("--strict-mcp-config" "--mcp-config" '{"mcpServers":{}}')
+      _cmd_ref=("claude" "${_ai_options[@]}" "-p")
       ;;
-    sonnet-1m)
-      _ai_options=("--model" "sonnet" "--context-window" "1000000")
+    codex)
+      # codex exec は cwd が git リポジトリ内でも ~/.codex/config.toml の trusted project
+      # でもないと起動を拒む (`Not inside a trusted directory and --skip-git-repo-check was
+      # not specified.`)。run_ai は cd せず呼び出し元の cwd をそのまま引き継ぐので、
+      # リポジトリ外から dot-source して呼ばれた時点で落ちる。しかも codex-cli 0.157 系は
+      # この拒否を exit 0 で返すため、stdout が空のまま「成功」に化ける。
+      # argv が cwd に依存しないことが _build_ai_command の契約なので、
+      # --skip-git-repo-check は条件付きではなく常に付ける。
+      # --ignore-user-config は claude 分岐の --strict-mcp-config / 空 MCP 設定と同じ
+      # 「ユーザー設定の MCP を読ませない」役割である。これがないと codex exec は
+      # ~/.codex/config.toml の [mcp_servers.*] を起動し、MCP サーバが cwd 配下へ作業ファイル
+      # (`.cocoindex_code/` など) を作って掴んだままにする。run_ai は cd しないので、
+      # 汚れるのは呼び出し元の cwd である。-c 'mcp_servers={}' では止まらない。codex は TOML の
+      # テーブルを再帰マージするので、空テーブルでは既存のキーが消えない。
+      # 認証は維持される。auth.json は config.toml ではなく CODEX_HOME から読まれる
+      # (help: `Do not load $CODEX_HOME/config.toml; auth still uses CODEX_HOME`)。
+      # 落ちるのは config.toml に書かれた設定だけであり、そのすべてが落ちる。model_reasoning_effort
+      # や service_tier のような既定値のほか、[windows] sandbox や [shell_environment_policy]、
+      # 独自の model_providers も含む。~/.codex/AGENTS.md は config.toml 由来ではないので
+      # 読まれ続ける (実測)。モデルは --model で明示しているので影響しない。
+      # 副作用: コマンド実行を許す設定 ([windows] sandbox = "elevated" など) も落ちるため、
+      # codex にシェルコマンドを実行させたい用途にこのフラグは使えない。run_ai はプロンプトを
+      # 渡して stdout を読むだけなので影響しない。codex にコマンドを走らせる呼び出し
+      # (deckrd-review / code-reviewer) では付けてはならない。
+      # 代替が使えない理由と検証の記録は docs/specs/mcp-servers.md の
+      # 「Isolating Codex from the user's MCP servers」に置く。
+      # -s read-only は CLI に書き込み権限を渡さないための隔離である。生成物をファイルへ書くのは
+      # run_ai の呼び出し元だけで、CLI 側に書き込み権限は要らない。
+      # --color never は stdout を「AI の応答本文だけ」に保つ。ANSI が混ざると stdout 契約が崩れる。
+      _cmd_ref=("codex" "exec" "--model" "$model" "--skip-git-repo-check" "--ignore-user-config" "-s" "read-only" "--color" "never")
       ;;
-    opusplan)
-      _ai_options=("--model" "opusplan" "--thinking")
+    gemini)
+      _cmd_ref=("gemini" "--model" "$model")
       ;;
-    *)
-      _ai_options=("--model" "$model")
+    copilot)
+      # Extract model name after prefix (github/<model>, github-copilot/<model>, copilot/<model>)
+      local copilot_model="${model#*/}"
+      case "$copilot_model" in
+        claude-* | gpt-* | gemini-* | grok-*)
+          _cmd_ref=("copilot" "--model" "$copilot_model")
+          ;;
+        *)
+          return 1
+          ;;
+      esac
       ;;
-    esac
-    _ai_options+=("--strict-mcp-config" "--mcp-config" '{"mcpServers":{}}')
-    _cmd_ref=("claude" "${_ai_options[@]}" "-p")
-    ;;
-  codex)
-    # codex exec は cwd が git リポジトリ内でも ~/.codex/config.toml の trusted project
-    # でもないと起動を拒む (`Not inside a trusted directory and --skip-git-repo-check was
-    # not specified.`)。run_ai は cd せず呼び出し元の cwd をそのまま引き継ぐので、
-    # リポジトリ外から dot-source して呼ばれた時点で落ちる。しかも codex-cli 0.157 系は
-    # この拒否を exit 0 で返すため、stdout が空のまま「成功」に化ける。
-    # argv が cwd に依存しないことが _build_ai_command の契約なので、
-    # --skip-git-repo-check は条件付きではなく常に付ける。
-    # --ignore-user-config は claude 分岐の --strict-mcp-config / 空 MCP 設定と同じ
-    # 「ユーザー設定の MCP を読ませない」役割である。これがないと codex exec は
-    # ~/.codex/config.toml の [mcp_servers.*] を起動し、MCP サーバが cwd 配下へ作業ファイル
-    # (`.cocoindex_code/` など) を作って掴んだままにする。run_ai は cd しないので、
-    # 汚れるのは呼び出し元の cwd である。-c 'mcp_servers={}' では止まらない。codex は TOML の
-    # テーブルを再帰マージするので、空テーブルでは既存のキーが消えない。
-    # 認証は維持される。auth.json は config.toml ではなく CODEX_HOME から読まれる
-    # (help: `Do not load $CODEX_HOME/config.toml; auth still uses CODEX_HOME`)。
-    # 落ちるのは config.toml に書かれた設定だけであり、そのすべてが落ちる。model_reasoning_effort
-    # や service_tier のような既定値のほか、[windows] sandbox や [shell_environment_policy]、
-    # 独自の model_providers も含む。~/.codex/AGENTS.md は config.toml 由来ではないので
-    # 読まれ続ける (実測)。モデルは --model で明示しているので影響しない。
-    # 副作用: コマンド実行を許す設定 ([windows] sandbox = "elevated" など) も落ちるため、
-    # codex にシェルコマンドを実行させたい用途にこのフラグは使えない。run_ai はプロンプトを
-    # 渡して stdout を読むだけなので影響しない。codex にコマンドを走らせる呼び出し
-    # (deckrd-review / code-reviewer) では付けてはならない。
-    # 代替が使えない理由と検証の記録は docs/specs/mcp-servers.md の
-    # 「Isolating Codex from the user's MCP servers」に置く。
-    # -s read-only は CLI に書き込み権限を渡さないための隔離である。生成物をファイルへ書くのは
-    # run_ai の呼び出し元だけで、CLI 側に書き込み権限は要らない。
-    # --color never は stdout を「AI の応答本文だけ」に保つ。ANSI が混ざると stdout 契約が崩れる。
-    _cmd_ref=("codex" "exec" "--model" "$model" "--skip-git-repo-check" "--ignore-user-config" "-s" "read-only" "--color" "never")
-    ;;
-  gemini)
-    _cmd_ref=("gemini" "--model" "$model")
-    ;;
-  copilot)
-    # Extract model name after prefix (github/<model>, github-copilot/<model>, copilot/<model>)
-    local copilot_model="${model#*/}"
-    case "$copilot_model" in
-    claude-* | gpt-* | gemini-* | grok-*)
-      _cmd_ref=("copilot" "--model" "$copilot_model")
+    opencode)
+      _cmd_ref=("opencode" "run" "--model" "$model")
       ;;
     *)
       return 1
       ;;
-    esac
-    ;;
-  opencode)
-    _cmd_ref=("opencode" "run" "--model" "$model")
-    ;;
-  *)
-    return 1
-    ;;
   esac
 }
 
@@ -302,7 +306,8 @@ _build_ai_command() {
 # @arg $1  int     Timeout in seconds. Empty or omitted falls back to DECKRD_AI_TIMEOUT
 # @stdout  int     Resolved timeout in seconds (no trailing newline)
 # @exitcode 0  Always succeeds; the value itself is validated by timeout(1)
-resolve_ai_timeout() {
+resolve_ai_timeout()
+                     {
   printf '%s' "${1:-${DECKRD_AI_TIMEOUT:-300}}"
 }
 
@@ -310,7 +315,8 @@ resolve_ai_timeout() {
 #
 # @exitcode 0  stdin は端末である
 # @exitcode 1  stdin は端末ではない（パイプ・リダイレクト・クローズ）
-_ai_stdin_is_tty() {
+_ai_stdin_is_tty()
+                   {
   [[ -t 0 ]]
 }
 
@@ -347,12 +353,13 @@ _ai_stdin_is_tty() {
 #
 #   # NG: `.` が echo を引数として飲み込み、stdin が空になる
 #   #   . "<path>/ai-runner.lib.sh" echo "prompt" | run_ai "sonnet"
-run_ai() {
+run_ai()
+         {
   local model="${1:-}"
   local timeout_sec
   timeout_sec="$(resolve_ai_timeout "${2:-}")"
 
-  if [[ -z "$model" ]]; then
+  if [[ -z $model   ]]; then
     echo "Error: model is required" >&2
     return 1
   fi
@@ -363,7 +370,7 @@ run_ai() {
     return 1
   }
 
-  if ! command -v "$cli" >/dev/null 2>&1; then
+  if ! command -v "$cli" > /dev/null 2>&1; then
     echo "Error: CLI not found: $cli" >&2
     return 2
   fi
@@ -407,7 +414,7 @@ run_ai() {
     return 3
   fi
 
-  if [[ -z "$prompt" ]]; then
+  if [[ -z $prompt   ]]; then
     echo "Error: empty prompt on stdin (model: $model)" >&2
     return 3
   fi
@@ -416,7 +423,7 @@ run_ai() {
   # 素の代入のままだと CLI が非 0 を返した時点で呼び出し元の errexit がシェルを落とし、
   # 打ち切りの診断も応答本文も呼び出し元へ届かなくなる。
   local output exit_code
-  if output=$(timeout "$timeout_sec" "${_AI_CMD[@]}" <<<"$prompt"); then
+  if output=$(timeout "$timeout_sec" "${_AI_CMD[@]}" <<< "$prompt"); then
     exit_code=0
   else
     exit_code=$?
@@ -431,7 +438,7 @@ run_ai() {
   # 起動拒否 (trusted directory / git リポジトリ判定) を exit 0 + 空 stdout で返すため、
   # ここを素通しすると呼び出し元には「空の応答で成功した」としか見えない。
   # 他のエラー経路と同じく stdout へは何も書かず、理由は stderr だけが伝える。
-  if [[ $exit_code -eq 0 && -z "$output" ]]; then
+  if [[ $exit_code -eq 0 && -z $output   ]]; then
     echo "Error: ${cli} exited 0 without a response (model: $model); see its stderr above" >&2
     return 4
   fi

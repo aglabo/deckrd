@@ -72,7 +72,8 @@ unset _SCRIPT_DIR
 # @description SESSION_FILE uses ${VAR:-default} to allow external override (mock)
 # @description OPTIONS / OPTIONS_SET are not declared here: args_init (libs/args.lib.sh) owns them
 # @description SUBCOMMAND is reset on every call
-init_vars() {
+init_vars()
+            {
   SESSION_FILE="${SESSION_FILE:-${DECKRD_LOCAL_DATA}/session.json}"
   SUBDIRS=("requirements" "specifications" "implementation" "tasks" "workspaces")
   MODULE_META_SUBPATH="workspaces/module/module.md"
@@ -82,8 +83,9 @@ init_vars() {
 ##
 # @description Show usage information
 # @stdout Usage text (stdout, also when reporting argument errors)
-show_usage() {
-  cat <<EOF
+show_usage()
+             {
+  cat << EOF
 Usage: module.sh <namespace>/<module> [--force] [--test-scope <SCOPE>]
        module.sh <module> [--force] [--test-scope <SCOPE>]
        module.sh create <namespace>/<module> [--force] [--test-scope <SCOPE>]
@@ -125,10 +127,11 @@ EOF
 # @arg $1 string Raw module path (namespace/module)
 # @stdout Normalized path (lowercase)
 # @return 0 on success, 1 on error (message on stderr)
-validate_and_normalize() {
+validate_and_normalize()
+                         {
   local raw="$1"
 
-  if [[ "$raw" != */* ]]; then
+  if [[ $raw != */*   ]]; then
     echo "Error: Path must be in format <namespace>/<module>" >&2
     echo "  Example: agt-kind/is-collection" >&2
     return 1
@@ -137,17 +140,17 @@ validate_and_normalize() {
   local namespace="${raw%%/*}"
   local module="${raw#*/}"
 
-  if [[ -z "$namespace" || -z "$module" ]]; then
+  if [[ -z $namespace || -z $module     ]]; then
     echo "Error: namespace and module must not be empty" >&2
     return 1
   fi
 
-  if [[ ! "$namespace" =~ ^${SYMBOL}$ ]]; then
+  if [[ ! $namespace =~ ^${SYMBOL}$   ]]; then
     echo "Error: namespace '${namespace}' contains invalid characters" >&2
     echo "  Allowed: a-z, hyphen (-), underscore (_)" >&2
     return 1
   fi
-  if [[ ! "$module" =~ ^${SYMBOL}$ ]]; then
+  if [[ ! $module =~ ^${SYMBOL}$   ]]; then
     echo "Error: module '${module}' contains invalid characters" >&2
     echo "  Allowed: a-z, hyphen (-), underscore (_)" >&2
     return 1
@@ -162,27 +165,28 @@ validate_and_normalize() {
 # @stdout Namespace string (lowercase)
 # @stderr Error message if neither source is available
 # @return 0 on success, 1 on error
-_get_default_ns() {
+_get_default_ns()
+                  {
   local project_file="${DECKRD_LOCAL_DATA}/.project.json"
 
-  if [[ -f "$project_file" ]]; then
+  if [[ -f $project_file   ]]; then
     local project_name
-    project_name=$(jq_read -r '.project // empty' "$project_file" 2>/dev/null)
-    if [[ -n "$project_name" ]]; then
+    project_name=$(jq_read -r '.project // empty' "$project_file" 2> /dev/null)
+    if [[ -n $project_name   ]]; then
       echo "$project_name"
       return 0
     fi
   fi
 
   local repo_root
-  repo_root=$(git rev-parse --show-toplevel 2>/dev/null) || {
+  repo_root=$(git rev-parse --show-toplevel 2> /dev/null) || {
     echo "Error: Cannot resolve default namespace: no .project.json and not in a git repository" >&2
     return 1
   }
   local repo_name
   repo_name="${repo_root##*/}"
   repo_name="${repo_name,,}"
-  if [[ -z "$repo_name" ]]; then
+  if [[ -z $repo_name   ]]; then
     echo "Error: Cannot extract repository name from git root directory" >&2
     return 1
   fi
@@ -195,9 +199,10 @@ _get_default_ns() {
 # @stdout Normalized path (lowercase)
 # @stderr Error message if the default namespace cannot be resolved or the path is invalid
 # @return 0 on success, 1 on error (namespace resolution or validation failure)
-validate_and_normalize_with_fallback() {
+validate_and_normalize_with_fallback()
+                                       {
   local raw="$1"
-  if [[ "$raw" == */* ]]; then
+  if [[ $raw == */*   ]]; then
     validate_and_normalize "$raw"
   else
     local namespace
@@ -214,22 +219,23 @@ validate_and_normalize_with_fallback() {
 # @stderr Error message if the derived scope is shorter than 2 characters
 # @exitcode 0 Success
 # @exitcode 1 Derived scope is shorter than 2 characters
-derive_test_scope() {
+derive_test_scope()
+                    {
   local rest="$1"
   local scope=""
   local word
 
-  if [[ "$rest" != *[-_]* ]]; then
+  if [[ $rest != *[-_]*   ]]; then
     scope="${rest:0:3}"
   else
-    while [[ -n "$rest" ]]; do
+    while [[ -n $rest   ]]; do
       word="${rest%%[-_]*}"
-      if [[ "$rest" == *[-_]* ]]; then
+      if [[ $rest == *[-_]*   ]]; then
         rest="${rest#*[-_]}"
       else
         rest=""
       fi
-      if [[ -n "$word" ]]; then
+      if [[ -n $word   ]]; then
         scope+="${word:0:1}"
       fi
       if [[ ${#scope} -ge 4 ]]; then
@@ -253,7 +259,8 @@ derive_test_scope() {
 # @arg $1 string Path to a module.md file
 # @stdout The declared test scope, or nothing when there is no frontmatter test_scope
 # @exitcode 0 Always
-_read_frontmatter_scope() {
+_read_frontmatter_scope()
+                          {
   awk '
     NR == 1 && $0 != "---" { exit }
     NR > 1 && $0 == "---" { exit }
@@ -279,14 +286,15 @@ _read_frontmatter_scope() {
 # @description Reads test_scope from the frontmatter of ${DECKRD_DOCS_DIR}/*/*/workspaces/module/module.md
 # @stdout One line per declared scope: <test_scope><TAB><path relative to DECKRD_DOCS_DIR>
 # @exitcode 0 Always (no module.md means no output)
-collect_declared_scopes() {
+collect_declared_scopes()
+                          {
   local module_file scope
 
   for module_file in "${DECKRD_DOCS_DIR}"/*/*/"${MODULE_META_SUBPATH}"; do
     # nullglob is not set: an unmatched glob stays as a literal path
-    [[ -f "$module_file" ]] || continue
+    [[ -f $module_file   ]] || continue
     scope=$(_read_frontmatter_scope "$module_file")
-    [[ -n "$scope" ]] || continue
+    [[ -n $scope   ]] || continue
     printf '%s\t%s\n' "$scope" "${module_file#"${DECKRD_DOCS_DIR}"/}"
   done
 
@@ -298,10 +306,11 @@ collect_declared_scopes() {
 # @arg $1 string Normalized module path (namespace/module)
 # @stdout The declared test scope, or nothing when module.md or its test_scope is absent
 # @exitcode 0 Always (an absent declaration is not an error)
-read_declared_scope() {
+read_declared_scope()
+                      {
   local module_file="${DECKRD_DOCS_DIR}/$1/${MODULE_META_SUBPATH}"
 
-  [[ -f "$module_file" ]] || return 0
+  [[ -f $module_file   ]] || return 0
   _read_frontmatter_scope "$module_file"
 }
 
@@ -315,20 +324,21 @@ read_declared_scope() {
 # @stderr Error message if the explicit scope is malformed, underivable, or already taken
 # @exitcode 0 Success
 # @exitcode 1 Malformed explicit scope, underivable scope, or conflict with an existing module
-resolve_test_scope() {
+resolve_test_scope()
+                     {
   local path="$1"
   local explicit="${2:-}"
   local candidate declared scope owner own_scope
 
-  if [[ -n "$explicit" ]]; then
-    if [[ ! "$explicit" =~ ^[A-Z0-9]{2,4}$ ]]; then
+  if [[ -n $explicit   ]]; then
+    if [[ ! $explicit =~ ^[A-Z0-9]{2,4}$   ]]; then
       echo "Error: invalid test scope '${explicit}'" >&2
       echo "  A test scope must be 2-4 uppercase letters or digits (e.g. NOR)." >&2
       return 1
     fi
     # Rewriting a declared scope would invalidate every test ID already using it
     own_scope=$(read_declared_scope "$path")
-    if [[ -n "$own_scope" && "$own_scope" != "$explicit" ]]; then
+    if [[ -n $own_scope && $own_scope != "$explicit"     ]]; then
       echo "Error: module '${path}' already declares test scope '${own_scope}'" >&2
       echo "  given explicit scope: '${explicit}'" >&2
       echo "  Edit module.md directly to change it; every existing test ID becomes invalid." >&2
@@ -342,13 +352,13 @@ resolve_test_scope() {
   declared=$(collect_declared_scopes)
   while IFS=$'\t' read -r scope owner; do
     # The module's own declaration is not a conflict (--force re-initialization)
-    [[ "$owner" != "${path}/${MODULE_META_SUBPATH}" ]] || continue
-    [[ "$scope" == "$candidate" ]] || continue
+    [[ $owner != "${path}/${MODULE_META_SUBPATH}"   ]] || continue
+    [[ $scope == "$candidate"   ]] || continue
     echo "Error: test scope '${candidate}' conflicts with an existing module" >&2
     echo "  already declared in: ${owner}" >&2
     echo "  Use --test-scope <another scope> to choose a different one." >&2
     return 1
-  done <<<"$declared"
+  done <<< "$declared"
 
   echo "$candidate"
 }
@@ -362,14 +372,15 @@ resolve_test_scope() {
 #         or when a subdirectory cannot be created
 # @return 0 on success, 1 if the module directory already exists and force is "false",
 #         or if a subdirectory cannot be created
-create_module_dirs() {
+create_module_dirs()
+                     {
   local path="$1"
   local force="${2:-false}"
   local namespace="${path%%/*}"
   local module="${path#*/}"
   local base="${DECKRD_DOCS_DIR}/${namespace}/${module}"
 
-  if [[ -d "$base" && "$force" == false ]]; then
+  if [[ -d $base && $force == false     ]]; then
     echo "Error: Module directory already exists: ${base}" >&2
     echo "  Use --force to re-initialize." >&2
     return 1
@@ -394,20 +405,21 @@ create_module_dirs() {
 # @arg $2 string Resolved test scope
 # @stdout Path of the module metadata file
 # @exitcode 0 Success
-create_module_meta() {
+create_module_meta()
+                     {
   local path="$1"
   local scope="$2"
   local module="${path#*/}"
   local base="${DECKRD_DOCS_DIR}/${path}"
   local meta_file="${base}/${MODULE_META_SUBPATH}"
 
-  if [[ -f "$meta_file" ]]; then
+  if [[ -f $meta_file   ]]; then
     echo "Module meta: ${meta_file} (kept existing test_scope)"
     return 0
   fi
 
   mkdir -p "${meta_file%/*}"
-  cat >"$meta_file" <<EOF
+  cat > "$meta_file" << EOF
 ---
 title: ${module}
 test_scope: ${scope}
@@ -438,7 +450,8 @@ EOF
 # @stdout "Session updated" summary (only when the write succeeds)
 # @stderr Error message when session.json cannot be written ("Session updated" is not printed)
 # @return 0 on success, 1 if the session.json write fails
-update_session() {
+update_session()
+                 {
   local path="$1"
   local scope="$2"
   local timestamp
@@ -447,7 +460,7 @@ update_session() {
 
   mkdir -p "$DECKRD_LOCAL_DATA"
 
-  if [[ -f "$SESSION_FILE" ]]; then
+  if [[ -f $SESSION_FILE   ]]; then
     # shellcheck disable=SC2016
     write_json_file "$SESSION_FILE" "${jq_args[@]}" \
       '.active = $path |
@@ -493,7 +506,8 @@ update_session() {
 # @stderr Error message on failure
 # @exitcode 0 Success, or usage shown by --help
 # @exitcode 1 Missing jq/jaq, invalid arguments, a module creation/scope resolution failure, or a session.json write failure
-main() {
+main()
+       {
   local normalized scope
 
   validate_env || exit 1
@@ -502,7 +516,7 @@ main() {
   # Only the first argument can be the "create" subcommand; it is shifted off
   # before parsing, so a later "create" is an unexpected positional argument
   # shellcheck disable=SC2034 # SUBCOMMAND is informational; "create" is an alias for the default action
-  if [[ "${1:-}" == "create" ]]; then
+  if [[ ${1:-} == "create"   ]]; then
     SUBCOMMAND="create"
     shift
   else
@@ -521,12 +535,12 @@ main() {
     exit 1
   }
 
-  if [[ "${OPTIONS[SHOW_HELP]}" == true ]]; then
+  if [[ ${OPTIONS[SHOW_HELP]} == true   ]]; then
     show_usage
     exit 0
   fi
 
-  if [[ -z "${OPTIONS[module_path]}" ]]; then
+  if [[ -z ${OPTIONS[module_path]}   ]]; then
     echo "Error: <namespace>/<module> is required" >&2
     show_usage
     exit 1
@@ -537,7 +551,7 @@ main() {
 
   # The module's own module.md is the source of truth when no scope is given explicitly
   scope="${OPTIONS[test_scope]}"
-  if [[ -z "$scope" ]]; then
+  if [[ -z $scope   ]]; then
     scope=$(read_declared_scope "$normalized")
   fi
 
@@ -550,6 +564,6 @@ main() {
 # Main Execution
 # ============================================================================
 
-if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+if [[ ${BASH_SOURCE[0]} == "$0"   ]]; then
   main "$@"
 fi

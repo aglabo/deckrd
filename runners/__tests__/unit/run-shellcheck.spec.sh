@@ -8,43 +8,46 @@
 # https://opensource.org/licenses/MIT
 # shellcheck shell=bash
 
-# --- テスト対象 ---
-# run-shellcheck.sh はファイルスコープで `cd` するため、取り込み後の cwd はリポジトリルートになる。
-# この spec では相対パスを使わず、フィクスチャも対象もすべて絶対パスで渡す
+# --- Subject under test ---
+# run-shellcheck.sh runs `cd` at file scope, so the cwd is the repository root after it is included.
+# This spec uses no relative paths: fixtures and targets are all passed as absolute paths
 Include "${SHELLSPEC_PROJECT_ROOT}/runners/run-shellcheck.sh"
 
-# --- 内部ヘルパー ---
+# --- Internal helpers ---
 
-# 定数
+# Constants
 
-# 除外名と無関係なディレクトリに置く、列挙されるべき通常のファイル (T-RUN-FSF-01)
+# A normal file in a directory unrelated to the excluded names; it must be listed (T-RUN-FSF-01)
 _NORMAL_FILE='src/a.sh'
 
-# 除外リストの名前を持つディレクトリ配下に置く、列挙されてはならないファイル (T-RUN-FSF-02 の入力表)。
-# 語の順に、既存の振る舞いである .tools / 最上位の node_modules / 入れ子の node_modules を守る
+# Files under directories named in the exclude list; they must not be listed (input table of T-RUN-FSF-02).
+# In word order they guard the existing behaviour: .tools / top-level node_modules / nested node_modules
 %const _FSF_EXCLUDED_FILES: .tools/t.sh node_modules/p/y.sh pkg/node_modules/p/z.sh
 
-# ディレクトリ名が除外名を含むだけで一致はしない場所に置く、列挙されるべきファイル (T-RUN-FSF-03)
+# A file in a directory whose name merely contains an excluded name without matching it; it must be listed (T-RUN-FSF-03)
 _LOOKALIKE_FILE='my_node_modules_backup/w.sh'
 
-# 除外名そのものを名前に持つ、走査の起点にするディレクトリ (T-RUN-FSF-04)
+# A directory named exactly like an excluded name, used as the walk start point (T-RUN-FSF-04)
 _EXCLUDED_START_DIR='.tools'
 
-# 起点 _EXCLUDED_START_DIR の直下にあり、列挙されるべきファイル (T-RUN-FSF-04)
+# A file directly under the start point _EXCLUDED_START_DIR; it must be listed (T-RUN-FSF-04)
 _START_DIR_FILE="${_EXCLUDED_START_DIR}/t.sh"
 
-# 起点 _EXCLUDED_START_DIR より下の除外ディレクトリ配下にあり、列挙されてはならないファイル (T-RUN-FSF-05)
+# A file under an excluded directory below the start point _EXCLUDED_START_DIR; it must not be listed (T-RUN-FSF-05)
 _START_DIR_NESTED_FILE="${_EXCLUDED_START_DIR}/node_modules/p/y.sh"
 
-# main のテストで node_modules 配下に置くファイル (T-RUN-MSC-01 のツリー、T-RUN-MSC-02 の対象)
+# A file under node_modules for the main tests (tree of T-RUN-MSC-01, target of T-RUN-MSC-02)
 _NODE_MODULES_FILE='node_modules/p/y.sh'
 
-# 関数
+# Fixed rc file handed to main via SHELLCHECKRC, so config resolution is skipped and the expectation is deterministic (T-RUN-MSC-01/02)
+_RCFILE='/fixture/shellcheckrc'
+
+# Functions
 
 #
-# @description 一時ディレクトリに空の .sh ファイルからなるツリーを作る。
-#              実リポジトリのツリーには触れない
-# @arg $@ string ツリーのルートからの相対パス (1 個以上)。親ディレクトリも作る
+# @description Build a tree of empty .sh files in a temporary directory.
+#              The real repository tree is never touched
+# @arg $@ string One or more paths relative to the tree root. Parent directories are created too
 # @return 0 when the tree is ready
 # @sideeffect Sets _TREE_ROOT to the absolute path of the temporary root
 #
@@ -58,21 +61,21 @@ _setup_shell_tree() {
 }
 
 #
-# @description T-RUN-FSF の全ケースが共有するツリーを作る。
-#              走査の起点を変えるケースも同じツリーを使い、
-#              各ケースはこのうち 1 個のパスだけを照合する
+# @description Build the tree shared by every T-RUN-FSF case.
+#              Cases that change the walk start point use the same tree,
+#              and each case checks only one path of it
 # @arg none
 # @return 0 when the tree is ready
 # @sideeffect Sets _TREE_ROOT (via _setup_shell_tree)
 #
 _setup_fsf_tree() {
-  # shellcheck disable=SC2086 # %const の語リストを 1 ファイルずつに単語分割する
+  # shellcheck disable=SC2086 # word-split the %const word list into one file each
   _setup_shell_tree "$_NORMAL_FILE" $_FSF_EXCLUDED_FILES "$_LOOKALIKE_FILE" \
     "$_START_DIR_FILE" "$_START_DIR_NESTED_FILE"
 }
 
 #
-# @description _setup_shell_tree() が作った一時ツリーを削除する
+# @description Delete the temporary tree made by _setup_shell_tree()
 # @arg none
 # @return 0 always
 # @sideeffect Deletes _TREE_ROOT (only when it is under /tmp) and unsets it
@@ -83,10 +86,10 @@ _teardown_shell_tree() {
 }
 
 #
-# @description find_shell_files の NUL 終端の出力を、1 行 1 パス・安定した順序に直す。
-#              pipefail の下で呼ばれるので、find_shell_files の失敗は終了コードに現れる
-# @arg $1 string 走査するディレクトリ (絶対パス)
-# @stdout 見つかったファイルのパス (1 行 1 件、ソート済み)
+# @description Turn the NUL-terminated output of find_shell_files into one path per line in a stable order.
+#              Called under pipefail, so a find_shell_files failure shows up in the exit status
+# @arg $1 string Directory to walk (absolute path)
+# @stdout Paths of the files found (one per line, sorted)
 # @return 0 when find_shell_files succeeded
 #
 _list_shell_files() {
@@ -94,81 +97,83 @@ _list_shell_files() {
 }
 
 #
-# @description 実物の shellcheck をシェル関数のモックに差し替える。
-#              main のサブシェルにも引き継がれるので、main の標準出力が
-#              モックの受け取った引数列そのものになる
+# @description Replace the real shellcheck with a shell function mock and pin SHELLCHECKRC.
+#              The mock is inherited by main's subshell, so main's stdout
+#              is exactly the argument list the mock received
 # @arg none
-# @stdout (モック呼び出し時) 受け取った全引数を [引数] の形で連結したもの。改行なし
-# @return 0 always (モックも常に 0 を返す)
-# @sideeffect Defines the shell function shellcheck
+# @stdout (when the mock is called) All received arguments joined as [arg], without a newline
+# @return 0 always (the mock also returns 0)
+# @sideeffect Defines the shell function shellcheck and sets SHELLCHECKRC
 #
 _setup_shellcheck_mock() {
-  # shellcheck disable=SC2329 # main() から間接的に呼ばれる
+  # shellcheck disable=SC2329 # called indirectly from main()
   shellcheck() {
     printf '[%s]' "$@"
   }
+  SHELLCHECKRC="$_RCFILE"
 }
 
 #
-# @description _setup_shellcheck_mock() が定義したモックを取り除く
+# @description Remove the mock defined by _setup_shellcheck_mock()
 # @arg none
 # @return 0 always
-# @sideeffect Unsets the shell function shellcheck
+# @sideeffect Unsets the shell function shellcheck and SHELLCHECKRC
 #
 _teardown_shellcheck_mock() {
   unset -f shellcheck
+  unset SHELLCHECKRC
 }
 
-# --- テスト本体 ---
+# --- Tests ---
 
 #
-# run-shellcheck.sh: shellcheck に渡す .sh ファイルを集めて実行するランナー
+# run-shellcheck.sh: runner that collects the .sh files and passes them to shellcheck
 #
 Describe 'run-shellcheck.sh'
   #
-  # find_shell_files: ディレクトリ配下の .sh を NUL 終端で列挙する。
-  # 名前が除外リストに一致するディレクトリは、起点より下なら深さを問わず走査しない。
-  # 起点そのものは、名前が一致しても走査する
+  # find_shell_files: list the .sh files under a directory, NUL-terminated.
+  # A directory whose name matches the exclude list is not walked at any depth below the start point.
+  # The start point itself is walked even when its name matches
   #
   Describe 'T-RUN-FSF: find_shell_files()'
     Before '_setup_fsf_tree'
     After '_teardown_shell_tree'
 
-    Describe 'When: 正常系'
-      It 'Then: [Normal] T-RUN-FSF-01: 除外名を持たないディレクトリ配下の .sh を列挙する'
+    Describe 'When: normal cases'
+      It 'Then: [Normal] T-RUN-FSF-01: lists a .sh under a directory with no excluded name'
         When call _list_shell_files "$_TREE_ROOT"
         The output should include "${_TREE_ROOT}/${_NORMAL_FILE}"
         The status should be success
       End
 
-      # shellcheck disable=SC2086 # %const の表を 1 ケースずつに単語分割する
+      # shellcheck disable=SC2086 # word-split the %const table into one case each
       Parameters:value $_FSF_EXCLUDED_FILES
 
-      It "Then: [Normal] T-RUN-FSF-02: 除外ディレクトリ配下の $1 を列挙しない"
+      It "Then: [Normal] T-RUN-FSF-02: does not list $1 under an excluded directory"
         When call _list_shell_files "$_TREE_ROOT"
         The output should not include "${_TREE_ROOT}/$1"
         The status should be success
       End
     End
 
-    # 除外の境界。除外名に似ているだけの名前と、走査の起点そのものには除外が効かない
-    Describe 'When: エッジケース'
-      # 対照ケース。除外名の部分一致で prune すると RED になる
-      It 'Then: [Edge] T-RUN-FSF-03: 名前が除外名を含むだけのディレクトリ配下は列挙する'
+    # Exclusion boundaries. Exclusion does not apply to names that merely resemble an excluded name, nor to the walk start point itself
+    Describe 'When: edge cases'
+      # Control case. Pruning on a partial match of an excluded name turns this RED
+      It 'Then: [Edge] T-RUN-FSF-03: lists files under a directory whose name merely contains an excluded name'
         When call _list_shell_files "$_TREE_ROOT"
         The output should include "${_TREE_ROOT}/${_LOOKALIKE_FILE}"
         The status should be success
       End
 
-      # 起点にも -name が適用されると、起点ごと prune されて RED になる
-      It 'Then: [Edge] T-RUN-FSF-04: 起点が除外名のディレクトリでも、その直下の .sh を列挙する'
+      # If -name also applies to the start point, the whole start point is pruned and this turns RED
+      It 'Then: [Edge] T-RUN-FSF-04: lists a .sh directly under the start point even when it is named like an excluded directory'
         When call _list_shell_files "${_TREE_ROOT}/${_EXCLUDED_START_DIR}"
         The output should include "${_TREE_ROOT}/${_START_DIR_FILE}"
         The status should be success
       End
 
-      # 起点が除外名のときに除外そのものをやめると RED になる
-      It 'Then: [Edge] T-RUN-FSF-05: 起点が除外名のディレクトリでも、配下の除外ディレクトリは列挙しない'
+      # Dropping exclusion altogether when the start point has an excluded name turns this RED
+      It 'Then: [Edge] T-RUN-FSF-05: does not list excluded directories under the start point even when it is named like an excluded directory'
         When call _list_shell_files "${_TREE_ROOT}/${_EXCLUDED_START_DIR}"
         The output should not include "${_TREE_ROOT}/${_START_DIR_NESTED_FILE}"
         The status should be success
@@ -177,29 +182,29 @@ Describe 'run-shellcheck.sh'
   End
 
   #
-  # main: 対象を shellcheck に渡すファイル列へ展開して 1 回だけ実行する。
-  # ディレクトリ対象は find_shell_files で列挙し、ファイル対象はそのまま渡す。
-  # 実物の shellcheck はモックに差し替え、受け取った引数列を標準出力で観測する
+  # main: expand the targets into a file list for shellcheck and run it exactly once.
+  # Directory targets are listed with find_shell_files; file targets are passed as they are.
+  # The real shellcheck is replaced by a mock and the received arguments are observed on stdout
   #
   Describe 'T-RUN-MSC: main()'
     Before '_setup_shellcheck_mock'
     After '_teardown_shellcheck_mock' '_teardown_shell_tree'
 
-    Describe 'When: 正常系'
-      It 'Then: [Normal] T-RUN-MSC-01: ディレクトリ対象では node_modules 配下を除いたファイルだけを渡す'
+    Describe 'When: normal cases'
+      It 'Then: [Normal] T-RUN-MSC-01: for a directory target, passes only the files outside node_modules'
         _setup_shell_tree "$_NORMAL_FILE" "$_NODE_MODULES_FILE"
         When call main "$_TREE_ROOT"
-        The output should equal "[--rcfile=${SHELLCHECKRC}][${_TREE_ROOT}/${_NORMAL_FILE}]"
+        The output should equal "[--rcfile=${_RCFILE}][${_TREE_ROOT}/${_NORMAL_FILE}]"
         The status should be success
       End
     End
 
-    # 除外リストはディレクトリ走査にだけ効き、明示したファイルには効かない
-    Describe 'When: エッジケース'
-      It 'Then: [Edge] T-RUN-MSC-02: ファイル対象は node_modules 配下でもそのまま渡す'
+    # The exclude list applies only to directory walks, not to explicitly given files
+    Describe 'When: edge cases'
+      It 'Then: [Edge] T-RUN-MSC-02: passes a file target as is even under node_modules'
         _setup_shell_tree "$_NODE_MODULES_FILE"
         When call main "${_TREE_ROOT}/${_NODE_MODULES_FILE}"
-        The output should equal "[--rcfile=${SHELLCHECKRC}][${_TREE_ROOT}/${_NODE_MODULES_FILE}]"
+        The output should equal "[--rcfile=${_RCFILE}][${_TREE_ROOT}/${_NODE_MODULES_FILE}]"
         The status should be success
       End
     End

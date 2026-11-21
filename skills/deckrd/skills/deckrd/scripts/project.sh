@@ -69,8 +69,9 @@ readonly SUPPORTED_LANGUAGES
 
 ##
 # @description Show usage information
-show_usage() {
-  cat <<EOF
+show_usage()
+             {
+  cat << EOF
 Usage: project.sh --project <name> [OPTIONS]
 
 Configure project settings for deckrd.
@@ -97,10 +98,11 @@ EOF
 # @description Validate language against supported list
 # @arg $1 string Language to validate
 # @return 0 if valid, 1 if unsupported (prints error to stderr)
-validate_language() {
+validate_language()
+                    {
   local lang="$1" supported
   for supported in "${SUPPORTED_LANGUAGES[@]}"; do
-    if [[ "$lang" == "$supported" ]]; then
+    if [[ $lang == "$supported"   ]]; then
       return 0
     fi
   done
@@ -112,10 +114,11 @@ validate_language() {
 # @description Normalize language aliases (bash -> shell)
 # @arg $1 string Language name
 # @stdout Normalized language name
-normalize_language() {
+normalize_language()
+                     {
   case "$1" in
-  bash) echo "shell" ;;
-  *) echo "$1" ;;
+    bash) echo "shell" ;;
+    *) echo "$1" ;;
   esac
 }
 
@@ -123,18 +126,19 @@ normalize_language() {
 # @description Validate required parameters are set
 # @var OPTIONS project, project_type
 # @return 0 if valid, 1 if missing or invalid (prints error to stderr)
-validate_required_params() {
+validate_required_params()
+                           {
   local project="${OPTIONS[project]}" project_type="${OPTIONS[project_type]}"
-  if [[ -z "$project" ]]; then
+  if [[ -z $project   ]]; then
     echo "Error: --project is required" >&2
     return 1
   fi
-  if [[ ! "$project" =~ ^${SYMBOL}$ ]]; then
+  if [[ ! $project =~ ^${SYMBOL}$   ]]; then
     echo "Error: project name '${project}' contains invalid characters" >&2
     echo "  Allowed: a-z, hyphen (-), underscore (_)" >&2
     return 1
   fi
-  if [[ -n "$project_type" && ! "$project_type" =~ ^${SYMBOL}$ ]]; then
+  if [[ -n $project_type && ! $project_type =~ ^${SYMBOL}$     ]]; then
     echo "Error: project type '${project_type}' contains invalid characters" >&2
     echo "  Allowed: a-z, hyphen (-), underscore (_)" >&2
     return 1
@@ -143,7 +147,8 @@ validate_required_params() {
 
 ##
 # @description Ensure the DECKRD_LOCAL_DATA directory (.local/deckrd) exists
-ensure_deckrd_dir() {
+ensure_deckrd_dir()
+                    {
   mkdir -p "${DECKRD_LOCAL_DATA}"
 }
 
@@ -157,18 +162,19 @@ ensure_deckrd_dir() {
 # @var OPTIONS_SET ai_model is `true` when --ai-model was given
 # @stderr An `Error:` line when the write fails
 # @return 0 on success, 1 if the write fails
-write_project() {
+write_project()
+                {
   local timestamp
   timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
   local created_at existing_type existing_model
-  if [[ -f "$PROJECT_FILE" ]]; then
+  if [[ -f $PROJECT_FILE   ]]; then
     # Update: preserve created_at, merge existing fields for omitted options
-    created_at=$(jq_read -r '.created_at // empty' "$PROJECT_FILE" 2>/dev/null || echo "$timestamp")
-    existing_type=$(jq_read -r '.project_type // empty' "$PROJECT_FILE" 2>/dev/null || true)
-    existing_model=$(jq_read -r '.ai_model // empty' "$PROJECT_FILE" 2>/dev/null || true)
-    [[ -z "${OPTIONS[project_type]}" ]] && OPTIONS[project_type]="$existing_type"
-    [[ "${OPTIONS_SET[ai_model]:-false}" != true ]] && [[ -n "$existing_model" ]] && OPTIONS[ai_model]="$existing_model"
+    created_at=$(jq_read -r '.created_at // empty' "$PROJECT_FILE" 2> /dev/null || echo "$timestamp")
+    existing_type=$(jq_read -r '.project_type // empty' "$PROJECT_FILE" 2> /dev/null || true)
+    existing_model=$(jq_read -r '.ai_model // empty' "$PROJECT_FILE" 2> /dev/null || true)
+    [[ -z ${OPTIONS[project_type]}   ]] && OPTIONS[project_type]="$existing_type"
+    [[ ${OPTIONS_SET[ai_model]:-false} != true   ]] && [[ -n $existing_model   ]] && OPTIONS[ai_model]="$existing_model"
   else
     created_at="$timestamp"
   fi
@@ -197,7 +203,8 @@ write_project() {
 ##
 # @description Display result message
 # @var OPTIONS project, project_type, prog, ai_model
-display_result() {
+display_result()
+                 {
   echo "Deckrd project configured."
   echo ""
   echo "  project:      ${OPTIONS[project]}"
@@ -219,7 +226,8 @@ display_result() {
 # @exitcode 0 Success, or usage shown by --help
 # @exitcode 1 Missing jq/jaq, parse error, invalid arguments, unsupported language,
 #   or a failure to write the project file
-main() {
+main()
+       {
   validate_env || exit 1
 
   args_init
@@ -234,7 +242,7 @@ main() {
     exit 1
   }
 
-  if [[ "${OPTIONS[SHOW_HELP]}" == true ]]; then
+  if [[ ${OPTIONS[SHOW_HELP]} == true   ]]; then
     show_usage
     exit 0
   fi
@@ -254,6 +262,6 @@ main() {
 # Main Execution
 # ============================================================================
 
-if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+if [[ ${BASH_SOURCE[0]} == "$0"   ]]; then
   main "$@"
 fi

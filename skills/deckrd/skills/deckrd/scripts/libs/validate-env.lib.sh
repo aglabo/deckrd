@@ -10,7 +10,7 @@
 # USAGE: source this file, do NOT execute directly.
 #   . "$(dirname "${BASH_SOURCE[0]}")/libs/validate-env.lib.sh"
 
-if [[ -n "${_VALIDATE_ENV_LOADED:-}" ]]; then
+if [[ -n ${_VALIDATE_ENV_LOADED:-}   ]]; then
   return 0
 fi
 readonly _VALIDATE_ENV_LOADED=1
@@ -25,11 +25,12 @@ readonly _VALIDATE_ENV_LOADED=1
 # @return 0 if all requirements are met, 1 if neither jq nor jaq is installed
 #
 # Mock support: define validate_env before sourcing this file to override.
-if ! declare -f validate_env >/dev/null 2>&1; then
-  validate_env() {
-    if command -v jq >/dev/null 2>&1; then
+if ! declare -f validate_env > /dev/null 2>&1; then
+  validate_env()
+                 {
+    if command -v jq > /dev/null 2>&1; then
       export jqexe="jq"
-    elif command -v jaq >/dev/null 2>&1; then
+    elif command -v jaq > /dev/null 2>&1; then
       export jqexe="jaq"
     else
       echo "Error: jq or jaq is required but not installed." >&2

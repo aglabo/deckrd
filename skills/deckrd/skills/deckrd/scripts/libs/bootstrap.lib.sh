@@ -11,7 +11,7 @@
 #   (pass --no-finalize to skip bootstrap_finalize).
 #   . "$(dirname "${BASH_SOURCE[0]}")/bootstrap.lib.sh"
 
-if [[ -n "${_BOOTSTRAP_LOADED:-}" ]]; then
+if [[ -n ${_BOOTSTRAP_LOADED:-}   ]]; then
   return 0
 fi
 readonly _BOOTSTRAP_LOADED=1
@@ -27,12 +27,13 @@ readonly _BOOTSTRAP_LOADED=1
 #
 # @stdout Resolved PROJECT_ROOT path
 # @return 0 always
-_resolve_project_root() {
-  if [[ -n "${PROJECT_ROOT:-}" ]]; then
+_resolve_project_root()
+                        {
+  if [[ -n ${PROJECT_ROOT:-}   ]]; then
     printf '%s' "${PROJECT_ROOT}"
     return 0
   fi
-  git rev-parse --show-toplevel 2>/dev/null || pwd
+  git rev-parse --show-toplevel 2> /dev/null || pwd
 }
 
 # _resolve_deckrd_root - Resolve the deckrd skill root relative to this file's location
@@ -47,7 +48,8 @@ _resolve_project_root() {
 #
 # @stdout Resolved skill root path (used for SKILL_ROOT and DECKRD_ROOT)
 # @return 0 always
-_resolve_deckrd_root() {
+_resolve_deckrd_root()
+                       {
   local _skills_dir
   # CDPATH is cleared so cd prints nothing into the captured path
   _skills_dir="$(CDPATH='' cd -- "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -72,9 +74,10 @@ _resolve_deckrd_root() {
 # Does NOT call readonly; call bootstrap_finalize() after to lock variables.
 #
 # @return 0 on success, 1 if a readonly SKILL_ROOT differs from the computed value
-bootstrap_init() {
+bootstrap_init()
+                 {
   # PROJECT_ROOT: env var > git > pwd
-  if [[ -z "${PROJECT_ROOT:-}" ]]; then
+  if [[ -z ${PROJECT_ROOT:-}   ]]; then
     PROJECT_ROOT="$(_resolve_project_root)"
   fi
   export PROJECT_ROOT
@@ -91,8 +94,8 @@ bootstrap_init() {
   # whole command without a usable status, so it is checked up front).
   local _skill_root
   _skill_root="$(_resolve_deckrd_root)"
-  if [[ "${SKILL_ROOT:-}" != "${_skill_root}" ]]; then
-    if [[ "$(declare -p SKILL_ROOT 2>/dev/null)" =~ ^declare\ -[a-zA-Z]*r ]]; then
+  if [[ ${SKILL_ROOT:-} != "${_skill_root}"   ]]; then
+    if [[ "$(declare -p SKILL_ROOT 2> /dev/null)" =~ ^declare\ -[a-zA-Z]*r ]]; then
       printf 'bootstrap.lib.sh: SKILL_ROOT: readonly variable (%s, expected %s)\n' \
         "${SKILL_ROOT}" "${_skill_root}" >&2
       return 1
@@ -110,25 +113,25 @@ bootstrap_init() {
   # sources another skill's linked copy of this library computes its own.
   # Explicit env overrides are honored and keep their export (no export -n).
   # An empty value is not an override: it is replaced by the default and unexported.
-  if [[ -z "${DECKRD_ROOT:-}" ]]; then
+  if [[ -z ${DECKRD_ROOT:-}   ]]; then
     DECKRD_ROOT="${SKILL_ROOT}"
     export -n DECKRD_ROOT
   fi
 
   # DECKRD_SCRIPTS_DIR: deckrd scripts directory
-  if [[ -z "${DECKRD_SCRIPTS_DIR:-}" ]]; then
+  if [[ -z ${DECKRD_SCRIPTS_DIR:-}   ]]; then
     DECKRD_SCRIPTS_DIR="${DECKRD_ROOT}/scripts"
     export -n DECKRD_SCRIPTS_DIR
   fi
 
   # DECKRD_ASSETS_DIR: deckrd assets directory
-  if [[ -z "${DECKRD_ASSETS_DIR:-}" ]]; then
+  if [[ -z ${DECKRD_ASSETS_DIR:-}   ]]; then
     DECKRD_ASSETS_DIR="${DECKRD_ROOT}/assets"
     export -n DECKRD_ASSETS_DIR
   fi
 
   # DECKRD_LIB_DIR: deckrd library directory
-  if [[ -z "${DECKRD_LIB_DIR:-}" ]]; then
+  if [[ -z ${DECKRD_LIB_DIR:-}   ]]; then
     DECKRD_LIB_DIR="${DECKRD_ROOT}/scripts/libs"
     export -n DECKRD_LIB_DIR
   fi
@@ -158,7 +161,7 @@ bootstrap_init() {
   # SYMBOL: valid character pattern for project names, namespaces, and domains
   # Usage: [[ "$value" =~ ^${SYMBOL}$ ]]  or  [[ "$path" =~ ^${SYMBOL}/${SYMBOL}$ ]]
   # Mock support: define SYMBOL before sourcing this file to override.
-  if [[ -z "${SYMBOL:-}" ]]; then
+  if [[ -z ${SYMBOL:-}   ]]; then
     SYMBOL='[a-z][a-z_-]*'
   fi
   export SYMBOL
@@ -173,7 +176,8 @@ bootstrap_init() {
 # consistent across all variables.
 #
 # @return 0 always
-bootstrap_finalize() {
+bootstrap_finalize()
+                     {
   readonly PROJECT_ROOT
   readonly SKILL_ROOT
   readonly DECKRD_ROOT
@@ -195,6 +199,6 @@ bootstrap_finalize() {
 #   . bootstrap.lib.sh --no-finalize # init only - variables remain writable
 #   . bootstrap.lib.sh               # init + finalize - variables locked
 bootstrap_init || return 1
-if [[ "${1:-}" != "--no-finalize" ]]; then
+if [[ ${1:-} != "--no-finalize"   ]]; then
   bootstrap_finalize
 fi

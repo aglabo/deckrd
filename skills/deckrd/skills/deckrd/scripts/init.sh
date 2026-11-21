@@ -73,7 +73,8 @@ validate_env || exit 1
 #   init_asset_dirs (libs/asset-diff.lib.sh), the single asset target list shared with update
 # @description Path variables use ${VAR:-default} to allow external override (mock)
 # @description OPTIONS / OPTIONS_SET are not declared here: args_init (libs/args.lib.sh) owns them
-init_vars() {
+init_vars()
+            {
   init_asset_dirs
   PROJECT_FILE="${PROJECT_FILE:-${DECKRD_LOCAL_DATA}/.project.json}"
   SESSION_FILE="${SESSION_FILE:-${DECKRD_LOCAL_DATA}/session.json}"
@@ -84,8 +85,9 @@ init_vars() {
 ##
 # @description Show usage information
 # @stderr Usage text
-show_usage() {
-  cat >&2 <<EOF
+show_usage()
+             {
+  cat >&2 << EOF
 Usage: init.sh <project> <project-type> [OPTIONS]
 
 Bootstrap and initialize a DECKRD project.
@@ -121,10 +123,11 @@ EOF
 # @description Validate programming language against supported list
 # @arg $1 string Language to validate
 # @return 0 if valid, 1 if invalid (no output; caller handles error message)
-validate_language() {
+validate_language()
+                    {
   local lang="$1"
   for supported in "${SUPPORTED_LANGUAGES[@]}"; do
-    if [[ "$lang" == "$supported" ]]; then
+    if [[ $lang == "$supported"   ]]; then
       return 0
     fi
   done
@@ -135,22 +138,23 @@ validate_language() {
 # @description Validate required positional arguments
 # @return 0 on success, 1 on error (no output; caller handles error message)
 # @var VALIDATE_ARGS_ERROR set to error description on failure
-validate_args() {
+validate_args()
+                {
   VALIDATE_ARGS_ERROR=""
 
-  if [[ -z "${OPTIONS[project]}" ]]; then
+  if [[ -z ${OPTIONS[project]}   ]]; then
     VALIDATE_ARGS_ERROR="<project> is required"
     return 1
   fi
-  if [[ -z "${OPTIONS[project_type]}" ]]; then
+  if [[ -z ${OPTIONS[project_type]}   ]]; then
     VALIDATE_ARGS_ERROR="<project-type> is required"
     return 1
   fi
-  if [[ ! "${OPTIONS[project]}" =~ ^${SYMBOL}$ ]]; then
+  if [[ ! ${OPTIONS[project]} =~ ^${SYMBOL}$   ]]; then
     VALIDATE_ARGS_ERROR="project name '${OPTIONS[project]}' contains invalid characters. Allowed: a-z, hyphen (-), underscore (_)"
     return 1
   fi
-  if [[ ! "${OPTIONS[project_type]}" =~ ^${SYMBOL}$ ]]; then
+  if [[ ! ${OPTIONS[project_type]} =~ ^${SYMBOL}$   ]]; then
     VALIDATE_ARGS_ERROR="project type '${OPTIONS[project_type]}' contains invalid characters. Allowed: a-z, hyphen (-), underscore (_)"
     return 1
   fi
@@ -163,7 +167,8 @@ validate_args() {
 # @exitcode 0 Every directory exists or was created
 # @exitcode 1 A directory could not be created
 # @stderr Error message naming the directory on failure
-make_directories() {
+make_directories()
+                   {
   local dir
   for dir in "$@"; do
     mkdir -p "$dir" || {
@@ -192,22 +197,23 @@ make_directories() {
 # @stderr `  [init/<label>] copied: <rel>` per copied file (kept files are not reported), then
 #   `  [init/<label>] done: N copied`
 # @stderr Error message naming the directory or file that failed
-install_assets() {
+install_assets()
+                 {
   local label="$1" src="$2" dest="$3"
   local out rel copied=0
   local -a mode_opt=(--missing-only)
-  if [[ ! -d "$src" ]]; then
+  if [[ ! -d $src   ]]; then
     make_directories "$dest" || return 1
     echo "  [init/${label}] source not found, skipping: ${src}" >&2
     return 0
   fi
-  [[ "${OPTIONS[force]:-false}" == true ]] && mode_opt=(--force)
+  [[ ${OPTIONS[force]:-false} == true   ]] && mode_opt=(--force)
   out=$(copy_assets "${mode_opt[@]}" "$src" "$dest" "${ASSET_KEEP_PATTERNS[@]}") || return 1
   while IFS= read -r rel; do
-    [[ -n "$rel" ]] || continue
+    [[ -n $rel   ]] || continue
     echo "  [init/${label}] copied: ${rel}" >&2
     copied=$((copied + 1))
-  done <<<"$out"
+  done <<< "$out"
   printf '  [init/%s] done: %d copied\n' "$label" "$copied" >&2
 }
 
@@ -227,12 +233,13 @@ install_assets() {
 # @exitcode 1 A directory could not be created or an asset could not be copied
 # @stderr Progress messages
 # @stderr Error message naming the directory or file that failed
-init_directories() {
+init_directories()
+                   {
   local entry label src dest
   echo "Init: creating directories and installing assets..." >&2
   make_directories "$DECKRD_LOCAL_TEMP" "$DECKRD_LOCAL_WORKSPACES" || return 1
   for entry in "${ASSET_TARGETS[@]}"; do
-    IFS='|' read -r label src dest <<<"$entry"
+    IFS='|' read -r label src dest <<< "$entry"
     install_assets "$label" "$src" "$dest" || return 1
   done
   make_directories "${BASE_SUBDIRS[@]/#/${DECKRD_DOCS_DIR}/}" || return 1
@@ -251,15 +258,16 @@ init_directories() {
 # @stderr Progress messages, or an `Error:` line when the write fails
 #         ("Project written" is not printed then)
 # @return 0 on success, 1 if jq or mv fails
-write_project() {
+write_project()
+                {
   local timestamp
   timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
   # Keep created_at from an existing file; fall back to the current time when
   # the file is missing, is not valid JSON, or has no created_at.
   local created_at=""
-  if [[ -f "$PROJECT_FILE" ]]; then
-    created_at=$(jq_read -r '.created_at // empty' "$PROJECT_FILE" 2>/dev/null)
+  if [[ -f $PROJECT_FILE   ]]; then
+    created_at=$(jq_read -r '.created_at // empty' "$PROJECT_FILE" 2> /dev/null)
   fi
   created_at="${created_at:-$timestamp}"
 
@@ -298,10 +306,11 @@ write_project() {
 # @arg $1 string `true` when --lang was given (init_session reads OPTIONS_SET[lang])
 # @stderr Migration notice, "Session preserved", or an `Error:` line on failure
 # @return 0 on success, 1 if the migration or the lang write fails
-_init_session_preserve() {
+_init_session_preserve()
+                         {
   local lang_given="$1"
   session_migrate_lang_to_prog "$SESSION_FILE" || return 1
-  if [[ "$lang_given" == true ]]; then
+  if [[ $lang_given == true   ]]; then
     # shellcheck disable=SC2016
     write_json_file "$SESSION_FILE" --arg lang "${OPTIONS[lang]}" '.lang = $lang' "$SESSION_FILE" || {
       echo "Error: init_session: failed to write lang: ${SESSION_FILE}" >&2
@@ -328,9 +337,10 @@ _init_session_preserve() {
 # @return 0 on success, 1 if session.json cannot be created (write or mv
 #         fails), the existing file cannot be migrated, or `lang` cannot be
 #         written to it
-init_session() {
+init_session()
+               {
   local lang_given="${OPTIONS_SET[lang]:-false}"
-  if [[ -f "$SESSION_FILE" ]]; then
+  if [[ -f $SESSION_FILE   ]]; then
     _init_session_preserve "$lang_given"
     return
   fi
@@ -368,7 +378,8 @@ init_session() {
 #   cannot be written).
 # @stderr Progress messages and the `Error:` line of the failing step
 # @return 0 when every step succeeds, 1 when any step fails
-_run_init_steps() {
+_run_init_steps()
+                  {
   init_directories && write_project && init_session
 }
 
@@ -386,7 +397,8 @@ _run_init_steps() {
 # @exitcode 0 Success, or help shown
 # @exitcode 1 Parse error, validation error, or a failing init step
 # @stderr Usage and `Error:` lines, plus the progress messages of the init steps
-main() {
+main()
+       {
   local ai_model_errmsg
 
   init_vars
@@ -400,20 +412,20 @@ main() {
 
   parse_args "$@" || {
     echo "Error: ${ARGS_ERROR}" >&2
-    [[ "$ARGS_ERROR" == "Unknown option:"* ]] && show_usage
+    [[ $ARGS_ERROR == "Unknown option:"*   ]] && show_usage
     exit 1
   }
 
-  if [[ "${OPTIONS[SHOW_HELP]}" == true ]]; then
+  if [[ ${OPTIONS[SHOW_HELP]} == true   ]]; then
     show_usage
     exit 0
   fi
 
-  [[ "${OPTIONS[prog]}" == bash ]] && OPTIONS[prog]=shell
+  [[ ${OPTIONS[prog]} == bash   ]] && OPTIONS[prog]=shell
 
   validate_args || {
     echo "Error: ${VALIDATE_ARGS_ERROR}" >&2
-    if [[ "$VALIDATE_ARGS_ERROR" == *"is required" ]]; then
+    if [[ $VALIDATE_ARGS_ERROR == *"is required"   ]]; then
       show_usage
     fi
     exit 1
@@ -432,6 +444,6 @@ main() {
   _run_init_steps || exit 1
 }
 
-if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+if [[ ${BASH_SOURCE[0]} == "$0"   ]]; then
   main "$@"
 fi

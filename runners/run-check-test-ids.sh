@@ -152,7 +152,8 @@ _MODULE_FILE=''
 #   per example and must not see the values read from the previous one.
 # @exitcode 0 always
 #
-reset_check_caches() {
+reset_check_caches()
+                     {
   _MODULE_SCALAR_CACHE=()
   _MODULE_OWNS_CACHE=()
   _MODULE_TARGETS_CACHE=()
@@ -206,7 +207,8 @@ reset_check_caches() {
 #   was merged into awk.
 # @exitcode 0 always
 #
-scan_spec_declarations() {
+scan_spec_declarations()
+                         {
   # Also keeps awk from reading stdin when the caller has no file to scan
   [[ $# -gt 0 ]] || return 0
   # gawk aborts the whole run on the first unreadable argument and never reads the
@@ -272,7 +274,8 @@ scan_spec_declarations() {
 # @stderr One warning per unreadable argument; the remaining files are still scanned
 # @exitcode 0 always
 #
-extract_group_ids() {
+extract_group_ids()
+                    {
   [[ $# -gt 0 ]] || return 0
   # Plain `sort`, never `sort -u`, and applied once after every file has been read,
   # so the order is global across files and duplicate occurrences are preserved:
@@ -288,7 +291,8 @@ extract_group_ids() {
 # @stderr One warning per unreadable argument; the remaining files are still scanned
 # @exitcode 0 always
 #
-extract_case_ids() {
+extract_case_ids()
+                   {
   [[ $# -gt 0 ]] || return 0
   # Plain `sort`, never `sort -u`, and applied once after every file has been read,
   # so the order is global across files and duplicate occurrences are preserved.
@@ -307,7 +311,8 @@ extract_case_ids() {
 # @stderr One warning per unreadable argument; the remaining files are still scanned
 # @exitcode 0 always
 #
-find_unidentified_cases() {
+find_unidentified_cases()
+                          {
   [[ $# -gt 0 ]] || return 0
   # The public contract is three fields, so the record's kind and its empty group
   # field are dropped here rather than in the scanner: every scanner record stays
@@ -331,7 +336,8 @@ find_unidentified_cases() {
 # @stdout Field value with surrounding quotes stripped; empty when undeclared
 # @exitcode 0 always
 #
-read_module_scalar() {
+read_module_scalar()
+                     {
   local file="$1" field="$2"
   # Unit separator: neither a field name nor a path can carry it, so the composite key
   # cannot collide the way a `:` or `/` joined one could
@@ -341,7 +347,7 @@ read_module_scalar() {
     return 0
   fi
   local value=''
-  if [[ -f "$file" ]]; then
+  if [[ -f $file   ]]; then
     # The trailing sentinel survives the newline stripping of `$(...)`, so the cached
     # bytes replay exactly what awk wrote, trailing newline included
     value="$(
@@ -376,14 +382,15 @@ read_module_scalar() {
 # @stdout One glob per line, in declaration order; empty when undeclared
 # @exitcode 0 always
 #
-read_module_owns() {
+read_module_owns()
+                   {
   local file="$1"
   if [[ -n ${_MODULE_OWNS_CACHE[$file]+x} ]]; then
     printf '%s' "${_MODULE_OWNS_CACHE[$file]}"
     return 0
   fi
   local value=''
-  if [[ -f "$file" ]]; then
+  if [[ -f $file   ]]; then
     value="$(
       awk '
     NR == 1 && $0 == "---" { in_fm = 1; next }
@@ -415,15 +422,16 @@ read_module_owns() {
 # @sideeffect Replaces the contents of _MODULE_OWNS_GLOBS
 # @exitcode 0 always
 #
-load_module_owns() {
+load_module_owns()
+                   {
   local file="$1"
   # Populates the cache on a miss; the value itself is read from the cache below
-  read_module_owns "$file" >/dev/null
+  read_module_owns "$file" > /dev/null
   _MODULE_OWNS_GLOBS=()
   local value="${_MODULE_OWNS_CACHE[$file]}"
-  [[ -n "$value" ]] || return 0
+  [[ -n $value   ]] || return 0
   # A here-string appends a newline of its own, so the recorded one is dropped first
-  mapfile -t _MODULE_OWNS_GLOBS <<<"${value%$'\n'}"
+  mapfile -t _MODULE_OWNS_GLOBS <<< "${value%$'\n'}"
   return 0
 }
 
@@ -434,14 +442,15 @@ load_module_owns() {
 # @stdout One abbreviation per line, in declaration order; empty when the table is absent
 # @exitcode 0 always
 #
-read_module_targets() {
+read_module_targets()
+                      {
   local file="$1"
   if [[ -n ${_MODULE_TARGETS_CACHE[$file]+x} ]]; then
     printf '%s' "${_MODULE_TARGETS_CACHE[$file]}"
     return 0
   fi
   local value=''
-  if [[ -f "$file" ]]; then
+  if [[ -f $file   ]]; then
     value="$(
       awk -v heading="$TARGET_TABLE_HEADING" '
     $0 ~ "^##[[:space:]]+" heading "[[:space:]]*$" { in_table = 1; next }
@@ -469,7 +478,8 @@ read_module_targets() {
 # @stdout Anchored ERE
 # @exitcode 0 always
 #
-glob_to_regex() {
+glob_to_regex()
+                {
   local glob="$1"
   glob="${glob//./[.]}"
   glob="${glob//\*\*/$'\001'}"
@@ -484,7 +494,8 @@ glob_to_regex() {
 # @arg $2 string `owns` glob pattern
 # @exitcode 0 when the path is owned, 1 otherwise
 #
-path_matches_glob() {
+path_matches_glob()
+                    {
   local path="$1" glob="$2" regex
   # Checks A, B and D test every spec file against every glob, so this runs hundreds of
   # times over a handful of distinct globs; without the cache each call forks a subshell
@@ -495,7 +506,7 @@ path_matches_glob() {
     regex="$(glob_to_regex "$glob")"
     _GLOB_REGEX_CACHE[$glob]="$regex"
   fi
-  [[ "$path" =~ $regex ]]
+  [[ $path =~ $regex   ]]
 }
 
 #
@@ -504,9 +515,10 @@ path_matches_glob() {
 #   empty when the docs root is absent
 # @exitcode 0 always
 #
-list_module_files() {
+list_module_files()
+                    {
   local docs_root="${TEST_ID_CHECK_ROOT}/${MODULE_DOCS_SUBDIR}"
-  [[ -d "$docs_root" ]] || return 0
+  [[ -d $docs_root   ]] || return 0
   find "$docs_root" -type f -path "*/${MODULE_FILE_SUFFIX}" | sort
 }
 
@@ -518,7 +530,8 @@ list_module_files() {
 # @sideeffect Replaces _MODULE_REF
 # @exitcode 0 always
 #
-module_ref_of() {
+module_ref_of()
+                {
   # The docs root comes off the front and MODULE_FILE_SUFFIX off the back, in that order:
   # a namespace may carry slashes of its own, so only the two ends are known. No
   # trailing newline is appended, for the reason given on module_file_of
@@ -539,7 +552,8 @@ module_ref_of() {
 # @sideeffect Replaces _MODULE_FILE
 # @exitcode 0 always
 #
-module_file_of() {
+module_file_of()
+                 {
   # No trailing newline, unlike the `printf '%s\n'` this replaces: the `$( )` that is
   # now gone used to strip it, and a path still carrying it would split the
   # "declaration not found" report over two lines. Assigned unconditionally, so a
@@ -553,10 +567,11 @@ module_file_of() {
 # @stdout One repository-relative path per line, sorted; empty when none exist
 # @exitcode 0 always
 #
-list_spec_files() {
+list_spec_files()
+                  {
   # The scan root is part of the validity condition: the tests repoint it at a fresh
   # fixture tree, and a list carried over from the previous one would be a false report
-  if [[ $_SPEC_FILES_CACHE_VALID -eq 0 || "$_SPEC_FILES_CACHE_ROOT" != "$TEST_ID_CHECK_ROOT" ]]; then
+  if [[ $_SPEC_FILES_CACHE_VALID -eq 0 || $_SPEC_FILES_CACHE_ROOT != "$TEST_ID_CHECK_ROOT"   ]]; then
     local value
     value="$(
       get_filelist "$TEST_ID_CHECK_ROOT" '*.spec.sh' | sed 's|^\./||' | sort
@@ -575,11 +590,12 @@ list_spec_files() {
 # @sideeffect Replaces the contents of _SPEC_FILES
 # @exitcode 0 always
 #
-load_spec_files() {
-  list_spec_files >/dev/null
+load_spec_files()
+                  {
+  list_spec_files > /dev/null
   _SPEC_FILES=()
-  [[ -n "$_SPEC_FILES_CACHE" ]] || return 0
-  mapfile -t _SPEC_FILES <<<"${_SPEC_FILES_CACHE%$'\n'}"
+  [[ -n $_SPEC_FILES_CACHE   ]] || return 0
+  mapfile -t _SPEC_FILES <<< "${_SPEC_FILES_CACHE%$'\n'}"
   return 0
 }
 
@@ -593,7 +609,8 @@ load_spec_files() {
 # @sideeffect Replaces the contents of _OWNERS
 # @exitcode 0 always
 #
-load_owners_of() {
+load_owners_of()
+                 {
   local path="$1"
   shift
   _OWNERS=()
@@ -601,7 +618,7 @@ load_owners_of() {
   for module in "$@"; do
     load_module_owns "$module"
     for glob in ${_MODULE_OWNS_GLOBS[@]+"${_MODULE_OWNS_GLOBS[@]}"}; do
-      [[ -n "$glob" ]] || continue
+      [[ -n $glob   ]] || continue
       if path_matches_glob "$path" "$glob"; then
         _OWNERS+=("$module")
         break
@@ -627,13 +644,14 @@ load_owners_of() {
 #   and records the root they were built from
 # @exitcode 0 always
 #
-load_spec_records() {
+load_spec_records()
+                    {
   # The negation of the rebuild condition in list_spec_files, written as an early
   # return because the body below is long enough that nesting it would hurt. Two
   # things have to agree before the indexes are reused, and they cover each other:
   # reset_check_caches drops the flag when a test rebuilds the fixture tree in place,
   # and the root comparison catches a scan root repointed without a reset.
-  if [[ $_SPEC_RECORDS_VALID -eq 1 && "$_SPEC_RECORDS_ROOT" == "$TEST_ID_CHECK_ROOT" ]]; then
+  if [[ $_SPEC_RECORDS_VALID -eq 1 && $_SPEC_RECORDS_ROOT == "$TEST_ID_CHECK_ROOT"   ]]; then
     return 0
   fi
   # Cleared in one block, in declaration order, so a seventh index added later is
@@ -676,36 +694,36 @@ load_spec_records() {
     # A kind with no branch is skipped, so a record type added later is inert here
     # until something asks for it, rather than corrupting an index
     case "$kind" in
-    G)
-      # The mirror image of the `I` branch below, field for field: §5.4 asks the same
-      # two questions of both layers, so both are indexed by file and by ID
-      _GROUP_IDS_BY_FILE[$b]+="${a}"$'\n'
-      if [[ $'\n'"${_GROUP_FILES_BY_ID[$a]-}" != *$'\n'"${b}"$'\n'* ]]; then
-        _GROUP_FILES_BY_ID[$a]+="${b}"$'\n'
-      fi
-      ;;
-    I)
-      # Every occurrence is kept here: check C counts same-file duplicates, so
-      # collapsing them would hide exactly what it looks for
-      _CASE_IDS_BY_FILE[$b]+="${a}"$'\n'
-      # The reverse index answers "which files claim this ID", so a file that claims
-      # it twice still belongs on the list once. Comparing with the newlines on both
-      # sides makes the match whole-entry: a bare substring test would read an
-      # already-listed `.../b.spec.sh` as covering `.../b.spec.sh.bak` too. A pattern
-      # test is used rather than `grep`, which would cost a fork per record
-      if [[ $'\n'"${_CASE_FILES_BY_ID[$a]-}" != *$'\n'"${b}"$'\n'* ]]; then
-        _CASE_FILES_BY_ID[$a]+="${b}"$'\n'
-      fi
-      # An empty group field is stored as it came rather than dropped: a case sitting
-      # outside every group is a membership violation (§5.4), and this record is where
-      # the report of it, file and line included, is read from
-      _CASE_GROUP_BY_RECORD[$b]+="${a}"$'\t'"${d}"$'\t'"${b}"$'\t'"${c}"$'\n'
-      ;;
-    U)
-      # Stored as the scanner emitted it, file and line included, so a consumer can
-      # report the offending declaration without going back to the tree
-      _UNIDENT_BY_FILE[$a]+="${a}"$'\t'"${b}"$'\t'"${d}"$'\n'
-      ;;
+      G)
+        # The mirror image of the `I` branch below, field for field: §5.4 asks the same
+        # two questions of both layers, so both are indexed by file and by ID
+        _GROUP_IDS_BY_FILE[$b]+="${a}"$'\n'
+        if [[ $'\n'"${_GROUP_FILES_BY_ID[$a]-}" != *$'\n'"${b}"$'\n'* ]]; then
+          _GROUP_FILES_BY_ID[$a]+="${b}"$'\n'
+        fi
+        ;;
+      I)
+        # Every occurrence is kept here: check C counts same-file duplicates, so
+        # collapsing them would hide exactly what it looks for
+        _CASE_IDS_BY_FILE[$b]+="${a}"$'\n'
+        # The reverse index answers "which files claim this ID", so a file that claims
+        # it twice still belongs on the list once. Comparing with the newlines on both
+        # sides makes the match whole-entry: a bare substring test would read an
+        # already-listed `.../b.spec.sh` as covering `.../b.spec.sh.bak` too. A pattern
+        # test is used rather than `grep`, which would cost a fork per record
+        if [[ $'\n'"${_CASE_FILES_BY_ID[$a]-}" != *$'\n'"${b}"$'\n'* ]]; then
+          _CASE_FILES_BY_ID[$a]+="${b}"$'\n'
+        fi
+        # An empty group field is stored as it came rather than dropped: a case sitting
+        # outside every group is a membership violation (§5.4), and this record is where
+        # the report of it, file and line included, is read from
+        _CASE_GROUP_BY_RECORD[$b]+="${a}"$'\t'"${d}"$'\t'"${b}"$'\t'"${c}"$'\n'
+        ;;
+      U)
+        # Stored as the scanner emitted it, file and line included, so a consumer can
+        # report the offending declaration without going back to the tree
+        _UNIDENT_BY_FILE[$a]+="${a}"$'\t'"${b}"$'\t'"${d}"$'\n'
+        ;;
     esac
   done < <(scan_spec_declarations ${paths[@]+"${paths[@]}"})
 
@@ -730,7 +748,8 @@ load_spec_records() {
 # @sideeffect Replaces the contents of the named array
 # @exitcode 0 always
 #
-_load_indexed_entries() {
+_load_indexed_entries()
+                        {
   # The locals are named apart from every global they may be pointed at: a nameref
   # that resolves to itself is a circular reference Bash refuses to expand
   local -n _source_index="$1" _target_array="$2"
@@ -743,9 +762,9 @@ _load_indexed_entries() {
     # cost a fork per spec file, which is what this whole index exists to avoid
     joined+="${_source_index[$file]-}"
   done
-  [[ -n "$joined" ]] || return 0
+  [[ -n $joined   ]] || return 0
   # The recorded trailing newline is dropped first; the here-string appends its own
-  mapfile -t _target_array <<<"${joined%$'\n'}"
+  mapfile -t _target_array <<< "${joined%$'\n'}"
   return 0
 }
 
@@ -764,7 +783,8 @@ _load_indexed_entries() {
 # @sideeffect Replaces the contents of _CASE_IDS
 # @exitcode 0 always
 #
-load_indexed_case_ids() {
+load_indexed_case_ids()
+                        {
   _load_indexed_entries _CASE_IDS_BY_FILE _CASE_IDS "$@"
 }
 
@@ -779,7 +799,8 @@ load_indexed_case_ids() {
 # @sideeffect Replaces the contents of _CASE_GROUP_RECORDS
 # @exitcode 0 always
 #
-load_indexed_case_groups() {
+load_indexed_case_groups()
+                           {
   _load_indexed_entries _CASE_GROUP_BY_RECORD _CASE_GROUP_RECORDS "$@"
 }
 
@@ -794,7 +815,8 @@ load_indexed_case_groups() {
 # @sideeffect Replaces the contents of _GROUP_IDS
 # @exitcode 0 always
 #
-load_indexed_group_ids() {
+load_indexed_group_ids()
+                         {
   _load_indexed_entries _GROUP_IDS_BY_FILE _GROUP_IDS "$@"
 }
 
@@ -809,7 +831,8 @@ load_indexed_group_ids() {
 # @sideeffect Replaces the contents of _UNIDENT_RECORDS
 # @exitcode 0 always
 #
-load_indexed_unidentified() {
+load_indexed_unidentified()
+                            {
   _load_indexed_entries _UNIDENT_BY_FILE _UNIDENT_RECORDS "$@"
 }
 
@@ -826,7 +849,8 @@ load_indexed_unidentified() {
 #   of first occurrence and both free of repeats
 # @exitcode 0 when the two counts agree, 1 when an ID was assigned more than once
 #
-find_duplicate_ids() {
+find_duplicate_ids()
+                     {
   _DISTINCT_IDS=()
   _DUPLICATE_IDS=()
   local -A occurrences=()
@@ -838,8 +862,8 @@ find_duplicate_ids() {
     # Each list is appended to at the single occurrence that makes it true, which is
     # what keeps both free of repeats without a second pass over the IDs
     case "${occurrences[$id]}" in
-    1) _DISTINCT_IDS+=("$id") ;;
-    2) _DUPLICATE_IDS+=("$id") ;;
+      1) _DISTINCT_IDS+=("$id") ;;
+      2) _DUPLICATE_IDS+=("$id") ;;
     esac
   done
   # The whole check, and deliberately the last command: the caller reads its status
@@ -854,7 +878,8 @@ find_duplicate_ids() {
 # @exitcode 0 Check passed
 # @exitcode 1 Duplicate scope, unowned file, or multiply-owned file found
 #
-check_scopes() {
+check_scopes()
+               {
   local -a modules=()
   mapfile -t modules < <(list_module_files)
   if [[ ${#modules[@]} -eq 0 ]]; then
@@ -866,12 +891,12 @@ check_scopes() {
   local -a declarations=()
   for module in "${modules[@]}"; do
     scope="$(read_module_scalar "$module" 'test_scope')"
-    if [[ -z "$scope" ]]; then
+    if [[ -z $scope   ]]; then
       echo "Error: ${module}: frontmatter declares no 'test_scope'" >&2
       result=1
       continue
     fi
-    if [[ ! "$scope" =~ $TEST_SCOPE_PATTERN ]]; then
+    if [[ ! $scope =~ $TEST_SCOPE_PATTERN   ]]; then
       echo "Error: ${module}: test_scope '${scope}' must be 2-4 uppercase letters or digits" >&2
       result=1
       # A malformed value must not reach the duplicate check: two modules sharing it
@@ -921,7 +946,8 @@ check_scopes() {
 # @stdout One absolute spec file path per line
 # @exitcode 0 always
 #
-list_module_spec_files() {
+list_module_spec_files()
+                         {
   local module_file="$1"
   local -a specs=() globs=()
   load_spec_files
@@ -932,7 +958,7 @@ list_module_spec_files() {
   local spec glob
   for spec in ${specs[@]+"${specs[@]}"}; do
     for glob in ${globs[@]+"${globs[@]}"}; do
-      [[ -n "$glob" ]] || continue
+      [[ -n $glob   ]] || continue
       if path_matches_glob "$spec" "$glob"; then
         printf '%s\n' "${TEST_ID_CHECK_ROOT}/${spec}"
         break
@@ -951,7 +977,8 @@ list_module_spec_files() {
 # @stdout One matching file path per line, in argument order and once per argument
 # @exitcode 0 always
 #
-_locate_id() {
+_locate_id()
+             {
   local -n _source_index="$1"
   local id="$2"
   shift 2
@@ -963,7 +990,7 @@ _locate_id() {
   local list=$'\n'"${_source_index[$id]-}"
   local file
   for file in "$@"; do
-    [[ "$list" == *$'\n'"${file}"$'\n'* ]] && printf '%s\n' "$file"
+    [[ $list == *$'\n'"${file}"$'\n'*   ]] && printf '%s\n' "$file"
   done
   # Under `set -e` a final `[[ ]]` that tests false would make the function fail
   return 0
@@ -982,7 +1009,8 @@ _locate_id() {
 # @stdout One matching file path per line, in argument order and once per argument
 # @exitcode 0 always
 #
-locate_case_id() {
+locate_case_id()
+                 {
   _locate_id _CASE_FILES_BY_ID "$@"
 }
 
@@ -997,7 +1025,8 @@ locate_case_id() {
 # @stdout One matching file path per line, in argument order and once per argument
 # @exitcode 0 always
 #
-locate_group_id() {
+locate_group_id()
+                  {
   _locate_id _GROUP_FILES_BY_ID "$@"
 }
 
@@ -1013,21 +1042,22 @@ locate_group_id() {
 # @exitcode 1 Missing declaration, unidentified case, membership violation, duplicate
 #   ID, or foreign scope found
 #
-check_module() {
+check_module()
+               {
   local module_ref="$1"
   # Copied into a local straight away, the convention every scratch variable in this
   # file is read under. Nothing reached from here resolves a path of its own today;
   # the copy is kept so this stays correct if one of them ever does
   module_file_of "$module_ref"
   local module_file="$_MODULE_FILE"
-  if [[ ! -f "$module_file" ]]; then
+  if [[ ! -f $module_file   ]]; then
     echo "Error: module '${module_ref}': declaration not found at ${module_file}" >&2
     return 1
   fi
 
   local scope
   scope="$(read_module_scalar "$module_file" 'test_scope')"
-  if [[ -z "$scope" ]]; then
+  if [[ -z $scope   ]]; then
     echo "Error: ${module_file}: frontmatter declares no 'test_scope'" >&2
     return 1
   fi
@@ -1065,10 +1095,10 @@ check_module() {
     rest="${rest#*$'\t'}"
     spec_file="${rest%%$'\t'*}"
     line="${rest##*$'\t'}"
-    if [[ -z "$group" ]]; then
+    if [[ -z $group   ]]; then
       echo "Error: module '${module_ref}': test ID '${id}' is declared under no group ID: ${spec_file}:${line}" >&2
       result=1
-    elif [[ "$id" != "${group}-"* ]]; then
+    elif [[ $id != "${group}-"*   ]]; then
       echo "Error: module '${module_ref}': test ID '${id}' does not belong to its enclosing group ID '${group}': ${spec_file}:${line}" >&2
       result=1
     fi
@@ -1101,7 +1131,7 @@ check_module() {
   for id in ${distinct_groups[@]+"${distinct_groups[@]}"}; do
     id_scope="${id#T-}"
     id_scope="${id_scope%%-*}"
-    [[ "$id_scope" == "$scope" ]] && continue
+    [[ $id_scope == "$scope"   ]] && continue
     echo "Error: module '${module_ref}': group ID '${id}' uses scope '${id_scope}' but the module declares '${scope}':" >&2
     locate_group_id "$id" "${owned[@]}" | sed 's/^/  /' >&2
     result=1
@@ -1144,7 +1174,8 @@ check_module() {
 # @exitcode 0 Check passed, or the scan root holds no spec file at all
 # @exitcode 1 A duplicate group ID was found, or spec files yielded no group ID
 #
-check_duplicates() {
+check_duplicates()
+                   {
   local -a specs=() files=() group_ids=() duplicates=()
   load_spec_files
   specs=(${_SPEC_FILES[@]+"${_SPEC_FILES[@]}"})
@@ -1201,7 +1232,8 @@ check_duplicates() {
 # @stdout One abbreviation per line, sorted and de-duplicated
 # @exitcode 0 always
 #
-base_targets() {
+base_targets()
+               {
   load_indexed_group_ids "$@"
   local id target
   for id in ${_GROUP_IDS[@]+"${_GROUP_IDS[@]}"}; do
@@ -1220,7 +1252,8 @@ base_targets() {
 # @stdout One line per argument
 # @exitcode 0 always
 #
-print_lines() {
+print_lines()
+              {
   [[ $# -gt 0 ]] || return 0
   printf '%s\n' "$@"
 }
@@ -1245,14 +1278,15 @@ print_lines() {
 # @exitcode 0 Check passed
 # @exitcode 1 Missing declaration, or the table and the tests disagree
 #
-check_targets() {
+check_targets()
+                {
   local module_ref="$1"
   # Copied into a local straight away, the convention every scratch variable in this
   # file is read under. Nothing reached from here resolves a path of its own today;
   # the copy is kept so this stays correct if one of them ever does
   module_file_of "$module_ref"
   local module_file="$_MODULE_FILE"
-  if [[ ! -f "$module_file" ]]; then
+  if [[ ! -f $module_file   ]]; then
     echo "Error: module '${module_ref}': declaration not found at ${module_file}" >&2
     return 1
   fi
@@ -1311,7 +1345,8 @@ check_targets() {
 # @exitcode 0 All checks passed
 # @exitcode 1 At least one check failed
 #
-check_repository() {
+check_repository()
+                   {
   local result=0
   check_scopes || result=1
 
@@ -1339,8 +1374,9 @@ check_repository() {
 # @stdout Usage line
 # @exitcode 0 always
 #
-usage() {
-  cat <<'USAGE'
+usage()
+        {
+  cat << 'USAGE'
 Usage: run-check-test-ids.sh <mode>
 
 Modes:
@@ -1360,35 +1396,36 @@ USAGE
 # @exitcode 0 All requested checks passed
 # @exitcode 1 A check failed or the mode is unknown
 #
-main() {
+main()
+       {
   case "${1:-}" in
-  --scopes)
-    check_scopes
-    ;;
-  --module)
-    if [[ $# -lt 2 || -z "$2" ]]; then
-      echo "Error: --module requires a module reference (<ns>/<mod>)" >&2
+    --scopes)
+      check_scopes
+      ;;
+    --module)
+      if [[ $# -lt 2 || -z $2 ]]; then
+        echo "Error: --module requires a module reference (<ns>/<mod>)" >&2
+        return 1
+      fi
+      check_module "$2"
+      ;;
+    --targets)
+      if [[ $# -lt 2 || -z $2 ]]; then
+        echo "Error: --targets requires a module reference (<ns>/<mod>)" >&2
+        return 1
+      fi
+      check_targets "$2"
+      ;;
+    --all)
+      check_repository
+      ;;
+    *)
+      usage >&2
       return 1
-    fi
-    check_module "$2"
-    ;;
-  --targets)
-    if [[ $# -lt 2 || -z "$2" ]]; then
-      echo "Error: --targets requires a module reference (<ns>/<mod>)" >&2
-      return 1
-    fi
-    check_targets "$2"
-    ;;
-  --all)
-    check_repository
-    ;;
-  *)
-    usage >&2
-    return 1
-    ;;
+      ;;
   esac
 }
 
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+if [[ ${BASH_SOURCE[0]} == "${0}"   ]]; then
   main "$@"
 fi

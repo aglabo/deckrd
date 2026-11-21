@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # src: runners/libs/utils.lib.sh
-# @(#): utils.lib.sh: common utility library
+# @(#) : common utility library
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #
@@ -8,7 +8,7 @@
 # https://opensource.org/licenses/MIT
 
 # Guard against double sourcing
-[[ -n "${_UTILS_LIB_SH:-}" ]] && return 0
+[[ -n ${_UTILS_LIB_SH:-}   ]] && return 0
 readonly _UTILS_LIB_SH=1
 
 # Exit code returned by runners when no config file is found (EX_CONFIG, the BSD configuration error code)
@@ -25,11 +25,12 @@ readonly GLOBAL_CONFIGS_DIRNAME='global-configs'
 # @stdout Candidate directories, one per line; nothing when neither variable is set
 # @exitcode 0 Always
 #
-_global_configdir_candidates() {
-  if [[ -n "${XDG_CONFIG_HOME:-}" ]]; then
+_global_configdir_candidates()
+                               {
+  if [[ -n ${XDG_CONFIG_HOME:-}   ]]; then
     echo "${XDG_CONFIG_HOME}/${GLOBAL_CONFIGS_DIRNAME}"
   fi
-  if [[ -n "${HOME:-}" ]]; then
+  if [[ -n ${HOME:-}   ]]; then
     echo "${HOME}/.config/${GLOBAL_CONFIGS_DIRNAME}"
   fi
 }
@@ -42,11 +43,12 @@ _global_configdir_candidates() {
 # @exitcode 0 Config directory found
 # @exitcode 1 Config directory not found
 #
-resolve_global_configdir() {
+resolve_global_configdir()
+                           {
   local __candidate
 
   while IFS= read -r __candidate; do
-    if [[ -d "$__candidate" ]]; then
+    if [[ -d $__candidate   ]]; then
       echo "$__candidate"
       return 0
     fi
@@ -66,19 +68,20 @@ resolve_global_configdir() {
 # @exitcode 1 No global config directory exists (and no local config)
 # @exitcode 2 Global config directories exist but none holds the config file
 #
-resolve_config_file() {
+resolve_config_file()
+                      {
   local __global_relpath="$1"
   local __local_config="${PROJECT_ROOT}/$2"
   local __candidate
   local __status=1
 
-  if [[ -f "$__local_config" ]]; then
+  if [[ -f $__local_config   ]]; then
     echo "$__local_config"
     return 0
   fi
 
   while IFS= read -r __candidate; do
-    [[ -d "$__candidate" ]] || continue
+    [[ -d $__candidate   ]] || continue
     if [[ -f "${__candidate}/${__global_relpath}" ]]; then
       echo "${__candidate}/${__global_relpath}"
       return 0
@@ -98,7 +101,8 @@ resolve_config_file() {
 # @stdout The not-found message
 # @exitcode 0 Always
 #
-format_config_not_found() {
+format_config_not_found()
+                          {
   local __status="$1"
   local __global_relpath="$2"
   local __local_config="${PROJECT_ROOT:-}/$3"
@@ -107,11 +111,11 @@ format_config_not_found() {
   local __global_desc
 
   while IFS= read -r __candidate; do
-    [[ "$__status" == 1 ]] || __candidate="${__candidate}/${__global_relpath}"
+    [[ $__status == 1   ]] || __candidate="${__candidate}/${__global_relpath}"
     __candidates="${__candidates:+${__candidates}, }${__candidate}"
   done < <(_global_configdir_candidates)
 
-  if [[ "$__status" == 1 ]]; then
+  if [[ $__status == 1   ]]; then
     __global_desc="no global-configs directory${__candidates:+: ${__candidates}}"
   else
     __global_desc="${__candidates:-no global-configs directory}"

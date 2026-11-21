@@ -1,37 +1,54 @@
 #!/usr/bin/env bash
-# src: ./scripts/setup-dev-env.sh
-# @(#) : Install lefthook in local development environment only
+# src: scripts/setup-dev-env.sh
+# @(#) : install local dev tools (lefthook hooks, shellspec, aglabo); skipped in CI
 #
-# Copyright (c) 2026- atsushifx <http://github.com/atsushifx>
+# Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
-#
 
 set -euo pipefail
 
 ##
-# @description Check if the script is running in a CI environment
+# @description Detect if running in CI environment
 # @return 0 If CI environment detected
 # @return 1 If not in CI environment
-is_ci_environment() {
-  [[ -n "${CI:-}" ]] ||               # Generic CI
-    [[ -n "${GITHUB_ACTIONS:-}" ]] || # GitHub Actions
-    [[ -n "${GITLAB_CI:-}" ]] ||      # GitLab CI
-    [[ -n "${CIRCLECI:-}" ]] ||       # CircleCI
-    [[ -n "${JENKINS_HOME:-}" ]] ||   # Jenkins
-    [[ -n "${TRAVIS:-}" ]] ||         # Travis CI
-    [[ -n "${BUILDKITE:-}" ]] ||      # Buildkite
-    [[ -n "${DRONE:-}" ]] ||          # Drone CI
-    [[ -n "${TF_BUILD:-}" ]]          # Azure Pipelines
+is_ci_environment()
+                    {
+  [[ -n ${CI:-}   ]] \
+                     ||
+    # Generic CI
+    [[ -n ${GITHUB_ACTIONS:-}   ]] \
+                                   ||
+    # GitHub Actions
+    [[ -n ${GITLAB_CI:-}   ]] \
+                              ||
+    # GitLab CI
+    [[ -n ${CIRCLECI:-}   ]] \
+                             ||
+    # CircleCI
+    [[ -n ${JENKINS_HOME:-}   ]] \
+                                 ||
+    # Jenkins
+    [[ -n ${TRAVIS:-}   ]] \
+                           ||
+    # Travis CI
+    [[ -n ${BUILDKITE:-}   ]] \
+                              ||
+    # Buildkite
+    [[ -n ${DRONE:-}   ]] \
+                          ||
+    # Drone CI
+    [[ -n ${TF_BUILD:-}   ]]          # Azure Pipelines
 }
 
 ##
 # @description Check if the lefthook executable is available on PATH
 # @return 0 If the lefthook command is found
 # @return 1 If the lefthook command is not found
-is_lefthook_available() {
-  command -v lefthook >/dev/null 2>&1
+is_lefthook_available()
+                        {
+  command -v lefthook > /dev/null 2>&1
 }
 
 ##
@@ -39,8 +56,9 @@ is_lefthook_available() {
 # Assumes the lefthook executable is available (see is_lefthook_available)
 # @return 0 If the hooks are installed
 # @return 1 If the hooks are not installed
-is_lefthook_installed() {
-  lefthook check-install >/dev/null 2>&1
+is_lefthook_installed()
+                        {
+  lefthook check-install > /dev/null 2>&1
 }
 
 ##
@@ -48,7 +66,8 @@ is_lefthook_installed() {
 # @arg $1 string Directory path where shellspec should be installed
 # @return 0 If shellspec is installed
 # @return 1 If shellspec is not installed
-is_shellspec_installed() {
+is_shellspec_installed()
+                         {
   local install_dir="$1"
   [[ -f "${install_dir}/shellspec" ]]
 }
@@ -57,7 +76,8 @@ is_shellspec_installed() {
 # @description Check availability, install state, then install lefthook git hooks
 # @return 0 If the hooks are already installed or were installed successfully
 # @return 1 If lefthook is unavailable or the install failed
-setup_lefthook() {
+setup_lefthook()
+                 {
   if ! is_lefthook_available; then
     echo "Error: lefthook not found on PATH." >&2
     echo "Hint: install lefthook, then run 'lefthook install'." >&2
@@ -86,7 +106,8 @@ setup_lefthook() {
 # @arg $1 string Directory path where shellspec will be installed
 # @return 0 If shellspec is already installed or was installed successfully
 # @return 1 If the install failed
-setup_shellspec() {
+setup_shellspec()
+                  {
   local install_dir="${1:-.tools/shellspec}"
 
   if is_shellspec_installed "$install_dir"; then
@@ -96,14 +117,15 @@ setup_shellspec() {
 
   echo "Installing shellspec to $install_dir..."
 
-  if git clone --depth 1 https://github.com/shellspec/shellspec.git "$install_dir" >/dev/null 2>&1; then
+  # Clone shellspec repository
+  if git clone --depth 1 https://github.com/shellspec/shellspec.git "$install_dir" > /dev/null 2>&1; then
     echo "shellspec installed successfully to $install_dir"
     echo "Add to PATH: export PATH=\"\$PWD/$install_dir:\$PATH\""
     return 0
   fi
 
   echo "Error: shellspec installation failed" >&2
-  if [[ -d "$install_dir" ]]; then
+  if [[ -d $install_dir   ]]; then
     echo "Hint: $install_dir already exists but is incomplete. Remove it and retry." >&2
   fi
   return 1
@@ -115,7 +137,8 @@ setup_shellspec() {
 # @arg $2 string Directory path where aglabo tools are checked out
 # @return 0 If both bin/ and node_modules/.bin exist
 # @return 1 If the tool is not checked out or its dependencies are not installed
-is_agla_tool_installed() {
+is_agla_tool_installed()
+                         {
   local repo="$1"
   local tools_dir="$2"
   [[ -d "${tools_dir}/${repo}/bin" && -d "${tools_dir}/${repo}/node_modules/.bin" ]]
@@ -127,16 +150,17 @@ is_agla_tool_installed() {
 # @arg $2 string Directory path where the repository is cloned
 # @return 0 If the clone succeeded
 # @return 1 If the clone failed
-_clone_agla_tool() {
+_clone_agla_tool()
+                   {
   local repo="$1"
   local install_dir="$2"
 
-  if git clone --depth 1 "https://github.com/aglabo/${repo}.git" "$install_dir" >/dev/null 2>&1; then
+  if git clone --depth 1 "https://github.com/aglabo/${repo}.git" "$install_dir" > /dev/null 2>&1; then
     return 0
   fi
 
   echo "Error: $repo installation failed" >&2
-  if [[ -d "$install_dir" ]]; then
+  if [[ -d $install_dir   ]]; then
     echo "Hint: $install_dir already exists but is incomplete. Remove it and retry." >&2
   fi
   return 1
@@ -144,11 +168,13 @@ _clone_agla_tool() {
 
 ##
 # @description Check install state, then check out an aglabo tool repository and install its dependencies
+#   Skips the clone when bin/ already exists (repo checked out but dependencies missing)
 # @arg $1 string Repository name (e.g. agla-dev-tools)
 # @arg $2 string Directory path where aglabo tools are checked out (default: ~/.local/tools)
 # @return 0 If the tool is already installed or was installed successfully
 # @return 1 If the clone or pnpm install failed
-setup_agla_tool() {
+setup_agla_tool()
+                  {
   local repo="$1"
   local tools_dir="${2:-${HOME}/.local/tools}"
   local install_dir="${tools_dir}/${repo}"
@@ -162,13 +188,12 @@ setup_agla_tool() {
 
   mkdir -p "$tools_dir"
 
-  # Skip the clone when bin/ already exists (repo checked out but dependencies missing)
   if [[ ! -d "${install_dir}/bin" ]]; then
     _clone_agla_tool "$repo" "$install_dir" || return 1
   fi
 
-  # Tool wrappers require node_modules/.bin
-  if ! pnpm --dir "$install_dir" install --frozen-lockfile >/dev/null 2>&1; then
+  # Install dependencies (tool wrappers require node_modules/.bin)
+  if ! pnpm --dir "$install_dir" install --frozen-lockfile > /dev/null 2>&1; then
     echo "Error: $repo pnpm install failed" >&2
     echo "Hint: run 'pnpm --dir \"$install_dir\" install --frozen-lockfile' manually." >&2
     return 1
@@ -180,10 +205,13 @@ setup_agla_tool() {
 }
 
 ##
+# @description Main entry point
 # @arg $1 string Optional shellspec installation directory (default: .tools/shellspec)
 # @return 0 If every setup step succeeded or was skipped
 # @return 1 If any setup step failed
-main() {
+main()
+       {
+  # Skip in CI environment
   if is_ci_environment; then
     echo "CI environment detected. Skipping dev tools install."
     return 0
@@ -204,7 +232,7 @@ main() {
 }
 
 # Skip execution when this script is sourced
-if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
+if [[ ${BASH_SOURCE[0]} != "$0"   ]]; then
   return 0
 fi
 
