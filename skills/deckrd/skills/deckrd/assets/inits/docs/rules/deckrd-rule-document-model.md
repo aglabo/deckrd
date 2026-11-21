@@ -1,7 +1,7 @@
 ---
 title: "Deckrd Rule: ドキュメントモデル"
 description: "設計チェーン・ID 採番・ドキュメント命名・ディレクトリ配置を定める統一モデル"
-version: 1.7.0
+version: 1.8.0
 ---
 
 <!-- textlint-disable
@@ -98,18 +98,29 @@ grep -rl "REQ-<new-namespace>-" --include=*.md docs/.deckrd/
 
 ### 用語の ID (UD)
 
-`UD-NNN` は、モジュールの `universal-dictionary.md` が用語ごとに割り当てる ID とする。
-名前空間はモジュール単位であり、別のモジュールの `UD-001` とは別のものを指す。
+`UD-<章コード>-NNN` は、モジュールの `universal-dictionary.md` が用語ごとに割り当てる ID とする。
+名前空間はモジュール単位であり、別のモジュールの `UD-ST-001` とは別のものを指す。
 モジュールの外から参照するときは、モジュールのパスを添える。
 
-- 採番にあたるのは、`universal-dictionary.md` の用語の見出し (`### UD-NNN <用語>` など) だけとする。ほかの文書での記載は参照とする
-- 番号は振り直さない。廃止した用語は行を残して廃止と記し、その番号を再利用しない
-- 3 桁ゼロ埋めの連番とする (`UD-001`)
+- 採番にあたるのは、`universal-dictionary.md` の用語の見出し (`### UD-<章コード>-NNN <用語>` など) だけとする。ほかの文書での記載は参照とする
+- 章コードは、辞書の章 (カテゴリ) ごとに 1 つ定める。英大文字で始まる 2〜6 文字の英大文字・数字とし (`ST`、`CON`)、モジュール内で重複させない。章と章コードの対応は、辞書の冒頭の「章コード」表に書く
+- NNN は、章コードごとの 3 桁ゼロ埋めの連番とする (`UD-ST-001`、`UD-CON-001`)。次の番号は、その章コードの最大番号の次とする
+- 新しい ID は、次の順で発行する。
+
+  1. 用語ごとにふさわしい章を選ぶ
+  2. その章の章コードを使う
+  3. その章コードの最大番号の次を NNN とする
+
+  **どの章か (章コード) と、その章の何番目か (NNN) を、この順に決める**。
+  章に当てはまらない用語は、無理に既存の章へ入れず、新しい章と章コードを立てる
+- 番号は振り直さない。廃止した用語は行を残して廃止と記し、その ID を再利用しない
+- 用語を別の章へ移しても ID は変えない。章コードは、ID を発行した時点の章を示す識別子であり、現在の章を表すとは限らない
 
 重複は、用語の見出しから導出して検出する。出力は空でなければならない。
 
 ```bash
-grep -oE "^#{2,6} UD-[0-9]{3} " docs/.deckrd/<namespace>/<module>/universal-dictionary.md \
+grep -oE "^#{2,6} UD-[A-Z][A-Z0-9]{1,5}-[0-9]{3} " \
+  docs/.deckrd/<namespace>/<module>/universal-dictionary.md \
   | awk '{print $2}' | sort | uniq -d
 ```
 
@@ -272,7 +283,7 @@ docs/.deckrd/chatlog/normalize/
 
 #### 項目
 
-用語は、1 語ごとに見出し `UD-NNN <用語>` を立て、その下に定義の段落と項目の箇条書きを置く (定義リストの形)。
+用語は、1 語ごとに見出し `UD-<章コード>-NNN <用語>` を立て、その下に定義の段落と項目の箇条書きを置く (定義リストの形)。
 項目が多く横に長くなるため、用語の一覧を 1 つの表にしない。
 
 | 項目       | 内容                                                                           | 省略 |
@@ -331,7 +342,7 @@ docs/.deckrd/chatlog/normalize/
 参照元の列挙:
 
 ```bash
-grep -rn "UD-<NNN>" --include=*.md docs/.deckrd/<namespace>/<module>/
+grep -rn "UD-<章コード>-<NNN>" --include=*.md docs/.deckrd/<namespace>/<module>/
 ```
 
 辞書を改訂したときは、影響を受ける文書 (DR、requirements、specifications、implementation、tasks) を参照元の列挙で特定し、その意味で読んでも判断・保証が変わらないかを確かめる。

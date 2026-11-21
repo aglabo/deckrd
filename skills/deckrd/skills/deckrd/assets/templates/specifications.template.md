@@ -33,9 +33,9 @@ Every item in Sections 3–5 carries one `Class`:
 Terms follow `universal-dictionary.md`. Their definitions live only there.
 This specification cites them by UD-ID and does not redefine them.
 
-| UD-ID  | Term       |
-| ------ | ---------- |
-| UD-001 | {{TERM_1}} |
+| UD-ID             | Term       |
+| ----------------- | ---------- |
+| UD-{{CODE_1}}-001 | {{TERM_1}} |
 
 <!-- List only the UD-IDs cited in this specification. No definitions.
      If the module has no universal-dictionary.md, delete this section and the
