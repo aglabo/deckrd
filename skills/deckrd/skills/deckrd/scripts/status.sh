@@ -44,7 +44,8 @@ validate_env || exit 1
 # ============================================================================
 
 # Initialize configuration variables (mock-friendly)
-init_vars() {
+init_vars()
+            {
   SESSION_FILE="${SESSION_FILE:-${DECKRD_LOCAL_DATA}/session.json}"
   # DECKRD_DOCS is a backward-compatible override; bootstrap exports DECKRD_DOCS_DIR.
   DECKRD_DOCS="${DECKRD_DOCS:-${DECKRD_DOCS_DIR}}"
@@ -52,8 +53,9 @@ init_vars() {
 }
 
 # Check if session file exists
-check_session() {
-  if [[ ! -f "$SESSION_FILE" ]]; then
+check_session()
+                {
+  if [[ ! -f $SESSION_FILE   ]]; then
     echo "Error: No session file found." >&2
     echo "  Expected: ${SESSION_FILE}" >&2
     echo "" >&2
@@ -63,7 +65,8 @@ check_session() {
 }
 
 # Display workflow progress
-display_progress() {
+display_progress()
+                   {
   local completed="$1"
   local current_step="$2"
 
@@ -71,7 +74,7 @@ display_progress() {
   for step in "${WORKFLOW_STEPS[@]}"; do
     if echo "$completed" | grep -qE "(^|, )${step}(,|$)"; then
       echo "  [✓] $step"
-    elif [[ "$step" == "$current_step" ]]; then
+    elif [[ $step == "$current_step"   ]]; then
       echo "  [•] $step"
     else
       echo "  [ ] $step"
@@ -79,14 +82,15 @@ display_progress() {
   done
 }
 
-main() {
+main()
+       {
   init_vars
   check_session || exit 1
 
   local active prog lang ai_model created updated current_step completed
 
   active=$(jq_read -r '.active // empty' "$SESSION_FILE")
-  if [[ -z "$active" ]]; then
+  if [[ -z $active   ]]; then
     echo "Error: No active module set in session." >&2
     echo "" >&2
     echo "Run 'deckrd module <namespace>/<module>' to set active module." >&2
@@ -127,4 +131,4 @@ main() {
 # Entry Point
 # ============================================================================
 
-if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then main "$@"; fi
+if [[ ${BASH_SOURCE[0]} == "$0"   ]]; then main "$@"; fi
