@@ -12,7 +12,7 @@
 # shellcheck shell=bash
 # shellcheck disable=SC2034 # OPTIONS, OPTIONS_SET and ARGS_ERROR are consumed by callers
 
-if [[ -n "${_ARGS_LIB_LOADED:-}" ]]; then
+if [[ -n ${_ARGS_LIB_LOADED:-}   ]]; then
   return 0
 fi
 readonly _ARGS_LIB_LOADED=1
@@ -23,7 +23,8 @@ readonly _ARGS_LIB_LOADED=1
 # ARGS_ERROR. Call it before declaring options for a new parse.
 #
 # @return 0 always
-args_init() {
+args_init()
+            {
   unset OPTIONS OPTIONS_SET _ARGS_KEY_OF _ARGS_TYPE _ARGS_POSITIONAL
   declare -gA OPTIONS=() OPTIONS_SET=() _ARGS_KEY_OF=() _ARGS_TYPE=()
   declare -ga _ARGS_POSITIONAL=()
@@ -35,7 +36,8 @@ args_init() {
 # @arg $1 string key  Result key in OPTIONS
 # @arg $2 string type flag | value
 # @arg $@ string opts Option names
-_args_register() {
+_args_register()
+                 {
   local key="$1" type="$2"
   shift 2
   _ARGS_TYPE["$key"]="$type"
@@ -51,7 +53,8 @@ _args_register() {
 #
 # @arg $1 string key  Result key in OPTIONS
 # @arg $@ string opts Option names (e.g. -f --force)
-args_flag() {
+args_flag()
+            {
   local key="$1"
   shift
   _args_register "$key" flag "$@"
@@ -66,7 +69,8 @@ args_flag() {
 # @arg $1 string key     Result key in OPTIONS
 # @arg $2 string default Value used when the option is not given
 # @arg $@ string opts    Option names (e.g. -m --model)
-args_value() {
+args_value()
+             {
   local key="$1" default="$2"
   shift 2
   _args_register "$key" value "$@"
@@ -76,7 +80,8 @@ args_value() {
 # args_positional - Declare positional argument keys in order
 #
 # @arg $@ string keys Result keys in OPTIONS, assigned in declaration order
-args_positional() {
+args_positional()
+                  {
   _ARGS_POSITIONAL+=("$@")
   local key
   for key in "$@"; do
@@ -91,9 +96,10 @@ args_positional() {
 # @arg $3 string value Next argument; absent or empty counts as missing
 # @set ARGS_ERROR "<opt> requires a value" when the value is missing
 # @return 0 when stored, 1 when the value is missing
-_args_take_value() {
+_args_take_value()
+                   {
   local key="$1" opt="$2"
-  if [[ -z "${3-}" ]]; then
+  if [[ -z ${3-}   ]]; then
     ARGS_ERROR="${opt} requires a value"
     return 1
   fi
@@ -112,26 +118,27 @@ _args_take_value() {
 # @set ARGS_ERROR  "Unknown option: <name>", "<name> does not take a value"
 #                  or "<name> requires a value" on error
 # @return 0 when applied, 1 on error
-_args_option() {
+_args_option()
+               {
   local arg="$1" name="$1" inline=false
-  if [[ "$arg" == --*=* ]]; then
+  if [[ $arg == --*=*   ]]; then
     name="${arg%%=*}"
     inline=true
   fi
   local key="${_ARGS_KEY_OF[$name]:-}"
-  if [[ -z "$key" ]]; then
+  if [[ -z $key   ]]; then
     ARGS_ERROR="Unknown option: ${name}"
     return 1
   fi
   _ARGS_SHIFT=1
-  if [[ "${_ARGS_TYPE[$key]}" == value ]]; then
-    if [[ "$inline" == true ]]; then
+  if [[ ${_ARGS_TYPE[$key]} == value   ]]; then
+    if [[ $inline == true   ]]; then
       _args_take_value "$key" "$name" "${arg#*=}" || return 1
     else
       _args_take_value "$key" "$name" "${2-}" || return 1
       _ARGS_SHIFT=2
     fi
-  elif [[ "$inline" == true ]]; then
+  elif [[ $inline == true   ]]; then
     ARGS_ERROR="${name} does not take a value"
     return 1
   else
@@ -146,7 +153,8 @@ _args_option() {
 # @arg $2 string arg Argument to assign
 # @set ARGS_ERROR "Unexpected argument: <arg>" when no key is left
 # @return 0 when assigned, 1 when more arguments than declared keys
-_args_positional() {
+_args_positional()
+                   {
   local pos="$1" arg="$2"
   if ((pos >= ${#_ARGS_POSITIONAL[@]})); then
     ARGS_ERROR="Unexpected argument: ${arg}"
@@ -167,17 +175,18 @@ _args_positional() {
 #
 # @arg $@ string args Command-line arguments
 # @return 0 on success (including help), 1 on error (ARGS_ERROR holds the message)
-parse_args() {
+parse_args()
+             {
   ARGS_ERROR=""
   OPTIONS[SHOW_HELP]=false
   local arg pos=0
   while (($# > 0)); do
     arg="$1"
-    if [[ "$arg" == --help || "$arg" == -h ]]; then
+    if [[ $arg == --help || $arg == -h     ]]; then
       OPTIONS[SHOW_HELP]=true
       return 0
     fi
-    if [[ "$arg" != -* ]]; then
+    if [[ $arg != -*   ]]; then
       _args_positional "$pos" "$arg" || return 1
       pos=$((pos + 1))
       shift

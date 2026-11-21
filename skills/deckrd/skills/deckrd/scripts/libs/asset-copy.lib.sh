@@ -14,7 +14,7 @@
 #   1. Asset copy  - copy_assets and the per-file copy
 #   2. Mtime sync  - sync_asset_mtimes
 
-if [[ -n "${_ASSET_COPY_LOADED:-}" ]]; then
+if [[ -n ${_ASSET_COPY_LOADED:-}   ]]; then
   return 0
 fi
 readonly _ASSET_COPY_LOADED=1
@@ -50,14 +50,15 @@ readonly _ASSET_COPY_LOADED=1
 # @stderr `Error:` line on failure
 # @return 0 on success, including a missing src_dir
 # @return 1 when dest_dir cannot be created, a copy fails, or sync_asset_mtimes fails
-copy_assets() {
+copy_assets()
+              {
   local src_dir dest_dir list
   local -a mode_opt=()
   case "$1" in
-  --force | --missing-only)
-    mode_opt=("$1")
-    shift
-    ;;
+    --force | --missing-only)
+      mode_opt=("$1")
+      shift
+      ;;
   esac
   src_dir="$(normalize_dir_path "$1")"
   dest_dir="$(normalize_dir_path "$2")"
@@ -65,10 +66,10 @@ copy_assets() {
     printf 'Error: failed to create directory: %s\n' "$dest_dir" >&2
     return 1
   fi
-  [[ -d "$src_dir" ]] || return 0
+  [[ -d $src_dir   ]] || return 0
   list="$(list_asset_files "${mode_opt[@]}" "$src_dir" "$dest_dir" "${@:3}")"
   _copy_listed_assets "$src_dir" "$dest_dir" "$list" || return 1
-  [[ "${mode_opt[0]:-}" == --force ]] || sync_asset_mtimes "$src_dir" "$dest_dir" "${@:3}" || return 1
+  [[ ${mode_opt[0]:-} == --force   ]] || sync_asset_mtimes "$src_dir" "$dest_dir" "${@:3}" || return 1
 }
 
 # --- Per-file copy (internal) -----------------------------------------------
@@ -83,11 +84,12 @@ copy_assets() {
 # @stdout Each copied destination relative path (without `.org`), one per line
 # @stderr `Error: failed to copy file: <dest>` on failure
 # @return 0 on success, 1 on failure
-_copy_listed_assets() {
+_copy_listed_assets()
+                      {
   local src_dir="$1" dest_dir="$2" src_rel dst_rel dest
   while IFS= read -r src_rel; do
     # an empty list yields one empty line
-    [[ -n "$src_rel" ]] || continue
+    [[ -n $src_rel   ]] || continue
     dst_rel="${src_rel%.org}"
     dest="${dest_dir}/${dst_rel}"
     if ! copy_asset_file "${src_dir}/${src_rel}" "$dest"; then
@@ -95,7 +97,7 @@ _copy_listed_assets() {
       return 1
     fi
     printf '%s\n' "$dst_rel"
-  done <<<"$3"
+  done <<< "$3"
   return 0
 }
 
@@ -107,9 +109,10 @@ _copy_listed_assets() {
 # @arg $1 Source file path
 # @arg $2 Destination file path, overwritten if it exists
 # @return 0 on success, non-zero on failure (no message)
-copy_asset_file() {
+copy_asset_file()
+                  {
   mkdir -p "$(dirname "$2")" || return
-  if [[ -L "$2" ]]; then
+  if [[ -L $2   ]]; then
     rm -f -- "$2" || return
   fi
   cp -p "$1" "$2"
@@ -130,7 +133,8 @@ copy_asset_file() {
 # @stderr `Error: failed to update timestamp: <dest>` on failure
 # @return 0 on success, including a missing source directory
 # @return 1 when a timestamp update fails
-sync_asset_mtimes() {
+sync_asset_mtimes()
+                    {
   local src_dir dest_dir src_rel dst_rel src dest
   src_dir="$(normalize_dir_path "$1")"
   dest_dir="$(normalize_dir_path "$2")"
@@ -155,6 +159,7 @@ sync_asset_mtimes() {
 # @arg $2 Destination file path
 # @return 0 when dest is a regular file (not a symlink), older than src, and identical to it
 # @return 1 otherwise
-_asset_needs_mtime_sync() {
-  [[ ! -L "$2" && -f "$2" && "$1" -nt "$2" ]] && cmp -s "$1" "$2"
+_asset_needs_mtime_sync()
+                          {
+  [[ ! -L $2 && -f $2 && $1 -nt $2         ]] && cmp -s "$1" "$2"
 }

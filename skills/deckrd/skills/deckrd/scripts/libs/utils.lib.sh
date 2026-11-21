@@ -10,7 +10,7 @@
 # USAGE: source this file, do NOT execute directly.
 #   . "$(dirname "${BASH_SOURCE[0]}")/utils.lib.sh"
 
-if [[ -n "${_UTILS_LOADED:-}" ]]; then
+if [[ -n ${_UTILS_LOADED:-}   ]]; then
   return 0
 fi
 readonly _UTILS_LOADED=1
@@ -32,8 +32,9 @@ readonly _UTILS_LOADED=1
 # @stderr Passed through from jq. Callers that want it silenced write
 #         `jq_read ... 2>/dev/null`
 # @return jq exit code
-jq_read() {
-  (
+jq_read()
+          {
+  ( 
     set -o pipefail
     "${jqexe:-jq}" "$@" | tr -d '\r'
   )
@@ -52,13 +53,16 @@ jq_read() {
 # @arg ... Arguments passed to jq_read
 # @stderr jq and mktemp messages only; the function itself writes nothing
 # @return 0 on success, 1 if target is an existing directory (or a symlink to one), or if mktemp, jq_read or mv fails
-write_json_file() {
+write_json_file()
+                  {
   local target="$1"
   shift
-  [[ -d "$target" ]] && return 1
+  [[ -d $target   ]] && return 1
   local tmp
   tmp="$(mktemp "${target}.tmp.XXXXXX")" || return 1
-  if ! { jq_read "$@" >"$tmp" && mv -f "$tmp" "$target"; }; then
+  if ! {
+         jq_read "$@" > "$tmp" && mv -f "$tmp" "$target"
+  }; then
     rm -f "$tmp"
     return 1
   fi
@@ -81,7 +85,8 @@ write_json_file() {
 # @arg $1 Directory path, optional (a missing argument is treated as empty)
 # @stdout Normalized path followed by a newline (an empty line for empty input)
 # @return 0 always
-normalize_dir_path() {
+normalize_dir_path()
+                     {
   printf '%s\n' "${1:-}" | sed -E 's#\\#/#g; s#^/{3,}#/#; s#([^/])/+#\1/#g; s#(.)/$#\1#'
 }
 
@@ -99,6 +104,7 @@ normalize_dir_path() {
 # @arg $2 Suffix to remove (an empty suffix removes nothing)
 # @stdout The resulting string followed by a newline (an empty line for empty input)
 # @return 0 always
-strip_suffix() {
+strip_suffix()
+               {
   printf '%s\n' "${1%"$2"}"
 }

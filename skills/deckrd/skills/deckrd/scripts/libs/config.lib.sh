@@ -10,7 +10,7 @@
 # USAGE: source this file, do NOT execute directly.
 #   . "$(dirname "${BASH_SOURCE[0]}")/libs/config.lib.sh"
 
-if [[ -n "${_CONFIG_LOADED:-}" ]]; then
+if [[ -n ${_CONFIG_LOADED:-}   ]]; then
   return 0
 fi
 readonly _CONFIG_LOADED=1
@@ -54,14 +54,15 @@ declare -n CONFIG="_KV_config"
 # @arg $2 string Key name, spelled identically in session.json and in the config schema
 # @return 0 when the value was copied or there was nothing to copy, 1 when the read
 #         failed or the key is not in the config schema
-_config_copy_session_value() {
+_config_copy_session_value()
+                             {
   local session_file="$1"
   local key="$2"
 
   # A read failure is propagated instead of being silently treated as "no value".
   local value
   value=$(jq_read -r ".${key} // empty" "$session_file") || return 1
-  if [[ -n "$value" ]]; then
+  if [[ -n $value   ]]; then
     kv_set "config" "$key" "$value"
   fi
 }
@@ -89,14 +90,15 @@ _config_copy_session_value() {
 # @stderr Error message naming either the missing interpreter or the unreadable file
 # @return 0 on defaults-only or successful load, 1 when the interpreter is missing or
 #         no JSON object can be read
-config_init() {
+config_init()
+              {
   local session_file="${1:-}"
 
   kv_init "config" "$_CONFIG_SCHEMA"
 
   # No session file to read yet (argument omitted, or first run before the file
   # is created): keep the schema defaults and stay silent.
-  if [[ -z "$session_file" || ! -f "$session_file" ]]; then
+  if [[ -z $session_file || ! -f $session_file     ]]; then
     return 0
   fi
 
@@ -105,7 +107,7 @@ config_init() {
   # is blamed for an absent tool. Absence is read from command -v, not from jq's
   # exit code, which varies by version (see the shape guard's note).
   local jq_cmd="${jqexe:-jq}"
-  if ! command -v "$jq_cmd" >/dev/null 2>&1; then
+  if ! command -v "$jq_cmd" > /dev/null 2>&1; then
     echo "Error: config_init: '${jq_cmd}' is not installed, so '${session_file}' cannot be read. Call validate_env before config_init, or install jq or jaq." >&2
     return 1
   fi
@@ -115,7 +117,7 @@ config_init() {
   # empty file depends on its version (1.6 reports success, 1.8 reports failure),
   # while "no object line on stdout" is uniform across versions and also covers
   # a parse error. A missing interpreter is already ruled out above.
-  if [[ "$(jq_read -r 'type' "$session_file" 2>/dev/null)" != "object" ]]; then
+  if [[ "$(jq_read -r 'type' "$session_file" 2> /dev/null)" != "object" ]]; then
     echo "Error: config_init: cannot read '${session_file}' as a JSON object" >&2
     return 1
   fi
@@ -129,9 +131,9 @@ config_init() {
   # session without an active module leaves deckrd_base at its default.
   local active
   active=$(jq_read -r '.active // empty' "$session_file") || return 1
-  if [[ -n "$active" ]]; then
+  if [[ -n $active   ]]; then
     # DECKRD_DOCS is a backward-compatible override; bootstrap exports DECKRD_DOCS_DIR.
-    local deckrd_docs="${DECKRD_DOCS:-${DECKRD_DOCS_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)/docs/.deckrd}}"
+    local deckrd_docs="${DECKRD_DOCS:-${DECKRD_DOCS_DIR:-$(git rev-parse --show-toplevel 2> /dev/null || pwd)/docs/.deckrd}}"
     kv_set "config" "deckrd_base" "${deckrd_docs}/${active}"
   fi
 
@@ -142,7 +144,8 @@ config_init() {
 #
 # @arg $1 string Key name
 # @stdout Value (empty if key not found)
-config_get() {
+config_get()
+             {
   local key="$1"
   kv_get "config" "$key"
 }
@@ -153,7 +156,8 @@ config_get() {
 # @arg $2 string Value
 # @note config_set updates the in-memory CONFIG store only.
 #       Changes are NOT automatically written back to session.json.
-config_set() {
+config_set()
+             {
   local key="$1"
   local value="${2:-}"
   kv_set "config" "$key" "$value"
@@ -162,6 +166,7 @@ config_set() {
 # config_all - Output all CONFIG entries as key=value lines
 #
 # @stdout All entries in "key=value" format
-config_all() {
+config_all()
+             {
   kv_all "config"
 }

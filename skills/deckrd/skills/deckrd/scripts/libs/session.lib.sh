@@ -10,7 +10,7 @@
 # USAGE: source this file, do NOT execute directly.
 #   . "$(dirname "${BASH_SOURCE[0]}")/libs/session.lib.sh"
 
-if [[ -n "${_SESSION_LOADED:-}" ]]; then
+if [[ -n ${_SESSION_LOADED:-}   ]]; then
   return 0
 fi
 readonly _SESSION_LOADED=1
@@ -33,7 +33,8 @@ declare -n SESSION_SCHEMA="_KV_SCHEMA"
 #
 # @arg $1 string Buffer name (store name)
 # @arg $2 string Schema string
-session_init() {
+session_init()
+               {
   local buffer="$1"
   local schema="$2"
   kv_init "$buffer" "$schema"
@@ -44,11 +45,12 @@ session_init() {
 # @arg $1 string JSON file path
 # @arg $2 string Buffer name (store name)
 # @return 0 on success (including file-not-found with default init), 1 on schema error, invalid JSON, or unknown key
-session_load() {
+session_load()
+               {
   local file="$1"
   local buffer="$2"
 
-  if [[ -z "${_KV_SCHEMA[$buffer]+set}" ]]; then
+  if [[ -z ${_KV_SCHEMA[$buffer]+set}   ]]; then
     echo "Error: session_load: schema not registered for buffer '${buffer}'" >&2
     return 1
   fi
@@ -61,7 +63,8 @@ session_load() {
 # @arg $1 string JSON file path
 # @arg $2 string Buffer name (store name)
 # @return 0 on success
-session_save() {
+session_save()
+               {
   local file="$1"
   local buffer="$2"
   kv_save "$buffer" "$file"
@@ -72,7 +75,8 @@ session_save() {
 # @arg $1 string Buffer name (store name)
 # @arg $2 string Key name
 # @stdout Value (empty string if key not found)
-session_get() {
+session_get()
+              {
   local buffer="$1"
   local key="$2"
   kv_get "$buffer" "$key"
@@ -83,7 +87,8 @@ session_get() {
 # @arg $1 string Buffer name (store name)
 # @arg $2 string Key name
 # @arg $3 string Value
-session_set() {
+session_set()
+              {
   local buffer="$1"
   local key="$2"
   local value="${3:-}"
@@ -101,10 +106,11 @@ session_set() {
 # @return 0 if migration is needed, 1 if the file is a JSON object that needs no
 #         migration, 2 if the file is missing or is not a JSON object (including
 #         an empty file)
-session_lang_migration_needed() {
+session_lang_migration_needed()
+                                {
   local file="$1"
 
-  if [[ ! -f "$file" ]]; then
+  if [[ ! -f $file   ]]; then
     echo "Error: session_lang_migration_needed: file not found: ${file}" >&2
     return 2
   fi
@@ -115,14 +121,14 @@ session_lang_migration_needed() {
   local verdict
 
   # An empty file makes jq print nothing and succeed, so it falls into `*` too
-  verdict="$(jq_read -r "$check" "$file" 2>/dev/null)"
+  verdict="$(jq_read -r "$check" "$file" 2> /dev/null)"
   case "$verdict" in
-  migrate) return 0 ;;
-  skip) return 1 ;;
-  *)
-    echo "Error: session_lang_migration_needed: not a JSON object: ${file}" >&2
-    return 2
-    ;;
+    migrate) return 0 ;;
+    skip) return 1 ;;
+    *)
+      echo "Error: session_lang_migration_needed: not a JSON object: ${file}" >&2
+      return 2
+      ;;
   esac
 }
 
@@ -142,16 +148,17 @@ session_lang_migration_needed() {
 # @stderr One notice line when the file is migrated; an `Error:` line on failure
 # @return 0 on migration or no-op, 1 if the file is missing, is not a JSON object
 #         (including an empty file), or cannot be written
-session_migrate_lang_to_prog() {
+session_migrate_lang_to_prog()
+                               {
   local file="$1"
   local rc=0
 
   # The predicate prints the `Error:` line itself when it returns 2
   session_lang_migration_needed "$file" || rc=$?
   case "$rc" in
-  0) ;;
-  1) return 0 ;;
-  *) return 1 ;;
+    0) ;;
+    1) return 0 ;;
+    *) return 1 ;;
   esac
 
   if ! write_json_file "$file" '(. + {prog: .lang}) | del(.lang)' "$file"; then

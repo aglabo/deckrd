@@ -10,7 +10,7 @@
 # shellcheck shell=bash
 # cspell:words shuf TOCTOU
 
-if [[ -n "${_NAMING_LIB_LOADED:-}" ]]; then
+if [[ -n ${_NAMING_LIB_LOADED:-}   ]]; then
   return 0
 fi
 readonly _NAMING_LIB_LOADED=1
@@ -35,9 +35,10 @@ _NAMING_SYMLINK_HINT="Hint: a symlink may have been checked out as a text file (
 # _init_filename_cache - Ensure the filename cache directory exists
 #
 # @return 0 on success, 1 if _FILENAME_CACHE_DIR is unset or mkdir fails
-_init_filename_cache() {
+_init_filename_cache()
+                       {
   local cache_dir="${_FILENAME_CACHE_DIR}"
-  if [[ -z "$cache_dir" ]]; then
+  if [[ -z $cache_dir   ]]; then
     echo "Error: _init_filename_cache: _FILENAME_CACHE_DIR is not set" >&2
     return 1
   fi
@@ -52,14 +53,15 @@ _init_filename_cache() {
 # @arg $1 string filename  The filename to register in the cache
 # @return 0 if newly created (filename is unique and now registered)
 # @return 1 if file already exists or cache directory setup fails
-_try_create_cache_file() {
+_try_create_cache_file()
+                         {
   local filename="${1}"
 
   _init_filename_cache || return 1
-  (
+  ( 
     set -o noclobber
-    : >"${_FILENAME_CACHE_DIR}/${filename}"
-  ) 2>/dev/null
+    : > "${_FILENAME_CACHE_DIR}/${filename}"
+  ) 2> /dev/null
 }
 
 _ADJECTIVES=(
@@ -78,10 +80,11 @@ _ADJECTIVES=(
 #                           Default: <lib_dir>/../../assets/dic/hackers.dic
 # @stdout One hacker short name (e.g. "knuth")
 # @return 0 on success, 1 on error (file not found, empty, or only a link target path)
-hacker_random() {
+hacker_random()
+                {
   local dic="${1:-${_NAMING_DIC_DEFAULT}}"
 
-  if [[ ! -f "$dic" ]]; then
+  if [[ ! -f $dic   ]]; then
     echo "Error: hacker_random: file not found: ${dic}" >&2
     echo "${_NAMING_SYMLINK_HINT}" >&2
     return 1
@@ -96,7 +99,7 @@ hacker_random() {
   fi
 
   # A symlink checked out as text leaves the link target path as the only entry
-  if [[ ${#entries[@]} -eq 1 && "${entries[0]}" == */* ]]; then
+  if [[ ${#entries[@]} -eq 1 && ${entries[0]} == */*   ]]; then
     echo "Error: hacker_random: dictionary holds only a path: ${dic}" >&2
     echo "${_NAMING_SYMLINK_HINT}" >&2
     return 1
@@ -111,7 +114,8 @@ hacker_random() {
 #
 # @stdout One adjective word (e.g. "bold")
 # @return 0 on success, 1 on error (empty array)
-adjective_random() {
+adjective_random()
+                   {
   if [[ ${#_ADJECTIVES[@]} -eq 0 ]]; then
     echo "Error: adjective_random: _ADJECTIVES array is empty" >&2
     return 1
@@ -126,7 +130,8 @@ adjective_random() {
 # @arg $2 string postfix File type/category suffix (e.g. "doc", "spec")
 # @stdout Filename in format: <slug>-<token>-<timestamp>-<hash>-<postfix>
 # @return 0 on success, 1 if hacker_random fails
-_generate_filename() {
+_generate_filename()
+                     {
   local slug="${1}"
   local postfix="${2}"
 
@@ -155,7 +160,8 @@ _generate_filename() {
 # @arg $2 string postfix File type/category suffix (e.g. "doc", "spec")
 # @stdout Filename in format: <slug>-<token>-<timestamp>-<hash>-<postfix>
 # @return 0 on success, 1 if max retries exceeded or _generate_filename fails
-generate_filename() {
+generate_filename()
+                    {
   local slug="${1}"
   local postfix="${2}"
   local max_retries="${NAMING_MAX_RETRIES}"
