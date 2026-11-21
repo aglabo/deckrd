@@ -63,14 +63,16 @@ If **EXISTING DICTIONARY** is provided:
 
 ## Step 1: Assign and Group Terms
 
-- Use the UD-IDs given in DICTIONARY TERMS. A NEW term without an ID gets the next number after the highest existing one
-- Format: `UD-NNN`, three digits, zero-padded (`UD-001`)
-- Group terms into one chapter per category (`## N. <category>`). Sub-groups may use `### N.M` with `#### UD-NNN` headings
+- Use the UD-IDs given in DICTIONARY TERMS. A NEW term without an ID is issued in this order: (1) choose the chapter that fits the term, (2) use that chapter's code, (3) use the next number after the highest existing one of that code. Decide the chapter (code) first, then the number within it. If no existing chapter fits, add a new chapter with a new code
+- Format: `UD-<CODE>-NNN`. `<CODE>` is the chapter code (2-6 characters, an uppercase letter first, then uppercase letters or digits; unique in the module). NNN is three digits, zero-padded, numbered per chapter code (`UD-ST-001`, `UD-CON-001`)
+- List the chapter codes in the "Chapter Codes" table (TEMPLATE 1.5). Add a code only for a new chapter; never change an existing code
+- Moving a term to another chapter does not change its ID
+- Group terms into one chapter per category (`## N. <category>`). Sub-groups may use `### N.M` with `#### UD-<CODE>-NNN` headings
 - Place a new term in the chapter it belongs to, next to related terms. The UD-ID order does not have to match the heading order
 
 ## Step 2: Write Each Term
 
-Write one heading per term: `### UD-NNN <term>` (or `#### UD-NNN <term>` inside a sub-group).
+Write one heading per term: `### UD-<CODE>-NNN <term>` (or `#### UD-<CODE>-NNN <term>` inside a sub-group).
 Put the definition paragraph directly under the heading, then the items as a bullet list.
 If the definition itself contains a bullet list, write `項目:` (or `Items:`) on its own line before the item list.
 **Do NOT put the term list in a single table.**
@@ -89,7 +91,7 @@ If the definition itself contains a bullet list, write `項目:` (or `Items:`) o
 | Evidence (定義根拠)           | The source passage that grounds the meaning (REQ / DR / design note)                                          | No       |
 | Related rules (関連規則)      | DR decisions, requirements, or rules that use this concept to set obligations or values                       | Yes      |
 
-Reference other terms by UD-ID and term (`UD-003 処理権`).
+Reference other terms by UD-ID and term (`UD-ST-003 処理権`).
 
 ### Relation Direction
 
@@ -147,6 +149,6 @@ Do not include explanations or meta-commentary.
 
 - No MUST / SHOULD / MAY, conditions, or concrete values inside a definition
 - Every term has definition, abstraction, perspective, settlement, and evidence
-- No UD-ID appears twice as a heading; no existing UD-ID is missing
+- No UD-ID appears twice as a heading; no existing UD-ID is missing; every UD-ID uses a code from the Chapter Codes table
 - No reverse relations under broader concept / components / states
 - No term table
