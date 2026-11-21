@@ -33,7 +33,7 @@ created: "{{ DATE }}"
 
 ### 1.2 Items
 
-Each term has a heading `UD-NNN <term>` followed by its definition paragraph, then the items below.
+Each term has a heading `UD-<CODE>-NNN <term>` (`<CODE>` is the chapter code in 1.5, NNN is a 3-digit sequence per chapter code) followed by its definition paragraph, then the items below.
 
 | Item             | 項目       | Meaning                                                                                 |
 | ---------------- | ---------- | --------------------------------------------------------------------------------------- |
@@ -51,8 +51,9 @@ Each term has a heading `UD-NNN <term>` followed by its definition paragraph, th
 - Broader concept, Components, and States are written only from this term toward the other. Do not write the reverse relation.
   For example, a state value lists the state concept as its broader concept; the state concept does not enumerate its values.
 - Broader concept, Components, States, Distinguish from, Related, and Related rules are omitted when they do not apply.
-- The UD-ID leads the heading. Numbers are never renumbered, and deprecated numbers are never reused.
+- The UD-ID leads the heading. Numbers are never renumbered, and deprecated IDs are never reused.
   The numeric order does not have to match the order of the headings.
+- Moving a term to another chapter does not change its ID. The chapter code shows the chapter at the time the ID was issued.
 
 ### 1.3 Abstraction Levels
 
@@ -77,19 +78,28 @@ Each term has a heading `UD-NNN <term>` followed by its definition paragraph, th
 
 <!-- Japanese labels: 確定 / 確定 (実現可能性は未確認) / 未確定 / 廃止 -->
 
+### 1.5 Chapter Codes
+
+Each term chapter has one code: 2-6 characters, an uppercase letter first, then uppercase letters or digits. Codes are unique in the module.
+A term ID is `UD-<CODE>-NNN`. To issue a new ID: choose the chapter that fits the term, use that chapter's code, then use the highest existing number of that code plus one as NNN.
+
+| Code       | Chapter        |
+| ---------- | -------------- |
+| {{CODE_1}} | {{CATEGORY_1}} |
+
 ---
 
 ## 2. {{CATEGORY_1}}
 
 <!--
-Group terms into one chapter per category (## N. <category>). Sub-groups may use ### N.M with #### UD-NNN headings.
+Group terms into one chapter per category (## N. <category>). Sub-groups may use ### N.M with #### UD-<CODE>-NNN headings.
 Within and across chapters, the UD-ID order does not have to match the heading order.
 Do not put the terms in a single table.
 If the definition itself contains a bullet list, write "Items:" (項目:) on its own line before the item list.
 A deprecated term keeps its heading, sets Settlement: Deprecated, and states the reason (and successor UD-ID, if any) in the definition.
 -->
 
-### UD-001 {{TERM_1}}
+### UD-{{CODE_1}}-001 {{TERM_1}}
 
 {{DEFINITION_1}}
 
@@ -100,7 +110,7 @@ A deprecated term keeps its heading, sets Settlement: Deprecated, and states the
 - Components: {{COMPONENTS_1}} <!-- optional -->
 - States: {{STATES_1}} <!-- optional -->
 - Distinguish from: {{DISTINGUISH_1}} <!-- optional -->
-- Related: {{RELATED_1}} <!-- optional: UD-xxx -->
+- Related: {{RELATED_1}} <!-- optional: UD-<CODE>-NNN -->
 - Evidence: {{EVIDENCE_1}} <!-- REQ / DR / design note. A definition moved from another document: "migrated from <doc> vX.Y.Z <section>" -->
 - Related rules: {{RELATED_RULES_1}} <!-- optional: DR-xx decision N / REQ-xx / R-xxx -->
 
@@ -129,7 +139,7 @@ Optional: a table of the DR decisions checked against the dictionary.
 
 | Decision | DR text (summary) | UD checked | Result     |
 | -------- | ----------------- | ---------- | ---------- |
-| N        | {{SUMMARY}}       | UD-xxx     | Consistent |
+| N        | {{SUMMARY}}       | UD-<CODE>-NNN | Consistent |
 -->
 
 ---
@@ -144,7 +154,7 @@ The term IDs defined in `<doc>` v<version> are retired and moved to the UD-IDs b
 
 | Former ID | Former term | UD-ID  |
 | --------- | ----------- | ------ |
-| TM-01     | {{TERM}}    | UD-xxx |
+| TM-01     | {{TERM}}    | UD-<CODE>-NNN |
 
 Content removed from a definition while moving it (obligations, conditions) and the documents that now own it are noted below the table.
 
@@ -158,10 +168,10 @@ Content removed from a definition while moving it (obligations, conditions) and 
      MINOR = term added, structural change (item added, etc.)
      PATCH = clarification that keeps the meaning, relation / evidence added, typo
      Keep frontmatter `version` equal to the newest row.
-     In Description, list the documents whose impact was checked (found with `grep -rn "UD-NNN"`) and the result.
+     In Description, list the documents whose impact was checked (found with `grep -rn "UD-<CODE>-NNN"`) and the result.
      See docs/.deckrd/rules/deckrd-rule-document-versioning.md
      and docs/.deckrd/rules/deckrd-rule-document-model.md -->
 
-| Date     | Version | Description                        |
-| -------- | ------- | ---------------------------------- |
-| {{DATE}} | 1.0.0   | Initial release (UD-001 to UD-NNN) |
+| Date     | Version | Description                            |
+| -------- | ------- | -------------------------------------- |
+| {{DATE}} | 1.0.0   | Initial release (UD-<CODE>-001 onward) |
