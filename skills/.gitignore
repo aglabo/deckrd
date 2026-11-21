@@ -28,3 +28,17 @@
 !**/*.sh
 !**/*.md
 
+
+## ---------------------------------------------------------------
+##  Re-apply root exclusions (the allow rules above would reopen them)
+
+# session files
+**/*session.json
+**/*session
+
+# .env files
+**/.env*
+!**/.env.example
+
+# dependencies
+**/node_modules/
