@@ -107,7 +107,8 @@ declare -a AI_COMMAND=()
 # @return Always exits with 0
 # @example
 #   display_help
-display_help() {
+display_help()
+               {
   local script_name
   script_name=$(basename "$0")
   cat << EOF
@@ -161,7 +162,8 @@ EOF
 # @exitcode 1 If unknown option provided or required argument missing
 # @global OUTPUT_FILE
 # @global AI_MODEL
-parse_options() {
+parse_options()
+                {
   while [[ $# -gt 0 ]]; do
     case $1 in
       --output | -o)
@@ -210,7 +212,8 @@ parse_options() {
 #   if has_existing_message ".git/COMMIT_EDITMSG"; then
 #     echo "Message already exists"
 #   fi
-has_existing_message() {
+has_existing_message()
+                       {
   local file="$1"
 
   # Fail safely if file does not exist
@@ -230,7 +233,8 @@ has_existing_message() {
 # @example
 #   context=$(make_context_block)
 #   echo "$context" | claude -p
-make_context_block() {
+make_context_block()
+                     {
   echo ""
   echo "===== GIT LOGS ====="
   git log --oneline -10 || echo "No logs available."
@@ -270,7 +274,8 @@ make_context_block() {
 #   echo "data" | "${AI_COMMAND[@]}"
 #
 #   get_model_command "gpt-5" || { echo "Error"; exit 1; }
-get_model_command() {
+get_model_command()
+                    {
   local model="${1:-${DEFAULT_AI_MODEL}}"
 
   case "$model" in
@@ -344,7 +349,8 @@ get_model_command() {
 #
 #   # For testing with mock message
 #   generate_commit_message "fix: test message" || exit 1
-generate_commit_message() {
+generate_commit_message()
+                          {
   local test_message="${1:-}"
 
   # Return test message if provided (for testing purposes)
@@ -418,7 +424,8 @@ generate_commit_message() {
 # @global OUTPUT_FILE Output file path (empty means stdout)
 # @example
 #   output_commit_message "$commit_msg"
-output_commit_message() {
+output_commit_message()
+                        {
   local commit_msg="$1"
 
   if [[ -z $OUTPUT_FILE   ]]; then

@@ -13,8 +13,9 @@ set -euo pipefail
 
 DEFAULT_INPUT="skills/_data/hackers.meta.yaml"
 
-usage() {
-  cat <<EOF
+usage()
+        {
+  cat << EOF
 Usage: $(basename "$0") [OPTIONS] [INPUT_FILE]
 
 Extract .short names from a hackers metadata YAML file.
@@ -39,21 +40,21 @@ output_file=""
 
 while getopts "io:h" opt; do
   case "$opt" in
-  i) use_stdin=true ;;
-  o) output_file="$OPTARG" ;;
-  h)
-    usage
-    exit 0
-    ;;
-  *)
-    usage >&2
-    exit 1
-    ;;
+    i) use_stdin=true ;;
+    o) output_file="$OPTARG" ;;
+    h)
+      usage
+      exit 0
+      ;;
+    *)
+      usage >&2
+      exit 1
+      ;;
   esac
 done
 shift $((OPTIND - 1))
 
-if ! command -v yq >/dev/null 2>&1; then
+if ! command -v yq > /dev/null 2>&1; then
   echo "Error: yq is required" >&2
   exit 1
 fi
@@ -72,11 +73,11 @@ generated_at=$(date '+%Y-%m-%d %H:%M:%S %Z')
 
 header="# @(#) Hacker Name List -- generated: ${generated_at} from ${input_source}"
 
-if [[ -n "$output_file" ]]; then
+if [[ -n $output_file   ]]; then
   {
     printf '%s\n' "$header"
     printf '%s\n' "$result"
-  } >"$output_file"
+  } > "$output_file"
   echo "Generated: $output_file" >&2
 else
   printf '%s\n' "$header"
