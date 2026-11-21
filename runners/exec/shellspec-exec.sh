@@ -55,7 +55,8 @@ SPEC_SEARCH_ROOT="${SPEC_SEARCH_ROOT:-${PROJECT_ROOT}}"
 # @arg $1 string Argument to check
 # @exitcode 0 if valid test type, 1 otherwise
 #
-is_test_type() {
+is_test_type()
+               {
   local arg="$1"
   local type
   for type in "${TEST_TYPES[@]}"; do
@@ -69,7 +70,8 @@ is_test_type() {
 # @arg $1 string Argument to check
 # @exitcode 0 if spec file path, 1 otherwise
 #
-is_spec_file() {
+is_spec_file()
+               {
   local arg="$1"
   [[ $arg == *.spec.sh   ]]
 }
@@ -79,7 +81,8 @@ is_spec_file() {
 # @arg $1 string Argument to check
 # @exitcode 0 if glob path containing *.spec.sh pattern, 1 otherwise
 #
-is_spec_glob() {
+is_spec_glob()
+               {
   local arg="$1"
   is_glob_pattern "$arg" && [[ $arg == *".spec.sh"*   ]]
 }
@@ -90,7 +93,8 @@ is_spec_glob() {
 # @stdout List of matching spec file paths; nothing when no file matches
 # @exitcode 0 always
 #
-expand_spec_glob() {
+expand_spec_glob()
+                   {
   local pattern="$1"
   local norm_pattern
   norm_pattern=$(normalize_path "$pattern")
@@ -113,7 +117,8 @@ expand_spec_glob() {
 # @arg $@ Additional file patterns to filter by
 # @stdout List of spec file paths relative to project root
 #
-get_spec_files() {
+get_spec_files()
+                 {
   local test_type="$1"
   shift
   # The leading separator anchors the filter to a whole path component: without it
@@ -136,7 +141,8 @@ get_spec_files() {
 # @sideeffect Sets PARSED_ARGS to the remaining arguments (without --integration)
 # @sideeffect Sets SKIP_INTEGRATION_TESTS=0 if --integration found
 #
-parse_options() {
+parse_options()
+                {
   PARSED_ARGS=()
   local arg
   for arg in "$@"; do
@@ -164,7 +170,8 @@ parse_options() {
 # @exitcode 1 no arguments given
 # @exitcode 2 an argument is neither a test type, a spec file nor a glob
 #
-resolve_spec_files() {
+resolve_spec_files()
+                     {
   RESOLVED_SPEC_FILES=()
   UNMATCHED_SPEC_GLOBS=()
   UNKNOWN_SPEC_ARG=''
@@ -194,7 +201,8 @@ resolve_spec_files() {
 # @sideeffect Sets UNKNOWN_SPEC_ARG to the rejected argument (exit code 2)
 # @exitcode 0 on success, 2 on an argument that is neither a spec file nor a glob
 #
-_resolve_spec_paths() {
+_resolve_spec_paths()
+                      {
   local arg
   local -a matches
   for arg in "$@"; do
@@ -223,7 +231,8 @@ _resolve_spec_paths() {
 # @arg $1 Name of the array to normalize
 # @sideeffect Empties the named array when it holds one empty element
 #
-_drop_empty_mapfile() {
+_drop_empty_mapfile()
+                      {
   local -n ref_array=$1
   if [[ ${#ref_array[@]} -eq 1 && -z ${ref_array[0]}   ]]; then
     ref_array=()
@@ -236,7 +245,8 @@ _drop_empty_mapfile() {
 #         normalize_path unchanged unless they contain backslashes)
 # @exitcode Exit code from ShellSpec
 #
-run_shellspec() {
+run_shellspec()
+                {
   local -a normalized_args=()
   local arg
   for arg in "$@"; do
@@ -263,7 +273,8 @@ run_shellspec() {
 #   main a.unit.spec.sh b.unit.spec.sh  # Run several spec files
 #   main test.spec.sh --repair        # Run with ShellSpec options
 #
-main() {
+main()
+       {
   # Called in this shell, not through a pipe or $(): parse_options() reports its
   # result in PARSED_ARGS precisely so that SKIP_INTEGRATION_TESTS survives
   parse_options "$@"

@@ -18,7 +18,8 @@ set -euo pipefail
 # @stderr "Unknown option: <opt>" for an unrecognized option
 # @exitcode 0 Success
 # @exitcode 1 Unknown option, or shfmt failed
-main() {
+main()
+       {
   local mode="list"
   while [[ $# -gt 0 ]]; do
     case "$1" in

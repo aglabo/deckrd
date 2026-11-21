@@ -32,7 +32,8 @@ readonly CONFIG_LOCAL_RELPATH='configs/textlintrc.yaml'
 # @exitcode 0 All checks passed
 # @exitcode 1 Lint error
 # @exitcode 78 (EXIT_CONFIG_NOT_FOUND) Config file not found
-main() {
+main()
+       {
   local -a targets=("$@")
   local configFile status=0
   configFile="$(resolve_config_file "$CONFIG_GLOBAL_RELPATH" "$CONFIG_LOCAL_RELPATH")" || status=$?

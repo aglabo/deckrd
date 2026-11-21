@@ -33,7 +33,8 @@ readonly CONFIG_LOCAL_RELPATH='configs/shellcheckrc'
 # @exitcode 0 All checks passed, or no .sh files found
 # @exitcode 1 Lint error or unknown option
 # @exitcode 78 (EXIT_CONFIG_NOT_FOUND) Config file not found
-main() {
+main()
+       {
   local rcfile="${SHELLCHECKRC:-}"
   while [[ $# -gt 0 ]]; do
     case "$1" in

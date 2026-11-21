@@ -33,7 +33,8 @@ readonly CONFIG_LOCAL_RELPATH='configs/ghalint.yaml'
 # @exitcode 0 All checks passed
 # @exitcode 1 Lint error or invalid subcommand
 # @exitcode 78 (EXIT_CONFIG_NOT_FOUND) Config file not found
-main() {
+main()
+       {
   local subcommand="${1:-}"
 
   case "$subcommand" in

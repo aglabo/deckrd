@@ -36,7 +36,8 @@ readonly WSL_REQUIRED_COMMANDS=('bash' 'git' 'rg' 'jq')
 # @arg $1 string OS name (the value of `uname -s`)
 # @exitcode 0 if the body should run in WSL, 1 if it should run on this shell
 #
-should_use_wsl() {
+should_use_wsl()
+                 {
   local __os_name="$1"
   if [[ ${SHELLSPEC_NO_WSL:-} == '1'   ]]; then
     return 1
@@ -49,7 +50,8 @@ should_use_wsl() {
 # @arg $@ Arguments forwarded to the body untouched
 # @exitcode Exit code of the body
 #
-run_local() {
+run_local()
+            {
   bash "${PROJECT_ROOT}/${EXEC_SCRIPT}" "$@"
 }
 
@@ -62,7 +64,8 @@ run_local() {
 # @exitcode 1 wsl.exe cannot be invoked
 # @exitcode 2 Some required commands are missing inside WSL
 #
-check_wsl_ready() {
+check_wsl_ready()
+                  {
   if ! is_wsl_available; then
     return 1
   fi
@@ -83,7 +86,8 @@ check_wsl_ready() {
 # @exitcode 1 WSL is required but not ready
 # @exitcode Exit code of the body otherwise
 #
-main() {
+main()
+       {
   if ! should_use_wsl "$(uname -s)"; then
     run_local "$@"
     return
