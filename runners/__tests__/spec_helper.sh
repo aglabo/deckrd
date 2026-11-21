@@ -38,7 +38,8 @@
 # @sideeffect Saves the current SPEC_SEARCH_ROOT into ORIG_SPEC_SEARCH_ROOT and
 #             repoints SPEC_SEARCH_ROOT at TEMP_DIR
 #
-setup_temp_specs() {
+setup_temp_specs()
+                   {
   local __root="${SHELLSPEC_TMPBASE:-${TMPDIR:-/tmp}}/deckrd-spec-fixture"
   # Marker name must not match `*.spec.sh`: get_filelist() globs the tree for specs
   local __ready="${__root}/.fixture-ready"
@@ -52,7 +53,7 @@ setup_temp_specs() {
   # Rebuild until the completion marker exists. Testing the root with `-d` instead
   # would also accept a tree a parallel job is still filling in, yielding a
   # short spec list. `-f` is a builtin test, not a fork()
-  if [[ ! -f "$__ready" ]]; then
+  if [[ ! -f $__ready   ]]; then
     # Fake spec files mirroring the real layout (no e2e directory on purpose)
     local __spec __dir
     local -A __seen=()
@@ -87,7 +88,7 @@ setup_temp_specs() {
     touch "${__files[@]}" || return 1
     # Stamp completion last and only on success, so the marker always implies a
     # finished tree. A redirection, not a command: no fork()
-    : >"$__ready" || return 1
+    : > "$__ready" || return 1
   fi
 }
 
@@ -99,7 +100,8 @@ setup_temp_specs() {
 # @sideeffect Unsets TEMP_DIR
 # @sideeffect Restores SPEC_SEARCH_ROOT from ORIG_SPEC_SEARCH_ROOT
 #
-teardown_temp_specs() {
+teardown_temp_specs()
+                      {
   unset TEMP_DIR
   # shellcheck disable=SC2034
   SPEC_SEARCH_ROOT="${ORIG_SPEC_SEARCH_ROOT:-}"
@@ -112,7 +114,8 @@ teardown_temp_specs() {
 # @return 0 on success; 1 when the directory could not be created
 # @sideeffect Sets the variable named by $1
 #
-make_temp_dir() {
+make_temp_dir()
+                {
   local __dir
   __dir="$(mktemp -d)" || return 1
   printf -v "$1" '%s' "$__dir"
@@ -124,9 +127,10 @@ make_temp_dir() {
 # @arg $1 string Name of the variable holding the directory path
 # @sideeffect Removes the directory and unsets the variable named by $1
 #
-remove_temp_dir() {
+remove_temp_dir()
+                  {
   local __dir="${!1:-}"
-  [[ -n "$__dir" ]] && rm -rf "$__dir"
+  [[ -n $__dir   ]] && rm -rf "$__dir"
   unset "$1"
 }
 
@@ -136,7 +140,8 @@ remove_temp_dir() {
 # @arg $2 string bash statement the script executes when launched
 # @return 0 on success; 1 when the file could not be written
 #
-write_bash_stub() {
-  printf '#!/usr/bin/env bash\n%s\n' "$2" >"$1" || return 1
+write_bash_stub()
+                  {
+  printf '#!/usr/bin/env bash\n%s\n' "$2" > "$1" || return 1
   chmod +x "$1"
 }
