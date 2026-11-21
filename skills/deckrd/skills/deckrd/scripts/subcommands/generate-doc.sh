@@ -75,14 +75,16 @@ SESSION_FILE="${SESSION_FILE:-${DECKRD_LOCAL_DATA}/session.json}"
 #   resolution as config.lib.sh; keep both in step.
 # @stdout Resolved deckrd docs base directory path (no trailing newline)
 # @return 0 always
-resolve_deckrd_base() {
-  printf '%s' "${DECKRD_DOCS:-${DECKRD_DOCS_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)/docs/.deckrd}}"
+resolve_deckrd_base()
+                      {
+  printf '%s' "${DECKRD_DOCS:-${DECKRD_DOCS_DIR:-$(git rev-parse --show-toplevel 2> /dev/null || pwd)/docs/.deckrd}}"
 }
 
 ##
 # @description Show usage information
-show_usage() {
-  cat <<EOF
+show_usage()
+             {
+  cat << EOF
 Usage: generate-doc.sh @<type> [context] [OPTIONS]
 
 Execute AI prompt with auto-loaded prompt and template files.
@@ -141,90 +143,91 @@ EOF
 
 ##
 # @description Parse command-line options
-parse_options() {
+parse_options()
+                {
   local positional_count=0
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
-    -h | --help)
-      show_usage
-      exit 0
-      ;;
-    --ai-model)
-      if [[ -z "${2:-}" ]]; then
-        echo "Error: --ai-model requires a model name" >&2
-        exit 1
-      fi
-      local _validated
-      _validated=$(validate_ai_model "$2") || {
-        echo "$_validated" >&2
-        exit 1
-      }
-      config_set "ai_model" "$2"
-      shift 2
-      ;;
-    --ai-model=*)
-      local _model="${1#*=}"
-      local _validated
-      _validated=$(validate_ai_model "$_model") || {
-        echo "$_validated" >&2
-        exit 1
-      }
-      config_set "ai_model" "$_model"
-      shift
-      ;;
-    --lang)
-      if [[ -z "${2:-}" ]]; then
-        echo "Error: --lang requires a value" >&2
-        exit 1
-      fi
-      config_set "lang" "$2"
-      shift 2
-      ;;
-    --lang=*)
-      config_set "lang" "${1#*=}"
-      shift
-      ;;
-    --output)
-      if [[ -z "${2:-}" ]]; then
-        echo "Error: --output requires a file path" >&2
-        exit 1
-      fi
-      config_set "output_file" "$2"
-      shift 2
-      ;;
-    --output=*)
-      config_set "output_file" "${1#*=}"
-      shift
-      ;;
-    --verbose)
-      config_set "verbose" "1"
-      shift
-      ;;
-    -*)
-      echo "Error: Unknown option: $1" >&2
-      show_usage
-      exit 1
-      ;;
-    *)
-      if [[ $positional_count -eq 0 ]]; then
-        if [[ "$1" == @* ]]; then
-          config_set "doc_type" "${1:1}"
-          config_set "prompt_mode" "1"
-        else
-          config_set "doc_type" "$1"
-          config_set "prompt_mode" "0"
+      -h | --help)
+        show_usage
+        exit 0
+        ;;
+      --ai-model)
+        if [[ -z ${2:-} ]]; then
+          echo "Error: --ai-model requires a model name" >&2
+          exit 1
         fi
-      elif [[ $positional_count -eq 1 ]]; then
-        config_set "context_input" "$1"
-      else
-        echo "Error: Too many positional arguments" >&2
+        local _validated
+        _validated=$(validate_ai_model "$2") || {
+          echo "$_validated" >&2
+          exit 1
+        }
+        config_set "ai_model" "$2"
+        shift 2
+        ;;
+      --ai-model=*)
+        local _model="${1#*=}"
+        local _validated
+        _validated=$(validate_ai_model "$_model") || {
+          echo "$_validated" >&2
+          exit 1
+        }
+        config_set "ai_model" "$_model"
+        shift
+        ;;
+      --lang)
+        if [[ -z ${2:-} ]]; then
+          echo "Error: --lang requires a value" >&2
+          exit 1
+        fi
+        config_set "lang" "$2"
+        shift 2
+        ;;
+      --lang=*)
+        config_set "lang" "${1#*=}"
+        shift
+        ;;
+      --output)
+        if [[ -z ${2:-} ]]; then
+          echo "Error: --output requires a file path" >&2
+          exit 1
+        fi
+        config_set "output_file" "$2"
+        shift 2
+        ;;
+      --output=*)
+        config_set "output_file" "${1#*=}"
+        shift
+        ;;
+      --verbose)
+        config_set "verbose" "1"
+        shift
+        ;;
+      -*)
+        echo "Error: Unknown option: $1" >&2
         show_usage
         exit 1
-      fi
-      positional_count=$((positional_count + 1))
-      shift
-      ;;
+        ;;
+      *)
+        if [[ $positional_count -eq 0 ]]; then
+          if [[ $1 == @* ]]; then
+            config_set "doc_type" "${1:1}"
+            config_set "prompt_mode" "1"
+          else
+            config_set "doc_type" "$1"
+            config_set "prompt_mode" "0"
+          fi
+        elif [[ $positional_count -eq 1 ]]; then
+          config_set "context_input" "$1"
+        else
+          echo "Error: Too many positional arguments" >&2
+          show_usage
+          exit 1
+        fi
+        positional_count=$((positional_count + 1))
+        shift
+        ;;
     esac
   done
 }
@@ -234,19 +237,20 @@ parse_options() {
 # @arg $1 string Context input
 # @stdout Resolved context content
 # @note @filepath is resolved relative to DECKRD_BASE
-resolve_context() {
+resolve_context()
+                  {
   local input="$1"
 
-  if [[ -z "$input" ]]; then
+  if [[ -z $input   ]]; then
     echo ""
     return 0
   fi
 
-  if [[ "$input" == @* ]]; then
+  if [[ $input == @*   ]]; then
     local relative_path="${input:1}"
     local filepath="${DECKRD_BASE}/${relative_path}"
 
-    if [[ ! -f "$filepath" ]]; then
+    if [[ ! -f $filepath   ]]; then
       echo "Error: Context file not found: $filepath" >&2
       echo "  (DECKRD_BASE: ${DECKRD_BASE})" >&2
       return 1
@@ -264,10 +268,11 @@ resolve_context() {
 # @stdout Prompt content string
 # @return 0  prompt-text mode: the argument itself written to stdout
 # @return 1  prompt-file mode: caller should use cat on PROMPT_PATH
-get_prompt() {
+get_prompt()
+             {
   local arg="$1"
 
-  if [[ "$arg" == @* ]]; then
+  if [[ $arg == @*   ]]; then
     return 1
   fi
 
@@ -282,10 +287,11 @@ get_prompt() {
 # @stderr Error message on invalid argument
 # @return 0  success
 # @return 1  invalid argument (missing @, or unsupported doctype)
-get_prompt_file() {
+get_prompt_file()
+                  {
   local arg="$1"
 
-  if [[ "$arg" != @* ]]; then
+  if [[ $arg != @*   ]]; then
     echo "Error: argument must start with @" >&2
     return 1
   fi
@@ -301,18 +307,19 @@ get_prompt_file() {
 # @description Resolve prompt and template paths for document type
 # @arg $1 string Document type (asset base name, e.g. requirements)
 # @stdout Two lines: prompt path, template path
-resolve_doc_paths() {
+resolve_doc_paths()
+                    {
   local doc_type="$1"
 
   local prompt_path="${DECKRD_ASSETS_DIR}/prompts/${doc_type}.prompt.md"
   local template_path="${DECKRD_ASSETS_DIR}/templates/${doc_type}.template.md"
 
-  if [[ ! -f "$prompt_path" ]]; then
+  if [[ ! -f $prompt_path   ]]; then
     echo "Error: Prompt file not found: $prompt_path" >&2
     return 1
   fi
 
-  if [[ ! -f "$template_path" ]]; then
+  if [[ ! -f $template_path   ]]; then
     echo "Error: Template file not found: $template_path" >&2
     return 1
   fi
@@ -328,7 +335,8 @@ resolve_doc_paths() {
 # @arg $3 string Language setting
 # @arg $4 string Context input
 # @stdout Combined content
-build_ai_input() {
+build_ai_input()
+                 {
   local prompt_path="$1"
   local template_path="$2"
   local lang="$3"
@@ -346,7 +354,7 @@ build_ai_input() {
   echo "LANG: ${lang}"
   echo ""
 
-  if [[ -n "$context" ]]; then
+  if [[ -n $context   ]]; then
     echo "===== USER INPUT ====="
     echo "$context"
     echo "===== END INPUT ====="
@@ -357,7 +365,8 @@ build_ai_input() {
 # @description Execute prompt with AI model
 # @stdout AI response
 # @see run_ai
-execute_prompt() {
+execute_prompt()
+                 {
   local prompt_path="$1"
   local template_path="$2"
   local lang="$3"
@@ -373,16 +382,17 @@ execute_prompt() {
 # @description Output result to stdout or file
 # @arg $1 string Result
 # @arg $2 string Output file (relative to DECKRD_BASE)
-output_result() {
+output_result()
+                {
   local result="$1"
   local output_file="$2"
 
-  if [[ -z "$output_file" ]]; then
+  if [[ -z $output_file   ]]; then
     echo "$result"
   else
     local full_path="${DECKRD_BASE}/${output_file}"
     mkdir -p "$(dirname "$full_path")"
-    echo "$result" >"$full_path"
+    echo "$result" > "$full_path"
     echo "Output written to: $full_path" >&2
   fi
 }
@@ -391,7 +401,8 @@ output_result() {
 # Main Execution
 # ============================================================================
 
-main() {
+main()
+       {
   local session_file="${SESSION_FILE}"
 
   # config 初期化（デフォルト + セッション読込）
@@ -402,7 +413,7 @@ main() {
 
   local deckrd_base
   deckrd_base=$(config_get "deckrd_base")
-  if [[ -z "$deckrd_base" ]]; then
+  if [[ -z $deckrd_base   ]]; then
     deckrd_base="$(resolve_deckrd_base)"
     config_set "deckrd_base" "$deckrd_base"
   fi
@@ -412,14 +423,14 @@ main() {
   doc_type=$(config_get "doc_type")
   prompt_mode=$(config_get "prompt_mode")
 
-  if [[ -z "$doc_type" ]]; then
+  if [[ -z $doc_type   ]]; then
     echo "Error: prompt or @keyword is required" >&2
     show_usage
     exit 1
   fi
 
   # @keyword モード: prompt/template パスを解決
-  if [[ "$prompt_mode" -eq 1 ]]; then
+  if [[ $prompt_mode -eq 1   ]]; then
     # 別名 (impl 等) を正本の長名へ正規化してからアセットを解決する
     local asset_type paths
     asset_type=$(get_prompt_file "@${doc_type}") || exit 1
@@ -430,7 +441,7 @@ main() {
 
   local context_input
   context_input=$(config_get "context_input")
-  if [[ -n "$context_input" ]]; then
+  if [[ -n $context_input   ]]; then
     context_input=$(resolve_context "$context_input") || exit 1
     config_set "context_input" "$context_input"
   elif [[ ! -t 0 ]]; then
@@ -444,7 +455,7 @@ main() {
 
   local prompt_path
   prompt_path=$(config_get "prompt_path")
-  if [[ -z "$prompt_path" ]]; then
+  if [[ -z $prompt_path   ]]; then
     echo "Error: No prompt file resolved. Use @<type> to specify document type." >&2
     exit 1
   fi
@@ -462,6 +473,6 @@ main() {
   output_result "$result" "$output_file"
 }
 
-if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+if [[ ${BASH_SOURCE[0]} == "$0"   ]]; then
   main "$@"
 fi
