@@ -1,9 +1,10 @@
 ---
 title: "CHANGELOG"
-description: "ChangeLog: 0.8.0"
-version: "0.8.0"
-date: "2026-11-16"
+description: "ChangeLog: 0.8.1"
+version: "0.8.1"
+date: "2026-11-21"
 summary:
+  - "0.8.1: Chapter-coded Universal Dictionary IDs (UD-<CODE>-NNN), betterleaks runner and tool config cleanup, unified shell style"
   - "0.8.0: Universal Dictionary and spec item classification, separate programming (prog) and document (lang) languages, declarative args.lib.sh parser, atomic JSON writes, per-Target bdd-coder dispatch"
 ---
 
@@ -15,7 +16,44 @@ summary:
 
 ## CHANGELOG
 
-## [0.8.0] - 2026-11-16
+## 0.8.1 - 2026-11-21
+
+### Refactor
+
+- Change Universal Dictionary IDs from `UD-NNN` to chapter-coded `UD-<CODE>-NNN`. A chapter code
+  is 2 to 6 characters starting with an uppercase letter, unique within the module, and the
+  serial number is a 3-digit sequence per chapter code.
+- Keep the ID when a term moves to another chapter, never reuse a deprecated ID, and add a new
+  chapter and chapter code when no existing chapter fits.
+- Update `deckrd-rule-document-model.md` (1.7.0 to 1.8.0) with the chapter code rules, and split
+  the ID issuance steps into a numbered list.
+- Update `specifications.prompt.md`, `universal-dictionary.prompt.md`,
+  `specifications.template.md`, and `universal-dictionary.template.md` to the new ID format, and
+  add a Chapter Codes section (1.5) to the dictionary template.
+- Change the UD-ID duplicate and broken-reference detection patterns in
+  `spec-phases/09-dictionary.md` and `spec-phases/11-spec-review.md` to
+  `UD-[A-Z][A-Z0-9]{1,5}-[0-9]{3}`.
+
+### Tooling
+
+- Add `runners/run-betterleaks.sh` for staged and directory scans, and improve config resolution
+  in `run-shellcheck.sh` and `run-shfmt.sh` (`shfmt` now reads `.editorconfig`).
+- Run betterleaks through `run-betterleaks.sh --staged` and secretlint with `{staged_files}` in
+  `lefthook.yml`, and route the lint scripts in `package.json` through `cross-env MSYS=NOGLOB`.
+- Bump `packageManager` from pnpm 12.15.0 to 12.21.0 and `argue-cli` from 3.2.0 to 3.2.1.
+- Remove `configs/betterleaks.toml` and `configs/secretlint.config.yaml`, and clean up
+  `configs/cliff.toml`.
+- Restructure the `.gitignore` allowlist, add `skills/.gitignore`, and allow
+  `/.claude-plugin/*.json` for the marketplace.
+- Move the excluded directory list of `run-shellcheck.sh` into `find_shell_files`.
+- Rename the cspell dictionary `test-target-dic` to `test-id-dic`.
+- Update the `commit-message-generator` agent to 0.10.0 with a 76-character header limit, a
+  96-character body wrap, and a type priority order.
+- Unify the shell style in `runners/`, `scripts/`, and `skills/deckrd/skills/deckrd/scripts/`:
+  function braces on the next line, unquoted and padded `[[ ]]` operands, indented `case`
+  branches, and spaces around redirections.
+
+## 0.8.0 - 2026-11-16
 
 ### Features
 
@@ -65,7 +103,7 @@ summary:
 - Add test target abbreviations (`MAINI`, `UPDA`, `UPDI`) to the cspell dictionary.
 - Upgrade `@astrojs/node` to 11.1.12 in `aglabo.github.io` and pin the minimum version with a pnpm override (Dependabot #6).
 
-## [0.7.0] - 2026-11-11
+## 0.7.0 - 2026-11-11
 
 ### Features
 
@@ -115,7 +153,7 @@ summary:
 - Correct test and library script path comments.
 - Inline the `allowed-tools` list in the `deckrd-review` skill.
 
-## [0.6.1] - 2026-11-10
+## 0.6.1 - 2026-11-10
 
 ### Bug Fixes
 
@@ -134,7 +172,7 @@ summary:
 - Ignore everything under `node_modules` in `.editorconfig`.
 - Add test target abbreviations to the cspell dictionary.
 
-## [0.6.0] - 2026-10-04
+## 0.6.0 - 2026-10-04
 
 ### Features
 
@@ -234,7 +272,7 @@ summary:
 - The `codex-mcp` server configuration is removed. Codex review now runs through `codex exec`, so the Codex CLI must be on `PATH` and logged in.
 - Module metadata is read only from `workspaces/module/module.md`. Move an existing `module.md` there by hand: `/deckrd update` does not move it, and the old location is no longer read.
 
-## [0.5.0] - 2026-09-12
+## 0.5.0 - 2026-09-12
 
 ### 🚀 Features
 
@@ -289,7 +327,7 @@ summary:
 
 ---
 
-## [0.4.0] - 2026-06-19
+## 0.4.0 - 2026-06-19
 
 ### ♻️ Refactor
 
@@ -312,7 +350,7 @@ summary:
 
 ---
 
-## [0.3.0] - 2026-06-19
+## 0.3.0 - 2026-06-19
 
 ### ♻️ Refactor
 
@@ -323,7 +361,7 @@ summary:
 
 ---
 
-## [0.2.1] - 2026-06-18
+## 0.2.1 - 2026-06-18
 
 ### 🚀 Features
 
@@ -342,7 +380,7 @@ summary:
 
 ---
 
-## [0.2.0] - 2026-06-08
+## 0.2.0 - 2026-06-08
 
 ### 🚀 Features
 
@@ -381,7 +419,7 @@ summary:
 
 ---
 
-## [0.1.0] - 2026-03-22
+## 0.1.0 - 2026-03-22
 
 ### 🚀 Features
 
@@ -443,7 +481,7 @@ summary:
 - Add runner scripts for textlint, markdownlint, shellcheck, and shellspec
 - Normalize project configuration and dictionary entries (cspell, commitlint)
 
-## [0.0.4] - 2026-01-14
+## 0.0.4 - 2026-01-14
 
 ### 🚀 Features
 
@@ -468,7 +506,7 @@ summary:
 
 - *(config)* Update configs and stabilize commit hooks for development workflow
 
-## [0.0.3] - 2026-01-02
+## 0.0.3 - 2026-01-02
 
 ### 🚀 Features
 
