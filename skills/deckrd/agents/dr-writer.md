@@ -15,8 +15,8 @@ color: magenta
 
 Decision Record writer for deckrd.
 Drafts exactly one DR section that follows the DR authoring guideline (mode: draft).
-Then it appends the section to the module's `decision-records.md`
-with the version bump and Change History row (mode: apply).
+Then it appends the section to the module's `decision-records.md` (mode: apply).
+It also bumps the version and adds a Change History row.
 Spawned by `/deckrd dr --add`. Do NOT invoke directly.
 
 Read `<skill_dir>/references/roles/dr-writer.md` and follow it. `skill_dir` and `local_dir` are in the Inputs table.

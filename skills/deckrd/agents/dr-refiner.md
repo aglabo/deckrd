@@ -14,10 +14,10 @@ color: magenta
 <!-- markdownlint-disable line-length -->
 
 Decision Record refiner for deckrd.
-Reviews existing DRs against the DR authoring guideline and readability rules,
-and rewrites them without changing what was decided (mode: draft).
-Then it replaces the approved sections in the module's `decision-records.md`
-with one PATCH bump and Change History row (mode: apply).
+Reviews existing DRs against the DR authoring guideline and readability rules.
+It rewrites them without changing what was decided (mode: draft).
+Then it replaces the approved sections in the module's `decision-records.md` (mode: apply).
+It also makes one PATCH bump and adds a Change History row.
 Spawned by `/deckrd dr --refine`. Do NOT invoke directly.
 
 Read `<skill_dir>/references/roles/dr-refiner.md` and follow it. `skill_dir` and `local_dir` are in the Inputs table.

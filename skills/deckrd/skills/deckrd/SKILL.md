@@ -17,13 +17,19 @@ metadata:
 
 Goals → Requirements → Specifications → Implementation → Tasks
 
-A document-driven framework that derives requirements, specifications, implementation plans,
-and executable tasks from goals through structured AI dialogue.
+A document-driven framework that derives requirements, specifications, and implementation plans.
+It also derives executable tasks from goals through structured AI dialogue.
 
 When to use:
 
-- The user says "write requirements", "create spec", "plan implementation", "derive tasks",
-  "structure this feature", "break down into tasks", or "document this module".
+- The user says any of:
+  - "write requirements"
+  - "create spec"
+  - "plan implementation"
+  - "derive tasks"
+  - "structure this feature"
+  - "break down into tasks"
+  - "document this module"
 - Reverse engineering existing code into docs (`/deckrd rev`).
 
 When NOT to use:
