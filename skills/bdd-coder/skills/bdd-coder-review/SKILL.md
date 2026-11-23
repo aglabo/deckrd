@@ -6,7 +6,7 @@ description: >
   - Read-only: never edits code, never commits
 metadata:
   author: aglabo
-  version: 0.8.1
+  version: 0.9.0
   license: MIT
 argument-hint: "[task_id] [--branch [<base>] | <paths...>] [--coverage-cmd <cmd>]"
 ---
