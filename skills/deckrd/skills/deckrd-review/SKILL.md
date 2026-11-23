@@ -1,10 +1,8 @@
 ---
 name: deckrd-review
 description: >
-  Get an independent second opinion from codex on any document or deckrd phase.
-  Codex acts as a critical reviewer — challenging assumptions and surfacing blind spots
-  from a different angle than Claude's primary analysis.
-  Use after /deckrd review, before phase transitions, or when a design decision is unclear.
+  Independent second opinion from codex on a document or deckrd phase.
+  - Use after /deckrd review, before phase transitions, or when a design decision is unclear
 metadata:
   author: aglabo
   version: 0.8.1
@@ -22,7 +20,10 @@ argument-hint: "<file_or_phase> [--focus completeness|risk|consistency|feasibili
 
 Invoke codex as an **independent critical reviewer** on any document.
 
-Codex challenges assumptions and surfaces blind spots that the primary analysis may miss.
+Codex acts as a critical reviewer: it challenges assumptions and surfaces blind spots
+from a different angle than Claude's primary analysis.
+Use it after `/deckrd review`, before phase transitions, or when a design decision is unclear.
+Target is any document or deckrd phase.
 The final judgment always stays with the user (accept / reject / follow-up).
 
 ## Usage

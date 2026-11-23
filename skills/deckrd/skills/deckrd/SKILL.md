@@ -1,13 +1,10 @@
 ---
 name: deckrd
 description: >
-  Document-driven framework that derives requirements, specifications, implementation plans,
-  and executable tasks from goals through structured AI dialogue.
-  Use when user says "write requirements", "create spec", "plan implementation",
-  "derive tasks", "structure this feature", "break down into tasks", or "document this module".
-  Also use for reverse engineering existing code into docs (/deckrd rev).
-  Do NOT use for direct code writing — use /bdd-coder:bdd-coder after tasks are generated.
-  Do NOT use when the user only wants to run or fix existing code without planning.
+  Document-driven planning: goals → requirements → specs → implementation plan → tasks.
+  - Use for: "write requirements", "create spec", "plan implementation", "derive tasks",
+    "document this module", reverse engineering (/deckrd rev)
+  - Not for writing code (use /bdd-coder:bdd-coder)
 metadata:
   author: aglabo
   version: 0.8.1
@@ -19,6 +16,20 @@ metadata:
 # Deckrd
 
 Goals → Requirements → Specifications → Implementation → Tasks
+
+A document-driven framework that derives requirements, specifications, implementation plans,
+and executable tasks from goals through structured AI dialogue.
+
+When to use:
+
+- The user says "write requirements", "create spec", "plan implementation", "derive tasks",
+  "structure this feature", "break down into tasks", or "document this module".
+- Reverse engineering existing code into docs (`/deckrd rev`).
+
+When NOT to use:
+
+- Direct code writing. Use `/bdd-coder:bdd-coder` after tasks are generated.
+- The user only wants to run or fix existing code without planning.
 
 `<DECKRD_SKILL_DIR>` is a placeholder.
 It is neither a shell variable nor an agent-specific substitution.
