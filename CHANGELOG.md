@@ -1,11 +1,10 @@
 ---
 title: "CHANGELOG"
-description: "ChangeLog: 0.8.1"
-version: "0.8.1"
-date: "2026-11-21"
+description: "ChangeLog: 0.9.0"
+version: "0.9.0"
+date: "2026-11-24"
 summary:
-  - "0.8.1: Chapter-coded Universal Dictionary IDs (UD-<CODE>-NNN), betterleaks runner and tool config cleanup, unified shell style"
-  - "0.8.0: Universal Dictionary and spec item classification, separate programming (prog) and document (lang) languages, declarative args.lib.sh parser, atomic JSON writes, per-Target bdd-coder dispatch"
+  - "0.9.0: /deckrd rev is now a reverse chain from code to req (breaking: --from and --to tasks removed, default target is impl), task branch workflow, Scenario limit per Target"
 ---
 
 <!-- textlint-disable
@@ -15,6 +14,32 @@ summary:
 <!-- markdownlint-disable line-length -->
 
 ## CHANGELOG
+
+## 0.9.0 - 2026-11-24
+
+### Breaking Changes
+
+- Redesign `/deckrd rev` as a reverse chain: code → impl → spec → req. The target decides the
+  source (`impl` from code, `spec` from `implementation.md`, `req` from `specifications.md`).
+- Remove the `--from` option and the `--to tasks` target. Change the default of `--to` from `req`
+  to `impl`.
+- Delete `rev.template.md`. `rev` now uses the standard template of its TARGET.
+
+### Features
+
+- Add `--path <path>` (repeatable) to `rev --to impl` to limit the investigation to files or
+  directories.
+- Add `resolve_rev_template` to `generate-doc.sh`: it reads the `TARGET:` line of the context and
+  selects the requirements, specifications, or implementation template (default `implementation`).
+- Update `rev.prompt.md`, the explorer role, `explore-agent.md`, and the command references and
+  user guides for the reverse chain.
+
+### Docs
+
+- Add the task branch workflow: one integration branch per feature and one short-lived task branch
+  per Target (`T-XX`), with the caller owning all git operations.
+- Add the 40 Scenarios per Target limit to `tasks`; a larger Target is split by behavior group.
+- Condense the descriptions of the skills and agents.
 
 ## 0.8.1 - 2026-11-21
 
