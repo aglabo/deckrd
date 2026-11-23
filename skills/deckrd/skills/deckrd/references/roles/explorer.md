@@ -27,14 +27,15 @@ The main session reads the summary and proceeds without holding raw file content
 
 ## Inputs
 
-| Parameter   | Values                                                                          | Description                             |
-| ----------- | ------------------------------------------------------------------------------- | --------------------------------------- |
-| `skill_dir` | Absolute path                                                                   | Skill directory (where `SKILL.md` is)   |
-| `local_dir` | Absolute path                                                                   | Deckrd local data (`DECKRD_LOCAL_DATA`) |
-| `directory` | Path string                                                                     | Root directory to investigate           |
-| `scope`     | `codebase-extraction` / `codebase-survey` / `prior-art` / `pattern-detection`   | Investigation mode                      |
-| `focus`     | Comma-separated keywords (optional)                                             | Narrow the investigation to these areas |
-| `module`    | `<namespace>/<module>` (required for `codebase-extraction` / `codebase-survey`) | Active module, resolved by the caller   |
+| Parameter   | Values                                                                          | Description                                                       |
+| ----------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `skill_dir` | Absolute path                                                                   | Skill directory (where `SKILL.md` is)                             |
+| `local_dir` | Absolute path                                                                   | Deckrd local data (`DECKRD_LOCAL_DATA`)                           |
+| `directory` | Path string                                                                     | Root directory to investigate                                     |
+| `paths`     | Comma-separated paths (optional; `codebase-extraction` only)                    | Files or directories to investigate instead of all of `directory` |
+| `scope`     | `codebase-extraction` / `codebase-survey` / `prior-art` / `pattern-detection`   | Investigation mode                                                |
+| `focus`     | Comma-separated keywords (optional)                                             | Narrow the investigation to these areas                           |
+| `module`    | `<namespace>/<module>` (required for `codebase-extraction` / `codebase-survey`) | Active module, resolved by the caller                             |
 
 ## Scope Definitions
 
@@ -43,7 +44,10 @@ The main session reads the summary and proceeds without holding raw file content
 Extract and analyze existing code for reverse engineering:
 
 1. Use the `module` input (`<namespace>/<module>`) passed by the caller as the active module
-2. Use `Glob` to enumerate all source files, test files, and existing documentation
+2. Use `Glob` to enumerate source files, test files, and existing documentation.
+   When `paths` is given, enumerate only under those paths (a file is read as it is, a directory is searched recursively).
+   Do not read outside `paths`, except files that a listed file imports and that are needed to understand it: list those as `Out of paths` in `### Files`.
+   A path that does not exist or lies outside `directory` is an error: stop and report it.
 3. Use `Read` to scan source files and extract behavioral patterns:
    - Entry points and public interfaces
    - Observable behaviors (inputs, outputs, side effects)
@@ -53,7 +57,23 @@ Extract and analyze existing code for reverse engineering:
 5. Use `Bash` (`git log --oneline`, `git diff --stat`) to identify historical change units
 6. Identify items that can be directly traced vs. items that must be inferred
 
+**Workspace projects** (monorepo, several packages): map the `module` to the package or directory it covers.
+Read `workspaces` / `packages` in the root manifest (e.g., `pnpm-workspace.yaml`, `package.json`) and match the module name
+against package names and directories. Investigate the matched package first. Read the others only where the matched package
+imports them (shared types, config). List the packages you left out in `## Gaps`.
+
 Output file: `<local_dir>/temp/deckrd-work/codebase-extraction.md`
+
+Its `## Details` section MUST have these four parts, so `rev` can use it without re-reading the code:
+
+| Part                | Content                                                                                  |
+| ------------------- | ---------------------------------------------------------------------------------------- |
+| `### Files`         | Source, test, and existing doc files in scope, one per line, with a one-line role        |
+| `### FR Candidates` | One line per candidate: statement, `Source: path:line` (or `[INFERRED]` with the reason) |
+| `### Existing Docs` | README, specs, comments that describe the behavior. Note any that disagree with the code |
+| `### Gaps`          | What could not be read or inferred, and the question to ask the user                     |
+
+Evidence uses `path:line` relative to `directory`. When the code and an existing doc disagree, the code is the truth.
 
 ### `codebase-survey`
 
