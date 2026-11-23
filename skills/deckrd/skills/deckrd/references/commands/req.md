@@ -74,8 +74,8 @@ Accept free-form text. Store as **USER INPUT**.
 
 ### Phase 1-D: Generate System Context Diagram
 
-After collecting USER INPUT, generate a system context diagram in ASCII art
-to visualize the system boundary and external relationships identified in Phase 1.
+After collecting USER INPUT, generate a system context diagram in ASCII art.
+It visualizes the system boundary and external relationships from Phase 1.
 
 ```text
 [External Actor] --> +------------------+ --> [External System]
@@ -112,11 +112,13 @@ Conduct an interactive Q&A loop to fill information gaps.
 
 **Question priority order** (ask in this order, skip if already known):
 
-1. EARS/GIVEN — For each FR candidate, ask: "Under what condition does this apply?"
-   Example: "This behavior — is it available to all users, or only authenticated ones?"
-2. EARS/type — For each FR candidate without a type, ask which fits:
-   Example: "Does this trigger on a specific user action (WHEN), or hold continuously
-   during a system state (WHILE), or is it something the system must never do (NOT DO)?"
+1. EARS/GIVEN — For each FR candidate, ask the condition.
+   - Ask: "Under what condition does this apply?"
+   - Example: "Is this behavior available to all users, or only authenticated ones?"
+2. EARS/type — For each FR candidate without a type, ask which type fits.
+   - Ask: "Which type fits this candidate?"
+   - Options: WHEN (a specific user action), WHILE (a continuous system state).
+   - Options: NOT DO (something the system must never do).
 3. Scope — In-scope vs out-of-scope boundary
 4. Constraints — Technical or business constraints
 5. Stakeholders — Who will use the system
@@ -219,9 +221,11 @@ If the user requests revisions (or accepts any suggestion):
 
 ### Phase 4-5: Version Bump
 
-`generate-doc.sh` overwrites the output file. Every regeneration in the Phase 4
-review loop therefore resets `version` to the template value `1.0.0` and drops the
-Change History. Do not bump during the loop. Restore and bump after approval.
+`generate-doc.sh` overwrites the output file.
+Every regeneration in the Phase 4 review loop therefore resets `version`
+to the template value `1.0.0`.
+It also drops the Change History.
+Do not bump during the loop. Restore and bump after approval.
 
 On approval:
 
@@ -241,8 +245,8 @@ not the released one:
 | Requirement / AC added               | MINOR |
 | Clarification, Open Question, typo   | PATCH |
 
-Bumping from the reset `1.0.0` corrupts the Change History and invalidates every
-downstream `based-on: requirements.md v<x.y.z>` reference.
+Bumping from the reset `1.0.0` corrupts the Change History.
+It also invalidates every downstream `based-on: requirements.md v<x.y.z>` reference.
 
 See docs/.deckrd/rules/deckrd-rule-document-versioning.md.
 
