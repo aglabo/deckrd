@@ -23,6 +23,7 @@ source: specifications.md
 | T-02: {{TEST_TARGET_2}} | {{SCENARIO_COUNT}} | {{CASE_COUNT}} | pending     |
 
 <!-- Status may be: pending | in progress | done -->
+<!-- Scenarios per Test Target: at most 40. Split the target when it would exceed this. -->
 
 ---
 
