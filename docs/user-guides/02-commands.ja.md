@@ -815,7 +815,23 @@ Phase 3 で `[INFERRED]` の項目ごとに `keep` / `remove` / `custom` を選�
 
 - パスはプロジェクトルートからの相対パスで指定します。
 - 存在しないパスや、プロジェクト外のパスはエラーになります (黙ってスキップしません)。
-- 絞るのは読む範囲だけです。出力先とモジュールは変わりません。
+- 絞るのは読む範囲だけでなく、出力先のモジュールも決めます (次節)。
+
+### モジュールの自動推測
+
+`--to impl` に `--path` を付けると、パスから `<namespace>/<module>` を推測し、そこに文書を作ります。先に `/deckrd module` を実行する必要はありません。
+
+| `--path`                          | モジュール          |
+| --------------------------------- | ------------------- |
+| `packages/@aglabo/core/src`       | `hacker-names/core` |
+| `packages/@aglabo/cli/src/run.ts` | `hacker-names/cli`  |
+
+- モジュール名は、パスから `packages`、`src`、`@scope` などの汎用ディレクトリを除いた最後の名前です。
+- namespace は `/deckrd module` と同じ規則です。既存の namespace、`.project.json` の `project`、git ルート名の順に決めます。
+- 複数のパスで名前が分かれる場合は、どれを使うか質問します。
+- 推測結果は Phase 1 の要約に表示します。承認するか、別の `<namespace>/<module>` を指定します。承認前にモジュールは作りません。
+- 既存のモジュールなら、`active` を切り替えるだけです。進捗 (`completed`、`documents`) は消えません。
+- `--path` なし、または `--to spec` / `--to req` では、`active` なモジュールを使います。
 
 ### rev の対象フェーズ選択
 
