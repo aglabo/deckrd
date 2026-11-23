@@ -47,7 +47,7 @@ Bootstrap and initialize a DECKRD project.
 /deckrd init myapp lib --prog go --lang ja
 
 # Specify both programming language and AI model
-/deckrd init voift webapp --prog typescript --ai-model claude-sonnet-4-5
+/deckrd init myapp webapp --prog typescript --ai-model claude-sonnet-4-5
 
 # Reset every deployed asset to the bundled version
 /deckrd init myapp webapp --force

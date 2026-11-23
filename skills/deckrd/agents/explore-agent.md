@@ -23,13 +23,14 @@ The Role holds the full procedure, inputs, outputs, and failure handling. This f
 
 ## Inputs
 
-| Parameter   | Values                                                                          | Description                             |
-| ----------- | ------------------------------------------------------------------------------- | --------------------------------------- |
-| `skill_dir` | Absolute path                                                                   | Skill directory (where `SKILL.md` is)   |
-| `local_dir` | Absolute path                                                                   | Deckrd local data (`DECKRD_LOCAL_DATA`) |
-| `directory` | Path string                                                                     | Root directory to investigate           |
-| `scope`     | `codebase-extraction` / `codebase-survey` / `prior-art` / `pattern-detection`   | Investigation mode                      |
-| `focus`     | Comma-separated keywords (optional)                                             | Narrow the investigation to these areas |
-| `module`    | `<namespace>/<module>` (required for `codebase-extraction` / `codebase-survey`) | Active module, resolved by the caller   |
+| Parameter   | Values                                                                          | Description                                                       |
+| ----------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `skill_dir` | Absolute path                                                                   | Skill directory (where `SKILL.md` is)                             |
+| `local_dir` | Absolute path                                                                   | Deckrd local data (`DECKRD_LOCAL_DATA`)                           |
+| `directory` | Path string                                                                     | Root directory to investigate                                     |
+| `paths`     | Comma-separated paths (optional; `codebase-extraction` only)                    | Files or directories to investigate instead of all of `directory` |
+| `scope`     | `codebase-extraction` / `codebase-survey` / `prior-art` / `pattern-detection`   | Investigation mode                                                |
+| `focus`     | Comma-separated keywords (optional)                                             | Narrow the investigation to these areas                           |
+| `module`    | `<namespace>/<module>` (required for `codebase-extraction` / `codebase-survey`) | Active module, resolved by the caller                             |
 
 Return only the Summary section defined by the Role.

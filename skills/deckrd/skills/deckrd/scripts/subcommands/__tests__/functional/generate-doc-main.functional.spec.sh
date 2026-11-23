@@ -230,6 +230,42 @@ _run_generate_doc_capturing_ai_input() {
     _ "${SUBCOMMANDS_DIR}/generate-doc.sh" @requirements "test" "$@" </dev/null
 }
 
+# _captured_rev_input - @rev を指定コンテキストで起動し、AI 入力の全文を返す
+#
+# rev は TARGET 行で選んだ標準テンプレートを AI 入力に載せる。どのテンプレートが
+# 載ったかを、各テンプレート固有の見出しで見分けるために全文を取る。
+#
+# @arg $1 string @rev に渡すコンテキスト
+# @return 0 always
+# @stdout 捕捉した AI 入力 (起動に失敗したら空)
+_captured_rev_input() {
+  local _session
+  _session="$(_write_session 'rev-session.json' "$_VALID_SESSION_JSON")"
+
+  # shellcheck disable=SC2016 # $1 / $CAPTURE はサブプロセス側で展開させる
+  SESSION_FILE="$_session" \
+    DECKRD_DOCS="${DECKRD_DOCS_DIR}" \
+    CAPTURE="$(_capture_file_path)" \
+    bash -c '. "$1"; shift; run_ai() { cat >"$CAPTURE"; printf "%s\n" "STUB AI RESPONSE"; }; main "$@"' \
+    _ "${SUBCOMMANDS_DIR}/generate-doc.sh" @rev "$1" </dev/null >/dev/null 2>&1 || true
+  cat "$(_capture_file_path)" 2>/dev/null || true
+}
+
+# _rev_exit_status_and_stderr - @rev を指定コンテキストで起動し、終了ステータスと stderr を返す
+#
+# @arg $1 string @rev に渡すコンテキスト
+# @return 0 always
+# @stdout "<status>|<stderr>"
+_rev_exit_status_and_stderr() {
+  local _session _stub_dir _err _status=0
+  _session="$(_write_session 'rev-err-session.json' "$_VALID_SESSION_JSON")"
+  _stub_dir="$(_install_ai_cli_stubs)"
+
+  _err="$(SESSION_FILE="$_session" DECKRD_DOCS="${DECKRD_DOCS_DIR}" PATH="${_stub_dir}:${PATH}" \
+    bash "${SUBCOMMANDS_DIR}/generate-doc.sh" @rev "$1" </dev/null 2>&1 >/dev/null)" || _status=$?
+  printf '%s|%s' "$_status" "$_err"
+}
+
 # _captured_lang_lines - AI 入力を捕捉し、その中の LANG: 行だけを返す
 #
 # 行全体が "LANG: <値>" のものだけを拾う。部分一致にすると LANG: en が
@@ -334,6 +370,48 @@ Describe "T-SUB-MAINF: generate-doc.sh main"
         The status should equal 0
         The output should equal 'STUB AI RESPONSE'
         The stderr should include 'universal-dictionary.prompt.md'
+      End
+    End
+  End
+
+  Describe "Given: @rev に TARGET 行を含むコンテキストを渡したサブプロセス実行"
+    Describe "When: 正常系 (TARGET ごとの標準テンプレート)"
+      It "Then: [Normal] T-SUB-MAINF-18: TARGET: req → requirements テンプレート (Functional Requirements) を載せる"
+        When call _captured_rev_input $'EXTRACTION CONTEXT: x\nTARGET: req'
+        The output should include '## 4. Functional Requirements'
+        The output should not include '## 3. Behavioral Specification'
+      End
+
+      It "Then: [Normal] T-SUB-MAINF-19: TARGET: spec → specifications テンプレート (Behavioral Specification) を載せる"
+        When call _captured_rev_input $'EXTRACTION CONTEXT: x\nTARGET: spec'
+        The output should include '## 3. Behavioral Specification'
+        The output should not include '## 4. Functional Requirements'
+      End
+
+      It "Then: [Normal] T-SUB-MAINF-20: TARGET: impl → implementation テンプレート (Implementation Plan) を載せる"
+        When call _captured_rev_input $'EXTRACTION CONTEXT: x\nTARGET: impl'
+        The output should include '## 2. Implementation Plan'
+      End
+
+      It "Then: [Error] T-SUB-MAINF-21: TARGET: tasks → rev の対象外なので exit 1 で Error: unknown rev target を出す"
+        When call _rev_exit_status_and_stderr $'EXTRACTION CONTEXT: x\nTARGET: tasks'
+        The output should start with '1|'
+        The output should include 'Error: unknown rev target: tasks'
+      End
+    End
+
+    Describe "When: エッジケース"
+      It "Then: [Edge] T-SUB-MAINF-22: TARGET 行なし → 既定の impl として implementation テンプレートを載せる"
+        When call _captured_rev_input 'EXTRACTION CONTEXT: x'
+        The output should include '## 2. Implementation Plan'
+      End
+    End
+
+    Describe "When: 異常系"
+      It "Then: [Error] T-SUB-MAINF-23: TARGET: bogus → exit 1 で Error: unknown rev target を出す"
+        When call _rev_exit_status_and_stderr $'EXTRACTION CONTEXT: x\nTARGET: bogus'
+        The output should start with '1|'
+        The output should include 'Error: unknown rev target: bogus'
       End
     End
   End

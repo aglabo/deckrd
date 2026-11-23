@@ -151,7 +151,7 @@ docs/.deckrd/
 **Existing code, no docs:**
 
 > "This module has no documentation. Reverse-engineer it."
-> → `/deckrd rev --to req` → `spec` → `impl` → `tasks`
+> → `/deckrd rev --to impl` → `rev --to spec` → `rev --to req`
 
 **Small bug fix:**
 
@@ -165,34 +165,27 @@ docs/.deckrd/
 ### Reverse Engineering Path (existing code → documentation)
 
 Use when: existing code or PoC exists and documentation is missing.
+The order is the opposite of the standard flow: code → impl → spec → req.
 
 ```bash
 # Bootstrap project and create module
 /deckrd init my-project lib
 /deckrd module my-project/legacy-module
 
-# Reverse-engineer requirements from code
-/deckrd rev --to req
-# → Analyzes codebase, creates requirements/requirements.md
-
-# Continue with standard flow from here
-/deckrd spec
-/deckrd impl
-/deckrd tasks
+# Reverse-engineer step by step
+/deckrd rev --to impl   # code → implementation.md (narrow with --path <path>)
+/deckrd rev --to spec   # implementation.md → specifications.md
+/deckrd rev --to req    # specifications.md → requirements.md
 ```
 
-Or reverse-engineer directly to a later stage:
-
-```bash
-/deckrd rev --to spec   # → Skip req, generate spec from code
-/deckrd rev --to impl   # → Generate impl from code (req + spec must exist)
-```
+Each step needs the document of the previous step. You can stop at any step.
+After `impl` exists, the standard `tasks` command can run as well.
 
 ## Workflow Selection Guide
 
-| Situation                                    | Recommended Path               |
-| -------------------------------------------- | ------------------------------ |
-| New feature from scratch                     | Standard flow                  |
-| Existing code, no documentation              | `rev` path                     |
-| PoC completed, need production documentation | `rev --to req` + standard flow |
-| Complex change, new external interfaces      | Standard flow                  |
+| Situation                                    | Recommended Path                                         |
+| -------------------------------------------- | -------------------------------------------------------- |
+| New feature from scratch                     | Standard flow                                            |
+| Existing code, no documentation              | `rev` path                                               |
+| PoC completed, need production documentation | `rev --to impl` → `spec` → `req`, then standard commands |
+| Complex change, new external interfaces      | Standard flow                                            |

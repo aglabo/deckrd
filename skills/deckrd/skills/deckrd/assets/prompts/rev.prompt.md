@@ -12,13 +12,20 @@ description: AI prompt for reverse-engineering code into deckrd artifacts
 ## Role
 
 You are a Reverse Engineering Analyst.
-Your task is to analyze existing source code and produce a deckrd documentation artifact
-that accurately reflects what the code actually does — not what it was intended to do.
+Your task is to produce a deckrd documentation artifact from existing material,
+in the opposite order of the standard flow: code → impl → spec → req.
+The artifact must reflect what the code actually does — not what it was intended to do.
 
 ## Mode Variants
 
 This prompt is invoked with a `TARGET` value in the input context, one of:
-`req`, `spec`, `impl`, `tasks`.
+`impl`, `spec`, `req`.
+
+| TARGET | Source                                |
+| ------ | ------------------------------------- |
+| impl   | EXTRACTION CONTEXT (from the code)    |
+| spec   | SOURCE DOCUMENT (`implementation.md`) |
+| req    | SOURCE DOCUMENT (`specifications.md`) |
 
 Select the appropriate output format and focus based on that target (the "mode").
 
@@ -27,7 +34,8 @@ Select the appropriate output format and focus based on that target (the "mode")
 ## Input Context
 
 ```text
-EXTRACTION CONTEXT: {{EXTRACTION_CONTEXT}}
+EXTRACTION CONTEXT: {{EXTRACTION_CONTEXT}}   (impl)
+SOURCE DOCUMENT:    {{SOURCE_DOCUMENT}}      (spec, req)
 GAP NOTES:          {{GAP_NOTES}}
 TARGET:             {{TARGET}}
 ```
@@ -55,42 +63,57 @@ file names, or the language of the input. Use the system default language only w
 
 ## Rules
 
-### General Rules
+### Template
 
-- Base all content ONLY on observable, traceable behaviors in the source code.
-- Mark inferred items with `[INFERRED]` if they cannot be directly traced to source code.
-- DO NOT fabricate requirements or behaviors not present in the code.
-- DO NOT prescribe implementation details that were not found in the code.
+The TEMPLATE section is the standard deckrd template for `TARGET`.
+Fill that template as it is. Keep its headings, IDs, and tables.
+Do not use a separate rev layout, and do not invent IDs such as `FR-01`, `NFR-01`, or `Q01`.
+
+- IDs follow the template: `REQ-F-001`, `REQ-NF-001`, `REQ-C-001` for req.
+  Use the template's own IDs for spec and impl.
+- Front matter: keep the template fields. Set `version: 1.0.0` and `status: Draft`. Add `generated_by: "deckrd rev"`.
+- Change History: add one row, `1.0.0` — "Reverse engineered by /deckrd rev".
+- Traceability: fill it as the template says. Where the upstream document is not part of the input, mark the link `[INFERRED]`.
+
+### Evidence Rules (all modes)
+
+- Base all content ONLY on the source of the mode: the code for impl, the source document for spec and req.
+- Give a `Source:` line for every normative item (requirement, behavioral rule, phase).
+  - impl: `Source: path/to/file.ext:LINE` (several are allowed, comma-separated; a range is `path:START-END`).
+    Use a path relative to the project root.
+  - spec, req: `Source: <document>#<heading>` of the source document, for example `Source: implementation.md#Phase 2`.
+    When that source item already has a `path:line`, copy it too, so the chain reaches the code.
+- Mark an item that cannot be traced to a source with `[INFERRED]` at the start of its title or sentence.
+  An `[INFERRED]` item has no `Source:` line, or lists the nearest evidence and why it is not enough.
+- DO NOT fabricate requirements or behaviors that the source does not state or imply.
+- DO NOT prescribe implementation details that were not found in the source.
 - Use RFC 2119 keywords (SHALL, SHOULD, MAY) for normative statements.
-- All Open Questions must list what source evidence is missing and why it is unresolved.
+- Every unresolved point goes to the template's Open Questions section.
+  If the template has none (impl), add a final `## Open Questions` section.
+  Each question states what source evidence is missing and why it is unresolved.
+- Confidence has two values only: traced (has a `Source:` line) and `[INFERRED]`.
 
-### Mode: req
-
-- Focus: Extract what the system is required to do, from the user's perspective.
-- Output: `requirements.md` using `requirements.template.md`
-- Each FR must cite the source file or pattern it was derived from.
-- Label inferred stakeholders, scope boundaries, and non-functional requirements with `[INFERRED]`.
-
-### Mode: spec
-
-- Focus: Extract behavioral contracts — inputs, outputs, invariants, error conditions.
-- Output: `specifications.md` using `specifications.template.md`
-- Do NOT include function names, type signatures, or file paths unless they form the public API.
-- Behavioral rules must be declarative, not procedural.
-
-### Mode: impl
+### Mode: impl (code → implementation)
 
 - Focus: Document the existing phase and commit decomposition from the code history and structure.
-- Output: `implementation.md` using `implementation.template.md`
 - Derive phases from directory structure, module boundaries, or git history if available.
 - Derive commits from logical change units inferred from file groupings or git log.
 
-### Mode: tasks
+### Mode: spec (implementation → specification)
 
-- Focus: Extract test targets, scenarios, and expected behaviors from existing test files.
-- Output: `tasks.md` using `tasks.template.md`
-- If no test files exist, generate tasks from inferred behavioral units.
-- Use T-XX-YY-ZZ ID format.
+- Focus: Lift the behavior that the implementation document describes into behavioral contracts —
+  inputs, outputs, invariants, error conditions.
+- Drop the how: phases, commit units, file names, and function names stay in the implementation document.
+  Keep a name only when it is part of the public API.
+- Behavioral rules must be declarative, not procedural.
+- Do not add behavior that the implementation document does not describe. List what it leaves open in Open Questions.
+
+### Mode: req (specification → requirements)
+
+- Focus: Lift the behavioral contracts into what the system is required to do, from the user's perspective.
+- Drop the how: no decision rules, data layouts, or error code details. Keep the outcome the user can observe.
+- Label inferred stakeholders, scope boundaries, and non-functional requirements with `[INFERRED]`.
+- Each requirement links to the specification items it comes from, in Traceability.
 
 ---
 
@@ -98,9 +121,10 @@ file names, or the language of the input. Use the system default language only w
 
 Before finalizing, verify:
 
-- [ ] No fabricated requirements (every normative item has a source)
+- [ ] No fabricated content (every normative item has a `Source:` line or `[INFERRED]`)
 - [ ] All gaps clearly labeled `[INFERRED]` or listed as Open Questions
-- [ ] No implementation details leaked into req/spec output
+- [ ] Standard template headings, IDs, `version`, and Change History are kept (no `FR-01` style IDs)
+- [ ] The level is right: spec has no phase or file detail, req has no behavioral rule detail
 - [ ] At least 3 Functional Requirements (for req mode)
 - [ ] At least 2 acceptance criteria (for req mode)
 - [ ] All behavioral units have pre/post-conditions (for spec mode)

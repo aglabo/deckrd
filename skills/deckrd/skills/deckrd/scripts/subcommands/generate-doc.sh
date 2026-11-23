@@ -311,8 +311,13 @@ resolve_doc_paths()
                     {
   local doc_type="$1"
 
+  # rev has no template of its own: the template follows the TARGET line of the
+  # context, which main resolves later. implementation is the default target.
+  local template_type="$doc_type"
+  [[ $doc_type == rev ]] && template_type="implementation"
+
   local prompt_path="${DECKRD_ASSETS_DIR}/prompts/${doc_type}.prompt.md"
-  local template_path="${DECKRD_ASSETS_DIR}/templates/${doc_type}.template.md"
+  local template_path="${DECKRD_ASSETS_DIR}/templates/${template_type}.template.md"
 
   if [[ ! -f $prompt_path   ]]; then
     echo "Error: Prompt file not found: $prompt_path" >&2
@@ -326,6 +331,37 @@ resolve_doc_paths()
 
   echo "$prompt_path"
   echo "$template_path"
+}
+
+##
+# @description Resolve the standard template for a rev context's TARGET line
+#   TARGET takes the same names as `rev --to` (req|spec|impl, or the long names).
+#   A context without a TARGET line means the default target, implementation
+#   (the first step of the code-to-document chain).
+# @arg $1 string Context text
+# @stdout Template path
+# @stderr Error message when TARGET is not a rev target
+# @return 0 success, 1 unknown target
+resolve_rev_template()
+                       {
+  local context="$1"
+
+  local target
+  target=$(printf '%s\n' "$context" | sed -n 's/^TARGET:[[:space:]]*//p' | head -1 | tr -d '[:space:]')
+  [[ -z $target ]] && target="impl"
+
+  local normalized
+  normalized=$(normalize_doc_type "$target" 2> /dev/null) || normalized=""
+
+  case "$normalized" in
+    requirements | specifications | implementation)
+      echo "${DECKRD_ASSETS_DIR}/templates/${normalized}.template.md"
+      ;;
+    *)
+      echo "Error: unknown rev target: ${target}" >&2
+      return 1
+      ;;
+  esac
 }
 
 ##
@@ -446,6 +482,13 @@ main()
     config_set "context_input" "$context_input"
   elif [[ ! -t 0 ]]; then
     config_set "context_input" "$(cat)"
+  fi
+
+  # rev: the standard template for TARGET replaces the default one resolved above
+  if [[ $prompt_mode -eq 1 && ${asset_type:-} == rev ]]; then
+    local rev_template
+    rev_template=$(resolve_rev_template "$(config_get "context_input")") || exit 1
+    config_set "template_path" "$rev_template"
   fi
 
   if [[ "$(config_get "verbose")" == "1" ]]; then

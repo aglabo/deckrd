@@ -142,11 +142,15 @@ meta:
 /deckrd init + module
      │
      ▼
-/deckrd rev --to req
+/deckrd rev --to impl   (コード → impl)
      │
-     ▼  ← 通常フローに合流
-/deckrd spec
-/deckrd impl
+     ▼
+/deckrd rev --to spec   (impl → spec)
+     │
+     ▼
+/deckrd rev --to req    (spec → req)
+     │
+     ▼  ← impl ができた時点で tasks も実行できる
 /deckrd tasks
      │
      ▼
@@ -262,12 +266,12 @@ init → module → req → [dr] → spec → impl → tasks → bdd-coder
 ```text
 新しい機能を作りたい
          │
-         ├─ 既存コードあり ─▶ /deckrd rev --to req ─┐
-         │                                          │
-         └─ ゼロから       ─▶ /deckrd req           ┘
+         ├─ 既存コードあり ─▶ /deckrd rev --to impl → spec → req ─┐
+         │                                                  │
+         └─ ゼロから       ─▶ /deckrd req                   ┘
                                     │
                                     ▼
-                            /deckrd spec → impl → tasks
+                            /deckrd tasks
                                     │
                     ┌───────────────┴───────────────┐
                     │                               │

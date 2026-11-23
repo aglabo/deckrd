@@ -743,12 +743,15 @@ Assets are up to date.
 ## rev — リバースエンジニアリング
 
 ```bash
-/deckrd rev [--from code] [--to req|spec|impl|tasks]
+/deckrd rev [--to req|spec|impl] [--path <path>]...
 ```
 
 ### 用途
 
 既存コードや PoC があり、ドキュメントが存在しない場合に使います。
+`init` と `module` が済んだ状態で実行します。出力先は `active` なモジュールです。
+
+通常のフローとは逆に、コード → impl → spec → req の順に作ります。`tasks` は対象外です。
 
 ### フロー
 
@@ -756,27 +759,89 @@ Assets are up to date.
 既存コード
      |
      v
-/deckrd rev --to req
+/deckrd rev --to impl   → implementation.md
      |
      v
-コードを静的解析・調査
+/deckrd rev --to spec   → specifications.md   (implementation.md が元)
      |
      v
-requirements/requirements.md を生成
-     |
-     v  (通常のフローに合流)
-/deckrd spec
-/deckrd impl
-/deckrd tasks
+/deckrd rev --to req    → requirements.md     (specifications.md が元)
 ```
+
+各コマンドの中身は共通です。
+
+```text
+Phase 0: 元の収集 (impl: コードを調査 / spec, req: 元の文書を読む)
+Phase 1: 内容の確認、不足情報の質問 (最大 3 回、1 回 1 問)
+Phase 2: 標準テンプレートで文書を生成
+Phase 3: セルフレビューと承認 (最大 3 回)
+```
+
+`impl` ができた時点で、通常の `tasks` も実行できます。
+
+### 生成物の読み方
+
+- 出力は通常フローと同じ標準テンプレートです。`REQ-F-001` などの ID、`version`、Change History を持ちます。
+- 各項目に根拠行が付きます。impl は `Source: path:line`、spec と req は `Source: <文書>#<見出し>` です。
+- 根拠をコードから追えない項目には `[INFERRED]` が付きます。
+- 判断できない点は Open Questions に残ります。
+
+### レビューと `[INFERRED]` の扱い
+
+Phase 3 で `[INFERRED]` の項目ごとに `keep` / `remove` / `custom` を選びます。
+
+| 選択     | 結果                                                   |
+| -------- | ------------------------------------------------------ |
+| `keep`   | ラベルを残し、仮定として受け入れる                     |
+| `remove` | 項目を削除する                                         |
+| `custom` | 根拠を書き直す。`Source:` を足したときだけラベルを外す |
+
+承認後も `status: Draft` のままです。残った `[INFERRED]` は、後続コマンドで確認すべき仮定として扱われます。
+
+### 既存の文書がある場合
+
+出力先に文書がすでにある場合、`rev` は上書きしません。
+結果を `specifications/specifications.rev.md` のように別名で出力し、`session.json` も更新しません。差分を見て手で取り込んでください。
+
+### 調査対象の指定
+
+既定ではプロジェクト全体を調べます。`--path` で調べるファイルやディレクトリを絞れます。複数指定する場合は繰り返します。
+`--to impl` でだけ使えます。spec と req はコードではなく文書を読むので、指定するとエラーになります。
+
+```bash
+/deckrd rev --to impl --path packages/@aglabo/core/src
+/deckrd rev --to impl --path packages/@aglabo/core/src --path shared/types
+```
+
+- パスはプロジェクトルートからの相対パスで指定します。
+- 存在しないパスや、プロジェクト外のパスはエラーになります (黙ってスキップしません)。
+- 絞るのは読む範囲だけでなく、出力先のモジュールも決めます (次節)。
+
+### モジュールの自動推測
+
+`--to impl` に `--path` を付けると、パスから `<namespace>/<module>` を推測し、そこに文書を作ります。先に `/deckrd module` を実行する必要はありません。
+
+| `--path`                          | モジュール          |
+| --------------------------------- | ------------------- |
+| `packages/@aglabo/core/src`       | `hacker-names/core` |
+| `packages/@aglabo/cli/src/run.ts` | `hacker-names/cli`  |
+
+- モジュール名は、パスから `packages`、`src`、`@scope` などの汎用ディレクトリを除いた最後の名前です。
+- namespace は `/deckrd module` と同じ規則です。既存の namespace、`.project.json` の `project`、git ルート名の順に決めます。
+- 複数のパスで名前が分かれる場合は、どれを使うか質問します。
+- 推測結果は Phase 1 の要約に表示します。承認するか、別の `<namespace>/<module>` を指定します。承認前にモジュールは作りません。
+- 既存のモジュールなら、`active` を切り替えるだけです。進捗 (`completed`、`documents`) は消えません。
+- `--path` なし、または `--to spec` / `--to req` では、`active` なモジュールを使います。
 
 ### rev の対象フェーズ選択
 
 ```text
-コード → req のみ逆引き     : /deckrd rev --to req
-コード → spec まで逆引き    : /deckrd rev --to spec
-コード → impl まで逆引き    : /deckrd rev --to impl  (req+spec が必要)
+コード → impl      : /deckrd rev --to impl   (既定。元になる文書は不要)
+impl   → spec      : /deckrd rev --to spec   (implementation.md が必要)
+spec   → req       : /deckrd rev --to req    (specifications.md が必要)
 ```
+
+元の文書がないときは、先にどの `rev --to` を実行するかが表示されます。
 
 ---
 
