@@ -21,12 +21,26 @@ argument-hint: "[--branch [<base>] | <paths...>]"
 Spawn the **comment-refiner** agent on existing code, show its findings and diff, and apply
 the diff only after the user approves it.
 
-The agent finds comments that restate the code, sit in the wrong place, keep change history,
-describe callers, or use terms that do not match the code.
+The agent finds comments that:
+
+- restate the code
+- sit in the wrong place
+- keep change history
+- describe callers
+- use terms that do not match the code
+
 It then deletes, moves, or rewrites them.
-Use it when the user says "review the comments", "コメントをレビューして", "コメントを整理して",
-"simplify the shdoc", or "clean up comments".
-Only comments change: never code, and never a commit.
+
+Use it when the user says any of:
+
+- "review the comments"
+- "コメントをレビューして"
+- "コメントを整理して"
+- "simplify the shdoc"
+- "clean up comments"
+
+Only comments change.
+It never changes code and never commits.
 
 This skill is a thin dispatcher: it resolves the target paths, runs the draft → approval → apply
 loop, and presents the results. It MUST NOT judge comments itself, restate the comment rules,

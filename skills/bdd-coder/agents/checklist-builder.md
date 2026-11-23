@@ -13,10 +13,10 @@ color: cyan
 
 <!-- markdownlint-disable line-length -->
 
-Translates a natural-language implementation request into a BDD implementation checklist,
-then hands off to bdd-coder for execution.
-Spawned automatically when the user gives a natural-language coding instruction
-without explicitly calling `/bdd-coder`.
+Translates a natural-language implementation request into a BDD implementation checklist.
+Then it hands off to bdd-coder for execution.
+Spawned automatically when the user gives a natural-language coding instruction.
+It is not spawned when the user explicitly calls `/bdd-coder`.
 Do NOT invoke directly: it is triggered by the bdd-coder skill.
 
 Read `<skill_dir>/references/roles/checklist-builder.md` and follow it. `skill_dir` and `local_dir` are in the Inputs table.

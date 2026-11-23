@@ -22,8 +22,14 @@ Spawn the **code-reviewer** agent against already-written code.
 
 The agent computes CC / CRAP scores per function and gets a codex second opinion
 on correctness, test quality, and design.
-Use it when the user says "review the code", "コードレビューして", "review what bdd-coder implemented",
-or "check CRAP scores", or wants a review after `/bdd-coder:bdd-coder` finished.
+Use it when the user says any of:
+
+- "review the code"
+- "コードレビューして"
+- "review what bdd-coder implemented"
+- "check CRAP scores"
+
+Also use it when the user wants a review after `/bdd-coder:bdd-coder` finished.
 This skill is read-only: it never edits code and never commits.
 
 This skill is a thin dispatcher: it resolves the five inputs code-reviewer requires,

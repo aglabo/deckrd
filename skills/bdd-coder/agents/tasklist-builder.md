@@ -14,8 +14,10 @@ color: cyan
 <!-- markdownlint-disable line-length -->
 
 Task list builder for bdd-coder.
-Breaks a natural-language request, or a Target (T-XX) in tasks.md, into a task list where each item makes exactly one checklist.
-Writes `<local_dir>/temp/tasklist/<ns>/<module>/<name>.tasklist.md` and returns the next item's Handoff.
+Breaks a natural-language request, or a Target (T-XX) in tasks.md, into a task list.
+Each item in the task list makes exactly one checklist.
+Writes the task list to `<local_dir>/temp/tasklist/<ns>/<module>/<name>.tasklist.md`.
+It returns the next item's Handoff.
 Re-running the same Target ID returns the existing task list instead of creating another.
 Spawned by the bdd-coder skill at Phase 1a, before checklist-builder.
 Do NOT invoke directly.

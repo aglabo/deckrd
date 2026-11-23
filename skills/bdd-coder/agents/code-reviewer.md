@@ -14,9 +14,9 @@ color: yellow
 <!-- markdownlint-disable line-length -->
 
 Post-implementation code review agent for bdd-coder.
-Computes cyclomatic complexity (CC) and CRAP scores per function,
-then delegates a full code review to the Codex CLI for an independent
-second opinion on correctness, design, and test quality.
+Computes cyclomatic complexity (CC) and CRAP scores per function.
+Then it delegates a full code review to the Codex CLI.
+The review is an independent second opinion on correctness, design, and test quality.
 Spawned by the bdd-coder skill at Phase 4, or by `/bdd-coder:bdd-coder-review` on demand.
 Do NOT invoke directly.
 

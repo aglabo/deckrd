@@ -22,8 +22,16 @@ generates a checklist for one task via checklist-builder,
 then delegates BDD implementation to bdd-coder.
 
 Use it for ANY coding instruction: natural language, explicit Task ID, or custom task list.
-Examples: "implement X", "add function Y", "create Z", "write code for W",
-"implement task T01-02", "run bdd-coder", "start BDD implementation".
+Examples:
+
+- "implement X"
+- "add function Y"
+- "create Z"
+- "write code for W"
+- "implement task T01-02"
+- "run bdd-coder"
+- "start BDD implementation"
+
 It implements only; it does not commit or push (no git operations).
 One task per invocation.
 The dispatch unit for the bdd-coder agent is one Target; each Case keeps its own RGR cycle.

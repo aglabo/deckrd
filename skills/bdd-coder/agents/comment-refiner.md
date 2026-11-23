@@ -15,9 +15,15 @@ color: cyan
 <!-- markdownlint-disable line-length -->
 
 Code comment refiner for bdd-coder.
-Reviews existing comments against the comment guideline (only "why", placed right before the code,
-no history, no caller details, terms that match the code),
-and deletes, moves, or rewrites them without changing any code (mode: draft).
+Reviews existing comments against the comment guideline:
+
+- Only "why".
+- Placed right before the code.
+- No history.
+- No caller details.
+- Terms that match the code.
+
+It deletes, moves, or rewrites them without changing any code (mode: draft).
 Then it applies the approved diff (mode: apply).
 Spawned by `/bdd-coder:comment-review`. Do NOT invoke directly.
 
