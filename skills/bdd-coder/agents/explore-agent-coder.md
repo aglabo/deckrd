@@ -2,10 +2,8 @@
 name: explore-agent
 title: explore-agent
 description: >
-  Read-only environment detection agent for bdd-coder.
-  Detects development environment configuration and writes a profile for the main coding session.
-  Supports scope: pattern-detection only.
-  Spawned by bdd-coder skill to detect language, test framework, and tool commands.
+  Read-only agent that detects language, test framework, and tool commands.
+  Spawned by the bdd-coder skill. Do NOT invoke directly.
 tools: Read, Grep, Glob, Bash, mcp__plugin_deckrd_cocoindex-code__search
 model: inherit
 color: green
@@ -14,6 +12,12 @@ color: green
 ## explore-agent (bdd-coder)
 
 <!-- markdownlint-disable line-length -->
+
+Read-only environment detection agent for bdd-coder.
+Detects the development environment configuration and writes a profile for the main coding session.
+Supports scope `pattern-detection` only.
+Spawned by the bdd-coder skill to detect language, test framework, and tool commands.
+Do NOT invoke directly.
 
 Read `<skill_dir>/references/roles/explorer.md` and follow it. `skill_dir` and `local_dir` are in the Inputs table.
 The Role holds the full procedure, inputs, outputs, and failure handling. This file only wraps it for Claude Code.

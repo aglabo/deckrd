@@ -1,15 +1,10 @@
 ---
 name: bdd-coder
 description: >
-  BDD-style implementation agent. Use when the user gives ANY coding instruction —
-  natural-language, explicit Task ID, or custom task list.
-  Breaks large requests into a task list via tasklist-builder, then always spawns
-  checklist-builder for one task to generate a checklist, then runs BDD implementation.
-  Examples: "implement X", "add function Y", "create Z", "write code for W",
-  "implement task T01-02", "run bdd-coder", "start BDD implementation".
-  Do NOT commit or push — implementation only, no git operations.
-  Do NOT implement multiple tasks in one invocation — one task per call.
-  The dispatch unit for the bdd-coder agent is one Target; each Case keeps its own RGR cycle.
+  Implements code with strict BDD (Red-Green-Refactor).
+  - Use for any coding instruction: natural language, Task ID (T01-02), or a task list
+  - One task per call
+  - Never commits or pushes
 metadata:
   author: aglabo
   version: 0.8.1
@@ -25,6 +20,13 @@ Implements tasks using strict BDD: Red → Green → Refactor.
 Breaks the input into a task list via tasklist-builder when needed,
 generates a checklist for one task via checklist-builder,
 then delegates BDD implementation to bdd-coder.
+
+Use it for ANY coding instruction: natural language, explicit Task ID, or custom task list.
+Examples: "implement X", "add function Y", "create Z", "write code for W",
+"implement task T01-02", "run bdd-coder", "start BDD implementation".
+It implements only; it does not commit or push (no git operations).
+One task per invocation.
+The dispatch unit for the bdd-coder agent is one Target; each Case keeps its own RGR cycle.
 
 ## Skill Announcement (REQUIRED)
 
@@ -85,6 +87,8 @@ Gate Rule: phases must run in order. No skipping.
 
 All tests MUST pass at Phase 4. No exceptions.
 Do NOT commit after completion — user commits manually.
+Do NOT implement multiple tasks in one invocation — one task per call.
+Branches are prepared by the caller: one task branch per Target (T-XX), cut from the integration branch.
 
 ### Phase 1: Tasklist Resolve + Checklist Build
 

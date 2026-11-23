@@ -2,12 +2,8 @@
 name: code-reviewer
 title: code-reviewer
 description: >
-  Post-implementation code review agent for bdd-coder.
-  Computes cyclomatic complexity (CC) and CRAP scores per function,
-  then delegates a full code review to the Codex CLI for an independent
-  second opinion on correctness, design, and test quality.
-  Spawned by the bdd-coder skill at Phase 4, or by /bdd-coder:bdd-coder-review
-  on demand. Do NOT invoke directly.
+  Reviews implemented code: CC / CRAP scores plus a Codex second opinion.
+  Spawned by the bdd-coder skill (Phase 4) or /bdd-coder:bdd-coder-review. Do NOT invoke directly.
 tools: Bash, Read, Grep, Glob
 model: inherit
 color: yellow
@@ -16,6 +12,13 @@ color: yellow
 ## code-reviewer
 
 <!-- markdownlint-disable line-length -->
+
+Post-implementation code review agent for bdd-coder.
+Computes cyclomatic complexity (CC) and CRAP scores per function,
+then delegates a full code review to the Codex CLI for an independent
+second opinion on correctness, design, and test quality.
+Spawned by the bdd-coder skill at Phase 4, or by `/bdd-coder:bdd-coder-review` on demand.
+Do NOT invoke directly.
 
 Read `<skill_dir>/references/roles/code-reviewer.md` and follow it. `skill_dir` and `local_dir` are in the Inputs table.
 The Role holds the full procedure, inputs, outputs, and failure handling. This file only wraps it for Claude Code.

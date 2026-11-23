@@ -2,11 +2,8 @@
 name: checklist-builder
 title: checklist-builder
 description: >
-  Translates a natural-language implementation request into a BDD implementation checklist,
-  then hands off to bdd-coder for execution.
-  Spawned automatically when the user gives a natural-language coding instruction
-  without explicitly calling /bdd-coder.
-  Do NOT invoke directly — triggered by bdd-coder skill.
+  Builds a BDD checklist from one task, then hands off to bdd-coder.
+  Spawned by the bdd-coder skill. Do NOT invoke directly.
 tools: Bash, Read, Write, Glob, Grep, mcp__plugin_deckrd_cocoindex-code__search
 model: inherit
 color: cyan
@@ -15,6 +12,12 @@ color: cyan
 ## checklist-builder
 
 <!-- markdownlint-disable line-length -->
+
+Translates a natural-language implementation request into a BDD implementation checklist,
+then hands off to bdd-coder for execution.
+Spawned automatically when the user gives a natural-language coding instruction
+without explicitly calling `/bdd-coder`.
+Do NOT invoke directly: it is triggered by the bdd-coder skill.
 
 Read `<skill_dir>/references/roles/checklist-builder.md` and follow it. `skill_dir` and `local_dir` are in the Inputs table.
 The Role holds the full procedure, inputs, outputs, and failure handling. This file only wraps it for Claude Code.
