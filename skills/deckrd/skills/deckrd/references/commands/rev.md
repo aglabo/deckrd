@@ -4,7 +4,7 @@ description: Reverse-engineer existing code into deckrd documentation artifacts
 ---
 
 <!-- textlint-disable
-  ja-technical-writing/sentence-length
+  ja-technical-writing/sentence-length,
   ja-technical-writing/no-exclamation-question-mark,
   ja-technical-writing/max-comma -->
 <!-- markdownlint-disable line-length -->
@@ -39,7 +39,7 @@ The source of each target is fixed by the chain:
 
 There is no `tasks` target and no `--from`. The target decides the source.
 
-The output path follows the session's `active` module. Switch modules with `/deckrd module` before running `rev`.
+The output goes to the module decided in "Module Resolution". Without `--path` it is the session's `active` module, so switch with `/deckrd module` before running `rev`.
 
 `--path` rules:
 
@@ -47,16 +47,59 @@ The output path follows the session's `active` module. Switch modules with `/dec
 - Use it with `--to impl` only. With `--to spec` or `--to req`, stop with an error: those targets read a document, not code.
 - Check each path before Phase 0. If one does not exist or lies outside the project root, stop with the path in the error message. Do not skip it silently.
 - Without `--path`, the whole project is investigated.
-- It limits only what is read. The output path and the module do not change.
+- With `--to impl`, the module is inferred from the paths (see "Module Resolution"). `--path` also limits what is read.
 
 ## Preconditions
 
 - Session must exist
 - `init` must be completed
-- `module` must be set (active module required)
+- A module must be decided: the `active` module, or one inferred from `--path` (see "Module Resolution")
 - The source document in the table above must exist (not for `--to impl`)
 
 If the source document is missing, stop and tell the user which `rev --to` step creates it (`impl` for `spec`, `spec` for `req`).
+
+## Module Resolution
+
+The document goes to a module (`<namespace>/<module>`). Decide the candidate module before Phase 0, and create it only after approval.
+
+- `--to spec` and `--to req`, or `--to impl` without `--path`: use the session's `active` module.
+  If there is none, stop and ask the user to run `/deckrd module` first.
+- `--to impl` with `--path`: infer the module from the paths, as below. The user does not need to run `/deckrd module` first.
+
+### Infer from `--path`
+
+1. Module name (one per path):
+   1. Drop the generic directories: `packages`, `apps`, `libs`, `lib`, `src`, `source`, `dist`, `skills`, `scripts`, `modules`, `__tests__`, and scope directories that start with `@`.
+   2. Take the last remaining segment. For a file, use the file name without its extension only when no directory is left.
+   3. Make it a valid name: lowercase, `a-z` `-` `_` only, starting with `a-z` (other characters become `-`).
+2. One name or many. If all paths give the same name, use it. If they differ (for example `packages/@aglabo/core/src` and `shared/types`), ask the user which name to use, one question only.
+   If nothing remains (for example `src`), ask the user for the name.
+3. Namespace. Follow the rules of `module` ("AI Pre-resolution" in [module.md](module.md)):
+   an existing namespace that already holds a module with this name, then `project` in `.local/deckrd/.project.json`, then the git repository root name.
+4. Confirm. Show the result in the Phase 1 summary (`Module: <namespace>/<module> (inferred from --path)`).
+   The user can approve it or give another `<namespace>/<module>`. Phase 0 runs with the inferred name (it only reads code).
+   Do not create the module before the user approves.
+
+Examples (project `hacker-names`):
+
+| `--path`                                     | Module                  |
+| -------------------------------------------- | ----------------------- |
+| `packages/@aglabo/core/src`                  | `hacker-names/core`     |
+| `packages/@aglabo/dict`                      | `hacker-names/dict`     |
+| `packages/@aglabo/cli/src/run.ts`            | `hacker-names/cli`      |
+| `packages/@aglabo/core/src` + `shared/types` | ask (`core` or `types`) |
+
+### Create or select
+
+At the end of Phase 1, after the user approves the module and the summary, make the module the active one. Do this before Phase 2:
+
+| State of the module                             | Action                                                                                                  |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Directory and `session.json` entry both missing | Run `module.sh <namespace>/<module>` (same as `/deckrd module`)                                         |
+| Directory exists, no `session.json` entry       | Run `module.sh <namespace>/<module> --force`. Existing files are kept                                   |
+| Directory and `session.json` entry both exist   | Only set `active` in `session.json`. Do not run `module.sh`: it would reset `completed` and `documents` |
+
+All later steps use this module: the output path and the session update. If the user gave another module in Phase 1, use that one (Phase 0 only read code, so nothing needs to be redone).
 
 ## Existing Target Document
 
@@ -93,12 +136,12 @@ Phase 3: Review Loop
 
 Delegate deep codebase extraction to explore-agent:
 
-1. Read `<local_dir>/session.json` to confirm active module
+1. Use the module from "Module Resolution"
 2. Spawn **explore-agent** with:
    - `skill_dir`, `local_dir`: absolute paths, see "Path arguments" in SKILL.md
    - `scope`: `codebase-extraction`
    - `directory`: project root
-   - `module`: active module (`active` in `<local_dir>/session.json`)
+   - `module`: the module from "Module Resolution"
    - `focus`: module name + `implementation`
    - `paths`: the `--path` values, comma-separated (omit when `--path` is not given)
    - Role: [`roles/explorer.md`](../roles/explorer.md) (no subagent: follow it yourself, see SKILL.md)
@@ -107,7 +150,7 @@ Delegate deep codebase extraction to explore-agent:
 
 #### `--to spec` / `--to req`: Read the Source Document
 
-1. Read `<local_dir>/session.json` to confirm active module
+1. Use the active module from `<local_dir>/session.json`
 2. Read the source document directly (no explore-agent):
    `docs/.deckrd/<namespace>/<module>/implementation/implementation.md` for `spec`,
    `docs/.deckrd/<namespace>/<module>/specifications/specifications.md` for `req`.
@@ -130,6 +173,7 @@ For `--to impl`:
 [Reverse Engineering Scan]
 
 Target: implementation
+Module: <namespace>/<module> (inferred from --path | active)
 Scope: <paths from --path, or "whole project">
 Detected artifacts:
   - Source files: <count> files
@@ -141,7 +185,7 @@ Gaps that need user input:
   - <gap-1>: <what could not be inferred>
   - <gap-2>: <what could not be inferred>
 
-Proceed to generate the implementation document? (Y / add more context)
+Proceed to generate the implementation document in this module? (Y / add more context / another module)
 ```
 
 For `--to spec` / `--to req`:
@@ -323,6 +367,7 @@ After Phase 3 approval, update `<local_dir>/session.json`.
 The chain does not follow the standard order, so mark only the step that `rev` created.
 Add it to `completed` (keep the steps already there), record the document, and set `current_step` to it.
 Do not update the session when the result was written as `<name>.rev.md`.
+Use the entry of the module from "Module Resolution" (`modules.<namespace>/<module>` and `active`).
 
 **`--to impl`**:
 
