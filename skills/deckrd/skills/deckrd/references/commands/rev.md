@@ -4,14 +4,12 @@ description: Reverse-engineer existing code into deckrd documentation artifacts
 ---
 
 <!-- textlint-disable
-  ja-technical-writing/sentence-length -->
+  ja-technical-writing/sentence-length
+  ja-technical-writing/no-exclamation-question-mark,
+  ja-technical-writing/max-comma -->
+<!-- markdownlint-disable line-length -->
 
 ## rev Command
-
-<!-- textlint-disable
-    ja-technical-writing/no-exclamation-question-mark,
-    ja-technical-writing/max-comma -->
-<!-- markdownlint-disable line-length -->
 
 Reverse-engineer existing code into deckrd documentation artifacts.
 Supports legacy codebases, post-PoC documentation, and applying deckrd to existing projects.

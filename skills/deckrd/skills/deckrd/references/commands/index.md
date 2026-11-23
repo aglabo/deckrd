@@ -28,9 +28,9 @@ description: Reference table of all deckrd commands
 
 ## Alternative Paths
 
-| Command                                           | Description                                                        |
-| ------------------------------------------------- | ------------------------------------------------------------------ |
-| `rev [--from code] [--to req\|spec\|impl\|tasks]` | Reverse-engineer existing code into deckrd documentation artifacts |
+| Command                                         | Description                                                        |
+| ----------------------------------------------- | ------------------------------------------------------------------ |
+| `rev [--to req\|spec\|impl] [--path <path>]...` | Reverse-engineer existing code into deckrd documentation artifacts |
 
 ## Utility
 

@@ -4,14 +4,12 @@ description: Derive a normative requirements document from goals and constraints
 ---
 
 <!-- textlint-disable
-  ja-technical-writing/sentence-length -->
+  ja-technical-writing/sentence-length
+  ja-technical-writing/no-exclamation-question-mark,
+  ja-technical-writing/max-comma -->
+<!-- markdownlint-disable line-length -->
 
 ## req Command
-
-<!-- textlint-disable
-    ja-technical-writing/no-exclamation-question-mark,
-    ja-technical-writing/max-comma -->
-<!-- markdownlint-disable line-length -->
 
 Derive a normative requirements document from the user's goals, ideas, and constraints.
 
