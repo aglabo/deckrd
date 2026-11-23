@@ -99,8 +99,8 @@ T-02-01-01  → TestTarget 02, Scenario 01, Case 01
 
 - One test target (T-XX) MUST hold at most **40 Scenarios** (T-XX-01 … T-XX-40).
   Count Scenarios across all three categories (Normal / Error / Edge).
-- If a target would exceed 40, split it into several test targets (T-XX, T-XY, ...)
-  by behavior group, keeping the category balance rule per resulting target.
+- If a target would exceed 40, split it into several test targets by behavior group.
+  Keep the category balance rule per resulting target.
   Name each part `<function> (part N)`, using the exact IMPLEMENTATION name.
 - A split is the only exception to "one function = exactly one T-XX".
 - Do NOT drop or merge scenarios to fit the limit. Coverage and MECE still apply.

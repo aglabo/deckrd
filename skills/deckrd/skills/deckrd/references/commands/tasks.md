@@ -95,8 +95,8 @@ T-02-01-01  → isSingleValue, Single value, returns true
 
 - One Test Target (`T-XX`) holds at most **40 Scenarios** (`T-XX-YY`), counted across Normal / Error / Edge.
 - bdd-coder dispatches one Target at a time, so this keeps each dispatch from getting too heavy.
-- A Target that would exceed 40 is split into several Targets by behavior group, named `<function> (part N)`.
-  Each part keeps the Normal / Error / Edge balance.
+- A Target that would exceed 40 is split into several Targets by behavior group.
+  Each part is named `<function> (part N)` and keeps the Normal / Error / Edge balance.
 - Do NOT drop or merge Scenarios to fit the limit.
 
 ## BDD Structure Mapping
@@ -241,7 +241,8 @@ Or give a natural-language instruction — `checklist-builder` will generate a c
 
 ### Branching before implementation
 
-Keep history short: one integration branch per feature, one short-lived task branch per Target (T-XX).
+Keep history short.
+Use one integration branch per feature and one short-lived task branch per Target (T-XX).
 
 1. Create one Issue for the feature and the integration branch `<type>-<issue>/<scope>/impl`
 2. Before each `/bdd-coder:bdd-coder`, cut `<type>-<issue>/<scope>/t-XX` from the integration branch
