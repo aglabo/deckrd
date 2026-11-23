@@ -242,11 +242,13 @@ Workflow Progress:
 
 ### /deckrd rev
 
-**Usage**: `/deckrd rev [--from code] [--to req|spec|impl|tasks]`
+**Usage**: `/deckrd rev [--to req|spec|impl] [--path <path>]...`
 
 **Purpose**: Reverse-engineer existing code into deckrd documents for the active module
 
-**Prerequisites**: `init` and `module` completed
+**Prerequisites**: `init` and `module` completed. The chain is code → impl → spec → req. `--to spec` needs `implementation.md`, `--to req` needs `specifications.md`. `--path` limits what is read and works with `--to impl` only.
+
+**Output**: the standard document for `--to`, built from its standard template with `Source: path:line` evidence and `[INFERRED]` labels. An existing target document is not overwritten; the result goes to `<name>.rev.md`.
 
 ### /deckrd update
 

@@ -275,7 +275,9 @@ req/spec/impl/tasks いずれのステップ中でも実行できます。
 既存コードからドキュメントを生成します。
 
 ```bash
-/deckrd rev --to req    # 既存コードから要件ドキュメント生成
+/deckrd rev --to impl    # コード → impl
+/deckrd rev --to spec    # impl → spec
+/deckrd rev --to req     # spec → req
 ```
 
 ---
@@ -285,9 +287,9 @@ req/spec/impl/tasks いずれのステップ中でも実行できます。
 ```bash
 /deckrd init <project> <type>
 /deckrd module <ns>/<mod>
-/deckrd rev --to req        # ここから開始（コード → 要件）
-/deckrd spec
-/deckrd impl
+/deckrd rev --to impl      # ここから開始（コード → impl）
+/deckrd rev --to spec      # impl → spec
+/deckrd rev --to req       # spec → req
 /deckrd tasks
 /bdd-coder:bdd-coder <task-id>
 ```
