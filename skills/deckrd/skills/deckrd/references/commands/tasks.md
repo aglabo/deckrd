@@ -229,3 +229,15 @@ To implement tasks using BDD:
 ```
 
 Or give a natural-language instruction — `checklist-builder` will generate a checklist automatically.
+
+### Branching before implementation
+
+Keep history short: one integration branch per feature, one short-lived task branch per Target (T-XX).
+
+1. Create one Issue for the feature and the integration branch `<type>-<issue>/<scope>/impl`
+2. Before each `/bdd-coder:bdd-coder`, cut `<type>-<issue>/<scope>/t-XX` from the integration branch
+3. After the Target is done, merge the task branch into the integration branch and delete it
+4. When all Targets are done, squash merge the integration branch into `main`
+
+bdd-coder does not run git commands. The caller creates, merges and deletes the branches.
+Details: `deckrd-rule-workflow.md` (Branch strategy).
