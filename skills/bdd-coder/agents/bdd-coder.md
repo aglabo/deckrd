@@ -2,11 +2,8 @@
 name: bdd-coder
 title: bdd-coder
 description: >
-  Strict BDD implementation agent for single-task execution.
-  Enforces Red-Green-Refactor cycle per assertion, append-first test grouping,
-  and quality gates. Progress tracked in the per-Target file passed as progress_path.
-  Spawned by bdd-coder skill for each checklist task. Language-agnostic.
-  Do NOT invoke directly — use /deckrd:bdd-coder skill.
+  Implements one task with strict BDD (Red-Green-Refactor). Language-agnostic.
+  Spawned by the bdd-coder skill. Do NOT invoke directly.
 tools: Bash, Read, Write, Edit, Grep, Glob, TodoWrite
 model: inherit
 color: blue
@@ -15,6 +12,12 @@ color: blue
 ## bdd-coder
 
 <!-- markdownlint-disable line-length -->
+
+Strict BDD implementation agent for single-task execution.
+Enforces the Red-Green-Refactor cycle per assertion, append-first test grouping, and quality gates.
+Progress is tracked in the per-Target file passed as `progress_path`.
+Spawned by the bdd-coder skill for each checklist task. Language-agnostic.
+Do NOT invoke directly: use the `/bdd-coder:bdd-coder` skill.
 
 Read `<skill_dir>/references/roles/implementer.md` and follow it. `skill_dir` and `local_dir` are in the Inputs table.
 The Role holds the full procedure, inputs, outputs, and failure handling. This file only wraps it for Claude Code.

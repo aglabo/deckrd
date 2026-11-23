@@ -2,12 +2,8 @@
 name: tasklist-builder
 title: tasklist-builder
 description: >
-  Task list builder for bdd-coder. Breaks a natural-language request, or a Target (T-XX)
-  in tasks.md, into a task list where each item makes exactly one checklist. Writes
-  <local_dir>/temp/tasklist/<ns>/<module>/<name>.tasklist.md and returns the next item's Handoff.
-  Re-running the same Target ID returns the existing task list instead of creating another.
-  Spawned by the bdd-coder skill at Phase 1a, before checklist-builder.
-  Do NOT invoke directly.
+  Splits a request or a Target (T-XX) into a task list (one checklist per item).
+  Spawned by the bdd-coder skill (Phase 1a). Do NOT invoke directly.
 tools: Bash, Read, Write, Glob, Grep, mcp__plugin_deckrd_cocoindex-code__search
 model: inherit
 color: cyan
@@ -16,6 +12,15 @@ color: cyan
 ## tasklist-builder
 
 <!-- markdownlint-disable line-length -->
+
+Task list builder for bdd-coder.
+Breaks a natural-language request, or a Target (T-XX) in tasks.md, into a task list.
+Each item in the task list makes exactly one checklist.
+Writes the task list to `<local_dir>/temp/tasklist/<ns>/<module>/<name>.tasklist.md`.
+It returns the next item's Handoff.
+Re-running the same Target ID returns the existing task list instead of creating another.
+Spawned by the bdd-coder skill at Phase 1a, before checklist-builder.
+Do NOT invoke directly.
 
 Read `<skill_dir>/references/roles/tasklist-builder.md` and follow it. `skill_dir` and `local_dir` are in the Inputs table.
 The Role holds the full procedure, inputs, outputs, and failure handling. This file only wraps it for Claude Code.

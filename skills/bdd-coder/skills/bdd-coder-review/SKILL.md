@@ -1,11 +1,9 @@
 ---
 name: bdd-coder-review
 description: >
-  Run an independent code review on already-implemented code by spawning the code-reviewer agent.
-  Computes CC / CRAP scores per function and gets a codex second opinion on correctness,
-  test quality, and design. Use when the user says "review the code", "コードレビューして",
-  "review what bdd-coder implemented", "check CRAP scores", or wants a review after
-  /bdd-coder:bdd-coder finished. Read-only — never edits code, never commits.
+  Independent review of already-implemented code (CC / CRAP scores + codex second opinion).
+  - Use for: "review the code", "コードレビューして", "check CRAP scores", review after /bdd-coder:bdd-coder
+  - Read-only: never edits code, never commits
 metadata:
   author: aglabo
   version: 0.8.1
@@ -21,6 +19,18 @@ argument-hint: "[task_id] [--branch [<base>] | <paths...>] [--coverage-cmd <cmd>
 ## Overview
 
 Spawn the **code-reviewer** agent against already-written code.
+
+The agent computes CC / CRAP scores per function and gets a codex second opinion
+on correctness, test quality, and design.
+Use it when the user says any of:
+
+- "review the code"
+- "コードレビューして"
+- "review what bdd-coder implemented"
+- "check CRAP scores"
+
+Also use it when the user wants a review after `/bdd-coder:bdd-coder` finished.
+This skill is read-only: it never edits code and never commits.
 
 This skill is a thin dispatcher: it resolves the five inputs code-reviewer requires,
 spawns the agent, and presents the returned report. It MUST NOT compute CRAP itself,

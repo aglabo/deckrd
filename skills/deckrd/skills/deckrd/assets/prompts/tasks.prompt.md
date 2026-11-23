@@ -95,6 +95,16 @@ T-02-01-01  → TestTarget 02, Scenario 01, Case 01
 - Exception: one assertion over a whole collection ("all extracted IDs are unique") has one input.
   That collection stays one Case.
 
+## Scenario Limit per Target
+
+- One test target (T-XX) MUST hold at most **40 Scenarios** (T-XX-01 … T-XX-40).
+  Count Scenarios across all three categories (Normal / Error / Edge).
+- If a target would exceed 40, split it into several test targets by behavior group.
+  Keep the category balance rule per resulting target.
+  Name each part `<function> (part N)`, using the exact IMPLEMENTATION name.
+- A split is the only exception to "one function = exactly one T-XX".
+- Do NOT drop or merge scenarios to fit the limit. Coverage and MECE still apply.
+
 ## BDD Structure Mapping
 
 Tasks must map to the following BDD test structure:
@@ -173,11 +183,11 @@ Use category prefixes in describe blocks:
 
 4. Break down each specification into a WBS hierarchy — apply the 100% rule and MECE principle at every level:
 
-   | Level       | WBS element            | MECE rule                                                                 |
-   | ----------- | ---------------------- | ------------------------------------------------------------------------- |
-   | Test target | describe block level 1 | Every function/class in IMPLEMENTATION must appear as exactly one T-XX    |
-   | Scenario    | describe block level 2 | All observable behaviors per target must appear; no two scenarios overlap |
-   | Assertion   | it block level         | Each scenario's equivalence classes must be covered exactly once          |
+   | Level       | WBS element            | MECE rule                                                                                                           |
+   | ----------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------- |
+   | Test target | describe block level 1 | Every function/class in IMPLEMENTATION must appear as exactly one T-XX (split only per "Scenario Limit per Target") |
+   | Scenario    | describe block level 2 | All observable behaviors per target must appear; no two scenarios overlap                                           |
+   | Assertion   | it block level         | Each scenario's equivalence classes must be covered exactly once                                                    |
 
    Equivalence-class checklist per scenario (use to ensure CE — no gaps):
    - Valid input classes (one case per distinct value range)
@@ -247,6 +257,7 @@ Each task MUST include:
 - NEVER generate two tasks that cover the same equivalence class (MECE — ME violation)
 - NEVER list multiple alternative inputs ("A or B", "any of ...") in one task's Scenario
 - NEVER leave a required category or equivalence class without a task (MECE — CE violation)
+- NEVER put more than 40 Scenarios (T-XX-YY) in one test target; split the target instead
 - NEVER skip error handling scenarios
 - NEVER omit edge case coverage (include boundary values, state transitions, and false-negative verification)
 - NEVER omit a task for any row in spec Section 5 (Edge Cases), except rows with `Class = Extension`

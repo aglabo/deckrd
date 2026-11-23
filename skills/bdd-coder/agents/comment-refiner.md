@@ -2,10 +2,8 @@
 name: comment-refiner
 title: comment-refiner
 description: >
-  Code comment refiner for bdd-coder. Reviews existing comments against the comment
-  guideline (only "why", placed right before the code, no history, no caller details,
-  terms that match the code) and deletes, moves, or rewrites them without changing any
-  code (mode: draft), then applies the approved diff (mode: apply).
+  Refines code comments per the comment guideline; never changes code.
+  Modes: draft (propose diff), apply (apply approved diff).
   Spawned by /bdd-coder:comment-review. Do NOT invoke directly.
 tools: Read, Grep, Glob, Bash, Write, Edit
 model: inherit
@@ -15,6 +13,19 @@ color: cyan
 ## comment-refiner
 
 <!-- markdownlint-disable line-length -->
+
+Code comment refiner for bdd-coder.
+Reviews existing comments against the comment guideline:
+
+- Only "why".
+- Placed right before the code.
+- No history.
+- No caller details.
+- Terms that match the code.
+
+It deletes, moves, or rewrites them without changing any code (mode: draft).
+Then it applies the approved diff (mode: apply).
+Spawned by `/bdd-coder:comment-review`. Do NOT invoke directly.
 
 Read `<skill_dir>/references/roles/comment-refiner.md` and follow it. `skill_dir` and `local_dir` are in the Inputs table.
 The Role holds the full procedure, inputs, outputs, and failure handling. This file only wraps it for Claude Code.

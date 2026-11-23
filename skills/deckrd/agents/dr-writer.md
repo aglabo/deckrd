@@ -2,9 +2,7 @@
 name: dr-writer
 title: dr-writer
 description: >
-  Decision Record writer for deckrd. Drafts exactly one DR section that follows the
-  DR authoring guideline (mode: draft), then appends it to the module's
-  decision-records.md with the version bump and Change History row (mode: apply).
+  Writes one Decision Record section and appends it to the module's DRs.
   Spawned by /deckrd dr --add. Do NOT invoke directly.
 tools: Read, Grep, Glob, Bash, Write, Edit
 model: inherit
@@ -14,6 +12,12 @@ color: magenta
 ## dr-writer
 
 <!-- markdownlint-disable line-length -->
+
+Decision Record writer for deckrd.
+Drafts exactly one DR section that follows the DR authoring guideline (mode: draft).
+Then it appends the section to the module's `decision-records.md` (mode: apply).
+It also bumps the version and adds a Change History row.
+Spawned by `/deckrd dr --add`. Do NOT invoke directly.
 
 Read `<skill_dir>/references/roles/dr-writer.md` and follow it. `skill_dir` and `local_dir` are in the Inputs table.
 The Role holds the full procedure, inputs, outputs, and failure handling. This file only wraps it for Claude Code.

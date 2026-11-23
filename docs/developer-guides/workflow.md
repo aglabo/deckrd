@@ -199,13 +199,18 @@ git checkout -b {type}-{number}/{scope}/{slug}
 
 #### 4. Implement Changes
 
-Follow the implementation plan from deckrd specifications, using bdd-coder for each task:
+Follow the implementation plan from deckrd specifications, using bdd-coder for each task.
+Create one Issue per feature. Cut one task branch per Target (T-XX) from the integration branch,
+and reuse the integration branch's Issue number in the task branch name:
 
 ```bash
-/bdd-coder:bdd-coder T01-01
-/bdd-coder:bdd-coder T01-02
-# ... (run for each task)
+git checkout -b feat-42/auth/t-01 feat-42/auth/impl
+/bdd-coder:bdd-coder T-01
+# commit, merge into feat-42/auth/impl, delete the task branch
+# ... (repeat for each Target)
 ```
+
+When all Targets are done, squash merge the integration branch into `main`.
 
 #### 5. Commit Changes
 

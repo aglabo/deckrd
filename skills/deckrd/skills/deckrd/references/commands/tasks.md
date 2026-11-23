@@ -91,6 +91,14 @@ T-01-02-01  → detectValueKind, Array input, returns Array
 T-02-01-01  → isSingleValue, Single value, returns true
 ```
 
+## Scenario Limit per Target
+
+- One Test Target (`T-XX`) holds at most **40 Scenarios** (`T-XX-YY`), counted across Normal / Error / Edge.
+- bdd-coder dispatches one Target at a time, so this keeps each dispatch from getting too heavy.
+- A Target that would exceed 40 is split into several Targets by behavior group.
+  Each part is named `<function> (part N)` and keeps the Normal / Error / Edge balance.
+- Do NOT drop or merge Scenarios to fit the limit.
+
 ## BDD Structure Mapping
 
 Tasks map to the following test structure:
@@ -186,6 +194,7 @@ YOU MUST verify `tasks.md` by reading it directly — not from memory.
 | Each task has Target/Scenario/Expected | Read each entry                 | All 3 fields present     |
 | Each Scenario names a single input     | Read each Scenario line         | No "or" / alternatives   |
 | Normal / Error / Edge cases all exist  | Count by category               | >=1 each                 |
+| Scenarios per Test Target              | Count T-XX-YY IDs per T-XX      | <=40 each                |
 | Tasks trace to specifications          | Cross-ref spec sections         | Each task maps to a spec |
 
 If any check fails: YOU MUST regenerate the failing section. No partial approval.
@@ -229,3 +238,16 @@ To implement tasks using BDD:
 ```
 
 Or give a natural-language instruction — `checklist-builder` will generate a checklist automatically.
+
+### Branching before implementation
+
+Keep history short.
+Use one integration branch per feature and one short-lived task branch per Target (T-XX).
+
+1. Create one Issue for the feature and the integration branch `<type>-<issue>/<scope>/impl`
+2. Before each `/bdd-coder:bdd-coder`, cut `<type>-<issue>/<scope>/t-XX` from the integration branch
+3. After the Target is done, merge the task branch into the integration branch and delete it
+4. When all Targets are done, squash merge the integration branch into `main`
+
+bdd-coder does not run git commands. The caller creates, merges and deletes the branches.
+Details: `deckrd-rule-workflow.md` (Branch strategy).

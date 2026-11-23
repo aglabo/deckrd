@@ -3,9 +3,7 @@ name: explore-agent
 title: explore-agent
 description: >
   Read-only codebase investigation agent for deckrd commands.
-  Protects the main session context window by delegating codebase surveys to a subagent.
-  Supports scopes: codebase-extraction, codebase-survey, prior-art, pattern-detection.
-  Spawned by deckrd skills to investigate the project without polluting the main context.
+  Spawned by deckrd skills.
 tools: Read, Grep, Glob, Bash, Write
 model: inherit
 color: green
@@ -14,6 +12,11 @@ color: green
 ## explore-agent
 
 <!-- markdownlint-disable line-length -->
+
+Read-only codebase investigation agent for deckrd commands.
+It protects the main session context window by delegating codebase surveys to a subagent.
+Supports scopes: `codebase-extraction`, `codebase-survey`, `prior-art`, `pattern-detection`.
+Spawned by deckrd skills to investigate the project without polluting the main context.
 
 Read `<skill_dir>/references/roles/explorer.md` and follow it. `skill_dir` and `local_dir` are in the Inputs table.
 The Role holds the full procedure, inputs, outputs, and failure handling. This file only wraps it for Claude Code.
