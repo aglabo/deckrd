@@ -121,12 +121,13 @@ Then:
 | any              | review       | [commands/review.md](references/commands/review.md) |
 | req–tasks        | dr --add     | [commands/dr.md](references/commands/dr.md)         |
 | any (DRs exist)  | dr --refine  | [commands/dr.md](references/commands/dr.md)         |
-| module completed | rev          | [commands/rev.md](references/commands/rev.md)       |
+| init completed   | rev          | [commands/rev.md](references/commands/rev.md)       |
 | any              | status       | [commands/status.md](references/commands/status.md) |
 
 Gate Rule: each command requires the previous command's document. No skipping.
 
 > `spec --phase <slug>` re-runs a single spec phase and is exempt from the order gate. See [commands/spec.md](references/commands/spec.md).
+> `rev` runs the chain in reverse (code → impl → spec → req) and is exempt from the order gate. `rev --to impl --path <path>` needs no module yet (it is inferred); other targets need an active module and their source document. See [commands/rev.md](references/commands/rev.md).
 > `project` is project-scoped and can run any time. See [commands/project.md](references/commands/project.md).
 > `update` refreshes deployed assets and can run any time after `init`. See [commands/update.md](references/commands/update.md).
 > Full command list: [commands/index.md](references/commands/index.md)
