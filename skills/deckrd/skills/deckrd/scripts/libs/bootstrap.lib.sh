@@ -27,8 +27,7 @@ readonly _BOOTSTRAP_LOADED=1
 #
 # @stdout Resolved PROJECT_ROOT path
 # @return 0 always
-_resolve_project_root()
-                        {
+_resolve_project_root() {
   if [[ -n ${PROJECT_ROOT:-}   ]]; then
     printf '%s' "${PROJECT_ROOT}"
     return 0
@@ -48,8 +47,7 @@ _resolve_project_root()
 #
 # @stdout Resolved skill root path (used for SKILL_ROOT and DECKRD_ROOT)
 # @return 0 always
-_resolve_deckrd_root()
-                       {
+_resolve_deckrd_root() {
   local _skills_dir
   # CDPATH is cleared so cd prints nothing into the captured path
   _skills_dir="$(CDPATH='' cd -- "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -74,8 +72,7 @@ _resolve_deckrd_root()
 # Does NOT call readonly; call bootstrap_finalize() after to lock variables.
 #
 # @return 0 on success, 1 if a readonly SKILL_ROOT differs from the computed value
-bootstrap_init()
-                 {
+bootstrap_init() {
   # PROJECT_ROOT: env var > git > pwd
   if [[ -z ${PROJECT_ROOT:-}   ]]; then
     PROJECT_ROOT="$(_resolve_project_root)"
@@ -176,8 +173,7 @@ bootstrap_init()
 # consistent across all variables.
 #
 # @return 0 always
-bootstrap_finalize()
-                     {
+bootstrap_finalize() {
   readonly PROJECT_ROOT
   readonly SKILL_ROOT
   readonly DECKRD_ROOT

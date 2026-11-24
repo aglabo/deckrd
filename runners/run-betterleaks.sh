@@ -36,8 +36,7 @@ readonly CONFIG_LOCAL_RELPATH='configs/betterleaks.toml'
 # @exitcode 0 No leaks found
 # @exitcode 1 Leaks found
 # @exitcode 78 (EXIT_CONFIG_NOT_FOUND) Config file not found
-main()
-       {
+main() {
   local staged=0
   if [[ ${1:-} == '--staged'   ]]; then
     staged=1

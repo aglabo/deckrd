@@ -23,16 +23,14 @@
 # Once finalized, readonly makes the assignments fail.
 #
 # @arg $1 string Directory to use as the sandbox DECKRD_LOCAL_DATA
-export_sandbox_local_dirs()
-                            {
+export_sandbox_local_dirs() {
   export DECKRD_LOCAL_DATA="$1"
   export DECKRD_LOCAL_TEMP="${1}/temp"
   export DECKRD_LOCAL_WORKSPACES="${1}/workspaces"
 }
 
 # unset_sandbox_local_dirs - Unset every variable overridden by export_sandbox_local_dirs
-unset_sandbox_local_dirs()
-                           {
+unset_sandbox_local_dirs() {
   unset DECKRD_LOCAL_DATA DECKRD_LOCAL_TEMP DECKRD_LOCAL_WORKSPACES
 }
 
@@ -45,8 +43,7 @@ unset_sandbox_local_dirs()
 #
 # Call this helper only from specs that sourced bootstrap.lib.sh with `--no-finalize`.
 # Once finalized, readonly makes the assignments fail.
-setup_deckrd_tmpdir()
-                      {
+setup_deckrd_tmpdir() {
   DECKRD_TMPDIR="$(mktemp -d)"
   export DECKRD_DOCS_DIR="${DECKRD_TMPDIR}/docs/.deckrd"
   export DECKRD_LOCAL="${DECKRD_TMPDIR}/.local/deckrd"
@@ -59,8 +56,7 @@ setup_deckrd_tmpdir()
 # Helper: clean up temp directory
 #
 # Pairs with setup_deckrd_tmpdir. Unsets every variable it overrode.
-teardown_deckrd_tmpdir()
-                         {
+teardown_deckrd_tmpdir() {
   [[ -n ${DECKRD_TMPDIR:-} && -d $DECKRD_TMPDIR     ]] && rm -rf "$DECKRD_TMPDIR"
   unset_sandbox_local_dirs
   unset DECKRD_TMPDIR DECKRD_DOCS_DIR DECKRD_LOCAL \
@@ -76,8 +72,7 @@ teardown_deckrd_tmpdir()
 #
 # @arg $1 string Command name
 # @return 0 if the command is not on PATH, 1 if it is
-command_missing()
-                  {
+command_missing() {
   ! command -v "$1" > /dev/null 2>&1
 }
 
@@ -91,8 +86,7 @@ command_missing()
 #
 # @arg $1 string Path to check
 # @return 0 if the path is absolute and outside SHELLSPEC_PROJECT_ROOT, 1 otherwise
-path_outside_repo()
-                    {
+path_outside_repo() {
   [[ $1 == /* && $1 != "${SHELLSPEC_PROJECT_ROOT}"/*     ]]
 }
 
@@ -101,14 +95,12 @@ ASSETS_DIR="${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/skills/deckrd/assets"
 export ASSETS_DIR
 
 # Helper: return the path to an asset file
-asset_path()
-             {
+asset_path() {
                echo "${ASSETS_DIR}/${1}"
 }
 
 # Helper: return the contents of an asset file
-load_asset()
-             {
+load_asset() {
                cat "${ASSETS_DIR}/${1}"
 }
 

@@ -48,8 +48,7 @@ readonly -a LONG_TYPES=(
 # @arg $1 string Doc-type (short or long form)
 # @stdout Canonical doc-type string
 # @return 0 on success, 1 on unknown doc-type
-normalize_doc_type()
-                     {
+normalize_doc_type() {
   local doc_type="${1:-}"
 
   if [[ -z ${doc_type}   ]]; then

@@ -1,7 +1,7 @@
 # src: .textlintignore
 # @(#) : ignore settings for textlint
 #
-# Copyright (c) 2026- atsushifx <http://github.com/atsushifx>
+# Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
@@ -12,7 +12,6 @@
 ## AI Generated files
 .claude/**
 .serena/**
-.cocoindex_code/**
 
 # temp
 **/temp/**
@@ -20,8 +19,3 @@
 
 ## Releases
 releases/**
-
-## Build artifacts
-**/dist/**
-aglabo.github.io/.blume/**
-aglabo.github.io/.blume-verify/**

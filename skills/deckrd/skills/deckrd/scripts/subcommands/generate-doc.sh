@@ -75,15 +75,13 @@ SESSION_FILE="${SESSION_FILE:-${DECKRD_LOCAL_DATA}/session.json}"
 #   resolution as config.lib.sh; keep both in step.
 # @stdout Resolved deckrd docs base directory path (no trailing newline)
 # @return 0 always
-resolve_deckrd_base()
-                      {
+resolve_deckrd_base() {
   printf '%s' "${DECKRD_DOCS:-${DECKRD_DOCS_DIR:-$(git rev-parse --show-toplevel 2> /dev/null || pwd)/docs/.deckrd}}"
 }
 
 ##
 # @description Show usage information
-show_usage()
-             {
+show_usage() {
   cat << EOF
 Usage: generate-doc.sh @<type> [context] [OPTIONS]
 
@@ -143,8 +141,7 @@ EOF
 
 ##
 # @description Parse command-line options
-parse_options()
-                {
+parse_options() {
   local positional_count=0
 
   while [[ $# -gt 0 ]]; do
@@ -237,8 +234,7 @@ parse_options()
 # @arg $1 string Context input
 # @stdout Resolved context content
 # @note @filepath is resolved relative to DECKRD_BASE
-resolve_context()
-                  {
+resolve_context() {
   local input="$1"
 
   if [[ -z $input   ]]; then
@@ -268,8 +264,7 @@ resolve_context()
 # @stdout Prompt content string
 # @return 0  prompt-text mode: the argument itself written to stdout
 # @return 1  prompt-file mode: caller should use cat on PROMPT_PATH
-get_prompt()
-             {
+get_prompt() {
   local arg="$1"
 
   if [[ $arg == @*   ]]; then
@@ -287,8 +282,7 @@ get_prompt()
 # @stderr Error message on invalid argument
 # @return 0  success
 # @return 1  invalid argument (missing @, or unsupported doctype)
-get_prompt_file()
-                  {
+get_prompt_file() {
   local arg="$1"
 
   if [[ $arg != @*   ]]; then
@@ -307,8 +301,7 @@ get_prompt_file()
 # @description Resolve prompt and template paths for document type
 # @arg $1 string Document type (asset base name, e.g. requirements)
 # @stdout Two lines: prompt path, template path
-resolve_doc_paths()
-                    {
+resolve_doc_paths() {
   local doc_type="$1"
 
   # rev has no template of its own: the template follows the TARGET line of the
@@ -342,8 +335,7 @@ resolve_doc_paths()
 # @stdout Template path
 # @stderr Error message when TARGET is not a rev target
 # @return 0 success, 1 unknown target
-resolve_rev_template()
-                       {
+resolve_rev_template() {
   local context="$1"
 
   local target
@@ -371,8 +363,7 @@ resolve_rev_template()
 # @arg $3 string Language setting
 # @arg $4 string Context input
 # @stdout Combined content
-build_ai_input()
-                 {
+build_ai_input() {
   local prompt_path="$1"
   local template_path="$2"
   local lang="$3"
@@ -401,8 +392,7 @@ build_ai_input()
 # @description Execute prompt with AI model
 # @stdout AI response
 # @see run_ai
-execute_prompt()
-                 {
+execute_prompt() {
   local prompt_path="$1"
   local template_path="$2"
   local lang="$3"
@@ -418,8 +408,7 @@ execute_prompt()
 # @description Output result to stdout or file
 # @arg $1 string Result
 # @arg $2 string Output file (relative to DECKRD_BASE)
-output_result()
-                {
+output_result() {
   local result="$1"
   local output_file="$2"
 
@@ -437,8 +426,7 @@ output_result()
 # Main Execution
 # ============================================================================
 
-main()
-       {
+main() {
   local session_file="${SESSION_FILE}"
 
   # config 初期化（デフォルト + セッション読込）

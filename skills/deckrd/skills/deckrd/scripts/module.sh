@@ -72,8 +72,7 @@ unset _SCRIPT_DIR
 # @description SESSION_FILE uses ${VAR:-default} to allow external override (mock)
 # @description OPTIONS / OPTIONS_SET are not declared here: args_init (libs/args.lib.sh) owns them
 # @description SUBCOMMAND is reset on every call
-init_vars()
-            {
+init_vars() {
   SESSION_FILE="${SESSION_FILE:-${DECKRD_LOCAL_DATA}/session.json}"
   SUBDIRS=("requirements" "specifications" "implementation" "tasks" "workspaces")
   MODULE_META_SUBPATH="workspaces/module/module.md"
@@ -83,8 +82,7 @@ init_vars()
 ##
 # @description Show usage information
 # @stdout Usage text (stdout, also when reporting argument errors)
-show_usage()
-             {
+show_usage() {
   cat << EOF
 Usage: module.sh <namespace>/<module> [--force] [--test-scope <SCOPE>]
        module.sh <module> [--force] [--test-scope <SCOPE>]
@@ -130,8 +128,7 @@ EOF
 # @arg $1 string Raw module path (namespace/module)
 # @stdout Normalized path (lowercase)
 # @return 0 on success, 1 on error (message on stderr)
-validate_and_normalize()
-                         {
+validate_and_normalize() {
   local raw="$1"
 
   if [[ $raw != */*   ]]; then
@@ -168,8 +165,7 @@ validate_and_normalize()
 # @stdout Namespace string (lowercase)
 # @stderr Error message if neither source is available
 # @return 0 on success, 1 on error
-_get_default_ns()
-                  {
+_get_default_ns() {
   local project_file="${DECKRD_LOCAL_DATA}/.project.json"
 
   if [[ -f $project_file   ]]; then
@@ -202,8 +198,7 @@ _get_default_ns()
 # @stdout Normalized path (lowercase)
 # @stderr Error message if the default namespace cannot be resolved or the path is invalid
 # @return 0 on success, 1 on error (namespace resolution or validation failure)
-validate_and_normalize_with_fallback()
-                                       {
+validate_and_normalize_with_fallback() {
   local raw="$1"
   if [[ $raw == */*   ]]; then
     validate_and_normalize "$raw"
@@ -222,8 +217,7 @@ validate_and_normalize_with_fallback()
 # @stderr Error message if the derived scope is shorter than 2 characters
 # @exitcode 0 Success
 # @exitcode 1 Derived scope is shorter than 2 characters
-derive_test_scope()
-                    {
+derive_test_scope() {
   local rest="$1"
   local scope=""
   local word
@@ -262,8 +256,7 @@ derive_test_scope()
 # @arg $1 string Path to a module.md file
 # @stdout The declared test scope, or nothing when there is no frontmatter test_scope
 # @exitcode 0 Always
-_read_frontmatter_scope()
-                          {
+_read_frontmatter_scope() {
   awk '
     NR == 1 && $0 != "---" { exit }
     NR > 1 && $0 == "---" { exit }
@@ -289,8 +282,7 @@ _read_frontmatter_scope()
 # @description Reads test_scope from the frontmatter of ${DECKRD_DOCS_DIR}/*/*/workspaces/module/module.md
 # @stdout One line per declared scope: <test_scope><TAB><path relative to DECKRD_DOCS_DIR>
 # @exitcode 0 Always (no module.md means no output)
-collect_declared_scopes()
-                          {
+collect_declared_scopes() {
   local module_file scope
 
   for module_file in "${DECKRD_DOCS_DIR}"/*/*/"${MODULE_META_SUBPATH}"; do
@@ -309,8 +301,7 @@ collect_declared_scopes()
 # @arg $1 string Normalized module path (namespace/module)
 # @stdout The declared test scope, or nothing when module.md or its test_scope is absent
 # @exitcode 0 Always (an absent declaration is not an error)
-read_declared_scope()
-                      {
+read_declared_scope() {
   local module_file="${DECKRD_DOCS_DIR}/$1/${MODULE_META_SUBPATH}"
 
   [[ -f $module_file   ]] || return 0
@@ -327,8 +318,7 @@ read_declared_scope()
 # @stderr Error message if the explicit scope is malformed, underivable, or already taken
 # @exitcode 0 Success
 # @exitcode 1 Malformed explicit scope, underivable scope, or conflict with an existing module
-resolve_test_scope()
-                     {
+resolve_test_scope() {
   local path="$1"
   local explicit="${2:-}"
   local candidate declared scope owner own_scope
@@ -375,8 +365,7 @@ resolve_test_scope()
 #         or when a subdirectory cannot be created
 # @return 0 on success, 1 if the module directory already exists and force is "false",
 #         or if a subdirectory cannot be created
-create_module_dirs()
-                     {
+create_module_dirs() {
   local path="$1"
   local force="${2:-false}"
   local namespace="${path%%/*}"
@@ -408,8 +397,7 @@ create_module_dirs()
 # @arg $2 string Resolved test scope
 # @stdout Path of the module metadata file
 # @exitcode 0 Success
-create_module_meta()
-                     {
+create_module_meta() {
   local path="$1"
   local scope="$2"
   local module="${path#*/}"
@@ -453,8 +441,7 @@ EOF
 # @stdout "Session updated" summary (only when the write succeeds)
 # @stderr Error message when session.json cannot be written ("Session updated" is not printed)
 # @return 0 on success, 1 if the session.json write fails
-update_session()
-                 {
+update_session() {
   local path="$1"
   local scope="$2"
   local timestamp
@@ -508,8 +495,7 @@ update_session()
 # @stdout "Switched active module" message (only when the write succeeds)
 # @stderr Error message when the session or the module entry is missing, or the write fails
 # @return 0 on success, 1 otherwise
-switch_session()
-                 {
+switch_session() {
   local path="$1"
   local timestamp
   timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
@@ -546,8 +532,7 @@ switch_session()
 # @exitcode 0 Success, or usage shown by --help
 # @exitcode 1 Missing jq/jaq, invalid arguments, a module creation/scope resolution failure, a session.json write failure,
 #           or switch mode with --test-scope, no session.json, or no module entry
-main()
-       {
+main() {
   local normalized scope
 
   validate_env || exit 1

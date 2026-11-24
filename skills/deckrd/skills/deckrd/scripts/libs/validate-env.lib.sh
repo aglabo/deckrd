@@ -26,8 +26,7 @@ readonly _VALIDATE_ENV_LOADED=1
 #
 # Mock support: define validate_env before sourcing this file to override.
 if ! declare -f validate_env > /dev/null 2>&1; then
-  validate_env()
-                 {
+  validate_env() {
     if command -v jq > /dev/null 2>&1; then
       export jqexe="jq"
     elif command -v jaq > /dev/null 2>&1; then
