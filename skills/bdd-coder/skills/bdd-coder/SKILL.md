@@ -7,7 +7,7 @@ description: >
   - Never commits or pushes
 metadata:
   author: aglabo
-  version: 0.9.0
+  version: 0.9.1
   license: MIT
 ---
 
