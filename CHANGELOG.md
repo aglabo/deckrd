@@ -1,10 +1,10 @@
 ---
 title: "CHANGELOG"
-description: "ChangeLog: 0.9.0"
-version: "0.9.0"
+description: "ChangeLog: 0.9.1"
+version: "0.9.1"
 date: "2026-11-24"
 summary:
-  - "0.9.0: /deckrd rev is now a reverse chain from code to req (breaking: --from and --to tasks removed, default target is impl), task branch workflow, Scenario limit per Target"
+  - "0.9.1: test case ID checker in bdd-coder, range and all-under-Target multi-task runs, switching to an existing module, rev exempt from the order gate"
 ---
 
 <!-- textlint-disable
@@ -14,6 +14,65 @@ summary:
 <!-- markdownlint-disable line-length -->
 
 ## CHANGELOG
+
+## 0.9.1 - 2026-11-24
+
+### Features
+
+- Add the test case ID checker `check-test-ids.sh` to `bdd-coder` (moved from `runners/`). It
+  detects missing, misplaced, and duplicate test case IDs, supports branch-expanded IDs and
+  abbreviations containing digits, and checks that target abbreviations are unique across modules.
+  File discovery uses `rg` with a `find` fallback, and `gawk` is preferred with an `AWK` override.
+- Document the checker in `SKILL.md` and `references/test-id-check.md` (modes, exit codes,
+  configuration, table-driven and fixture ID formats).
+- Add range (`T01-01..03`) and all-under-Target (`'T01-*'`) multi-task runs to `bdd-coder`. Tasks
+  run one by one through a Target ID tasklist, with `queue` and `index` stored in the session. A
+  BLOCKED task stops the run (fail-fast) and `--resume` continues from `queue[index]`. Phase 4 runs
+  once per item, `status: done` is set after the last item, and nothing is committed or pushed.
+- Make `tasklist-builder` (1.1.0 to 1.2.0) return `status: invalid-input` for a range or `T01-*`,
+  because the caller resolves them and passes the Target ID.
+- Switch to an existing module with `/deckrd module <namespace>/<module>` instead of failing. Only
+  `active` and `updated_at` are written to `session.json`; the module's progress and `test_scope`
+  are kept. `--test-scope` cannot be given when switching, and `--force` re-initializes the module
+  and resets its session progress.
+- Add `switch_session` to `module.sh`. It fails when `session.json` or the module entry is missing,
+  or when the write fails.
+- Retarget `scripts/bump-version.sh` to the plugin JSON and `SKILL.md` files. It now updates the
+  version in `package.json`, `deckrd.json`, `.claude-plugin/marketplace*.json`,
+  `skills/*/.claude-plugin/plugin.json`, and `skills/*/skills/*/SKILL.md` (the frontmatter
+  `version:` line), and no longer touches `.github/workflows/`.
+
+### Docs
+
+- Refine the test case ID rules in `deckrd-rule-testing-guidelines.md`: rename "ケース ID" to
+  "テストケース ID", add rules for table-driven and fixture test IDs (literal IDs with variable
+  branch suffixes, unique two-digit branch numbers), allow digits in abbreviations, and require
+  target abbreviations to be unique across the repository.
+- Document module switching in the command references, `session.md`, the developer guide
+  (`deckrd-commands.md`), and the user guide (`02-commands.ja.md`), and add the `MSS`, `MUM`,
+  `MUS`, `MSW`, and `STR` prefixes to the module test table.
+- Document range and all-under-Target runs in the `bdd-coder` README, `SKILL.md`, `faq.md`,
+  `troubleshooting.md`, and `workflow.md`, and state that the caller resolves task ID ranges in
+  `tasklist-builder`.
+- Exempt `rev` from the order gate: it requires only `init`, and `rev --to impl --path <path>`
+  needs no module. Route undocumented code through `rev --to impl`, `spec`, `req` in
+  `deckrd-rule-workflow.md`.
+
+### Tooling
+
+- Track `.claude-plugin/` and its JSON files in `.gitignore`, and refine the allow and ignore rules
+  (`skills/`, `aglabo.github.io/`, Beads / Dolt files).
+- Remove the `blume` exclude patterns from `dprint.jsonc` and bump `@dprint/typescript` from 0.99.1
+  to 0.101.0.
+- Bump `packageManager` from pnpm 12.21.0 to 12.23.0 and remove the `starter` keyword from
+  `package.json`.
+- Simplify the scope regex of `headerPattern` in `configs/commitlint.config.mjs`, and condense the
+  header comments of `.shellspec`.
+- Remove unused ignore patterns from `.textlintignore`.
+- Remove `runners/run-check-test-ids.sh` and the runner unit tests, and inline shell file discovery
+  in `run-shellcheck.sh` (excluding `node_modules`, `.tools`, and `*.spec.sh`).
+- Replace the `ci-platform` commit SHA pins in the `ci-docs-qa`, `ci-scan-secrets`, and
+  `ci-workflows-qa` workflows with the `v0.8.1` tag.
 
 ## 0.9.0 - 2026-11-24
 
