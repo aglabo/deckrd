@@ -1,11 +1,12 @@
 ---
 title: module Command
-description: Initialize a DECKRD module directory structure and set it as active
+description: Initialize a DECKRD module directory structure and set it as active, or switch to an existing module
 ---
 
 ## module Command
 
 Initialize a DECKRD module directory structure and set it as the active module.
+When the module already exists, switch the active module to it and keep its progress.
 
 ## Usage
 
@@ -18,10 +19,10 @@ Initialize a DECKRD module directory structure and set it as the active module.
 
 ## Subcommands
 
-| Subcommand | Description                                                                |
-| ---------- | -------------------------------------------------------------------------- |
-| (none)     | Create module dirs and update session (namespace auto-resolved if omitted) |
-| `create`   | Create module dirs and update session (namespace auto-resolved if omitted) |
+| Subcommand | Description                                                            |
+| ---------- | ---------------------------------------------------------------------- |
+| (none)     | Create module dirs and update session, or switch to an existing module |
+| `create`   | Same as (none) (namespace auto-resolved if omitted)                    |
 
 ## Arguments
 
@@ -34,11 +35,11 @@ Initialize a DECKRD module directory structure and set it as the active module.
 
 ## Options
 
-| Option                 | Description                                                                                                                                                                                                                                                                                                                        |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--force`              | Re-initialize even if the module directory already exists                                                                                                                                                                                                                                                                          |
-| `--test-scope <SCOPE>` | Test scope for the module: 2-4 uppercase letters or digits (e.g. `NOR`). Written to `module.md` and the session (`test_scope`). When omitted, the existing `module.md` value is kept, or one is derived from the module name. Errors if it differs from the scope already declared in `module.md` or conflicts with another module |
-| `--help`               | Show usage information                                                                                                                                                                                                                                                                                                             |
+| Option                 | Description                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--force`              | Re-initialize an existing module instead of switching to it. Its session entry is reset: progress (`current_step` / `completed` / `documents`) is lost                                                                                                                                                                                                                                                           |
+| `--test-scope <SCOPE>` | Test scope for the module: 2-4 uppercase letters or digits (e.g. `NOR`). Written to `module.md` and the session (`test_scope`). When omitted, the existing `module.md` value is kept, or one is derived from the module name. Errors if it differs from the scope already declared in `module.md` or conflicts with another module. Errors when the module already exists and is switched to (without `--force`) |
+| `--help`               | Show usage information                                                                                                                                                                                                                                                                                                                                                                                           |
 
 ## Naming Rules
 
@@ -101,8 +102,10 @@ AI runs: bash module.sh auth/user-login
    - `<module>` form: auto-resolve namespace from `.local/deckrd/.project.json` (`project`).
      If unavailable, use the git repository root directory name.
 3. Check characters: both parts must match `a-z`, `-`, `_` (starting with `a-z`). Uppercase is rejected, not converted
-4. Create module directory structure under `docs/.deckrd/`
-5. Update `.local/deckrd/session.json`
+4. If the directory exists and `--force` is not given, switch to it and stop.
+   See [Switching to an existing module](#switching-to-an-existing-module)
+5. Create module directory structure under `docs/.deckrd/`
+6. Update `.local/deckrd/session.json`
 
 ### With `create` subcommand
 
@@ -125,7 +128,7 @@ AI runs: bash module.sh auth/user-login
            └── module.md   # test_scope / owns declaration
    ```
 
-   - Without `--force`: exits with error if directory already exists
+   - Without `--force`: if the directory exists, switches to it instead (see below)
    - With `--force`: recreates directories
      - Existing files are preserved
      - An existing `module.md` keeps its `test_scope`
@@ -136,6 +139,19 @@ AI runs: bash module.sh auth/user-login
    - Set `active` to the validated module path
    - Set `current_step` to `"module"`, `completed` to `["module"]`, `documents` to `{}`
    - Set `test_scope` to the resolved test scope
+
+### Switching to an existing module
+
+Runs when the module directory exists and `--force` is not given.
+
+- Only `active` and `updated_at` in `.local/deckrd/session.json` are written.
+  The module's own progress and `test_scope` are kept (`current_step`, `completed`, `documents`).
+  Every other module's entry is kept too.
+- The module directory and `module.md` are not touched.
+- Prints `Switched active module: <namespace>/<module>` and exits 0.
+- `--test-scope` cannot be combined with switching: it exits 1.
+- It exits 1 when `session.json` does not exist or has no entry for the module.
+  Register the module with `--force` (this resets its progress).
 
 ## Session Schema (after module)
 
@@ -164,7 +180,9 @@ AI runs: bash module.sh auth/user-login
 | Error                                         | Cause                                    | Solution                                   |
 | --------------------------------------------- | ---------------------------------------- | ------------------------------------------ |
 | `namespace '...' contains invalid characters` | Invalid chars in namespace               | Use only `a-z`, hyphen `-`, underscore `_` |
-| `Module directory already exists`             | Directory exists, no `--force`           | Add `--force` to re-initialize             |
+| `no module entry for ... (use --force ...)`   | Directory exists, no session entry       | Add `--force` to register the module       |
+| `session not found ... (use --force ...)`     | Directory exists, no `session.json`      | Run `init`, or add `--force`               |
+| `--test-scope cannot be changed ...`          | `--test-scope` given when switching      | Drop `--test-scope`, or add `--force`      |
 | `Cannot resolve default namespace`            | No `.project.json` and not in a git repo | Run `init`, or pass `<namespace>/<module>` |
 | `Cannot extract repository name`              | Git root directory name is empty         | Pass `<namespace>/<module>` explicitly     |
 

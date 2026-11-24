@@ -191,15 +191,6 @@ Describe "module.sh"
         End
       End
 
-      Describe "When: run with 'myns/mymod' on existing directory without --force"
-        It "[Error] T-CLI-MOD-09: Should: exit with status 1 and output 'already exists' error"
-          mkdir -p "${DECKRD_DOCS_DIR}/myns/mymod"
-          When run bash "$SCRIPT" myns/mymod
-          The status should equal 1
-          The stderr should include "already exists"
-        End
-      End
-
       Describe "When: run with 'myns/mymod' on existing directory with --force"
         It "[Edge] T-CLI-MOD-10: Should: exit with status 0 and output 'myns/mymod'"
           mkdir -p "${DECKRD_DOCS_DIR}/myns/mymod"
@@ -1500,6 +1491,157 @@ Describe "module.sh"
           The status should equal 1
           The lines of entire stderr should eq 1
           The stderr should include "jq or jaq is required"
+        End
+      End
+    End
+  End
+
+  Describe "T-CLI-MSW: main の switch モード (既存モジュールの切り替え)"
+    # Two registered modules: ns/a (active, has progress) and ns/b (module.md declares BBB)
+    _MSW_MODULES='{"ns/a":{"current_step":"req","completed":["module","req"],"documents":{"req":"x.md"},"test_scope":"AAA"},"ns/b":{"current_step":"module","completed":["module"],"documents":{},"test_scope":"BBB"}}'
+    _MSW_SESSION="{\"active\":\"ns/a\",\"modules\":${_MSW_MODULES},\"created_at\":\"2026-01-01T00:00:00Z\",\"updated_at\":\"2026-01-01T00:00:00Z\"}"
+
+    # shellcheck disable=SC2329
+    setup_two_modules() {
+      setup_deckrd_tmpdir
+      local ns_mod
+      for ns_mod in a:AAA b:BBB; do
+        mkdir -p "${DECKRD_DOCS_DIR}/ns/${ns_mod%%:*}/workspaces/module"
+        printf '%s\n' "---" "title: ${ns_mod%%:*}" "test_scope: ${ns_mod##*:}" "---" \
+          >"${DECKRD_DOCS_DIR}/ns/${ns_mod%%:*}/workspaces/module/module.md"
+      done
+      printf '%s\n' "$_MSW_SESSION" >"${DECKRD_LOCAL_DATA}/session.json"
+    }
+
+    # shellcheck disable=SC2329
+    session_query() {
+      jq -c "$1" "${DECKRD_LOCAL_DATA}/session.json"
+    }
+
+    Describe "Given: two registered modules whose directories exist"
+      Before "setup_two_modules"
+      After "teardown_deckrd_tmpdir"
+
+      Describe "When: run module.sh with the existing module path and no --force"
+        It "[Normal] T-CLI-MSW-01: Should: exit with status 0 and switch the active module to ns/b"
+          When run bash "$SCRIPT" ns/b
+          The status should equal 0
+          The output should include "Switched active module: ns/b"
+          The value "$(session_query '.active')" should equal '"ns/b"'
+        End
+      End
+
+      Describe "When: run module.sh with the existing module path and no --force"
+        It "[Normal] T-CLI-MSW-02: Should: leave module.md and the module directory untouched and skip create output"
+          When run bash "$SCRIPT" ns/b
+          The status should equal 0
+          The output should not include "Initializing module"
+          The output should not include "Module meta"
+          The contents of file "${DECKRD_DOCS_DIR}/ns/b/workspaces/module/module.md" should equal "$(printf '%s\n' '---' 'title: b' 'test_scope: BBB' '---')"
+          The value "$(cd "${DECKRD_DOCS_DIR}/ns/b" && find . | sort | tr '\n' ' ')" should equal ". ./workspaces ./workspaces/module ./workspaces/module/module.md "
+        End
+      End
+
+      Describe "When: run module.sh with a new module path whose directory does not exist"
+        It "[Normal] T-CLI-MSW-03: Should: create the module and register it as active at the module step"
+          When run bash "$SCRIPT" ns/new
+          The status should equal 0
+          The output should include "Session updated"
+          The path "${DECKRD_DOCS_DIR}/ns/new/requirements" should be directory
+          The path "${DECKRD_DOCS_DIR}/ns/new/specifications" should be directory
+          The path "${DECKRD_DOCS_DIR}/ns/new/implementation" should be directory
+          The path "${DECKRD_DOCS_DIR}/ns/new/tasks" should be directory
+          The path "${DECKRD_DOCS_DIR}/ns/new/workspaces" should be directory
+          The path "${DECKRD_DOCS_DIR}/ns/new/workspaces/module/module.md" should be file
+          The value "$(session_query '.modules["ns/new"].current_step')" should equal '"module"'
+          The value "$(session_query '.active')" should equal '"ns/new"'
+        End
+      End
+
+      Describe "When: run module.sh with --force on the existing module with progress"
+        It "[Normal] T-CLI-MSW-04: Should: bypass switch mode and reset the entry to the module step keeping test_scope"
+          When run bash "$SCRIPT" ns/a --force
+          The status should equal 0
+          The output should include "Session updated"
+          The value "$(session_query '.modules["ns/a"]')" should equal '{"current_step":"module","completed":["module"],"documents":{},"test_scope":"AAA"}'
+        End
+      End
+
+      Describe "When: run module.sh with --test-scope on the existing module without --force"
+        It "[Error] T-CLI-MSW-07: Should: exit with status 1, name --test-scope in stderr and leave session.json untouched"
+          When run bash "$SCRIPT" ns/b --test-scope MYM
+          The status should equal 1
+          The stderr should include "--test-scope"
+          The stderr should include "cannot be changed"
+          The output should not include "Switched"
+          The contents of file "${DECKRD_LOCAL_DATA}/session.json" should equal "$_MSW_SESSION"
+        End
+      End
+    End
+
+    Describe "Given: an existing module directory that session.json does not register"
+      # shellcheck disable=SC2329
+      setup_unregistered_dir() {
+        setup_two_modules
+        mkdir -p "${DECKRD_DOCS_DIR}/ns/c"
+      }
+      Before "setup_unregistered_dir"
+      After "teardown_deckrd_tmpdir"
+
+      Describe "When: run module.sh with the unregistered module path and no --force"
+        It "[Error] T-CLI-MSW-05: Should: exit with status 1, hint --force and leave session.json untouched"
+          When run bash "$SCRIPT" ns/c
+          The status should equal 1
+          The stderr should include "--force"
+          The output should not include "Switched"
+          The contents of file "${DECKRD_LOCAL_DATA}/session.json" should equal "$_MSW_SESSION"
+        End
+      End
+    End
+
+    Describe "Given: an existing module directory and no session.json"
+      # shellcheck disable=SC2329
+      setup_dir_without_session() {
+        setup_two_modules
+        rm -f "${DECKRD_LOCAL_DATA}/session.json"
+      }
+      Before "setup_dir_without_session"
+      After "teardown_deckrd_tmpdir"
+
+      Describe "When: run module.sh with the existing module path and no --force"
+        It "[Error] T-CLI-MSW-06: Should: exit with status 1, hint --force and create no session.json"
+          When run bash "$SCRIPT" ns/b
+          The status should equal 1
+          The stderr should include "--force"
+          The path "${DECKRD_LOCAL_DATA}/session.json" should not be exist
+        End
+      End
+    End
+
+    Describe "Given: two modules created one after another through module.sh"
+      Before "setup_deckrd_tmpdir_with_project"
+      After "teardown_deckrd_tmpdir"
+
+      Describe "When: switch back and forth between them"
+        It "[Transition] T-CLI-MSW-08: Should: switch the active module each time and keep the progress of both"
+          bash "$SCRIPT" ns/aa >/dev/null
+          jq '.modules["ns/aa"] |= (.current_step = "req" | .completed = ["module","req"] | .documents = {req:"x.md"})' \
+            "${DECKRD_LOCAL_DATA}/session.json" >"${DECKRD_LOCAL_DATA}/session.tmp"
+          mv "${DECKRD_LOCAL_DATA}/session.tmp" "${DECKRD_LOCAL_DATA}/session.json"
+          bash "$SCRIPT" ns/bb >/dev/null
+          jq '.modules["ns/bb"] |= (.current_step = "spec" | .completed = ["module","req","spec"] | .documents = {spec:"y.md"})' \
+            "${DECKRD_LOCAL_DATA}/session.json" >"${DECKRD_LOCAL_DATA}/session.tmp"
+          mv "${DECKRD_LOCAL_DATA}/session.tmp" "${DECKRD_LOCAL_DATA}/session.json"
+          _MSW_CREATED_AT="$(session_query '.created_at')"
+          bash "$SCRIPT" ns/aa >/dev/null
+          bash "$SCRIPT" ns/bb >/dev/null
+          When run bash "$SCRIPT" ns/aa
+          The status should equal 0
+          The output should include "Switched active module: ns/aa"
+          The value "$(session_query '.active')" should equal '"ns/aa"'
+          The value "$(session_query '.modules["ns/aa"] | [.current_step, .completed, .documents, .test_scope]')" should equal '["req",["module","req"],{"req":"x.md"},"AA"]'
+          The value "$(session_query '.modules["ns/bb"] | [.current_step, .completed, .documents, .test_scope]')" should equal '["spec",["module","req","spec"],{"spec":"y.md"},"BB"]'
+          The value "$(session_query '.created_at')" should equal "$_MSW_CREATED_AT"
         End
       End
     End

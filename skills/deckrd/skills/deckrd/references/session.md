@@ -172,18 +172,27 @@ To work on a different module:
 /deckrd module <other-namespace>/<other-module>
 ```
 
-`module` creates a new module and makes it active.
-It fails if the module directory already exists.
+If the module directory does not exist, `module` creates it and makes it active.
+If the directory already exists, `module` only switches `active` to it:
 
-`module --force` is not a way to resume a module.
-It resets the module's session entry, so the recorded progress is lost:
+- `active` and `updated_at` are the only fields written
+- the module's `current_step`, `completed`, `documents` and `test_scope` are kept
+- other modules' entries, the module directory and `module.md` are not touched
+- `--test-scope` cannot be given: the scope of an existing module cannot be changed by switching
+
+Switching fails with exit 1 if `session.json` does not exist.
+It also fails if `session.json` has no entry for the module.
+An example is a module directory created by hand.
+Register the module with `/deckrd module <namespace>/<module> --force`.
+
+`module --force` is not a way to switch.
+It re-initializes the module's session entry, so the recorded progress is lost:
 
 - `current_step` becomes `"module"`
 - `completed` becomes `["module"]`
 - `documents` becomes `{}`
 
 The existing files and `module.md` are kept.
-There is no command that only switches `active` without resetting the module.
 
 ## Document Path Resolution
 
@@ -205,9 +214,10 @@ docs/.deckrd/agt-kind/is-collection/specifications/specifications.md
 
 ## Error Handling
 
-| Condition                  | Action                             |
-| -------------------------- | ---------------------------------- |
-| No session file            | Prompt to run `init` first         |
-| No active module           | Prompt to run `module`             |
-| Step out of order          | Warn and suggest correct next step |
-| dr --add outside req-tasks | Error, do NOT modify files         |
+| Condition                   | Action                                    |
+| --------------------------- | ----------------------------------------- |
+| No session file             | Prompt to run `init` first                |
+| No active module            | Prompt to run `module`                    |
+| Module has no session entry | Prompt to run `module <ns>/<mod> --force` |
+| Step out of order           | Warn and suggest correct next step        |
+| dr --add outside req-tasks  | Error, do NOT modify files                |

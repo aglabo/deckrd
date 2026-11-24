@@ -15,7 +15,8 @@ description: Reference table of all deckrd commands
 | `init <project> <type> --force` | Same, and overwrite every deployed asset with the bundled version              |
 | `module <ns>/<mod>`             | Create module directories, set active module                                   |
 | `module <mod>`                  | Short form; namespace from `.project.json` `project` (fallback: git root name) |
-| `module <ns>/<mod> --force`     | Re-initialize module (existing files preserved)                                |
+| `module <ns>/<mod>` (existing)  | Switch the active module only; progress is kept                                |
+| `module <ns>/<mod> --force`     | Re-initialize module (existing files preserved, progress reset)                |
 | `module create <ns>/<mod>`      | Create module dirs and update session, set active                              |
 | `module create <mod>`           | Same; namespace auto-resolved (`.project.json` `project` → git root dir name)  |
 | `req`                           | Derive requirements from goals                                                 |

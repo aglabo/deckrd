@@ -25,6 +25,10 @@ deckrd プラグインのコマンドエントリポイント。init / module / 
 | `MMT`   | create_module_meta と CLI 連携                          |
 | `MOD`   | module.sh の引数処理とディレクトリ生成                  |
 | `MPA`   | `parse_args` (module.sh)                                |
+| `MSS`   | `switch_session` (module.sh)                            |
+| `MUM`   | module.sh: main での `update_session` 失敗の伝播        |
+| `MUS`   | `update_session` (module.sh)                            |
+| `MSW`   | module.sh: 既存モジュールへの切り替え (main の分岐)     |
 | `PA`    | `parse_args` (init.sh)                                  |
 | `PRJ`   | project.sh の引数処理と `.project.json` 更新            |
 | `RDS`   | `read_declared_scope` (module.sh)                       |
@@ -33,6 +37,7 @@ deckrd プラグインのコマンドエントリポイント。init / module / 
 | `SHPO`  | `path_outside_repo` (spec_helper.sh)                    |
 | `SHTD`  | `setup_deckrd_tmpdir` (spec_helper.sh)                  |
 | `ST`    | status.sh のセッション表示                              |
+| `STR`   | init.sh: args.lib.sh 移行後の構造 (parse_args の所在)   |
 | `UPA`   | `parse_args` (update.sh)                                |
 | `UPDA`  | update.sh --update: apply outdated assets (integration) |
 | `UPDI`  | update.sh: list outdated assets (integration)           |
