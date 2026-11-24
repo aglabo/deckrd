@@ -1,10 +1,11 @@
-// src: ./dprint.jsonc
+// src: dprint.jsonc
 // @(#) : dprint configuration for project formatting
 //
 // Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 //
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
+
 {
   "$schema": "https://dprint.dev/schemas/v0.json",
   // Global settings
@@ -33,11 +34,6 @@
     "**/lib/**",
     "**/module/**",
     "**/dist/**",
-    // ignore blume files
-    "aglabo.github.io/.blume/**",
-    "aglabo.github.io/.blume-verify/**",
-    "aglabo.github.io/node_modules/**",
-    "aglabo.github.io/dist/**",
     //
     "**lock.*",
     // Documents
@@ -46,7 +42,7 @@
   ],
   // Plugins
   "plugins": [
-    "npm:@dprint/typescript@0.99.1",
+    "npm:@dprint/typescript@0.101.0",
     "npm:@dprint/json@0.26.0",
     "npm:@dprint/markdown@0.29.0",
     "npm:dprint-plugin-yaml@0.6.0",
