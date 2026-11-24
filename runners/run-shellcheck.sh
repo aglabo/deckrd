@@ -25,34 +25,6 @@ readonly CONFIG_GLOBAL_RELPATH='shellcheckrc'
 # Config file path relative to PROJECT_ROOT
 readonly CONFIG_LOCAL_RELPATH='configs/shellcheckrc'
 
-# Directory names that find_shell_files skips at any depth below its start point.
-# Add a name here to exclude another directory; nothing else needs editing.
-readonly -a SHELLCHECK_EXCLUDE_DIRS=(
-  .tools
-  node_modules
-)
-
-#
-# @description List the *.sh files under a directory, skipping every directory
-#              below it whose name is in SHELLCHECK_EXCLUDE_DIRS. The start
-#              directory itself is never skipped, even when its name matches
-# @arg $1 string Directory to walk (the start point)
-# @stdout Paths of the files found, each terminated by NUL
-# @exitcode 0 on success, find's exit code otherwise
-#
-find_shell_files()
-                  {
-  local -a prune=()
-  local name
-  for name in "${SHELLCHECK_EXCLUDE_DIRS[@]}"; do
-    prune+=(-o -name "$name")
-  done
-  # ${prune[@]:1} drops the leading -o, giving
-  #   find <dir> -mindepth 1 \( -name .tools -o -name node_modules \) -prune -o -name '*.sh' -print0
-  # -mindepth 1 keeps the test off <dir> itself, so a start point named like an excluded directory is still walked
-  find "$1" -mindepth 1 \( "${prune[@]:1}" \) -prune -o -name '*.sh' -print0
-}
-
 # @description Run shellcheck on .sh files (spec files and node_modules/.tools are skipped).
 #              The rc file is taken from --rcfile, then $SHELLCHECKRC, then the checked-in config,
 #              then the global config
@@ -61,8 +33,7 @@ find_shell_files()
 # @exitcode 0 All checks passed, or no .sh files found
 # @exitcode 1 Lint error or unknown option
 # @exitcode 78 (EXIT_CONFIG_NOT_FOUND) Config file not found
-main()
-       {
+main() {
   local rcfile="${SHELLCHECKRC:-}"
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -91,9 +62,8 @@ main()
   for target in "${targets[@]}"; do
     if [[ -d $target ]]; then
       while IFS= read -r -d '' f; do
-        [[ $f == *.spec.sh ]] && continue
         files+=("$f")
-      done < <(find_shell_files "$target")
+      done < <(find "$target" -mindepth 1 \( -name node_modules -o -name .tools \) -prune -o -name "*.sh" ! -name "*.spec.sh" -print0)
     elif [[ $target != *.spec.sh ]]; then
       files+=("$target")
     fi

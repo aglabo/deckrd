@@ -17,8 +17,7 @@ readonly _GET_FILELIST_SH=1
 # @stdout Converted pattern
 # @exitcode 0 always
 #
-args_to_filter()
-                 {
+args_to_filter() {
   local __pattern
   if [[ $# -gt 0 ]]; then
     __pattern="$1"
@@ -36,8 +35,7 @@ args_to_filter()
 # @stdout Normalized path string
 # @exitcode 0 always
 #
-normalize_path()
-                 {
+normalize_path() {
   local __path
   if [[ $# -gt 0 ]]; then
     __path="$1"
@@ -53,8 +51,7 @@ normalize_path()
 # @stdout nothing
 # @exitcode 0 if pattern contains * or ?, 1 otherwise
 #
-is_glob_pattern()
-                  {
+is_glob_pattern() {
   local __pattern="$1"
   [[ $__pattern == *'*'* || $__pattern == *'?'*     ]]
 }
@@ -67,8 +64,7 @@ is_glob_pattern()
 # @stdout Newline-separated list of matching file paths (./-prefixed, forward slashes); empty output when no files match
 # @exitcode 0 always
 #
-get_filelist()
-               {
+get_filelist() {
   local __root="$1"
   local __pattern="$2"
   shift 2

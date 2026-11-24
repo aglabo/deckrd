@@ -25,8 +25,7 @@ readonly GLOBAL_CONFIGS_DIRNAME='global-configs'
 # @stdout Candidate directories, one per line; nothing when neither variable is set
 # @exitcode 0 Always
 #
-_global_configdir_candidates()
-                               {
+_global_configdir_candidates() {
   if [[ -n ${XDG_CONFIG_HOME:-}   ]]; then
     echo "${XDG_CONFIG_HOME}/${GLOBAL_CONFIGS_DIRNAME}"
   fi
@@ -43,8 +42,7 @@ _global_configdir_candidates()
 # @exitcode 0 Config directory found
 # @exitcode 1 Config directory not found
 #
-resolve_global_configdir()
-                           {
+resolve_global_configdir() {
   local __candidate
 
   while IFS= read -r __candidate; do
@@ -68,8 +66,7 @@ resolve_global_configdir()
 # @exitcode 1 No global config directory exists (and no local config)
 # @exitcode 2 Global config directories exist but none holds the config file
 #
-resolve_config_file()
-                      {
+resolve_config_file() {
   local __global_relpath="$1"
   local __local_config="${PROJECT_ROOT}/$2"
   local __candidate
@@ -101,8 +98,7 @@ resolve_config_file()
 # @stdout The not-found message
 # @exitcode 0 Always
 #
-format_config_not_found()
-                          {
+format_config_not_found() {
   local __status="$1"
   local __global_relpath="$2"
   local __local_config="${PROJECT_ROOT:-}/$3"

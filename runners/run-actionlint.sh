@@ -31,8 +31,7 @@ readonly CONFIG_LOCAL_RELPATH='configs/jactionlint.yaml'
 # @stderr "Error: <not-found message>" when no config file is found
 # @exitcode 78 (EXIT_CONFIG_NOT_FOUND) Config file not found
 # @exitcode Exit code of jactionlint otherwise
-main()
-       {
+main() {
   local configFile status=0
   configFile="$(resolve_config_file "$CONFIG_GLOBAL_RELPATH" "$CONFIG_LOCAL_RELPATH")" || status=$?
   if [[ $status -ne 0 ]]; then
