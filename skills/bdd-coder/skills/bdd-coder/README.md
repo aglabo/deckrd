@@ -17,6 +17,15 @@ deckrd ワークフローと統合された BDD コーディングスキルで�
 # Task ID を指定して実装
 /bdd-coder:bdd-coder T01-02
 
+# 範囲指定 (終端は Scenario 番号だけ)。1 項目ずつ順に実行し、最初の失敗で止まる
+/bdd-coder:bdd-coder T01-01..03
+
+# Target 配下の全 Scenario を順に実行 (glob 展開を避けるため引用符で囲む)
+/bdd-coder:bdd-coder 'T01-*'
+
+# 止まった項目から再開
+/bdd-coder:bdd-coder --resume
+
 # 自然言語で指示
 "グリーティング関数を実装して"
 "implement config file parser"

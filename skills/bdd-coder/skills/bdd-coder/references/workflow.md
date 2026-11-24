@@ -63,6 +63,10 @@ Phase 6: ワークフロー終了
 /bdd-coder:bdd-coder T01-02
 /bdd-coder:bdd-coder T01-02 --checklist <path>   # skip checklist-builder, use existing checklist
 
+# Range / all Scenarios of a Target — run the tasks one by one (fail-fast)
+/bdd-coder:bdd-coder T01-01..03                  # T01-01, T01-02, T01-03 in order
+/bdd-coder:bdd-coder 'T01-*'                     # every Scenario of T01 (quote it: not a glob)
+
 # Continue an existing task list
 /bdd-coder:bdd-coder --tasklist <path>              # first pending item
 /bdd-coder:bdd-coder --tasklist <path> --item L-02  # a given item
@@ -100,6 +104,19 @@ Target が 1 つだけの指示 (例: "グリーティング関数を実装し�
 
 > "T01-02 を実装して"
 > → checklist-builder が tasks.md の T01-02 からチェックリストを生成 → bdd-coder で実装
+
+**範囲指定 / Target 配下の全指定:**
+
+> `/bdd-coder:bdd-coder T01-01..03` または `/bdd-coder:bdd-coder 'T01-*'`
+> → Target ID `T01` でタスクリストを作り、対象の項目を Scenario 番号順に並べる
+> → 項目ごとに Phase 1b〜5 を 1 周ずつ実行する (1 項目 = 1 委譲)
+> → 最初に失敗した項目で止める (fail-fast)。続きは `/bdd-coder:bdd-coder --resume`
+
+- 範囲の終端は Scenario 番号だけを書く (`T01-01..03` は `T01-01`〜`T01-03`)
+- 実行前に検査する。終端が始端より小さい、範囲内の Scenario が tasks.md にない、`needs-split` / `removed` の項目がある場合はエラーにして何も実行しない
+- `done` の項目は飛ばし、飛ばしたことを報告する
+- 途中で止まったら `bdd_coder` の `queue` と `index` に停止位置が残る。`--resume` は `queue[index]` から再開する
+- コミットと push は行わない。全項目の変更が作業ツリーに残るので、ユーザーが確認してコミットする
 
 **Existing checklist (skip checklist-builder):**
 
@@ -177,14 +194,16 @@ git status --porcelain=v1 --untracked-files=all
 
 ### 入力の振り分け
 
-| 入力                              | Phase 1a (tasklist-builder) | Phase 1b (checklist-builder) への入力 |
-| --------------------------------- | --------------------------- | ------------------------------------- |
-| 自然言語の指示                    | 実行                        | 選んだ項目の Handoff                  |
-| Target ID (例: T01)               | 実行                        | 選んだ項目の Handoff (例: `T01-02`)   |
-| Scenario ID (例: T01-02)          | スキップ                    | Task ID をそのまま渡す                |
-| `--tasklist <path> [--item L-02]` | スキップ                    | 指定項目、なければ先頭の `pending`    |
-| `--checklist <path>`              | スキップ                    | スキップ (既存チェックリストを使用)   |
-| `--resume`                        | スキップ                    | session.json の `bdd_coder` から復元  |
+| 入力                              | Phase 1a (tasklist-builder) | Phase 1b (checklist-builder) への入力   |
+| --------------------------------- | --------------------------- | --------------------------------------- |
+| 自然言語の指示                    | 実行                        | 選んだ項目の Handoff                    |
+| Target ID (例: T01)               | 実行                        | 選んだ項目の Handoff (例: `T01-02`)     |
+| 範囲 (例: T01-01..03)             | 実行 (Target ID `T01`)      | 範囲内の各項目の Handoff を順に渡す     |
+| Target 配下の全指定 (例: T01-\*)  | 実行 (Target ID `T01`)      | `pending` の各項目の Handoff を順に渡す |
+| Scenario ID (例: T01-02)          | スキップ                    | Task ID をそのまま渡す                  |
+| `--tasklist <path> [--item L-02]` | スキップ                    | 指定項目、なければ先頭の `pending`      |
+| `--checklist <path>`              | スキップ                    | スキップ (既存チェックリストを使用)     |
+| `--resume`                        | スキップ                    | session.json の `bdd_coder` から復元    |
 
 ### Phase 1a: タスクリスト作成 (tasklist-builder 委譲)
 

@@ -430,6 +430,9 @@ Solution: Restart from the beginning with proper announcements.
    /coding T01-03          # 次のメッセージ
    # 完了待ち
    /coding T01-04          # 次のメッセージ
+
+   # 範囲指定なら 1 項目ずつ順に実行される (最初の失敗で止まる)
+   /bdd-coder:bdd-coder T01-02..04
    ```
 
 2. deckrd-bdd-coder のエラー対応
