@@ -1,5 +1,6 @@
 # this files is words list for check spell on cSpell
 adr
+blume
 clippy
 deckrd
 envrc
@@ -27,6 +28,7 @@ pylint
 pyproject
 pytest
 Resumability
+Retarget
 rumdl
 shdoc
 Tera
