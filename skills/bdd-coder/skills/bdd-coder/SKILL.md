@@ -79,6 +79,9 @@ The procedure of each agent lives in a Role file under [references/roles/](refer
 - bdd-coder → [implementer.md](references/roles/implementer.md)
 - code-reviewer → [code-reviewer.md](references/roles/code-reviewer.md)
 
+Test ID uniqueness is checked with `bash "<BDD_CODER_SKILL_DIR>/scripts/check-test-ids.sh" <mode>`;
+see [test-id-check.md](references/test-id-check.md).
+
 On every "Spawn", also pass two absolute paths:
 
 - `skill_dir`: this skill directory, the one that holds this `SKILL.md`.
