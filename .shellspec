@@ -1,19 +1,12 @@
-# .shellspec - ShellSpec project configuration
-# @(#) : ShellSpec configuration - unified testing options
+# src: .shellspec
+# @(#) : ShellSpec project configuration (unified testing options)
 #
 # Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 #
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 
-# ============================================================================
-# ShellSpec Configuration
-# ============================================================================
-# This file marks the project root and contains all ShellSpec options.
-# Automatically loaded by ShellSpec.
-#
-# See: https://github.com/shellspec/shellspec
-# ============================================================================
+# Project root marker; ShellSpec loads this file automatically.
 
 # === Base Configuration ===
 # Core testing setup: helpers, sandbox, and example handling
