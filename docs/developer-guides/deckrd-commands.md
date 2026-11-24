@@ -93,7 +93,10 @@ and `ai_model` take the new values; only `created_at` is kept
 It is written to `module.md` and to `modules.<id>.test_scope` in the session.
 When omitted, the value in an existing `module.md` is kept, or one is derived from the module name.
 
-**Purpose**: Create a module directory and set it as the active module
+**Purpose**: Create a module directory and set it as the active module.
+If the module directory already exists (and `--force` is not given), only the active module is switched:
+progress and `test_scope` in the session are kept, and `--test-scope` cannot be given.
+`--force` re-initializes the module and resets its session progress.
 
 **Prerequisites**: Project must be initialized with `/deckrd init`
 
