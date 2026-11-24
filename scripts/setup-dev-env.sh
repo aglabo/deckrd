@@ -13,8 +13,7 @@ set -euo pipefail
 # @description Detect if running in CI environment
 # @return 0 If CI environment detected
 # @return 1 If not in CI environment
-is_ci_environment()
-                    {
+is_ci_environment() {
   [[ -n ${CI:-}   ]] \
                      ||
     # Generic CI
@@ -46,8 +45,7 @@ is_ci_environment()
 # @description Check if the lefthook executable is available on PATH
 # @return 0 If the lefthook command is found
 # @return 1 If the lefthook command is not found
-is_lefthook_available()
-                        {
+is_lefthook_available() {
   command -v lefthook > /dev/null 2>&1
 }
 
@@ -56,8 +54,7 @@ is_lefthook_available()
 # Assumes the lefthook executable is available (see is_lefthook_available)
 # @return 0 If the hooks are installed
 # @return 1 If the hooks are not installed
-is_lefthook_installed()
-                        {
+is_lefthook_installed() {
   lefthook check-install > /dev/null 2>&1
 }
 
@@ -66,8 +63,7 @@ is_lefthook_installed()
 # @arg $1 string Directory path where shellspec should be installed
 # @return 0 If shellspec is installed
 # @return 1 If shellspec is not installed
-is_shellspec_installed()
-                         {
+is_shellspec_installed() {
   local install_dir="$1"
   [[ -f "${install_dir}/shellspec" ]]
 }
@@ -76,8 +72,7 @@ is_shellspec_installed()
 # @description Check availability, install state, then install lefthook git hooks
 # @return 0 If the hooks are already installed or were installed successfully
 # @return 1 If lefthook is unavailable or the install failed
-setup_lefthook()
-                 {
+setup_lefthook() {
   if ! is_lefthook_available; then
     echo "Error: lefthook not found on PATH." >&2
     echo "Hint: install lefthook, then run 'lefthook install'." >&2
@@ -106,8 +101,7 @@ setup_lefthook()
 # @arg $1 string Directory path where shellspec will be installed
 # @return 0 If shellspec is already installed or was installed successfully
 # @return 1 If the install failed
-setup_shellspec()
-                  {
+setup_shellspec() {
   local install_dir="${1:-.tools/shellspec}"
 
   if is_shellspec_installed "$install_dir"; then
@@ -137,8 +131,7 @@ setup_shellspec()
 # @arg $2 string Directory path where aglabo tools are checked out
 # @return 0 If both bin/ and node_modules/.bin exist
 # @return 1 If the tool is not checked out or its dependencies are not installed
-is_agla_tool_installed()
-                         {
+is_agla_tool_installed() {
   local repo="$1"
   local tools_dir="$2"
   [[ -d "${tools_dir}/${repo}/bin" && -d "${tools_dir}/${repo}/node_modules/.bin" ]]
@@ -150,8 +143,7 @@ is_agla_tool_installed()
 # @arg $2 string Directory path where the repository is cloned
 # @return 0 If the clone succeeded
 # @return 1 If the clone failed
-_clone_agla_tool()
-                   {
+_clone_agla_tool() {
   local repo="$1"
   local install_dir="$2"
 
@@ -173,8 +165,7 @@ _clone_agla_tool()
 # @arg $2 string Directory path where aglabo tools are checked out (default: ~/.local/tools)
 # @return 0 If the tool is already installed or was installed successfully
 # @return 1 If the clone or pnpm install failed
-setup_agla_tool()
-                  {
+setup_agla_tool() {
   local repo="$1"
   local tools_dir="${2:-${HOME}/.local/tools}"
   local install_dir="${tools_dir}/${repo}"
@@ -209,8 +200,7 @@ setup_agla_tool()
 # @arg $1 string Optional shellspec installation directory (default: .tools/shellspec)
 # @return 0 If every setup step succeeded or was skipped
 # @return 1 If any setup step failed
-main()
-       {
+main() {
   # Skip in CI environment
   if is_ci_environment; then
     echo "CI environment detected. Skipping dev tools install."

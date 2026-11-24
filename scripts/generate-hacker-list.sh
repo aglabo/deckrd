@@ -13,8 +13,7 @@ set -euo pipefail
 
 DEFAULT_INPUT="skills/_data/hackers.meta.yaml"
 
-usage()
-        {
+usage() {
   cat << EOF
 Usage: $(basename "$0") [OPTIONS] [INPUT_FILE]
 
