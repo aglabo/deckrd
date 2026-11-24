@@ -92,6 +92,8 @@ Usage: module.sh <namespace>/<module> [--force] [--test-scope <SCOPE>]
        module.sh create <module> [--force] [--test-scope <SCOPE>]
 
 Initialize DECKRD module directory structure and update session.
+If the module directory already exists, switch the active module instead
+(--test-scope cannot be combined with switching; use --force to re-initialize).
 
 Subcommands:
   create    Create module dirs and update session (alias for default behavior)
@@ -102,7 +104,8 @@ Arguments:
                         Allowed: a-z, hyphen, underscore (lowercase only)
 
 Options:
-  --force               Re-initialize even if module directory already exists
+  --force               Re-initialize an existing module (resets its progress);
+                        without it, an existing module is switched to (progress is kept)
   --test-scope <SCOPE>  Test ID scope (2-4 uppercase alphanumerics); derived from the module name if omitted
                         Also accepts the inline form --test-scope=<SCOPE>
   -h, --help            Show this help message
@@ -499,13 +502,50 @@ update_session()
 }
 
 ##
-# @description Main entry point: parse arguments, create the module, and update the session
+# @description Switch the active module of an existing session.json
+# @description Sets only .active and .updated_at; every module entry (progress) is kept
+# @arg $1 string Normalized module path
+# @stdout "Switched active module" message (only when the write succeeds)
+# @stderr Error message when the session or the module entry is missing, or the write fails
+# @return 0 on success, 1 otherwise
+switch_session()
+                 {
+  local path="$1"
+  local timestamp
+  timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+  if [[ ! -f $SESSION_FILE ]]; then
+    echo "Error: switch_session: session not found: ${SESSION_FILE} (use --force to create the module)" >&2
+    return 1
+  fi
+
+  # shellcheck disable=SC2016
+  if ! jq_read -e --arg path "$path" 'has("modules") and (.modules | has($path))' "$SESSION_FILE" > /dev/null; then
+    echo "Error: switch_session: no module entry for ${path} in ${SESSION_FILE} (use --force to create the module)" >&2
+    return 1
+  fi
+
+  # shellcheck disable=SC2016
+  write_json_file "$SESSION_FILE" --arg path "$path" --arg timestamp "$timestamp" \
+    '.active = $path | .updated_at = $timestamp' "$SESSION_FILE" || {
+      echo "Error: switch_session: failed to write: ${SESSION_FILE}" >&2
+      return 1
+  }
+
+  echo "Switched active module: ${path}"
+}
+
+##
+# @description Main entry point: parse arguments, then create the module or switch to an existing one
+# @description An existing module directory without --force switches the active module (progress is kept)
+# @description A missing directory, or --force, runs the create flow (re-initialization)
 # @description Every exit of the script happens here; the other functions only return
 # @arg $@ Command-line arguments
-# @stdout Usage (on --help or argument errors), progress messages, and the session summary
+# @stdout Usage (on --help or argument errors), progress messages, and the session or switch summary
 # @stderr Error message on failure
 # @exitcode 0 Success, or usage shown by --help
-# @exitcode 1 Missing jq/jaq, invalid arguments, a module creation/scope resolution failure, or a session.json write failure
+# @exitcode 1 Missing jq/jaq, invalid arguments, a module creation/scope resolution failure, a session.json write failure,
+#           or switch mode with --test-scope, no session.json, or no module entry
 main()
        {
   local normalized scope
@@ -547,6 +587,18 @@ main()
   fi
 
   normalized=$(validate_and_normalize_with_fallback "${OPTIONS[module_path]}") || exit 1
+
+  # An existing module directory without --force means "switch to it", not "create it"
+  if [[ -d "${DECKRD_DOCS_DIR}/${normalized}" && ${OPTIONS[force]} != true   ]]; then
+    if [[ -n ${OPTIONS[test_scope]}   ]]; then
+      echo "Error: --test-scope cannot be changed by switching to an existing module: ${normalized}" >&2
+      echo "  Edit module.md directly, or use --force to re-initialize." >&2
+      exit 1
+    fi
+    switch_session "$normalized" || exit 1
+    return 0
+  fi
+
   create_module_dirs "$normalized" "${OPTIONS[force]}" || exit 1
 
   # The module's own module.md is the source of truth when no scope is given explicitly

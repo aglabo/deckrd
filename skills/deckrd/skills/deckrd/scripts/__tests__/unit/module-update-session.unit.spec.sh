@@ -40,6 +40,10 @@ _SESSION_MODULE_ENTRY='{"current_step":"module","completed":["module"],"document
 # Existing session.json with another module and an extra top-level key (MUS-02)
 _SESSION_EXISTING='{"active":"old/mod","lang":"ja","modules":{"old/mod":{"current_step":"spec"}},"created_at":"2026-01-01T00:00:00Z","updated_at":"2026-01-01T00:00:00Z"}'
 
+# Two-module session for switch_session: ns/a is active with req progress, ns/b is untouched
+_SESSION_SWITCH_MODULES='{"ns/a":{"current_step":"req","completed":["module","req"],"documents":{"req":"x.md"},"test_scope":"AAA"},"ns/b":{"current_step":"module","completed":["module"],"documents":{},"test_scope":"BBB"}}'
+_SESSION_SWITCH="{\"active\":\"ns/a\",\"modules\":${_SESSION_SWITCH_MODULES},\"created_at\":\"2026-01-01T00:00:00Z\",\"updated_at\":\"2026-01-01T00:00:00Z\"}"
+
 # --- Functions ---
 
 ##
@@ -117,6 +121,14 @@ _stub_main_steps_before_session() {
   resolve_test_scope() { echo "MM"; }
   # shellcheck disable=SC2329
   create_module_meta() { :; }
+}
+
+##
+# @description Write the two-module session fixture used by switch_session tests
+#   (active ns/a with req progress, ns/b at module step).
+# @return 0
+_write_switch_fixture() {
+  _write_session_fixture "$_SESSION_SWITCH"
 }
 
 ##
@@ -225,19 +237,97 @@ Describe "T-CLI-MUS: module.sh: update_session"
 End
 
 # main stops with exit 1 when update_session fails to write session.json.
-Describe "T-CLI-MUS: module.sh: main (update_session failure)"
+Describe "T-CLI-MUM: module.sh: main (update_session failure)"
   Before "_load_script_with_mocks" "_setup_session"
   After "_teardown_session"
 
   Describe "When: 異常系 (update_session fails)"
     # update_session is the last step of main today, so this passes with or
     # without `|| exit 1`; it guards against steps added after update_session.
-    It "[Error] T-CLI-MUS-08: update_session returns 1 -> main exits with status 1"
+    It "[Error] T-CLI-MUM-01: update_session returns 1 -> main exits with status 1"
       _stub_main_steps_before_session
       # shellcheck disable=SC2329
       update_session() { return 1; }
       When run main myns/mymod
       The status should equal 1
+    End
+  End
+End
+
+# switch_session switches the active module of an existing session.json and
+# keeps every module entry (progress) as it is.
+Describe "T-CLI-MSS: module.sh: switch_session"
+  Before "_load_script_with_mocks" "_setup_session" "init_vars"
+  After "_teardown_session"
+
+  Describe "When: 正常系"
+    It "[Normal] T-CLI-MSS-01: switch ns/a -> ns/b -> active is ns/b, both module entries unchanged"
+      _write_switch_fixture
+      When call switch_session ns/b
+      The status should equal 0
+      The stdout should be present
+      The value "$(_session_query '.active')" should equal '"ns/b"'
+      The value "$(_session_query '.modules')" should equal "$_SESSION_SWITCH_MODULES"
+    End
+
+    It "[Normal] T-CLI-MSS-02: switch -> updated_at refreshed (ISO UTC), created_at kept"
+      _write_switch_fixture
+      When call switch_session ns/b
+      The status should equal 0
+      The stdout should be present
+      # shellcheck disable=SC2016
+      The value "$(_session_query --arg re "$_ISO_UTC_PATTERN" '.updated_at | test($re) and . != "2026-01-01T00:00:00Z"')" should equal "true"
+      The value "$(_session_query '.created_at')" should equal '"2026-01-01T00:00:00Z"'
+    End
+
+    It "[Normal] T-CLI-MSS-03: switch -> 'Switched active module: ns/b' on stdout, stderr empty"
+      _write_switch_fixture
+      When call switch_session ns/b
+      The status should equal 0
+      The stdout should include "Switched active module: ns/b"
+      The stderr should be blank
+    End
+  End
+
+  Describe "When: 異常系"
+    It "[Error] T-CLI-MSS-04: no session.json -> status 1, stderr names --force, no session.json created"
+      When call switch_session ns/b
+      The status should equal 1
+      The stderr should include "--force"
+      The stdout should not include "Switched"
+      The path "$SESSION_FILE" should not be exist
+    End
+
+    It "[Error] T-CLI-MSS-05: no entry for ns/c -> status 1, stderr names ns/c and --force, session.json byte-identical"
+      _write_switch_fixture
+      When call switch_session ns/c
+      The status should equal 1
+      The stderr should include "ns/c"
+      The stderr should include "--force"
+      The stdout should not include "Switched"
+      The contents of file "$SESSION_FILE" should equal "$_SESSION_SWITCH"
+    End
+
+    It "[Error] T-CLI-MSS-07: write_json_file fails -> Error on stderr, status 1, no summary, content unchanged, no tmp left"
+      _write_switch_fixture
+      _mock_write_json_file_fail
+      When call switch_session ns/b
+      The status should equal 1
+      The stderr should include "Error: switch_session: failed to write: ${SESSION_FILE}"
+      The stdout should not include "Switched active module"
+      The contents of file "$SESSION_FILE" should equal "$_SESSION_SWITCH"
+      The value "$(_list_session_tmp)" should be blank
+    End
+  End
+
+  Describe "When: エッジケース"
+    It "[Edge] T-CLI-MSS-06: switch to the already-active ns/a -> status 0, active stays ns/a, modules unchanged"
+      _write_switch_fixture
+      When call switch_session ns/a
+      The status should equal 0
+      The stdout should include "Switched active module: ns/a"
+      The value "$(_session_query '.active')" should equal '"ns/a"'
+      The value "$(_session_query '.modules')" should equal "$_SESSION_SWITCH_MODULES"
     End
   End
 End
