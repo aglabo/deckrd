@@ -28,8 +28,7 @@ declare -Ag _KV_SCHEMA
 #
 # @arg $1 string Store name (used to look up schema array)
 # @arg $2 string Callback function name; called as: callback key default
-_kv_schema_iter()
-                  {
+_kv_schema_iter() {
   local store="$1"
   local callback="$2"
 
@@ -49,8 +48,7 @@ _kv_schema_iter()
 # @stdout Normalized key on success
 # @stderr Error message on failure
 # @return 0 if valid, 1 if invalid
-_kv_normalize_key()
-                    {
+_kv_normalize_key() {
   local key="$1"
 
   # Trim leading and trailing whitespace
@@ -74,8 +72,7 @@ _kv_normalize_key()
 #
 # @arg $1 string Store name
 # @arg $2 string Schema string (newline-separated "key|default" entries)
-kv_init()
-          {
+kv_init() {
   local store="$1"
   local schema="$2"
 
@@ -119,8 +116,7 @@ kv_init()
   local -n _kv_buf="_KV_${store}"
   local _kv_set_default
   # shellcheck disable=SC2329
-  _kv_set_default()
-                    {
+  _kv_set_default() {
                       _kv_buf["$1"]="${2}"
   }
   _kv_schema_iter "$store" _kv_set_default
@@ -132,8 +128,7 @@ kv_init()
 # @arg $1 string Store name
 # @arg $2 string Key name
 # @stdout Value (empty string if key not found)
-kv_get()
-         {
+kv_get() {
   local store="$1"
   local key="$2"
   key="$(_kv_normalize_key "$key")" || return $?
@@ -155,8 +150,7 @@ kv_get()
 # @arg $1 string Store name
 # @arg $2 string Key name
 # @arg $3 string Value
-kv_set()
-         {
+kv_set() {
   local store="$1"
   local key="$2"
   local value="${3:-}"
@@ -182,8 +176,7 @@ kv_set()
 #                    ".project"      → ".project"
 #                    ".project.json" → ".project"
 # @stdout Stem (basename without extension, dot-files preserve leading dot)
-_kv_normalize_filename()
-                         {
+_kv_normalize_filename() {
   local base="$1"
   local stem
 
@@ -216,8 +209,7 @@ _kv_normalize_filename()
 #                    "/foo/bar/session"   → "/foo/bar/session.kv"
 #                    "/foo/bar/.project" → "/foo/bar/.project.kv"
 # @stdout Resolved path with .kv extension
-_kv_file_path()
-                {
+_kv_file_path() {
   local path="$1"
   local dir base stem
 
@@ -250,8 +242,7 @@ _kv_file_path()
 # @arg $1 string Path or filename
 # @stdout Resolved .kv file path
 # @return 0 on success, 1 on error
-kv_store_path()
-                {
+kv_store_path() {
   local path="$1"
   local stem
 
@@ -290,8 +281,7 @@ kv_store_path()
 # @arg $1 string Store name
 # @arg $2 string JSON string (must be valid JSON)
 # @return 0 on success, 1 on schema error or unknown key
-_kv_json_to_buff()
-                   {
+_kv_json_to_buff() {
   local store="$1"
   local json="$2"
 
@@ -331,8 +321,7 @@ _kv_json_to_buff()
 # @arg $1 string Store name
 # @arg $2 string Path (directory + basename; .kv extension applied automatically)
 # @return 0 on success (including file-not-found with default init), 1 on schema error, invalid JSON, or unknown key
-kv_load()
-          {
+kv_load() {
   local store="$1"
   local path="$2"
   local file
@@ -347,8 +336,7 @@ kv_load()
     local -n _kv_buf="_KV_${store}"
     local _kv_set_default
     # shellcheck disable=SC2329
-    _kv_set_default()
-                      {
+    _kv_set_default() {
                         _kv_buf["$1"]="${2}"
     }
     _kv_schema_iter "$store" _kv_set_default
@@ -370,8 +358,7 @@ kv_load()
 #
 # @arg $1 string Store name (nameref target "_KV_<store>")
 # @stdout Compact JSON object followed by a newline, with LF line endings
-_kv_buff_to_json()
-                   {
+_kv_buff_to_json() {
   local store="$1"
   local -n _kv_buf="_KV_${store}"
 
@@ -388,8 +375,7 @@ _kv_buff_to_json()
 # @arg $1 string Store name
 # @arg $2 string Path (directory + basename; .kv extension applied automatically)
 # @return 0 on success, 1 on schema error
-kv_save()
-          {
+kv_save() {
   local store="$1"
   local path="$2"
   local file
@@ -408,8 +394,7 @@ kv_save()
 #
 # @arg $1 string Store name
 # @stdout All entries in "key=value" format
-kv_all()
-         {
+kv_all() {
   local store="$1"
 
   local -n _kv_buf="_KV_${store}"

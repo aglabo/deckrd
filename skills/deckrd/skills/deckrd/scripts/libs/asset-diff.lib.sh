@@ -32,8 +32,7 @@ readonly _ASSET_DIFF_LOADED=1
 # Directory variables already set are kept.
 #
 # @set ASSET_TARGETS Array of `<label>|<src_dir>|<dest_dir>`
-init_asset_dirs()
-                  {
+init_asset_dirs() {
   INITS_DIR="${INITS_DIR:-${DECKRD_ROOT}/assets/inits}"
   RULES_INDEX_SRC_DIR="${RULES_INDEX_SRC_DIR:-${INITS_DIR}/deckrd-rules-index}"
   CLAUDE_RULES_SRC_DIR="${CLAUDE_RULES_SRC_DIR:-${INITS_DIR}/claude-rules}"
@@ -89,8 +88,7 @@ ASSET_KEEP_PATTERNS=('.gitignore' '*/.gitignore')
 # @arg <dest_dir> Destination directory
 # @arg [keep...] Keep patterns (bash globs on the destination relative path), optional
 # @stdout Source relative paths to copy, byte-sorted, one per line
-list_asset_files()
-                   {
+list_asset_files() {
   local src_dir dest_dir src_rel dst_rel checker=_asset_can_update
   case "$1" in
     --force)
@@ -120,8 +118,7 @@ list_asset_files()
 #
 # @arg $1 Directory
 # @stdout Relative paths with `/` separators, byte-sorted, one per line
-_list_all_files()
-                  {
+_list_all_files() {
   local src_dir
   src_dir="$(normalize_dir_path "$1")"
   [[ -d $src_dir   ]] || return 0
@@ -139,8 +136,7 @@ _list_all_files()
 # @arg $1 Source asset directory
 # @arg $2 Destination directory
 # @stdout Source relative paths, byte-sorted, one per line
-_list_deployable_files()
-                         {
+_list_deployable_files() {
   local src_dir dest_dir src_rel dest REPLY
   local -a src_dirs
   src_dir="$(normalize_dir_path "$1")"
@@ -181,8 +177,7 @@ _list_deployable_files()
 # @arg $1 Destination file path
 # @arg $2+ Source tree directories: src_dir and every directory under it (none never blocks by location)
 # @return 0 blocked, 1 not blocked
-_asset_dest_is_blocked()
-                         {
+_asset_dest_is_blocked() {
   local REPLY dir
   [[ -d $1 && ! -L $1     ]] && return 0
   _asset_nearest_dir "$1"
@@ -208,8 +203,7 @@ _asset_dest_is_blocked()
 # @arg $1 Path (need not exist)
 # @set REPLY The nearest existing ancestor directory, with a trailing `/`
 #   (the root of a missing drive is returned as is)
-_asset_nearest_dir()
-                     {
+_asset_nearest_dir() {
   _asset_rooted_path "$1"
   REPLY="${REPLY%/*}"
   while [[ $REPLY == */* && ! -d "${REPLY}/"   ]]; do
@@ -226,8 +220,7 @@ _asset_nearest_dir()
 #
 # @arg $1 Path
 # @set REPLY The rooted path
-_asset_rooted_path()
-                     {
+_asset_rooted_path() {
   REPLY="$1"
   [[ $REPLY == /* || $REPLY == [A-Za-z]:/*     ]] || REPLY="./${REPLY}"
 }
@@ -245,8 +238,7 @@ _asset_rooted_path()
 # @arg $2 Destination directory
 # @arg $3+ Keep patterns (bash globs on the destination relative path), optional
 # @stdout Source relative paths, byte-sorted, one per line
-_list_candidate_files()
-                        {
+_list_candidate_files() {
   local src_dir dest_dir src_rel dst_rel
   src_dir="$(normalize_dir_path "$1")"
   dest_dir="$(normalize_dir_path "$2")"
@@ -268,8 +260,7 @@ _list_candidate_files()
 # @arg $1 Destination relative path
 # @arg $2+ Keep patterns (bash globs, without `|` or `)`), optional
 # @return 0 kept, 1 not kept
-_asset_is_kept()
-                 {
+_asset_is_kept() {
   local IFS='|'
   # shellcheck disable=SC2053 # the patterns are globs on purpose
   [[ $1 == @(${*:2}) ]]
@@ -289,8 +280,7 @@ _asset_is_kept()
 # @arg $1 Source file path
 # @arg $2 Destination file path
 # @return 0 list, 1 skip
-_asset_can_update()
-                    {
+_asset_can_update() {
   local src="$1" dest="$2"
   # Check -L first: -e follows the link, so it is false for dangling or looping links
   [[ -L $dest   ]] && return 1
@@ -306,8 +296,7 @@ _asset_can_update()
 # @arg $1 Source file path (unused)
 # @arg $2 Destination file path
 # @return 0 list (missing), 1 skip (deployed)
-_asset_is_missing()
-                    {
+_asset_is_missing() {
   [[ ! -e $2 && ! -L $2     ]]
 }
 
@@ -324,8 +313,7 @@ readonly WORKSPACES_RULE_BANNER='^## ---'
 #
 # @arg $1 Gitignore content (CRLF allowed)
 # @return 0 missing, 1 present
-workspaces_rule_missing()
-                          {
+workspaces_rule_missing() {
   ! grep -qxF '!/workspaces/' <<< "${1//$'\r'/}"
 }
 
@@ -337,8 +325,7 @@ workspaces_rule_missing()
 # @arg $1 Gitignore template content
 # @stdout The block
 # @return 0 found, 1 not found
-workspaces_rule_block()
-                        {
+workspaces_rule_block() {
   # Slide a 2-line window; on a banner+marker pair print through EOF, else exit 1 at the last line
   sed -n "\$!N; /${WORKSPACES_RULE_BANNER}[^\n]*\n[^\n]*${WORKSPACES_RULE_MARKER}/{:a;p;n;ba}; \$q1; D" <<< "$1"
 }

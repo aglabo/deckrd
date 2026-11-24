@@ -33,8 +33,7 @@ declare -n SESSION_SCHEMA="_KV_SCHEMA"
 #
 # @arg $1 string Buffer name (store name)
 # @arg $2 string Schema string
-session_init()
-               {
+session_init() {
   local buffer="$1"
   local schema="$2"
   kv_init "$buffer" "$schema"
@@ -45,8 +44,7 @@ session_init()
 # @arg $1 string JSON file path
 # @arg $2 string Buffer name (store name)
 # @return 0 on success (including file-not-found with default init), 1 on schema error, invalid JSON, or unknown key
-session_load()
-               {
+session_load() {
   local file="$1"
   local buffer="$2"
 
@@ -63,8 +61,7 @@ session_load()
 # @arg $1 string JSON file path
 # @arg $2 string Buffer name (store name)
 # @return 0 on success
-session_save()
-               {
+session_save() {
   local file="$1"
   local buffer="$2"
   kv_save "$buffer" "$file"
@@ -75,8 +72,7 @@ session_save()
 # @arg $1 string Buffer name (store name)
 # @arg $2 string Key name
 # @stdout Value (empty string if key not found)
-session_get()
-              {
+session_get() {
   local buffer="$1"
   local key="$2"
   kv_get "$buffer" "$key"
@@ -87,8 +83,7 @@ session_get()
 # @arg $1 string Buffer name (store name)
 # @arg $2 string Key name
 # @arg $3 string Value
-session_set()
-              {
+session_set() {
   local buffer="$1"
   local key="$2"
   local value="${3:-}"
@@ -106,8 +101,7 @@ session_set()
 # @return 0 if migration is needed, 1 if the file is a JSON object that needs no
 #         migration, 2 if the file is missing or is not a JSON object (including
 #         an empty file)
-session_lang_migration_needed()
-                                {
+session_lang_migration_needed() {
   local file="$1"
 
   if [[ ! -f $file   ]]; then
@@ -148,8 +142,7 @@ session_lang_migration_needed()
 # @stderr One notice line when the file is migrated; an `Error:` line on failure
 # @return 0 on migration or no-op, 1 if the file is missing, is not a JSON object
 #         (including an empty file), or cannot be written
-session_migrate_lang_to_prog()
-                               {
+session_migrate_lang_to_prog() {
   local file="$1"
   local rc=0
 

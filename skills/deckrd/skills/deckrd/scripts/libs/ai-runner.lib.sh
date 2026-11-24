@@ -21,8 +21,7 @@ readonly _AI_RUNNER_LOADED=1
 # @stdout  string  CLI command name (e.g. "claude", "codex", "gemini")
 # @exitcode 0  Success
 # @exitcode 1  Unknown model / empty argument
-resolve_ai_cli()
-                 {
+resolve_ai_cli() {
   local model="${1:-}"
 
   if [[ -z $model   ]]; then
@@ -60,8 +59,7 @@ resolve_ai_cli()
 # @stderr  string  エラーメッセージ（無効な場合）
 # @exitcode 0  有効なモデル識別子
 # @exitcode 1  無効なモデル識別子 or 空引数
-validate_ai_model()
-                    {
+validate_ai_model() {
   local model="${1:-}"
 
   if [[ -z $model   ]]; then
@@ -94,8 +92,7 @@ validate_ai_model()
 # @stderr  string  エラーメッセージ（無効な場合）
 # @exitcode 0  有効
 # @exitcode 1  無効 or 空引数
-resolve_ai_model()
-                   {
+resolve_ai_model() {
   local model="${1:-}"
 
   if [[ -z $model   ]]; then
@@ -216,8 +213,7 @@ resolve_ai_model()
 # @arg $3  nameref  Array variable to store the command (passed by name)
 # @exitcode 0  Success
 # @exitcode 1  Unknown CLI
-_build_ai_command()
-                    {
+_build_ai_command() {
   local cli="$1"
   local model="$2"
   local -n _cmd_ref="$3"
@@ -306,8 +302,7 @@ _build_ai_command()
 # @arg $1  int     Timeout in seconds. Empty or omitted falls back to DECKRD_AI_TIMEOUT
 # @stdout  int     Resolved timeout in seconds (no trailing newline)
 # @exitcode 0  Always succeeds; the value itself is validated by timeout(1)
-resolve_ai_timeout()
-                     {
+resolve_ai_timeout() {
   printf '%s' "${1:-${DECKRD_AI_TIMEOUT:-300}}"
 }
 
@@ -315,8 +310,7 @@ resolve_ai_timeout()
 #
 # @exitcode 0  stdin は端末である
 # @exitcode 1  stdin は端末ではない（パイプ・リダイレクト・クローズ）
-_ai_stdin_is_tty()
-                   {
+_ai_stdin_is_tty() {
   [[ -t 0 ]]
 }
 
@@ -353,8 +347,7 @@ _ai_stdin_is_tty()
 #
 #   # NG: `.` が echo を引数として飲み込み、stdin が空になる
 #   #   . "<path>/ai-runner.lib.sh" echo "prompt" | run_ai "sonnet"
-run_ai()
-         {
+run_ai() {
   local model="${1:-}"
   local timeout_sec
   timeout_sec="$(resolve_ai_timeout "${2:-}")"

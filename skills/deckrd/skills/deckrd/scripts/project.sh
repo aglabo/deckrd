@@ -69,8 +69,7 @@ readonly SUPPORTED_LANGUAGES
 
 ##
 # @description Show usage information
-show_usage()
-             {
+show_usage() {
   cat << EOF
 Usage: project.sh --project <name> [OPTIONS]
 
@@ -98,8 +97,7 @@ EOF
 # @description Validate language against supported list
 # @arg $1 string Language to validate
 # @return 0 if valid, 1 if unsupported (prints error to stderr)
-validate_language()
-                    {
+validate_language() {
   local lang="$1" supported
   for supported in "${SUPPORTED_LANGUAGES[@]}"; do
     if [[ $lang == "$supported"   ]]; then
@@ -114,8 +112,7 @@ validate_language()
 # @description Normalize language aliases (bash -> shell)
 # @arg $1 string Language name
 # @stdout Normalized language name
-normalize_language()
-                     {
+normalize_language() {
   case "$1" in
     bash) echo "shell" ;;
     *) echo "$1" ;;
@@ -126,8 +123,7 @@ normalize_language()
 # @description Validate required parameters are set
 # @var OPTIONS project, project_type
 # @return 0 if valid, 1 if missing or invalid (prints error to stderr)
-validate_required_params()
-                           {
+validate_required_params() {
   local project="${OPTIONS[project]}" project_type="${OPTIONS[project_type]}"
   if [[ -z $project   ]]; then
     echo "Error: --project is required" >&2
@@ -147,8 +143,7 @@ validate_required_params()
 
 ##
 # @description Ensure the DECKRD_LOCAL_DATA directory (.local/deckrd) exists
-ensure_deckrd_dir()
-                    {
+ensure_deckrd_dir() {
   mkdir -p "${DECKRD_LOCAL_DATA}"
 }
 
@@ -162,8 +157,7 @@ ensure_deckrd_dir()
 # @var OPTIONS_SET ai_model is `true` when --ai-model was given
 # @stderr An `Error:` line when the write fails
 # @return 0 on success, 1 if the write fails
-write_project()
-                {
+write_project() {
   local timestamp
   timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
@@ -203,8 +197,7 @@ write_project()
 ##
 # @description Display result message
 # @var OPTIONS project, project_type, prog, ai_model
-display_result()
-                 {
+display_result() {
   echo "Deckrd project configured."
   echo ""
   echo "  project:      ${OPTIONS[project]}"
@@ -226,8 +219,7 @@ display_result()
 # @exitcode 0 Success, or usage shown by --help
 # @exitcode 1 Missing jq/jaq, parse error, invalid arguments, unsupported language,
 #   or a failure to write the project file
-main()
-       {
+main() {
   validate_env || exit 1
 
   args_init

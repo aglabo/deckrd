@@ -74,8 +74,7 @@ readonly SESSION_MIGRATION_LABEL='[session] session.json (lang -> prog)'
 ##
 # @description Show usage information
 # @stderr Usage text
-show_usage()
-             {
+show_usage() {
   cat >&2 << EOF
 Usage: update.sh [OPTIONS]
 
@@ -109,8 +108,7 @@ EOF
 # @arg $2 Current content of the gitignore, as read by the caller
 # @stderr Error message when the template block cannot be obtained or the file cannot be
 #   written (exits 1)
-apply_workspaces_rule()
-                        {
+apply_workspaces_rule() {
   local gitignore="$1" content="${2//$'\r'/}" template template_content block
   template="${LOCAL_SRC_DIR}/.gitignore.org"
   if ! template_content="$(cat -- "$template" 2> /dev/null)" \
@@ -134,8 +132,7 @@ apply_workspaces_rule()
 # @stdout WORKSPACES_RULE_LABEL (`Updated: ` prefixed in update mode) when the rule is missing
 # @stderr Error message when the local gitignore cannot be read or updated (exits 1)
 # @return 0 when the local gitignore was reported, 1 otherwise
-print_workspaces_rule()
-                        {
+print_workspaces_rule() {
   local update_mode="$1" gitignore="${DECKRD_LOCAL_DATA}/.gitignore" content
   [[ -f $gitignore   ]] \
                         || return 1
@@ -164,8 +161,7 @@ print_workspaces_rule()
 # @stderr `Error:` line from session.lib.sh when session.json cannot be checked or migrated
 #   (exits 1); the migration notice line in update mode
 # @return 0 when session.json was reported, 1 otherwise
-print_session_migration()
-                          {
+print_session_migration() {
   local update_mode="$1" session="${DECKRD_LOCAL_DATA}/session.json" rc=0
   session_lang_migration_needed "$session" || rc=$?
   # 2 (missing or not a JSON object): the predicate has already printed the `Error:` line
@@ -194,8 +190,7 @@ print_session_migration()
 # @stdout Destination relative path per asset, one per line
 # @stderr `Error:` line from copy_assets when a file cannot be copied
 # @return 0 on success, 1 when a copy fails
-target_asset_paths()
-                     {
+target_asset_paths() {
   local update_mode="$1" src="$2" dest="$3" src_rel
   if [[ $update_mode == true   ]]; then
     copy_assets "$src" "$dest" "${ASSET_KEEP_PATTERNS[@]}"
@@ -215,8 +210,7 @@ target_asset_paths()
 # @arg $3 Name of an integer variable to add the number of listed assets to (nameref)
 # @stdout `[label] dst_rel` (`Updated: [label] dst_rel` in update mode) per listed asset
 # @stderr Error message from copy_assets when a file cannot be copied (exits 1)
-print_target_assets()
-                      {
+print_target_assets() {
   local update_mode="$1" label src dest paths dst_rel prefix=''
   local -n _count_ref="$3"
   IFS='|' read -r label src dest <<< "$2"
@@ -244,8 +238,7 @@ print_target_assets()
 #   or `Assets are up to date.` when none
 # @stderr Error message when a file cannot be copied, the local gitignore cannot be read,
 #   or session.json cannot be checked or migrated (exits 1)
-print_updated_assets()
-                       {
+print_updated_assets() {
   local update_mode="$1" entry count=0
 
   for entry in "${ASSET_TARGETS[@]}"; do
@@ -278,8 +271,7 @@ print_updated_assets()
 # @exitcode 1 Parse error, or session.json not found
 # @stdout Output of print_updated_assets
 # @stderr Usage and `Error:` lines
-main()
-       {
+main() {
   args_init
   args_flag update --update
 

@@ -44,8 +44,7 @@ validate_env || exit 1
 # ============================================================================
 
 # Initialize configuration variables (mock-friendly)
-init_vars()
-            {
+init_vars() {
   SESSION_FILE="${SESSION_FILE:-${DECKRD_LOCAL_DATA}/session.json}"
   # DECKRD_DOCS is a backward-compatible override; bootstrap exports DECKRD_DOCS_DIR.
   DECKRD_DOCS="${DECKRD_DOCS:-${DECKRD_DOCS_DIR}}"
@@ -53,8 +52,7 @@ init_vars()
 }
 
 # Check if session file exists
-check_session()
-                {
+check_session() {
   if [[ ! -f $SESSION_FILE   ]]; then
     echo "Error: No session file found." >&2
     echo "  Expected: ${SESSION_FILE}" >&2
@@ -65,8 +63,7 @@ check_session()
 }
 
 # Display workflow progress
-display_progress()
-                   {
+display_progress() {
   local completed="$1"
   local current_step="$2"
 
@@ -82,8 +79,7 @@ display_progress()
   done
 }
 
-main()
-       {
+main() {
   init_vars
   check_session || exit 1
 
