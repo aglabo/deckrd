@@ -100,6 +100,10 @@
 ## ---------------------------------------------------------------
 ##  Project specific
 
+# plugins
+!.claude-plugin/
+!.claude-plugin/*.json
+
 # Allow Templates (for project-starter-template repo)
 !skills/
 !skills/**
