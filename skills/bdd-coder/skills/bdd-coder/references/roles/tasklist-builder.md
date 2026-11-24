@@ -1,7 +1,7 @@
 ---
 title: "Role: tasklist-builder"
 description: "Procedure for breaking a natural-language request or a tasks.md Target into a task list, one item per checklist. Canonical steps for the tasklist-builder agent"
-version: 1.1.0
+version: 1.2.0
 ---
 
 ## Role: tasklist-builder
@@ -58,6 +58,8 @@ The Role does **not**: build checklists, choose which item to run, write code, r
 
 A Scenario ID (`T01-02`, `T-01-02`) or a Case ID (`T-01-02-03`) is already one task. The caller sends it straight to checklist-builder. If one reaches this Role, return `status: invalid-input`.
 
+A range (`T01-01..03`) or an all-under-parent form (`T01-*`) is resolved by the caller, which passes the Target ID (`T01`) to this Role and picks the items itself. If one of these forms reaches this Role, return `status: invalid-input`.
+
 ## Procedure
 
 ### Step 1: Classify the input
@@ -66,6 +68,8 @@ A Scenario ID (`T01-02`, `T-01-02`) or a Case ID (`T-01-02-03`) is already one t
 | -------------------------------------------- | ---------------- |
 | Matches `^T-?[0-9]{2}$`                      | Target ID        |
 | Matches `^T-?[0-9]{2}-[0-9]{2}(-[0-9]{2})?$` | `invalid-input`  |
+| Matches `^T-?[0-9]{2}-[0-9]{2}\.\.[0-9]{2}$` | `invalid-input`  |
+| Matches `^T-?[0-9]{2}-\*$`                   | `invalid-input`  |
 | Anything else                                | Natural language |
 
 Normalize a Target ID to the canonical form `T-XX` (`T01` → `T-01`).
@@ -191,6 +195,7 @@ DETAIL: <the question, or what was wrong with the input>
 | Condition                                              | Action                                   |
 | ------------------------------------------------------ | ---------------------------------------- |
 | Scenario or Case ID given                              | `status: invalid-input`; no file         |
+| Range (`T01-01..03`) or `T01-*` given                  | `status: invalid-input`; no file         |
 | Target ID without a readable `tasks_md`                | `status: invalid-input`; no file         |
 | `tasks_md` has no `module:` in its frontmatter         | `status: invalid-input`; no file         |
 | Target ID not found in `tasks_md`                      | `status: invalid-input`; no file         |
