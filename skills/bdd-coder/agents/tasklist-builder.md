@@ -27,12 +27,12 @@ The Role holds the full procedure, inputs, outputs, and failure handling. This f
 
 ## Inputs
 
-| Parameter     | Description                                                  |
-| ------------- | ------------------------------------------------------------ |
-| `skill_dir`   | Absolute path of the skill directory (where `SKILL.md` is)   |
-| `local_dir`   | Absolute path of the deckrd local data (`DECKRD_LOCAL_DATA`) |
-| `instruction` | Natural-language request, or Target ID (`T-01` / `T01`)      |
-| `tasks_md`    | Path to tasks.md (Target ID only)                            |
-| `answers`     | Answer to the previous `questions` run (optional)            |
+| Parameter     | Description                                                                                                                    |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `skill_dir`   | Absolute path of the skill directory (where `SKILL.md` is)                                                                     |
+| `local_dir`   | Absolute path of the deckrd local data (`DECKRD_LOCAL_DATA`)                                                                   |
+| `instruction` | Natural-language request, or Target ID (`T-01` / `T01`). A range or `T01-*` is resolved by the caller; it is never passed here |
+| `tasks_md`    | Path to tasks.md (Target ID only)                                                                                              |
+| `answers`     | Answer to the previous `questions` run (optional)                                                                              |
 
 Return only the summary defined by the Role.
