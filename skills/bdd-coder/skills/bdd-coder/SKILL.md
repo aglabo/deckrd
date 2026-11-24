@@ -3,7 +3,7 @@ name: bdd-coder
 description: >
   Implements code with strict BDD (Red-Green-Refactor).
   - Use for any coding instruction: natural language, Task ID (T01-02), or a task list
-  - One task per call
+  - One task per delegation; a range (T01-01..03) or all Scenarios of a Target (T01-*) runs its tasks one by one
   - Never commits or pushes
 metadata:
   author: aglabo
@@ -33,7 +33,8 @@ Examples:
 - "start BDD implementation"
 
 It implements only; it does not commit or push (no git operations).
-One task per invocation.
+One task per delegation. A range or an all-under-parent selection runs several tasks
+in one invocation, one after another ([Multi-task run](#multi-task-run)).
 The dispatch unit for the bdd-coder agent is one Target; each Case keeps its own RGR cycle.
 
 ## Skill Announcement (REQUIRED)
@@ -98,21 +99,27 @@ Gate Rule: phases must run in order. No skipping.
 
 All tests MUST pass at Phase 4. No exceptions.
 Do NOT commit after completion — user commits manually.
-Do NOT implement multiple tasks in one invocation — one task per call.
+Do NOT hand more than one task to one delegation.
+Several tasks in one invocation run one after another, one delegation each ([Multi-task run](#multi-task-run)).
 Branches are prepared by the caller: one task branch per Target (T-XX), cut from the integration branch.
 
 ### Phase 1: Tasklist Resolve + Checklist Build
 
-Route the input first. Only natural language and Target IDs go through tasklist-builder.
+Route the input first. Only natural language, Target IDs, and the range / all-under-parent forms go through tasklist-builder.
 
-| Input                             | Phase 1a: tasklist-builder | Phase 1b: checklist-builder input                    |
-| --------------------------------- | -------------------------- | ---------------------------------------------------- |
-| Natural-language                  | Run                        | `Handoff` of the selected item                       |
-| Target ID (e.g. `T01`)            | Run                        | `Handoff` of the selected item (`T01-02`)            |
-| Scenario ID (e.g. `T01-02`)       | Skip                       | The Task ID as given                                 |
-| `--tasklist <path> [--item L-02]` | Skip                       | `Handoff` of the given item, or first `pending`      |
-| `--checklist <path>`              | Skip                       | Skip checklist-builder; use the file                 |
-| `--resume`                        | Skip                       | Restored from `session.json` (see [Resume](#resume)) |
+| Input                             | Phase 1a: tasklist-builder   | Phase 1b: checklist-builder input                    |
+| --------------------------------- | ---------------------------- | ---------------------------------------------------- |
+| Natural-language                  | Run                          | `Handoff` of the selected item                       |
+| Target ID (e.g. `T01`)            | Run                          | `Handoff` of the selected item (`T01-02`)            |
+| Range (e.g. `T01-01..03`)         | Run with the Target ID `T01` | `Handoff` of each item in the range, in order        |
+| All under a Target (e.g. `T01-*`) | Run with the Target ID `T01` | `Handoff` of each `pending` item, in order           |
+| Scenario ID (e.g. `T01-02`)       | Skip                         | The Task ID as given                                 |
+| `--tasklist <path> [--item L-02]` | Skip                         | `Handoff` of the given item, or first `pending`      |
+| `--checklist <path>`              | Skip                         | Skip checklist-builder; use the file                 |
+| `--resume`                        | Skip                         | Restored from `session.json` (see [Resume](#resume)) |
+
+The range and all-under-parent forms run several tasks one by one: see [Multi-task run](#multi-task-run).
+Quote `T01-*` in a shell so that it is not expanded as a glob.
 
 #### Session entry
 
@@ -125,19 +132,23 @@ so an interrupted session can be resumed. Stored paths start with the `local_dir
     "tasklist": "<local_dir>/temp/tasklist/deckrd/libs/T-01.tasklist.md",
     "item": "L-02",
     "checklist": "<local_dir>/temp/tasks/parse-config-calm-checklist.md",
+    "queue": null,
+    "index": null,
     "status": "in-progress",
     "updated_at": "2026-11-09T00:00:00Z"
   }
 }
 ```
 
-| Field        | Value                                                                   |
-| ------------ | ----------------------------------------------------------------------- |
-| `tasklist`   | TASKLIST PATH, or `null` when Phase 1 used no task list                 |
-| `item`       | Item ID selected in Phase 1a, or `null` when there is no task list      |
-| `checklist`  | CHECKLIST PATH, or `null` until Phase 1b returns it                     |
-| `status`     | `in-progress` from Phase 1 on; `done` when Phase 5 completes every case |
-| `updated_at` | UTC timestamp of the last write (`date -u +"%Y-%m-%dT%H:%M:%SZ"`)       |
+| Field        | Value                                                                                                          |
+| ------------ | -------------------------------------------------------------------------------------------------------------- |
+| `tasklist`   | TASKLIST PATH, or `null` when Phase 1 used no task list                                                        |
+| `item`       | Item ID selected in Phase 1a (in a multi-task run, the item being run), or `null` without a task list          |
+| `checklist`  | CHECKLIST PATH, or `null` until Phase 1b returns it                                                            |
+| `queue`      | Multi-task run only: the item IDs to run, in order (`["L-01","L-02","L-03"]`). `null` otherwise                |
+| `index`      | Multi-task run only: the position in `queue` of the item being run (0-based). `null` otherwise                 |
+| `status`     | `in-progress` from Phase 1 on; `done` when Phase 5 completes every case (every queue item in a multi-task run) |
+| `updated_at` | UTC timestamp of the last write (`date -u +"%Y-%m-%dT%H:%M:%SZ"`)                                              |
 
 Rules:
 
@@ -148,25 +159,28 @@ Rules:
 
   ```bash
   jq --arg tl "$TASKLIST" --arg item "$ITEM" --arg cl "$CHECKLIST" --arg st "$STATUS" \
+     --argjson queue "$QUEUE" --argjson index "$INDEX" \
      --arg now "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
      'def nz: if . == "" then null else . end;
       .bdd_coder = {tasklist: ($tl | nz), item: ($item | nz), checklist: ($cl | nz),
+                    queue: $queue, index: $index,
                     status: $st, updated_at: $now}' \
      <local_dir>/session.json > <local_dir>/session.json.tmp &&
     mv <local_dir>/session.json.tmp <local_dir>/session.json
   ```
 
-  Pass an empty string for a `null` field. Do not use `select(. != "")` instead of `nz`:
+  Pass an empty string for a `null` string field. Pass `null` for `QUEUE` and `INDEX` in a single-task run,
+  and a JSON array (`'["L-01","L-02"]'`) and a number in a multi-task run. Do not use `select(. != "")` instead of `nz`:
   an empty value inside `{...}` makes jq output nothing, and the `mv` then empties `session.json`.
   `jaq` accepts the same filter.
 - If `<local_dir>/session.json` does not exist, do not create it. Warn that the session cannot be
   saved (`/deckrd init` has not run) and continue without it.
 
-| When                                    | Write                                                                        |
-| --------------------------------------- | ---------------------------------------------------------------------------- |
-| Phase 1a: an item is selected           | `tasklist`, `item`, `checklist: null`, `status: in-progress`                 |
-| Phase 1b: CHECKLIST PATH is returned    | Keep `tasklist` / `item` (or `null`), set `checklist`, `status: in-progress` |
-| Phase 5 Step 4c: every case is complete | `status: done`                                                               |
+| When                                    | Write                                                                                                    |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Phase 1a: an item is selected           | `tasklist`, `item`, `checklist: null`, `status: in-progress`                                             |
+| Phase 1b: CHECKLIST PATH is returned    | Keep `tasklist` / `item` (or `null`), set `checklist`, `status: in-progress`                             |
+| Phase 5 Step 4c: every case is complete | `status: done` (single-task run), or move to the next queue item (see [Multi-task run](#multi-task-run)) |
 
 A session that ends early (`BLOCKED`, abort) keeps `status: in-progress`, so it can be resumed.
 
@@ -174,12 +188,13 @@ A session that ends early (`BLOCKED`, abort) keeps `status: in-progress`, so it 
 
 `--resume` continues the work recorded in `bdd_coder`:
 
-| `bdd_coder` state                                         | Action                                                         |
-| --------------------------------------------------------- | -------------------------------------------------------------- |
-| Missing, or `status: done`                                | Report "nothing to resume" and end the session (Phase 6)       |
-| `checklist` set and the file exists                       | Use it as `--checklist`; restore TASKLIST PATH and the item    |
-| `checklist` is `null`, `tasklist` set and the file exists | Run as `--tasklist <tasklist> --item <item>`                   |
-| A recorded file does not exist                            | Report the missing path and end the session. Do not rebuild it |
+| `bdd_coder` state                                         | Action                                                                                  |
+| --------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Missing, or `status: done`                                | Report "nothing to resume" and end the session (Phase 6)                                |
+| `queue` set                                               | Continue the multi-task run from `queue[index]` (see [Multi-task run](#multi-task-run)) |
+| `checklist` set and the file exists                       | Use it as `--checklist`; restore TASKLIST PATH and the item                             |
+| `checklist` is `null`, `tasklist` set and the file exists | Run as `--tasklist <tasklist> --item <item>`                                            |
+| A recorded file does not exist                            | Report the missing path and end the session. Do not rebuild it                          |
 
 A Target ID or `--tasklist` also restores the selected item. After Phase 1a (or after reading `--tasklist`),
 check the `bdd_coder` entry against these conditions:
@@ -236,6 +251,52 @@ Output (under `<local_dir>/temp`):
   Re-running the same Target ID reuses this file (`reused` / `updated`); it is never created twice.
 - Natural language: `<local_dir>/temp/tasklist/<active module>/<name>.tasklist.md`
 - Natural language, no active module: `<local_dir>/temp/tasklist/<name>.tasklist.md`
+
+#### Multi-task run
+
+A range (`T01-01..03`) or an all-under-parent selection (`T01-*`) runs several Scenarios in one invocation,
+one after another. Each Scenario is still one task and one delegation: the "1 delegation = 1 task" rule holds.
+
+Forms (the Scenario numbers are the two-digit `YY` of `T-XX-YY`):
+
+| Form               | Pattern                              | Selects                                                                            |
+| ------------------ | ------------------------------------ | ---------------------------------------------------------------------------------- |
+| Range              | `^T-?[0-9]{2}-[0-9]{2}\.\.[0-9]{2}$` | Scenarios `YY` to `ZZ` of the Target (`T01-01..03` = `T01-01`, `T01-02`, `T01-03`) |
+| All under a Target | `^T-?[0-9]{2}-\*$`                   | Every Scenario of the Target                                                       |
+
+Resolve the selection before any code is written:
+
+1. Run Phase 1a with the Target ID (`T01`). The task list gives one item per Scenario (Handoff `T01-YY`).
+2. Pick the items by `Handoff`, in the order of the Scenario numbers. For `T01-*`, pick every item.
+3. Check the selection. If any check fails, report it and end the session (Phase 6). Nothing runs:
+
+   | Condition                                            | Error                                                                |
+   | ---------------------------------------------------- | -------------------------------------------------------------------- |
+   | End number is less than the start number             | Bad range: the end is before the start                               |
+   | A Scenario in the range has no item in the task list | The Scenario does not exist in `tasks.md`                            |
+   | A selected item is `needs-split` or `removed`        | Name the item; for `needs-split`, split the Case via `/deckrd tasks` |
+
+4. Drop the `done` items from the run and tell the user which ones were skipped.
+   If no item is left, report "nothing to run" and end the session (Phase 6).
+5. Write the session entry with `queue` (the item IDs left, in order), `index: 0`, and `item: queue[0]`.
+
+Run the queue:
+
+- Phase 0 runs once. For each item, run Phase 1b to Phase 5 as a full pass, with that item's `Handoff` only.
+  Phase 4 (quality gate and code review) and the Phase 5 write-backs belong to the item.
+- After an item completes (Phase 5 Step 1: every case `DONE` / `DONE_WITH_CONCERNS`, and Phase 4 passed),
+  set `index` to the next position and `item` to the next item, then start the next pass.
+  After the last item, set `status: done` and end the session (Phase 6).
+- **Fail-fast.** Stop at the first item that does not complete: a `BLOCKED` report (Phase 3 or Phase 4),
+  a failed quality gate, or a case that is not completed. Do not run the remaining items. Do not offer "skip":
+  later Scenarios may depend on the failed one.
+- Also stop before the next item when `git status --short` / `git diff --stat` shows files that this item should not touch.
+- On a stop, keep `status: in-progress`, `queue`, and `index` at the stopped item.
+  Report the stopped item and its cause, the completed items, and the items not run.
+  Tell the user to fix the cause and run `/bdd-coder:bdd-coder --resume`, which continues from `queue[index]`.
+  Run Phase 1b again for that item (see [Resume](#resume)).
+- Never commit or push, not even between items.
+  The changes of all items stay in the working tree for the user to review and commit.
 
 #### Phase 1b: Checklist Build
 
@@ -302,7 +363,8 @@ If bdd-coder reports `BLOCKED`:
 
 1. Collect the blocking issues from the bdd-coder report.
 2. Report to the user with the exact CRITICAL findings and the affected task ID.
-3. Wait for one of the following user instructions:
+3. In a [Multi-task run](#multi-task-run), stop here (fail-fast): keep the session entry and tell the user to run `--resume`.
+   Otherwise wait for one of the following user instructions:
    - Fix and retry: user provides guidance → re-run bdd-coder Phase 3–7 for the same task.
    - Skip task: user decides to defer → mark task as `SKIPPED` and continue with the next task.
    - Abort session: user stops work → end the session and summarize open blockers.
@@ -322,6 +384,7 @@ Run the global gates, then the code review. Both must be satisfied before Phase 
 
 After the first three gates pass, spawn **code-reviewer ONCE** for the whole session — an
 aggregate review over every file changed in Phase 3, not one invocation per task.
+In a [Multi-task run](#multi-task-run), the session is one item: run Phase 4 once per item, over that item's files.
 
 | Input           | Value                                                                          |
 | --------------- | ------------------------------------------------------------------------------ |
@@ -448,6 +511,10 @@ Run this step only when Phase 1 used a task list (Phase 1a ran, or `--tasklist` 
 If every case of this invocation is completed in Step 1, set `status: done` in the
 [session entry](#session-entry). Otherwise leave it `in-progress`, and add the command to continue
 to the Step 5 report: `/bdd-coder:bdd-coder --resume`.
+
+In a [Multi-task run](#multi-task-run), "this invocation" means the item of this pass.
+When it is completed and a later item is in `queue`, advance `index` and `item` instead of setting `status: done`.
+Set `status: done` only after the last queue item.
 
 #### Step 5: Report to user
 
