@@ -1,7 +1,7 @@
-// src: configs/commitlint.config.js
-// @(#) : commitlint basic configuration
+// src: configs/commitlint.config.mjs
+// @(#) : commitlint configuration:
 //
-// Copyright (c) 2025- atsushifx <http://github.com/atsushifx>
+// Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
 //
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
@@ -11,7 +11,7 @@ const BaseConfig = {
   extends: ['@commitlint/config-conventional'],
   parserPreset: {
     parserOpts: {
-      headerPattern: /^(?:(merge)\s+\(#(\d+)\):\s+)?(\w*)(?:\(((?:[^()]|\([^()]*\))*)\))?!?: (.+)$/,
+      headerPattern: /^(?:(merge)\s+\(#(\d+)\):\s+)?(\w*)(?:\(([^)]*)\))?!?: (.+)$/,
       headerCorrespondence: [
         'merge',
         'pr',
