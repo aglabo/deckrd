@@ -80,8 +80,11 @@ The procedure of each agent lives in a Role file under [references/roles/](refer
 - bdd-coder → [implementer.md](references/roles/implementer.md)
 - code-reviewer → [code-reviewer.md](references/roles/code-reviewer.md)
 
-Test ID uniqueness is checked with `bash "<BDD_CODER_SKILL_DIR>/scripts/check-test-ids.sh" <mode>`;
-see [test-id-check.md](references/test-id-check.md).
+Test IDs are checked with
+`bash "<BDD_CODER_SKILL_DIR>/scripts/check-test-ids.sh" --lang <lang>[,<lang>...]`,
+and the target abbreviations with `check-test-abbrs.sh` ([test-abbr-check.md](references/test-abbr-check.md)).
+Pass the languages of the target repository's tests: `sh` / `dart` / `ts` / `js` / `go`.
+Without `--lang`, only `sh` is checked. See [test-id-check.md](references/test-id-check.md).
 
 On every "Spawn", also pass two absolute paths:
 
