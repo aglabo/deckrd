@@ -57,7 +57,8 @@ is_glob_pattern() {
 }
 
 #
-# @description Get list of files matching a pattern with optional filters
+# @description Get list of files matching a pattern with optional filters.
+#   Files under any node_modules directory are always excluded, with or without .gitignore.
 # @arg $1 string Search root directory
 # @arg $2 string File glob pattern (e.g. "*.spec.sh")
 # @arg $@ Additional filters: slash-containing args are dir_filters, others are str_filters
@@ -85,7 +86,7 @@ get_filelist() {
 
   # Enumerate files; normalize separators and prepend ./
   local __result
-  __result=$(cd "$__root" && rg --files -g "$__pattern" 2> /dev/null | sed 's|\\|/|g; s|^[^./]|./&|' || true)
+  __result=$(cd "$__root" && rg --files -g "$__pattern" -g '!node_modules' 2> /dev/null | sed 's|\\|/|g; s|^[^./]|./&|' || true)
 
   # Apply each filter (AND: narrow results; short-circuit on empty)
   local __pat

@@ -85,7 +85,8 @@ is_spec_glob() {
 }
 
 #
-# @description Expand a glob path pattern to matching spec file paths
+# @description Expand a glob path pattern to matching spec file paths.
+#   Matches with a path element exactly equal to node_modules are always excluded.
 # @arg $1 string Glob path pattern (e.g. runners/libs/__tests__/unit/*.spec.sh)
 # @stdout List of matching spec file paths; nothing when no file matches
 # @exitcode 0 always
@@ -101,9 +102,12 @@ expand_spec_glob() {
     cd "$SPEC_SEARCH_ROOT" && compgen -G "$norm_pattern" 2> /dev/null || true
   )
 
-  local f
+  local f path
   for f in ${matches[@]+"${matches[@]}"}; do
-    normalize_path "$f"
+    path=$(normalize_path "$f")
+    # Slashes on both ends let the first and last elements match as whole elements
+    [[ "/${path}/" == */node_modules/*   ]] && continue
+    printf '%s\n' "$path"
   done
 }
 
