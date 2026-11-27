@@ -53,6 +53,7 @@ _aini_positional_count_after_second_init() {
 # @stdout "set" (キーが残っている) または "unset" (消えている)
 _aini_options_stale_after_second_init() {
   args_init
+  # shellcheck disable=SC2154 # stale は連想配列のキー
   OPTIONS[stale]=x
   args_init
   if [[ -v 'OPTIONS[stale]' ]]; then echo "set"; else echo "unset"; fi
@@ -74,6 +75,7 @@ _aini_options_set_stale_after_second_init() {
 _aini_init_inside_function() {
   _aini_wrapper() { args_init; }
   _aini_wrapper
+  # shellcheck disable=SC2154 # k は連想配列のキー
   OPTIONS[k]=v
   echo "${OPTIONS[k]}"
   declare -p OPTIONS
@@ -391,35 +393,35 @@ Describe "args.lib.sh"
   Describe "T-LIB-AINI: args_init"
     Describe "When: 正常系"
       It "Then: [Normal] T-LIB-AINI-01: 既存の _ARGS_KEY_OF を消す"
-        When call _aini_key_of_count_after_reinit
+        When call _aini_key_of_count_after_second_init
         The status should equal 0
         The output should equal "0"
         The stderr should equal ""
       End
 
       It "Then: [Normal] T-LIB-AINI-02: 既存の _ARGS_TYPE を消す"
-        When call _aini_type_count_after_reinit
+        When call _aini_type_count_after_second_init
         The status should equal 0
         The output should equal "0"
         The stderr should equal ""
       End
 
       It "Then: [Normal] T-LIB-AINI-03: 既存の _ARGS_POSITIONAL を消す"
-        When call _aini_positional_count_after_reinit
+        When call _aini_positional_count_after_second_init
         The status should equal 0
         The output should equal "0"
         The stderr should equal ""
       End
 
       It "Then: [Normal] T-LIB-AINI-04: 古い OPTIONS のキーを消す"
-        When call _aini_options_stale_after_reinit
+        When call _aini_options_stale_after_second_init
         The status should equal 0
         The output should equal "unset"
         The stderr should equal ""
       End
 
       It "Then: [Normal] T-LIB-AINI-05: 古い OPTIONS_SET のキーを消す"
-        When call _aini_options_set_stale_after_reinit
+        When call _aini_options_set_stale_after_second_init
         The status should equal 0
         The output should equal "unset"
         The stderr should equal ""
@@ -435,6 +437,7 @@ Describe "args.lib.sh"
 
     Describe "When: エッジケース"
       It "Then: [Edge] T-LIB-AINI-07: set -u の新規 bash で source 直後に呼ぶとグローバル連想配列ができる"
+        # shellcheck disable=SC2016 # $1 は子の bash で展開する
         When run bash -u -c '. "$1"; args_init; declare -p OPTIONS OPTIONS_SET _ARGS_KEY_OF _ARGS_TYPE' _ "${SCRIPT}"
         The status should equal 0
         The line 1 of output should start with "declare -A OPTIONS"
@@ -455,7 +458,7 @@ Describe "args.lib.sh"
 
     Describe "When: 状態遷移"
       It "Then: [Normal] T-LIB-AINI-09: 再初期化後は 1 回目の宣言 --force が未知になる"
-        When call _aini_parse_after_reinit
+        When call _aini_parse_after_second_init
         The status should equal 1
         The variable ARGS_ERROR should equal "Unknown option: --force"
         The output should equal ""
@@ -716,12 +719,14 @@ Describe "args.lib.sh"
 
     Describe "When: 状態遷移 (呼び出し側の strict mode)"
       It "Then: [Normal] T-LIB-PARG-16: set -eo pipefail の呼び出し側でエラーが返っても後続が動く"
+        # shellcheck disable=SC2016 # $1 や $rc は子の bash で展開する
         When run bash -c 'set -eo pipefail; . "$1"; args_init; rc=0; parse_args --bogus || rc=$?; echo "after rc=$rc"' _ "${SCRIPT}"
         The status should equal 0
         The output should equal "after rc=1"
       End
 
       It "Then: [Edge] T-LIB-PARG-17: set -u で位置引数宣言なし・引数なしで呼んでも unbound にならない"
+        # shellcheck disable=SC2016 # $1 は子の bash で展開する
         When run bash -u -c '. "$1"; args_init; parse_args; echo ok' _ "${SCRIPT}"
         The status should equal 0
         The output should equal "ok"
@@ -729,6 +734,7 @@ Describe "args.lib.sh"
       End
 
       It "Then: [Edge] T-LIB-PARG-18: set -u で未指定の値・位置引数を参照しても unbound にならない"
+        # shellcheck disable=SC2016 # $1 や ${OPTIONS[...]} は子の bash で展開する
         When run bash -u -c '. "$1"; args_init; args_value model "" --model; args_positional project; parse_args; echo "[${OPTIONS[model]}][${OPTIONS[project]}]"' _ "${SCRIPT}"
         The status should equal 0
         The output should equal "[][]"
@@ -736,6 +742,7 @@ Describe "args.lib.sh"
       End
 
       It "Then: [Error] T-LIB-PARG-19: エラーでも呼び出し元のシェルを exit しない"
+        # shellcheck disable=SC2016 # $1 は子の bash で展開する
         When run bash -c '. "$1"; args_init; parse_args --bogus; echo still-running' _ "${SCRIPT}"
         The output should equal "still-running"
       End
