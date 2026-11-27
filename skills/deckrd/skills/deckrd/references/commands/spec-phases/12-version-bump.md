@@ -55,8 +55,8 @@ dictionary untouched.
 ### Step 12-2: Specification Files
 
 On approval, run the steps below for **every file** written in Phase 10 — each
-split file and `specifications-index.md`, not only an unsuffixed
-`specifications.md`. Each file is versioned independently.
+split file and `specifications-index.md`, not only a
+`specifications.md` without a suffix. Each file is versioned independently.
 
 **No baseline** (first generation) — keep `1.0.0` and the initial row.
 
@@ -82,7 +82,7 @@ Step 12-1 bumped the dictionary. Update it to
 `universal-dictionary.md v<final version>` and treat the refresh as at least PATCH.
 Files without a `dictionary` line need no change.
 
-A split file left unbumped gives downstream documents no way to identify its
+A split file whose version is not raised gives downstream documents no way to identify its
 revision. Skipping any file is a defect.
 
 See docs/.deckrd/rules/deckrd-rule-document-versioning.md.
