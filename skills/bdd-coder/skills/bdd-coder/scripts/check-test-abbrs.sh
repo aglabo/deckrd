@@ -69,7 +69,7 @@ scan_root() {
   fi
   # A second run keeps the warnings of a successful git out of the root
   message="$(LC_ALL=C git rev-parse --show-toplevel 2>&1 > /dev/null)" || true
-  if [[ $message == *'not a git repository'* ]]; then
+  if [[ $message == *'not a git repository (or any'* ]]; then
     echo .
     return 0
   fi
