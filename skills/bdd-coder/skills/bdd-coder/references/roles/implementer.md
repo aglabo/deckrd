@@ -308,7 +308,7 @@ NOTES: <required if not DONE>
 
 `CHANGED_FILES` lists every file this task created, modified, or deleted, implementation
 and test alike. The caller unions these lists across tasks to scope the session code
-review, so a missing path means unreviewed code. Report paths relative to the repository
+review, so a missing path means code that is not reviewed. Report paths relative to the repository
 root, and include newly created files even though they are still untracked.
 
 ## Completion Checklist

@@ -138,7 +138,7 @@ the review. Emit the Phase 1 metrics, record
 from the CRAP scores alone. A missing second opinion is a degraded review, not a blocked one.
 
 Do not treat an empty or missing Codex result as "no findings". Absent findings and
-unobtained findings are different outcomes, and only the degraded path may report the second.
+findings that could not be obtained are different outcomes, and only the degraded path may report the second.
 
 Prompt:
 
