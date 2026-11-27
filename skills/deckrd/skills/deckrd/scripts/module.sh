@@ -26,10 +26,10 @@
 #
 # @example
 #   module.sh agt-kind/is-collection
-#   module.sh myns/mymod --force
-#   module.sh myns/mymod --test-scope=MYM
-#   module.sh create myns/mymod
-#   module.sh create myfeature
+#   module.sh my-ns/my-mod --force
+#   module.sh my-ns/my-mod --test-scope=MYM
+#   module.sh create my-ns/my-mod
+#   module.sh create my-feature
 #
 # @exitcode 0 Success
 # @exitcode 1 Error during execution

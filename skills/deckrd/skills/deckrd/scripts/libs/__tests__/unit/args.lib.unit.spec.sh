@@ -18,50 +18,50 @@ SCRIPT="${DECKRD_LIB_DIR}/args.lib.sh"
 
 # --- 内部ヘルパー ---
 
-# _aini_key_of_count_after_reinit - args_flag で宣言した後に args_init し、_ARGS_KEY_OF の要素数を出力する
+# _aini_key_of_count_after_second_init - args_flag で宣言した後に args_init し、_ARGS_KEY_OF の要素数を出力する
 #
 # @stdout _ARGS_KEY_OF の要素数
-_aini_key_of_count_after_reinit() {
+_aini_key_of_count_after_second_init() {
   args_init
   args_flag force --force
   args_init
   echo "${#_ARGS_KEY_OF[@]}"
 }
 
-# _aini_type_count_after_reinit - args_value で宣言した後に args_init し、_ARGS_TYPE の要素数を出力する
+# _aini_type_count_after_second_init - args_value で宣言した後に args_init し、_ARGS_TYPE の要素数を出力する
 #
 # @stdout _ARGS_TYPE の要素数
-_aini_type_count_after_reinit() {
+_aini_type_count_after_second_init() {
   args_init
   args_value model sonnet --model
   args_init
   echo "${#_ARGS_TYPE[@]}"
 }
 
-# _aini_positional_count_after_reinit - args_positional で宣言した後に args_init し、_ARGS_POSITIONAL の要素数を出力する
+# _aini_positional_count_after_second_init - args_positional で宣言した後に args_init し、_ARGS_POSITIONAL の要素数を出力する
 #
 # @stdout _ARGS_POSITIONAL の要素数
-_aini_positional_count_after_reinit() {
+_aini_positional_count_after_second_init() {
   args_init
   args_positional project type
   args_init
   echo "${#_ARGS_POSITIONAL[@]}"
 }
 
-# _aini_options_stale_after_reinit - OPTIONS に古いキーを入れた後に args_init し、キーの有無を出力する
+# _aini_options_stale_after_second_init - OPTIONS に古いキーを入れた後に args_init し、キーの有無を出力する
 #
 # @stdout "set" (キーが残っている) または "unset" (消えている)
-_aini_options_stale_after_reinit() {
+_aini_options_stale_after_second_init() {
   args_init
   OPTIONS[stale]=x
   args_init
   if [[ -v 'OPTIONS[stale]' ]]; then echo "set"; else echo "unset"; fi
 }
 
-# _aini_options_set_stale_after_reinit - OPTIONS_SET に古いキーを入れた後に args_init し、キーの有無を出力する
+# _aini_options_set_stale_after_second_init - OPTIONS_SET に古いキーを入れた後に args_init し、キーの有無を出力する
 #
 # @stdout "set" (キーが残っている) または "unset" (消えている)
-_aini_options_set_stale_after_reinit() {
+_aini_options_set_stale_after_second_init() {
   args_init
   OPTIONS_SET[stale]=true
   args_init
@@ -79,12 +79,12 @@ _aini_init_inside_function() {
   declare -p OPTIONS
 }
 
-# _aini_parse_after_reinit - --force を宣言・解析した後に args_init で宣言をやり直し、再度 --force を解析する
+# _aini_parse_after_second_init - --force を宣言・解析した後に args_init で宣言をやり直し、再度 --force を解析する
 #
 # 1 回目の parse_args が失敗した場合は前提崩れとして 9 を返す。
 #
 # @return 2 回目の parse_args の終了ステータス
-_aini_parse_after_reinit() {
+_aini_parse_after_second_init() {
   args_init
   args_flag force --force
   parse_args --force || return 9

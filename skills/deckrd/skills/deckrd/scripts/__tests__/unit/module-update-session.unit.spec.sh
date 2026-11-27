@@ -34,7 +34,7 @@ SCRIPT="${DECKRD_SCRIPTS_DIR}/module.sh"
 # ISO 8601 UTC timestamp pattern written by update_session (created_at / updated_at)
 _ISO_UTC_PATTERN='^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$'
 
-# modules entry written for myns/mymod with scope MM
+# modules entry written for my-ns/my-mod with scope MM
 _SESSION_MODULE_ENTRY='{"current_step":"module","completed":["module"],"documents":{},"test_scope":"MM"}'
 
 # Existing session.json with another module and an extra top-level key (MUS-02)
@@ -152,12 +152,12 @@ Describe "T-CLI-MUS: module.sh: update_session"
 
   Describe "When: 正常系"
     It "[Normal] T-CLI-MUS-01: no session.json -> created with active/modules, created_at == updated_at (ISO), summary on stdout, no tmp left"
-      When call update_session myns/mymod MM
+      When call update_session my-ns/my-mod MM
       The status should equal 0
       The stdout should include "Session updated: ${SESSION_FILE}"
-      The stdout should include "  active module: myns/mymod"
+      The stdout should include "  active module: my-ns/my-mod"
       The stderr should be blank
-      The value "$(_session_query '{active, modules}')" should equal "{\"active\":\"myns/mymod\",\"modules\":{\"myns/mymod\":${_SESSION_MODULE_ENTRY}}}"
+      The value "$(_session_query '{active, modules}')" should equal "{\"active\":\"my-ns/my-mod\",\"modules\":{\"my-ns/my-mod\":${_SESSION_MODULE_ENTRY}}}"
       # shellcheck disable=SC2016
       The value "$(_session_query --arg re "$_ISO_UTC_PATTERN" '.created_at == .updated_at and (.created_at | test($re))')" should equal "true"
       The value "$(_list_session_tmp)" should be blank
@@ -165,11 +165,11 @@ Describe "T-CLI-MUS: module.sh: update_session"
 
     It "[Normal] T-CLI-MUS-02: existing session.json -> merged: active/module entry set, other module, lang and created_at kept, updated_at refreshed, no tmp left"
       _write_session_fixture "$_SESSION_EXISTING"
-      When call update_session myns/mymod MM
+      When call update_session my-ns/my-mod MM
       The status should equal 0
       The stdout should include "Session updated: ${SESSION_FILE}"
-      The value "$(_session_query '.active')" should equal '"myns/mymod"'
-      The value "$(_session_query '.modules["myns/mymod"]')" should equal "$_SESSION_MODULE_ENTRY"
+      The value "$(_session_query '.active')" should equal '"my-ns/my-mod"'
+      The value "$(_session_query '.modules["my-ns/my-mod"]')" should equal "$_SESSION_MODULE_ENTRY"
       The value "$(_session_query '.modules["old/mod"]')" should equal '{"current_step":"spec"}'
       The value "$(_session_query '[.lang, .created_at]')" should equal '["ja","2026-01-01T00:00:00Z"]'
       # shellcheck disable=SC2016
@@ -182,7 +182,7 @@ Describe "T-CLI-MUS: module.sh: update_session"
     It "[Error] T-CLI-MUS-03: existing session.json + write_json_file fails -> Error on stderr, status 1, no summary, content unchanged, no tmp left"
       _write_session_fixture "$_SESSION_EXISTING"
       _mock_write_json_file_fail
-      When call update_session myns/mymod MM
+      When call update_session my-ns/my-mod MM
       The status should equal 1
       The stderr should include "Error: update_session: failed to write: ${SESSION_FILE}"
       The stdout should not include "Session updated"
@@ -192,7 +192,7 @@ Describe "T-CLI-MUS: module.sh: update_session"
 
     It "[Error] T-CLI-MUS-04: no session.json + write_json_file fails -> Error on stderr, status 1, no summary, no file created, no tmp left"
       _mock_write_json_file_fail
-      When call update_session myns/mymod MM
+      When call update_session my-ns/my-mod MM
       The status should equal 1
       The stderr should include "Error: update_session: failed to write: ${SESSION_FILE}"
       The stdout should not include "Session updated"
@@ -204,7 +204,7 @@ Describe "T-CLI-MUS: module.sh: update_session"
   Describe "When: エッジケース (real write failure / boundary input)"
     It "[Edge] T-CLI-MUS-05: session.json is not valid JSON -> Error on stderr, status 1, no summary, content unchanged, no tmp left"
       _write_session_fixture "not json"
-      When call update_session myns/mymod MM
+      When call update_session my-ns/my-mod MM
       The status should equal 1
       The stderr should include "Error: update_session: failed to write: ${SESSION_FILE}"
       The stdout should not include "Session updated"
@@ -214,7 +214,7 @@ Describe "T-CLI-MUS: module.sh: update_session"
 
     It "[Edge] T-CLI-MUS-06: SESSION_FILE is a directory -> Error on stderr, status 1, no summary, directory kept empty, no tmp left"
       mkdir "$SESSION_FILE"
-      When call update_session myns/mymod MM
+      When call update_session my-ns/my-mod MM
       The status should equal 1
       The stderr should include "Error: update_session: failed to write: ${SESSION_FILE}"
       The stdout should not include "Session updated"
@@ -225,10 +225,10 @@ Describe "T-CLI-MUS: module.sh: update_session"
 
     It "[Edge] T-CLI-MUS-07: session.json is {} -> status 0, active/modules created, updated_at ISO UTC, no tmp left"
       _write_session_fixture '{}'
-      When call update_session myns/mymod MM
+      When call update_session my-ns/my-mod MM
       The status should equal 0
       The stdout should include "Session updated: ${SESSION_FILE}"
-      The value "$(_session_query '{active, modules}')" should equal "{\"active\":\"myns/mymod\",\"modules\":{\"myns/mymod\":${_SESSION_MODULE_ENTRY}}}"
+      The value "$(_session_query '{active, modules}')" should equal "{\"active\":\"my-ns/my-mod\",\"modules\":{\"my-ns/my-mod\":${_SESSION_MODULE_ENTRY}}}"
       # shellcheck disable=SC2016
       The value "$(_session_query --arg re "$_ISO_UTC_PATTERN" '.updated_at | test($re)')" should equal "true"
       The value "$(_list_session_tmp)" should be blank
@@ -248,7 +248,7 @@ Describe "T-CLI-MUM: module.sh: main (update_session failure)"
       _stub_main_steps_before_session
       # shellcheck disable=SC2329
       update_session() { return 1; }
-      When run main myns/mymod
+      When run main my-ns/my-mod
       The status should equal 1
     End
   End

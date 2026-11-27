@@ -34,7 +34,7 @@ SCRIPT="${DECKRD_SCRIPTS_DIR}/status.sh"
 _UNSET='<unset>'
 
 # _ACTIVE_MODULE - session.json の active に書く値。Module Path の末尾に現れる
-_ACTIVE_MODULE='myns/mymod'
+_ACTIVE_MODULE='my-ns/my-mod'
 
 # _SENTINEL_DOCS - DECKRD_DOCS に入れるセンチネル。上書き枠が最優先で返ることの確認に使う
 #
@@ -178,7 +178,7 @@ Describe "T-CLI-ST: status.sh"
         When run bash "$SCRIPT"
         The status should equal 0
         The output should include "DECKRD Status"
-        The output should include "myns/mymod"
+        The output should include "my-ns/my-mod"
       End
     End
   End

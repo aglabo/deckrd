@@ -7,7 +7,7 @@
 # https://opensource.org/licenses/MIT
 
 # shellcheck disable=SC1090,SC1091,SC2288,SC2289
-# cspell:words reinit eqval uninit nofile emptyjson roundtrip noschema
+# cspell:words eqval uninit nofile emptyjson roundtrip noschema
 
 _RUNTIME_LIBS_DIR="$(cd "${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/skills/deckrd/scripts/libs" && pwd)"
 
@@ -179,18 +179,18 @@ Describe "kv-store.lib.sh (store)"
     Describe "Given: 既存ストアを再初期化する"
       Describe "When: kv_set 後に kv_init を呼ぶ"
         It "Then: [Normal] T-LIB-KSIN-12: デフォルト値にリセットされる"
-          kv_init "reinit_store" "key1|original"
-          kv_set "reinit_store" "key1" "modified"
-          kv_init "reinit_store" "key1|original"
-          When call kv_get "reinit_store" "key1"
+          kv_init "second_init_store" "key1|original"
+          kv_set "second_init_store" "key1" "modified"
+          kv_init "second_init_store" "key1|original"
+          When call kv_get "second_init_store" "key1"
           The status should equal 0
           The output should equal "original"
         End
 
         It "Then: [Normal] T-LIB-KSIN-13: スキーマが新しい内容に更新される"
-          kv_init "reinit_store2" "key1|val1"
-          kv_init "reinit_store2" $'key1|new1\nkey2|new2'
-          When call kv_get "reinit_store2" "key2"
+          kv_init "second_init_store2" "key1|val1"
+          kv_init "second_init_store2" $'key1|new1\nkey2|new2'
+          When call kv_get "second_init_store2" "key2"
           The status should equal 0
           The output should equal "new2"
         End

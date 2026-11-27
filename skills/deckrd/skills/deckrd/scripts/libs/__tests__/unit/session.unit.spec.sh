@@ -7,7 +7,7 @@
 # https://opensource.org/licenses/MIT
 
 # shellcheck disable=SC1090
-# cspell:words myproject
+# cspell:words
 
 _RUNTIME_BOOTSTRAP="${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/skills/deckrd/scripts/libs/bootstrap.lib.sh"
 . "$_RUNTIME_BOOTSTRAP" "--no-finalize"
@@ -100,13 +100,13 @@ Describe "session.sh"
     Before "declare -gA BUF=(); session_init BUF \"$SESSION_SCHEMA_TEST\""
 
     Describe "Given: BUF にキーをセットした状態"
-      Before "session_set BUF active myproject"
+      Before "session_set BUF active my-project"
 
       Describe "When: session_get を呼ぶ"
         It "Then: [Normal] T-LIB-SGS-01: セットした値が返る"
           When call session_get BUF "active"
           The status should equal 0
-          The output should equal "myproject"
+          The output should equal "my-project"
         End
 
         It "Then: [Error] T-LIB-SGS-02: スキーマ外キーは exit 1 を返す"
@@ -184,16 +184,16 @@ Describe "session.sh"
 
       Describe "When: session_load を呼ぶ"
         It "Then: [Normal] T-LIB-SLOAD-05: active キーが読み込まれる"
-          printf '{"active":"myproject","ai_model":"opus","lang":"ja"}' \
+          printf '{"active":"my-project","ai_model":"opus","lang":"ja"}' \
             > "${DECKRD_LOCAL}/session.kv"
           session_load "${DECKRD_LOCAL}/session" BUF
           When call session_get BUF "active"
           The status should equal 0
-          The output should equal "myproject"
+          The output should equal "my-project"
         End
 
         It "Then: [Normal] T-LIB-SLOAD-06: ai_model キーが読み込まれる"
-          printf '{"active":"myproject","ai_model":"opus","lang":"ja"}' \
+          printf '{"active":"my-project","ai_model":"opus","lang":"ja"}' \
             > "${DECKRD_LOCAL}/session.kv"
           session_load "${DECKRD_LOCAL}/session" BUF
           When call session_get BUF "ai_model"
@@ -202,7 +202,7 @@ Describe "session.sh"
         End
 
         It "Then: [Normal] T-LIB-SLOAD-07: lang キーが読み込まれる"
-          printf '{"active":"myproject","ai_model":"opus","lang":"ja"}' \
+          printf '{"active":"my-project","ai_model":"opus","lang":"ja"}' \
             > "${DECKRD_LOCAL}/session.kv"
           session_load "${DECKRD_LOCAL}/session" BUF
           When call session_get BUF "lang"

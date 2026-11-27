@@ -45,7 +45,7 @@ Describe "T-CLI-GDN: module.sh: _get_default_ns"
 
     setup_project_json() {
       mkdir -p "$DECKRD_LOCAL_DATA"
-      printf '{"project":"myproject","project_type":"feature","language":"shell","ai_model":"sonnet","created_at":"2026-01-01T00:00:00Z","updated_at":"2026-01-01T00:00:00Z"}\n' \
+      printf '{"project":"my-project","project_type":"feature","language":"shell","ai_model":"sonnet","created_at":"2026-01-01T00:00:00Z","updated_at":"2026-01-01T00:00:00Z"}\n' \
         >"${DECKRD_LOCAL_DATA}/.project.json"
     }
     Before "setup_project_json"
@@ -54,7 +54,7 @@ Describe "T-CLI-GDN: module.sh: _get_default_ns"
       It "[Normal] T-CLI-GDN-01: Should: return 0 and output the project name"
         When call _get_default_ns
         The status should equal 0
-        The output should equal "myproject"
+        The output should equal "my-project"
       End
     End
   End

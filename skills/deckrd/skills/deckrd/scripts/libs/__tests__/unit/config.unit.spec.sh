@@ -7,7 +7,7 @@
 # https://opensource.org/licenses/MIT
 
 # shellcheck disable=SC1090,SC1091
-# cspell:words myproject myns mymod jqexe jaq
+# cspell:words jqexe jaq
 
 _RUNTIME_BOOTSTRAP="${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/skills/deckrd/scripts/libs/bootstrap.lib.sh"
 . "$_RUNTIME_BOOTSTRAP" "--no-finalize"
@@ -41,7 +41,7 @@ _write_session_json() {
 # _write_session_json_minimal - deckrd が読む 3 キーだけを持つ session.json を書き出す
 #
 # active / ai_model / lang の反映だけを検査するための最小形式。
-# active は 1 階層 (myproject) とし、deckrd_base の連結結果を短く保つ。
+# active は 1 階層 (my-project) とし、deckrd_base の連結結果を短く保つ。
 #
 # 前提: setup_deckrd_tmpdir が DECKRD_LOCAL を export していること
 #
@@ -49,7 +49,7 @@ _write_session_json() {
 _write_session_json_minimal() {
   _write_session_json <<'JSON'
 {
-  "active": "myproject",
+  "active": "my-project",
   "ai_model": "opus",
   "lang": "ja"
 }
@@ -67,7 +67,7 @@ JSON
 _write_session_json_broken() {
   _write_session_json <<'JSON'
 {
-  "active": "myproject",
+  "active": "my-project",
   "ai_model": "opus
 JSON
 }
@@ -128,11 +128,11 @@ JSON
 _write_session_json_real() {
   _write_session_json <<'JSON'
 {
-  "active": "myns/mymod",
+  "active": "my-ns/my-mod",
   "ai_model": "opus",
   "lang": "ja",
   "modules": {
-    "myns/mymod": {
+    "my-ns/my-mod": {
       "current_step": "req",
       "completed": ["module", "req"]
     }
@@ -288,7 +288,7 @@ Describe "config.sh"
           config_init "${DECKRD_LOCAL}/session.json"
           When call config_get "deckrd_base"
           The status should equal 0
-          The output should equal "${DECKRD_DOCS_DIR}/myns/mymod"
+          The output should equal "${DECKRD_DOCS_DIR}/my-ns/my-mod"
         End
 
         It "Then: [Normal] T-LIB-CINI-05: セッションの ai_model が CONFIG に読み込まれる"
@@ -312,7 +312,7 @@ Describe "config.sh"
           config_init "${DECKRD_LOCAL}/session.json"
           When call config_get "deckrd_base"
           The status should equal 0
-          The output should equal "${DECKRD_DOCS_DIR}/myproject"
+          The output should equal "${DECKRD_DOCS_DIR}/my-project"
         End
       End
     End

@@ -40,9 +40,9 @@ teardown_update_env() {
   teardown_deckrd_tmpdir
 }
 
-# Helper: place an asset source file and its deployed copy with fixed mtimes
+# Helper: place an asset source file and its deployed copy with fixed modification times
 # Parent directories are created on both sides, so $3 may contain subdirectories.
-# Contents are written before touch so that the mtimes are not reset.
+# Contents are written before touch so that the modification times are not reset.
 # @arg $1 Asset label (subdirectory of INITS_DIR)
 # @arg $2 Destination directory
 # @arg $3 Relative path of the file (e.g. a.md, rules/a.md, workspaces/README.md)
@@ -125,7 +125,7 @@ make_gitignore_template_only() {
 
 # Helper: place a non-keep .org source (rules/x.md.org) newer than and differing from
 # its deployed file (rules/x.md)
-# Contents are written before touch so that the mtimes are not reset.
+# Contents are written before touch so that the modification times are not reset.
 make_org_outdated() {
   mkdir -p "${INITS_DIR}/docs/rules" "${DECKRD_DOCS_DIR}/rules"
   printf '%s\n' new >"${INITS_DIR}/docs/rules/x.md.org"
@@ -334,11 +334,11 @@ Describe "T-CLI-UPDI: update.sh: list outdated assets"
     Before "setup_update_env"
     After "teardown_update_env"
 
-    setup_undeployed() {
+    setup_not_deployed() {
       mkdir -p "${INITS_DIR}/docs/rules"
       printf '%s\n' new >"${INITS_DIR}/docs/rules/new-rule.md"
     }
-    Before "setup_undeployed"
+    Before "setup_not_deployed"
 
     It "[Edge] T-CLI-UPDI-06: Should: exit 0, list the file as [label] dst_rel, and not deploy it"
       When run bash "$SCRIPT"
@@ -668,11 +668,11 @@ Describe "T-CLI-UPDA: update.sh --update: apply outdated assets"
     Before "setup_update_env"
     After "teardown_update_env"
 
-    setup_undeployed_for_update() {
+    setup_not_deployed_for_update() {
       mkdir -p "${INITS_DIR}/docs/rules"
       printf '%s\n' new >"${INITS_DIR}/docs/rules/new-rule.md"
     }
-    Before "setup_undeployed_for_update"
+    Before "setup_not_deployed_for_update"
 
     It "[Edge] T-CLI-UPDA-04: Should: exit 0, print Updated: [label] dst_rel, and deploy the file"
       When run bash "$SCRIPT" --update
