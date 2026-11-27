@@ -82,7 +82,7 @@ and `ai_model` take the new values; only `created_at` is kept
 **Example**:
 
 ```bash
-/deckrd init myproject shell
+/deckrd init my-project shell
 ```
 
 ### /deckrd module
@@ -108,14 +108,14 @@ falling back to the git repository root directory name
 **Example**:
 
 ```bash
-/deckrd module myproject/authentication
-/deckrd module authentication   # same, when project = myproject
+/deckrd module my-project/authentication
+/deckrd module authentication   # same, when project = my-project
 ```
 
 Creates:
 
 ```bash
-docs/.deckrd/myproject/authentication/
+docs/.deckrd/my-project/authentication/
 ├── requirements/
 ├── specifications/
 ├── implementation/
@@ -208,11 +208,11 @@ docs/.deckrd/myproject/authentication/
 DECKRD Status
 =============
 
-Active Module: myproject/authentication
+Active Module: my-project/authentication
 Current Step:  tasks
 Completed:     module, req, spec, impl
 
-Module Path:   docs/.deckrd/myproject/authentication
+Module Path:   docs/.deckrd/my-project/authentication
 
 Configuration:
   Language:    typescript
