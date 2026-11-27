@@ -25,6 +25,24 @@ setup_deckrd_tmpdir_with_project() {
     >"${DECKRD_LOCAL_DATA}/.project.json"
 }
 
+# Helpers: make the frontmatter reader unrunnable (fm_read_scalar honors $AWK).
+# Works on every platform, unlike removing read permission
+# shellcheck disable=SC2329
+break_frontmatter_reader() { export AWK="${DECKRD_TMPDIR}/no-such-awk"; }
+# shellcheck disable=SC2329
+restore_frontmatter_reader() { unset AWK; }
+
+# Helper: succeed when chmod cannot block reading (root, or Windows file systems)
+# shellcheck disable=SC2329
+chmod_cannot_block_read() {
+  local probe status=1
+  probe="$(mktemp)"
+  chmod 000 "$probe"
+  if { : <"$probe"; } 2>/dev/null; then status=0; fi
+  rm -f "$probe"
+  return "$status"
+}
+
 # ============================================================================
 # module.sh
 # ============================================================================
@@ -968,6 +986,64 @@ Describe "module.sh"
         End
       End
     End
+
+    Describe "Given: a module.md nested deeper than <namespace>/<module>"
+      # shellcheck disable=SC2329
+      setup_nested_module_md() {
+        write_module_md "tango/deep/nested" "---" "test_scope: DEP" "---"
+      }
+      Before "setup_nested_module_md"
+
+      Describe "When: call collect_declared_scopes"
+        It "[Edge] T-CLI-CDS-17: Should: exit with status 0 and output nothing because only <namespace>/<module> is searched"
+          When call collect_declared_scopes
+          The status should equal 0
+          The output should equal ""
+          The stderr should equal ""
+        End
+      End
+    End
+
+    Describe "Given: a module.md and a frontmatter reader that cannot run"
+      # shellcheck disable=SC2329
+      setup_module_without_reader() {
+        write_module_md "uniform/noreader" "---" "test_scope: UNI" "---"
+        break_frontmatter_reader
+      }
+      Before "setup_module_without_reader"
+      After "restore_frontmatter_reader"
+
+      Describe "When: call collect_declared_scopes"
+        It "[Error] T-CLI-CDS-18: Should: exit with status 1 and name the unreadable declaration on stderr"
+          When call collect_declared_scopes
+          The status should equal 1
+          The output should equal ""
+          The stderr should include "cannot read module declaration"
+          The stderr should include "uniform/noreader/workspaces/module/module.md"
+        End
+      End
+    End
+
+    Describe "Given: a module.md without read permission"
+      Skip if "chmod cannot block reading here" chmod_cannot_block_read
+
+      # shellcheck disable=SC2329
+      setup_unreadable_module() {
+        write_module_md "victor/locked" "---" "test_scope: VIC" "---"
+        chmod 000 "${DECKRD_DOCS_DIR}/victor/locked/workspaces/module/module.md"
+      }
+      Before "setup_unreadable_module"
+
+      Describe "When: call collect_declared_scopes"
+        It "[Error] T-CLI-CDS-19: Should: exit with status 1 and name the unreadable declaration on stderr"
+          When call collect_declared_scopes
+          The status should equal 1
+          The output should equal ""
+          The stderr should include "cannot read module declaration"
+          The stderr should include "victor/locked/workspaces/module/module.md"
+        End
+      End
+    End
   End
 
   # --------------------------------------------------------------------------
@@ -1073,6 +1149,45 @@ Describe "module.sh"
           The status should equal 0
           The output should equal ""
           The stderr should equal ""
+        End
+      End
+    End
+
+    Describe "Given: a module.md and a frontmatter reader that cannot run"
+      # shellcheck disable=SC2329
+      setup_declaration_without_reader() {
+        declare_raw_module_scope "alpha/normalize" "NOR"
+        break_frontmatter_reader
+      }
+      Before "setup_declaration_without_reader"
+      After "restore_frontmatter_reader"
+
+      Describe "When: call read_declared_scope for that module"
+        It "[Error] T-CLI-RDS-06: Should: exit with status 1 and name the unreadable declaration on stderr"
+          When call read_declared_scope "alpha/normalize"
+          The status should equal 1
+          The output should equal ""
+          The stderr should include "cannot read module declaration"
+        End
+      End
+    End
+
+    Describe "Given: a module.md without read permission"
+      Skip if "chmod cannot block reading here" chmod_cannot_block_read
+
+      # shellcheck disable=SC2329
+      setup_unreadable_declaration() {
+        declare_raw_module_scope "alpha/normalize" "NOR"
+        chmod 000 "${DECKRD_DOCS_DIR}/alpha/normalize/workspaces/module/module.md"
+      }
+      Before "setup_unreadable_declaration"
+
+      Describe "When: call read_declared_scope for that module"
+        It "[Error] T-CLI-RDS-07: Should: exit with status 1 and name the unreadable declaration on stderr"
+          When call read_declared_scope "alpha/normalize"
+          The status should equal 1
+          The output should equal ""
+          The stderr should include "cannot read module declaration"
         End
       End
     End
@@ -1286,6 +1401,44 @@ Describe "module.sh"
       End
     End
 
+    Describe "Given: another module's declaration cannot be read"
+      # shellcheck disable=SC2329
+      setup_unread_conflict() {
+        declare_module_scope "bravo/notation" "NOR"
+        break_frontmatter_reader
+      }
+      Before "setup_unread_conflict"
+      After "restore_frontmatter_reader"
+
+      Describe "When: call resolve_test_scope with the scope that module declares"
+        It "[Error] T-CLI-RTS-15: Should: exit with status 1 and output no scope instead of accepting a possible duplicate"
+          When call resolve_test_scope "alpha/normalize" "NOR"
+          The status should equal 1
+          The output should equal ""
+          The stderr should include "bravo/notation/workspaces/module/module.md"
+        End
+      End
+    End
+
+    Describe "Given: another module declares the candidate scope and the reader exits with a failure"
+      # shellcheck disable=SC2329
+      setup_failing_reader_conflict() {
+        declare_module_scope "bravo/notation" "NOR"
+        export AWK=false
+      }
+      Before "setup_failing_reader_conflict"
+      After "restore_frontmatter_reader"
+
+      Describe "When: call resolve_test_scope with the scope that module declares"
+        It "[Error] T-CLI-RTS-16: Should: exit with status 1 and output no scope instead of accepting the duplicate"
+          When call resolve_test_scope "alpha/normalize" "NOR"
+          The status should equal 1
+          The output should equal ""
+          The stderr should include "Error: cannot read module declaration: ${DECKRD_DOCS_DIR}/bravo/notation/workspaces/module/module.md"
+        End
+      End
+    End
+
     Describe "Given: the module itself declares the candidate scope wrapped in single quotes"
       # shellcheck disable=SC2329
       setup_self_single_quoted_module() {
@@ -1491,6 +1644,106 @@ Describe "module.sh"
           The status should equal 1
           The lines of entire stderr should eq 1
           The stderr should include "jq or jaq is required"
+        End
+      End
+    End
+
+    Describe "Given: a declared module.md and a frontmatter reader that cannot run"
+      # shellcheck disable=SC2329
+      setup_cli_without_reader() {
+        setup_deckrd_tmpdir
+        mkdir -p "${DECKRD_DOCS_DIR}/bravo/notation/workspaces/module"
+        printf '%s\n' "---" "test_scope: NOR" "---" >"${DECKRD_DOCS_DIR}/bravo/notation/workspaces/module/module.md"
+        # module.sh ignores $AWK, so the reader is broken through the awk command itself
+        awk() { return 1; }
+        export -f awk
+      }
+      # shellcheck disable=SC2329
+      restore_awk_command() { unset -f awk; }
+      Before "setup_cli_without_reader"
+      After "restore_awk_command" "teardown_deckrd_tmpdir"
+
+      Describe "When: run module.sh for another module that would derive the same scope"
+        It "[Error] T-CLI-MMT-11: Should: exit with status 1 and write neither module.md nor session.json"
+          When run bash "$SCRIPT" alpha/normalize
+          The status should equal 1
+          The output should not include "Session updated"
+          The stderr should include "cannot read module declaration"
+          The path "${DECKRD_DOCS_DIR}/alpha/normalize/workspaces/module/module.md" should not be exist
+          The path "${DECKRD_LOCAL_DATA}/session.json" should not be exist
+        End
+      End
+
+      Describe "When: run module.sh with --force for the declared module itself"
+        It "[Error] T-CLI-MMT-12: Should: exit with status 1 and write no session.json"
+          When run bash "$SCRIPT" bravo/notation --force --test-scope XYZ
+          The status should equal 1
+          The output should not include "Session updated"
+          The stderr should include "cannot read module declaration"
+          The path "${DECKRD_LOCAL_DATA}/session.json" should not be exist
+        End
+      End
+    End
+
+    # Helper: declare <test_scope> in the module.md of <namespace/module>, then set a
+    # multi-word AWK that no command lookup can resolve
+    # shellcheck disable=SC2329
+    setup_awk_env_with_declaration() {
+      setup_deckrd_tmpdir
+      mkdir -p "${DECKRD_DOCS_DIR}/$1/workspaces/module"
+      printf '%s\n' "---" "test_scope: $2" "---" >"${DECKRD_DOCS_DIR}/$1/workspaces/module/module.md"
+      export AWK="gawk --posix"
+    }
+
+    Describe "Given: another module declares a different scope and AWK is a multi-word command"
+      # shellcheck disable=SC2329
+      setup_awk_env_with_other_scope() { setup_awk_env_with_declaration "bravo/notation" "NOR"; }
+      Before "setup_awk_env_with_other_scope"
+      After "restore_frontmatter_reader" "teardown_deckrd_tmpdir"
+
+      Describe "When: run module.sh for a new module"
+        It "[Normal] T-CLI-MMT-13: Should: exit with status 0 and create the module with the derived scope"
+          When run bash "$SCRIPT" myns/mymod
+          The status should equal 0
+          The output should include "Session updated"
+          The stderr should equal ""
+          The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/workspaces/module/module.md" should include "test_scope: MYM"
+          The contents of file "${DECKRD_LOCAL_DATA}/session.json" should include '"test_scope": "MYM"'
+        End
+      End
+    End
+
+    Describe "Given: another module declares the derived scope and AWK is a multi-word command"
+      # shellcheck disable=SC2329
+      setup_awk_env_with_taken_scope() { setup_awk_env_with_declaration "thirdns/thirdmod" "MYM"; }
+      Before "setup_awk_env_with_taken_scope"
+      After "restore_frontmatter_reader" "teardown_deckrd_tmpdir"
+
+      Describe "When: run module.sh for a new module"
+        It "[Error] T-CLI-MMT-14: Should: exit with status 1, report the conflicting module.md and write no module.md"
+          When run bash "$SCRIPT" myns/mymod
+          The status should equal 1
+          The output should include "Initializing module"
+          The stderr should include "conflict"
+          The stderr should include "thirdns/thirdmod/workspaces/module/module.md"
+          The path "${DECKRD_DOCS_DIR}/myns/mymod/workspaces/module/module.md" should not be exist
+        End
+      End
+    End
+
+    Describe "Given: a module declaring its own test scope and AWK is a multi-word command"
+      # shellcheck disable=SC2329
+      setup_awk_env_with_own_scope() { setup_awk_env_with_declaration "myns/mymod" "ZZ"; }
+      Before "setup_awk_env_with_own_scope"
+      After "restore_frontmatter_reader" "teardown_deckrd_tmpdir"
+
+      Describe "When: re-initialize the module with --force"
+        It "[Edge] T-CLI-MMT-15: Should: exit with status 0 and read back the declared scope into session.json"
+          When run bash "$SCRIPT" myns/mymod --force
+          The status should equal 0
+          The output should include "kept existing test_scope"
+          The stderr should equal ""
+          The contents of file "${DECKRD_LOCAL_DATA}/session.json" should include '"test_scope": "ZZ"'
         End
       End
     End

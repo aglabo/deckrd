@@ -54,6 +54,8 @@ unset _SCRIPT_DIR
 . "${DECKRD_LIB_DIR}/validate-env.lib.sh"
 . "${DECKRD_LIB_DIR}/utils.lib.sh"
 . "${DECKRD_LIB_DIR}/args.lib.sh"
+. "${DECKRD_LIB_DIR}/frontmatter.lib.sh"
+. "${DECKRD_LIB_DIR}/module-decl.lib.sh"
 
 # ============================================================================
 # Script Configuration
@@ -72,10 +74,13 @@ unset _SCRIPT_DIR
 # @description SESSION_FILE uses ${VAR:-default} to allow external override (mock)
 # @description OPTIONS / OPTIONS_SET are not declared here: args_init (libs/args.lib.sh) owns them
 # @description SUBCOMMAND is reset on every call
+# @description AWK is unset: frontmatter.lib.sh runs "${AWK:-awk}" as one command name,
+#   so an inherited value such as "gawk --posix" would fail every read; this script always uses awk
 init_vars() {
+  unset AWK
   SESSION_FILE="${SESSION_FILE:-${DECKRD_LOCAL_DATA}/session.json}"
   SUBDIRS=("requirements" "specifications" "implementation" "tasks" "workspaces")
-  MODULE_META_SUBPATH="workspaces/module/module.md"
+  MODULE_META_SUBPATH="$MODULE_FILE_SUFFIX"
   SUBCOMMAND=""
 }
 
@@ -252,43 +257,24 @@ derive_test_scope() {
 }
 
 ##
-# @description Read test_scope from the YAML frontmatter of a module.md
-# @arg $1 string Path to a module.md file
-# @stdout The declared test scope, or nothing when there is no frontmatter test_scope
-# @exitcode 0 Always
-_read_frontmatter_scope() {
-  awk '
-    NR == 1 && $0 != "---" { exit }
-    NR > 1 && $0 == "---" { exit }
-    NR > 1 && /^test_scope:/ {
-      value = $0
-      sub(/^test_scope:[[:space:]]*/, "", value)
-      gsub(/[[:space:]]+$/, "", value)
-      # Unwrap only a matching pair of quotes; an unbalanced quote stays in the value
-      if (length(value) >= 2 && substr(value, 1, 1) == substr(value, length(value), 1) && (substr(value, 1, 1) == "\"" || substr(value, 1, 1) == "\047")) {
-        unwrapped = substr(value, 2, length(value) - 2)
-        # Empty quotes are a declared-but-invalid value, not an undeclared field:
-        # keep the quotes so the caller format check rejects it loudly
-        if (unwrapped != "") { value = unwrapped }
-      }
-      print value
-      exit
-    }
-  ' "$1"
-}
-
-##
 # @description List the test scopes already declared by existing modules
-# @description Reads test_scope from the frontmatter of ${DECKRD_DOCS_DIR}/*/*/workspaces/module/module.md
+# @description Reads test_scope from the frontmatter of ${DECKRD_DOCS_DIR}/*/*/${MODULE_META_SUBPATH}
 # @stdout One line per declared scope: <test_scope><TAB><path relative to DECKRD_DOCS_DIR>
-# @exitcode 0 Always (no module.md means no output)
+# @stderr Error message when a module.md cannot be read
+# @exitcode 0 Success (no module.md means no output)
+# @exitcode 1 A module.md cannot be read
 collect_declared_scopes() {
   local module_file scope
 
   for module_file in "${DECKRD_DOCS_DIR}"/*/*/"${MODULE_META_SUBPATH}"; do
     # nullglob is not set: an unmatched glob stays as a literal path
     [[ -f $module_file   ]] || continue
-    scope=$(_read_frontmatter_scope "$module_file")
+    # A failed read must not pass as "no test_scope declared": that would let a
+    # duplicate scope through
+    scope=$(fm_read_scalar "$module_file" test_scope) || {
+      echo "Error: cannot read module declaration: ${module_file}" >&2
+      return 1
+    }
     [[ -n $scope   ]] || continue
     printf '%s\t%s\n' "$scope" "${module_file#"${DECKRD_DOCS_DIR}"/}"
   done
@@ -300,12 +286,47 @@ collect_declared_scopes() {
 # @description Read the test scope a module already declares in its own module.md
 # @arg $1 string Normalized module path (namespace/module)
 # @stdout The declared test scope, or nothing when module.md or its test_scope is absent
-# @exitcode 0 Always (an absent declaration is not an error)
+# @stderr Error message when module.md exists but cannot be read
+# @exitcode 0 Success (an absent declaration is not an error)
+# @exitcode 1 module.md cannot be read
 read_declared_scope() {
-  local module_file="${DECKRD_DOCS_DIR}/$1/${MODULE_META_SUBPATH}"
+  module_decl_file_of "$DECKRD_DOCS_DIR" "$1"
+  local module_file="$_MODULE_FILE"
 
   [[ -f $module_file   ]] || return 0
-  _read_frontmatter_scope "$module_file"
+  fm_read_scalar "$module_file" test_scope || {
+    echo "Error: cannot read module declaration: ${module_file}" >&2
+    return 1
+  }
+}
+
+##
+# @description Validate an explicitly given test scope for a module
+# @description Rejects a malformed scope, and a scope differing from the one the module already declares
+# @arg $1 string Normalized module path (namespace/module)
+# @arg $2 string Explicit test scope (non-empty)
+# @stderr Error message if the scope is malformed or differs from the declared one,
+#         or if the module's own module.md cannot be read
+# @exitcode 0 The explicit scope is acceptable (conflicts with other modules are not checked here)
+# @exitcode 1 Malformed scope, different declared scope, or an unreadable module.md
+_validate_explicit_scope() {
+  local path="$1"
+  local explicit="$2"
+  local own_scope
+
+  if [[ ! $explicit =~ ^[A-Z0-9]{2,4}$   ]]; then
+    echo "Error: invalid test scope '${explicit}'" >&2
+    echo "  A test scope must be 2-4 uppercase letters or digits (e.g. NOR)." >&2
+    return 1
+  fi
+  # Rewriting a declared scope would invalidate every test ID already using it
+  own_scope=$(read_declared_scope "$path") || return 1
+  if [[ -n $own_scope && $own_scope != "$explicit"   ]]; then
+    echo "Error: module '${path}' already declares test scope '${own_scope}'" >&2
+    echo "  given explicit scope: '${explicit}'" >&2
+    echo "  Edit module.md directly to change it; every existing test ID becomes invalid." >&2
+    return 1
+  fi
 }
 
 ##
@@ -315,34 +336,24 @@ read_declared_scope() {
 # @arg $1 string Normalized module path (namespace/module)
 # @arg $2 string Explicit test scope (optional, may be empty)
 # @stdout The resolved scope (uppercase alphanumeric, 2-4 characters)
-# @stderr Error message if the explicit scope is malformed, underivable, or already taken
+# @stderr Error message if the explicit scope is malformed, underivable, or already taken,
+#         or if a module.md cannot be read
 # @exitcode 0 Success
-# @exitcode 1 Malformed explicit scope, underivable scope, or conflict with an existing module
+# @exitcode 1 Malformed explicit scope, underivable scope, conflict with an existing module,
+#           or an unreadable module.md
 resolve_test_scope() {
   local path="$1"
   local explicit="${2:-}"
-  local candidate declared scope owner own_scope
+  local candidate declared scope owner
 
   if [[ -n $explicit   ]]; then
-    if [[ ! $explicit =~ ^[A-Z0-9]{2,4}$   ]]; then
-      echo "Error: invalid test scope '${explicit}'" >&2
-      echo "  A test scope must be 2-4 uppercase letters or digits (e.g. NOR)." >&2
-      return 1
-    fi
-    # Rewriting a declared scope would invalidate every test ID already using it
-    own_scope=$(read_declared_scope "$path")
-    if [[ -n $own_scope && $own_scope != "$explicit"     ]]; then
-      echo "Error: module '${path}' already declares test scope '${own_scope}'" >&2
-      echo "  given explicit scope: '${explicit}'" >&2
-      echo "  Edit module.md directly to change it; every existing test ID becomes invalid." >&2
-      return 1
-    fi
+    _validate_explicit_scope "$path" "$explicit" || return 1
     candidate="$explicit"
   else
     candidate=$(derive_test_scope "${path#*/}") || return 1
   fi
 
-  declared=$(collect_declared_scopes)
+  declared=$(collect_declared_scopes) || return 1
   while IFS=$'\t' read -r scope owner; do
     # The module's own declaration is not a conflict (--force re-initialization)
     [[ $owner != "${path}/${MODULE_META_SUBPATH}"   ]] || continue
@@ -401,8 +412,8 @@ create_module_meta() {
   local path="$1"
   local scope="$2"
   local module="${path#*/}"
-  local base="${DECKRD_DOCS_DIR}/${path}"
-  local meta_file="${base}/${MODULE_META_SUBPATH}"
+  module_decl_file_of "$DECKRD_DOCS_DIR" "$path"
+  local meta_file="$_MODULE_FILE"
 
   if [[ -f $meta_file   ]]; then
     echo "Module meta: ${meta_file} (kept existing test_scope)"
@@ -589,7 +600,7 @@ main() {
   # The module's own module.md is the source of truth when no scope is given explicitly
   scope="${OPTIONS[test_scope]}"
   if [[ -z $scope   ]]; then
-    scope=$(read_declared_scope "$normalized")
+    scope=$(read_declared_scope "$normalized") || exit 1
   fi
 
   scope=$(resolve_test_scope "$normalized" "$scope") || exit 1

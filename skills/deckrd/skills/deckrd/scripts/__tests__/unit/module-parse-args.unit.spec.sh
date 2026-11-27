@@ -225,6 +225,13 @@ Describe "T-CLI-MPA: module.sh: main argument parsing"
       The line 8 of stdout should equal "show_help=false"
       The line 9 of stdout should equal "help="
     End
+
+    It "[Normal] T-CLI-MPA-28: module.sh source -> the shared lib functions are defined"
+      When call declare -F fm_read_scalar module_decl_file_of
+      The status should equal 0
+      The stdout should include "fm_read_scalar"
+      The stdout should include "module_decl_file_of"
+    End
   End
 
   Describe "When: 異常系"
@@ -279,6 +286,18 @@ Describe "T-CLI-MPA: module.sh: main argument parsing"
 
     It "[Error] T-CLI-MPA-19: module.sh source -> no PARSE_ARGS_ERROR / OPTIONS[help] references left"
       When call grep -cE 'PARSE_ARGS_ERROR|OPTIONS\[help\]' "$SCRIPT"
+      The status should equal 1
+      The stdout should equal 0
+    End
+
+    It "[Error] T-CLI-MPA-29: module.sh source -> no local frontmatter reader (the library's is used)"
+      When call grep -c '_read_frontmatter_scope' "$SCRIPT"
+      The status should equal 1
+      The stdout should equal 0
+    End
+
+    It "[Error] T-CLI-MPA-30: module.sh source -> no literal module.md layout (the library's is used)"
+      When call grep -c 'MODULE_META_SUBPATH="workspaces' "$SCRIPT"
       The status should equal 1
       The stdout should equal 0
     End
