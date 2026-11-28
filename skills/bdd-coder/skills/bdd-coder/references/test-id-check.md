@@ -90,7 +90,7 @@ t.Run("T-CFG-GI-03-"+tc.name, ...)
 - A case keyword needs a title literal right after it. Anything else is error 1.
   A wrapped line and a variable title are therefore reported.
 
-Every error names the file and the line. The checker reports all of them and exits 1.
+Every error names the file and the line. The checker exits 1 after it reports all of them.
 It exits 0 with a count of files, group IDs and case IDs when there is none.
 
 ## What is not checked
@@ -110,7 +110,7 @@ The git toplevel of the current directory.
 The current directory itself is scanned outside a git repository, or when git is not installed.
 Override with `TEST_ID_CHECK_ROOT`; git is then not called. No module declaration is read.
 
-Any other git failure, such as `detected dubious ownership`, runs no check and exits 1.
+Any other git failure, such as `detected dubious ownership`, exits 1 and runs no check.
 The error is one line: `Error: cannot find the git toplevel: <first line of the git message>`.
 
 Hidden directories and `node_modules` are not listed.

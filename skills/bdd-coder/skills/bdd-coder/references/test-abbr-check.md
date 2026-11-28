@@ -39,7 +39,7 @@ It fails when:
 - No abbreviation is found
 
 The error names the abbreviation and the declarations that hold it.
-All duplicates are reported, and the script exits 1.
+The script exits 1 after it reports all duplicates.
 It exits 0 with a count of abbreviations and declarations when there is no error.
 
 The tables are not compared with the tests.
@@ -51,5 +51,5 @@ The current directory itself is scanned outside a git repository, or when git is
 Override with `TEST_ID_CHECK_ROOT`; git is then not called.
 Module declarations are read from `docs/.deckrd` (override with `MODULE_DOCS_SUBDIR`).
 
-Any other git failure, such as `detected dubious ownership`, runs no check and exits 1.
+Any other git failure, such as `detected dubious ownership`, exits 1 and runs no check.
 The error is one line: `Error: cannot find the git toplevel: <first line of the git message>`.
