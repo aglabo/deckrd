@@ -31,6 +31,7 @@ bdd-coder のテスト ID 検査スクリプト `check-test-ids.sh` と、その
 | `DII`  | test-id.lib.sh の `declared_ids_init`                   |
 | `FLR`  | check-test-ids.sh の 0 件の言語と、列挙・読み込みの失敗 |
 | `GRR`  | test-id.lib.sh の `group_id_reset`                      |
+| `LBR`  | test-id.lib.sh の `loop_block_reset`                    |
 | `LNG`  | 言語プラグインのファイル名と行の読み方                  |
 | `LST`  | check-test-ids.sh のファイル列挙とスキャンルート        |
 | `PDA`  | dart プラグインの `check_dart_line`                     |
@@ -42,3 +43,4 @@ bdd-coder のテスト ID 検査スクリプト `check-test-ids.sh` と、その
 | `RER`  | report.lib.sh の `report_error`                         |
 | `RFL`  | file-reader.lib.sh の `read_file_lines`                 |
 | `TIP`  | test-id.lib.sh の `parse_title_id`                      |
+| `TLB`  | test-id.lib.sh の `track_loop_block`                    |
