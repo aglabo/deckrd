@@ -1,7 +1,7 @@
 ---
 title: "Deckrd Rule: テストコード規約 (汎用)"
 description: "テストの階層・テーブル駆動・テストデータ・テスト ID・ファイル構成の規約"
-version: 3.1.1
+version: 3.1.2
 ---
 
 <!-- textlint-disable
@@ -141,7 +141,7 @@ group "GlobalConfig"                     -- 対象
 - **ケース名の先頭に必ずテストケース ID を埋め込む。** 分類 prefix の直後に置く
 - **宣言は 1 行で書く。** 行の先頭にキーワード、その直後に題名の文字列リテラルを置き、題名に ID を含める。
   例外として、`ts`・`js` の `it(` / `test(` と、`dart` の `test(` / `testWidgets(` に限り、題名の文字列リテラルを次の行から始めてよい
-  （条件は bdd-coder の `references/test-id-check.md` が定める）
+  （条件は bdd-coder の `references/test-id-check-syntax.md` が定める）
 - `it.each` などの派生形は使わず、表駆動はループと枝番で書く。派生形の ID は機械検査の対象外となる
 
 ```text
@@ -178,7 +178,7 @@ Bad — ID 全体が変数 (ソースから ID を取り出せない)
 - テストケース ID は、末尾の `-` を除いた部分が連番（と枝番）で終わる。
   `-` の直後の英数字と `-` は ID の一部として読まれる
 - 検査が認識できるループの書き方には制限がある
-  （bdd-coder の `references/test-id-check.md` の「Loop blocks」と「Loop branch check」が定める）
+  （bdd-coder の `references/test-id-check-syntax.md` の「Loop blocks」と「Loop branch check」が定める）
 
 同一対象を複数のレイヤで検証する場合は、レイヤごとに別の略語を割り当てる
 （例: unit を `GI`、integration を `GII`、functional を `GIF`）。
