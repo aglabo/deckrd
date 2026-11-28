@@ -4,10 +4,10 @@ description: >
   Review and simplify comments in existing code (applied only after the user approves a diff).
   - Use for: "review the comments", "コメントをレビューして", "コメントを整理して", "clean up comments"
   - Changes comments only: never code, never commits
+license: MIT
 metadata:
   author: aglabo
-  version: 0.9.1
-  license: MIT
+  version: 0.10.0
 argument-hint: "[--branch [<base>] | <paths...>]"
 ---
 

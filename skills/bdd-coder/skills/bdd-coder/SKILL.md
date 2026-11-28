@@ -5,37 +5,20 @@ description: >
   - Use for any coding instruction: natural language, Task ID (T01-02), or a task list
   - One task per delegation; a range (T01-01..03) or all Scenarios of a Target (T01-*) runs its tasks one by one
   - Never commits or pushes
+license: MIT
 metadata:
   author: aglabo
-  version: 0.9.1
-  license: MIT
+  version: 0.10.0
 ---
 
 <!-- textlint-disable
-  ja-technical-writing/sentence-length -->
+  ja-technical-writing/sentence-length,
+  ja-technical-writing/max-comma -->
 
 # bdd-coder
 
-Implements tasks using strict BDD: Red → Green → Refactor.
-Breaks the input into a task list via tasklist-builder when needed,
-generates a checklist for one task via checklist-builder,
-then delegates BDD implementation to bdd-coder.
-
-Use it for ANY coding instruction: natural language, explicit Task ID, or custom task list.
-Examples:
-
-- "implement X"
-- "add function Y"
-- "create Z"
-- "write code for W"
-- "implement task T01-02"
-- "run bdd-coder"
-- "start BDD implementation"
-
-It implements only; it does not commit or push (no git operations).
-One task per delegation. A range or an all-under-parent selection runs several tasks
-in one invocation, one after another ([Multi-task run](#multi-task-run)).
-The dispatch unit for the bdd-coder agent is one Target; each Case keeps its own RGR cycle.
+Orchestrates strict BDD (Red → Green → Refactor) for any coding instruction:
+resolve one task, build its checklist, delegate the implementation, verify, and write the results back.
 
 ## Skill Announcement (REQUIRED)
 
@@ -47,32 +30,35 @@ No announcement = violation. Restart with announcement.
 
 ## Before You Begin (REQUIRED)
 
-Raise ALL questions before writing any code. Ask NOW if any of the following are unclear:
+Before Phase 0, ask all questions in one message if any of these are unclear:
+task scope or acceptance criteria, specs, implementation approach, or dependencies.
 
-- Task scope or acceptance criteria
-- Ambiguous specs
-- Implementation approach or dependencies
-
-Once Phase 1 (Tasklist Resolve + Checklist Build) starts, stop asking scope questions.
-Choosing which task-list item to run (Phase 1a) is not a scope question and is still asked there.
+Once Phase 1 starts, stop asking scope questions.
+Choosing which task-list item to run is not a scope question and is asked in Phase 1a.
 
 ## Execution Flow
 
-bdd-coder is an orchestration layer with the following fixed phase order:
+Phases run in this order. No skipping.
+Read [workflow.md](references/workflow.md) first, then **Read a phase's file before you enter it**.
+Do not run a phase from memory.
 
-| Phase | Name                               | Agent                                | What happens                                                                                  |
-| ----- | ---------------------------------- | ------------------------------------ | --------------------------------------------------------------------------------------------- |
-| 0     | Environment                        | explore-agent                        | Detect language, test framework, lint, type-check setup                                       |
-| 1     | Tasklist Resolve + Checklist Build | tasklist-builder + checklist-builder | Build or restore the task list, pick one item, generate its checklist, save the session entry |
-| 2     | Dependency Map                     | bdd-coder                            | Classify checklist Targets into serial / parallel groups                                      |
-| 3     | bdd-coder Dispatch                 | bdd-coder                            | Spawn bdd-coder per Target (split only large Targets); collect status reports                 |
-| 4     | Quality Gate                       | bdd-coder + code-reviewer            | Global lint + type-check + all tests pass, then code review                                   |
-| 5     | Done Check                         | bdd-coder                            | Confirm all checklist items complete; write back tasks.md, task list, session                 |
-| 6     | Session End                        | bdd-coder                            | Reset state; remind user to commit manually                                                   |
+| Phase | Name                               | Agent                                | Procedure                                                        |
+| ----- | ---------------------------------- | ------------------------------------ | ---------------------------------------------------------------- |
+| 0     | Environment                        | explore-agent                        | [workflow.md](references/workflow.md)                            |
+| 1     | Tasklist Resolve + Checklist Build | tasklist-builder + checklist-builder | [tasklist-checklist.md](references/phases/tasklist-checklist.md) |
+| 2     | Dependency Map                     | (this skill)                         | [workflow.md](references/workflow.md)                            |
+| 3     | bdd-coder Dispatch                 | bdd-coder                            | [dispatch.md](references/phases/dispatch.md)                     |
+| 4     | Quality Gate                       | code-reviewer                        | [quality-gate.md](references/phases/quality-gate.md)             |
+| 5     | Done Check + Write-back            | (this skill)                         | [write-back.md](references/phases/write-back.md)                 |
+| 6     | Session End                        | (this skill)                         | [workflow.md](references/workflow.md)                            |
 
-### Roles and subagents
+- Range (`T01-01..03`) or `T01-*`: [multi-task-run.md](references/phases/multi-task-run.md)
+- Writing the session entry, or `--resume`: [session-resume.md](references/session-resume.md).
+  Do not write `session.json` from memory.
 
-The procedure of each agent lives in a Role file under [references/roles/](references/roles/):
+## Spawning a Role
+
+Each agent's procedure is a Role file:
 
 - explore-agent → [explorer.md](references/roles/explorer.md)
 - tasklist-builder → [tasklist-builder.md](references/roles/tasklist-builder.md)
@@ -80,463 +66,32 @@ The procedure of each agent lives in a Role file under [references/roles/](refer
 - bdd-coder → [implementer.md](references/roles/implementer.md)
 - code-reviewer → [code-reviewer.md](references/roles/code-reviewer.md)
 
-Test IDs are checked with
-`bash "<BDD_CODER_SKILL_DIR>/scripts/check-test-ids.sh" --lang <lang>[,<lang>...]`,
-and the target abbreviations with `check-test-abbrs.sh` ([test-abbr-check.md](references/test-abbr-check.md)).
-Pass the languages of the target repository's tests: `sh` / `dart` / `ts` / `js` / `go`.
-Without `--lang`, only `sh` is checked. See [test-id-check.md](references/test-id-check.md).
-
-On every "Spawn", also pass two absolute paths:
+On every "Spawn", also pass two absolute paths. The Role resolves every path from them (`temp` is `<local_dir>/temp`).
 
 - `skill_dir`: this skill directory, the one that holds this `SKILL.md`.
-- `local_dir`: the value of `DECKRD_LOCAL_DATA` (`.local/deckrd` under the project root, as an absolute path).
+- `local_dir`: the value of `DECKRD_LOCAL_DATA` (`.local/deckrd` under the project root).
 
-The Role resolves every path from these two values. `temp` is always `<local_dir>/temp`.
+If you can start a subagent, hand it these paths and the Role file. If you cannot, follow the same Role file
+yourself, step by step.
 
-Wherever a phase says "Spawn", do this:
+## Invariants
 
-- If you can start a subagent, hand it `skill_dir`, `local_dir` and the Role file, and let it run.
-- If you cannot, follow the same Role file yourself with the same two values, step by step.
+- One task per delegation. Several tasks in one invocation run one after another, one delegation each.
+- The dispatch unit is one Target; each Case keeps its own RED → GREEN → REFACTOR cycle.
+- All tests MUST pass at Phase 4. No exceptions.
+- Never commit or push. The user commits manually.
+- Branches are prepared by the caller: one task branch per Target (`T-XX`), cut from the integration branch.
 
-Gate Rule: phases must run in order. No skipping.
+## Test ID checks
 
-All tests MUST pass at Phase 4. No exceptions.
-Do NOT commit after completion — user commits manually.
-Do NOT hand more than one task to one delegation.
-Several tasks in one invocation run one after another, one delegation each ([Multi-task run](#multi-task-run)).
-Branches are prepared by the caller: one task branch per Target (T-XX), cut from the integration branch.
-
-### Phase 1: Tasklist Resolve + Checklist Build
-
-Route the input first. Only natural language, Target IDs, and the range / all-under-parent forms go through tasklist-builder.
-
-| Input                             | Phase 1a: tasklist-builder   | Phase 1b: checklist-builder input                    |
-| --------------------------------- | ---------------------------- | ---------------------------------------------------- |
-| Natural-language                  | Run                          | `Handoff` of the selected item                       |
-| Target ID (e.g. `T01`)            | Run                          | `Handoff` of the selected item (`T01-02`)            |
-| Range (e.g. `T01-01..03`)         | Run with the Target ID `T01` | `Handoff` of each item in the range, in order        |
-| All under a Target (e.g. `T01-*`) | Run with the Target ID `T01` | `Handoff` of each `pending` item, in order           |
-| Scenario ID (e.g. `T01-02`)       | Skip                         | The Task ID as given                                 |
-| `--tasklist <path> [--item L-02]` | Skip                         | `Handoff` of the given item, or first `pending`      |
-| `--checklist <path>`              | Skip                         | Skip checklist-builder; use the file                 |
-| `--resume`                        | Skip                         | Restored from `session.json` (see [Resume](#resume)) |
-
-The range and all-under-parent forms run several tasks one by one: see [Multi-task run](#multi-task-run).
-Quote `T01-*` in a shell so that it is not expanded as a glob.
-
-#### Session entry
-
-The skill keeps the work in progress in the `bdd_coder` entry of `<local_dir>/session.json`,
-so an interrupted session can be resumed. Stored paths start with the `local_dir` value (`<local_dir>` below).
-
-```json
-{
-  "bdd_coder": {
-    "tasklist": "<local_dir>/temp/tasklist/deckrd/libs/T-01.tasklist.md",
-    "item": "L-02",
-    "checklist": "<local_dir>/temp/tasks/parse-config-calm-checklist.md",
-    "queue": null,
-    "index": null,
-    "status": "in-progress",
-    "updated_at": "2026-11-09T00:00:00Z"
-  }
-}
+```bash
+bash "<BDD_CODER_SKILL_DIR>/scripts/check-test-ids.sh" --lang <lang>[,<lang>...]
 ```
 
-| Field        | Value                                                                                                          |
-| ------------ | -------------------------------------------------------------------------------------------------------------- |
-| `tasklist`   | TASKLIST PATH, or `null` when Phase 1 used no task list                                                        |
-| `item`       | Item ID selected in Phase 1a (in a multi-task run, the item being run), or `null` without a task list          |
-| `checklist`  | CHECKLIST PATH, or `null` until Phase 1b returns it                                                            |
-| `queue`      | Multi-task run only: the item IDs to run, in order (`["L-01","L-02","L-03"]`). `null` otherwise                |
-| `index`      | Multi-task run only: the position in `queue` of the item being run (0-based). `null` otherwise                 |
-| `status`     | `in-progress` from Phase 1 on; `done` when Phase 5 completes every case (every queue item in a multi-task run) |
-| `updated_at` | UTC timestamp of the last write (`date -u +"%Y-%m-%dT%H:%M:%SZ"`)                                              |
+`<lang>` is each language of the target repository's tests (`sh` / `dart` / `ts` / `js` / `go`);
+without `--lang`, only `sh` is checked. See [test-id-check.md](references/test-id-check.md).
+Check the target abbreviations with `check-test-abbrs.sh` ([test-abbr-check.md](references/test-abbr-check.md)).
 
-Rules:
+## Related
 
-- Only this skill (the orchestrator) reads or writes `bdd_coder`. tasklist-builder, checklist-builder,
-  and the bdd-coder agent never see it (Phase 3: "Do NOT pass ... session.json").
-- Replace the `bdd_coder` value as a whole and leave every other key untouched.
-  Write through a temporary file, as `module.sh` does:
-
-  ```bash
-  jq --arg tl "$TASKLIST" --arg item "$ITEM" --arg cl "$CHECKLIST" --arg st "$STATUS" \
-     --argjson queue "$QUEUE" --argjson index "$INDEX" \
-     --arg now "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
-     'def nz: if . == "" then null else . end;
-      .bdd_coder = {tasklist: ($tl | nz), item: ($item | nz), checklist: ($cl | nz),
-                    queue: $queue, index: $index,
-                    status: $st, updated_at: $now}' \
-     <local_dir>/session.json > <local_dir>/session.json.tmp &&
-    mv <local_dir>/session.json.tmp <local_dir>/session.json
-  ```
-
-  Pass an empty string for a `null` string field. Pass `null` for `QUEUE` and `INDEX` in a single-task run,
-  and a JSON array (`'["L-01","L-02"]'`) and a number in a multi-task run. Do not use `select(. != "")` instead of `nz`:
-  an empty value inside `{...}` makes jq output nothing, and the `mv` then empties `session.json`.
-  `jaq` accepts the same filter.
-- If `<local_dir>/session.json` does not exist, do not create it. Warn that the session cannot be
-  saved (`/deckrd init` has not run) and continue without it.
-
-| When                                    | Write                                                                                                    |
-| --------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Phase 1a: an item is selected           | `tasklist`, `item`, `checklist: null`, `status: in-progress`                                             |
-| Phase 1b: CHECKLIST PATH is returned    | Keep `tasklist` / `item` (or `null`), set `checklist`, `status: in-progress`                             |
-| Phase 5 Step 4c: every case is complete | `status: done` (single-task run), or move to the next queue item (see [Multi-task run](#multi-task-run)) |
-
-A session that ends early (`BLOCKED`, abort) keeps `status: in-progress`, so it can be resumed.
-
-#### Resume
-
-`--resume` continues the work recorded in `bdd_coder`:
-
-| `bdd_coder` state                                         | Action                                                                                  |
-| --------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Missing, or `status: done`                                | Report "nothing to resume" and end the session (Phase 6)                                |
-| `queue` set                                               | Continue the multi-task run from `queue[index]` (see [Multi-task run](#multi-task-run)) |
-| `checklist` set and the file exists                       | Use it as `--checklist`; restore TASKLIST PATH and the item                             |
-| `checklist` is `null`, `tasklist` set and the file exists | Run as `--tasklist <tasklist> --item <item>`                                            |
-| A recorded file does not exist                            | Report the missing path and end the session. Do not rebuild it                          |
-
-A Target ID or `--tasklist` also restores the selected item. After Phase 1a (or after reading `--tasklist`),
-check the `bdd_coder` entry against these conditions:
-
-- `bdd_coder.tasklist` equals TASKLIST PATH
-- `status` is `in-progress`
-- the recorded `item` is still `pending` in the task list
-- `--item` is not given, or names the recorded `item`
-
-If all of them hold, select that item without asking and tell the user which item was restored.
-Otherwise select the item as usual. An explicit `--item` always wins over the recorded item.
-
-Run Phase 1b for the restored item even when the recorded checklist still exists.
-tasks.md may have changed since the checklist was built (a Case added or changed in the Scenario),
-and reconciliation keeps the item's ID and its `pending` status, so the old checklist cannot be trusted.
-Only `--resume` reuses the recorded checklist as is. If tasks.md has changed, run the Target ID instead of `--resume`.
-
-#### Phase 1a: Tasklist Build
-
-Spawn **tasklist-builder** with `skill_dir`, `local_dir`, `instruction`, and `tasks_md` for a Target ID.
-Role: [roles/tasklist-builder.md](references/roles/tasklist-builder.md).
-
-| Returned status              | Handling                                                                   |
-| ---------------------------- | -------------------------------------------------------------------------- |
-| `questions`                  | Ask the user the returned question, then re-run with `answers`             |
-| `invalid-input`              | Report `DETAIL` to the user and end the session (Phase 6)                  |
-| `created`/`reused`/`updated` | Select one item as below, and keep the task list path as **TASKLIST PATH** |
-
-Select the item:
-
-- Exactly one `pending` item → use it without asking.
-- Two or more `pending` items → show the list (ID / Title / Status) and ask which one to run.
-  Default: the first `pending` item whose `Depends-on` items are all `done`.
-- `needs-split`, `done`, and `removed` items cannot be selected.
-  For `needs-split`, tell the user to split the Case in tasks.md via `/deckrd tasks`,
-  then run the same Target ID again. tasklist-builder reconciles the list with tasks.md
-  (`STATUS: updated`) and keeps the `done` items.
-- On `updated`, show the `CHANGED` line to the user before selecting.
-- No `pending` item → report it and end the session (Phase 6).
-
-After selecting the item, write the [session entry](#session-entry).
-
-Pass **only the selected item's `Handoff`** to Phase 1b.
-Never pass the task list file to checklist-builder or bdd-coder: it lists other tasks.
-The rule "1 delegation = 1 task" (`docs/.deckrd/rules/deckrd-rule-bdd-cycle.md`)
-forbids handing over material that contains other tasks.
-The task list is orchestrator state only. Shortcuts such as "pass the task list and say
-'do L-02 only'" break this rule: the agent sees the other items and may implement them.
-
-Output (under `<local_dir>/temp`):
-
-- Target ID: `<local_dir>/temp/tasklist/<ns>/<module>/T-XX.tasklist.md`
-  (for example `<local_dir>/temp/tasklist/deckrd/libs/T-01.tasklist.md`).
-  Re-running the same Target ID reuses this file (`reused` / `updated`); it is never created twice.
-- Natural language: `<local_dir>/temp/tasklist/<active module>/<name>.tasklist.md`
-- Natural language, no active module: `<local_dir>/temp/tasklist/<name>.tasklist.md`
-
-#### Multi-task run
-
-A range (`T01-01..03`) or an all-under-parent selection (`T01-*`) runs several Scenarios in one invocation,
-one after another. Each Scenario is still one task and one delegation: the "1 delegation = 1 task" rule holds.
-
-Forms (the Scenario numbers are the two-digit `YY` of `T-XX-YY`):
-
-| Form               | Pattern                              | Selects                                                                            |
-| ------------------ | ------------------------------------ | ---------------------------------------------------------------------------------- |
-| Range              | `^T-?[0-9]{2}-[0-9]{2}\.\.[0-9]{2}$` | Scenarios `YY` to `ZZ` of the Target (`T01-01..03` = `T01-01`, `T01-02`, `T01-03`) |
-| All under a Target | `^T-?[0-9]{2}-\*$`                   | Every Scenario of the Target                                                       |
-
-Resolve the selection before any code is written:
-
-1. Run Phase 1a with the Target ID (`T01`). The task list gives one item per Scenario (Handoff `T01-YY`).
-2. Pick the items by `Handoff`, in the order of the Scenario numbers. For `T01-*`, pick every item.
-3. Check the selection. If any check fails, report it and end the session (Phase 6). Nothing runs:
-
-   | Condition                                            | Error                                                                |
-   | ---------------------------------------------------- | -------------------------------------------------------------------- |
-   | End number is less than the start number             | Bad range: the end is before the start                               |
-   | A Scenario in the range has no item in the task list | The Scenario does not exist in `tasks.md`                            |
-   | A selected item is `needs-split` or `removed`        | Name the item; for `needs-split`, split the Case via `/deckrd tasks` |
-
-4. Drop the `done` items from the run and tell the user which ones were skipped.
-   If no item is left, report "nothing to run" and end the session (Phase 6).
-5. Write the session entry with `queue` (the item IDs left, in order), `index: 0`, and `item: queue[0]`.
-
-Run the queue:
-
-- Phase 0 runs once. For each item, run Phase 1b to Phase 5 as a full pass, with that item's `Handoff` only.
-  Phase 4 (quality gate and code review) and the Phase 5 write-backs belong to the item.
-- After an item completes (Phase 5 Step 1: every case `DONE` / `DONE_WITH_CONCERNS`, and Phase 4 passed),
-  set `index` to the next position and `item` to the next item, then start the next pass.
-  After the last item, set `status: done` and end the session (Phase 6).
-- **Fail-fast.** Stop at the first item that does not complete: a `BLOCKED` report (Phase 3 or Phase 4),
-  a failed quality gate, or a case that is not completed. Do not run the remaining items. Do not offer "skip":
-  later Scenarios may depend on the failed one.
-- Also stop before the next item when `git status --short` / `git diff --stat` shows files that this item should not touch.
-- On a stop, keep `status: in-progress`, `queue`, and `index` at the stopped item.
-  Report the stopped item and its cause, the completed items, and the items not run.
-  Tell the user to fix the cause and run `/bdd-coder:bdd-coder --resume`, which continues from `queue[index]`.
-  Run Phase 1b again for that item (see [Resume](#resume)).
-- Never commit or push, not even between items.
-  The changes of all items stay in the working tree for the user to review and commit.
-
-#### Phase 1b: Checklist Build
-
-Spawn **checklist-builder** with `skill_dir`, `local_dir`, and the routed input.
-Role: [roles/checklist-builder.md](references/roles/checklist-builder.md).
-
-| Input type            | checklist-builder behavior                                    |
-| --------------------- | ------------------------------------------------------------- |
-| Natural-language      | Analyze instruction, decompose into BDD tasks, generate file  |
-| Task ID (e.g. T01-02) | Read tasks.md entry, expand into BDD checklist, generate file |
-| `--checklist <path>`  | Skip checklist-builder, use the specified existing file       |
-
-Output: `<local_dir>/temp/tasks/<slug>-<adjective>-checklist.md`
-
-When the checklist path is returned (or given by `--checklist`), keep it as **CHECKLIST PATH**
-and write the [session entry](#session-entry).
-
-If checklist-builder reports `BLOCKED` (a Task ID's Case lists more than one input):
-
-1. Do NOT proceed to Phase 2 — no checklist was written.
-2. Report the `BLOCKED` line to the user verbatim, with the remediation:
-   split the Case in tasks.md via `/deckrd tasks`, then re-run bdd-coder with the Task ID.
-3. End the session (Phase 6). Do NOT expand the inputs yourself or fall back to a natural-language checklist.
-
-### Phase 3: bdd-coder Dispatch
-
-**The dispatch unit is a Target (`T-XX`).** Spawn one bdd-coder per Target. It runs every Case of that Target
-in order, and each Case keeps its own RED → GREEN → REFACTOR cycle (Cases are never merged into one cycle).
-The role file, checklist, ENV PROFILE and target files are read once per Target instead of once per Case.
-
-Split a Target across several bdd-coder instances only when it is large:
-30 or more Cases, or target files plus checklist near half the context window.
-Split at a Case boundary, Scenario first. Steps: [workflow.md](references/workflow.md) — Phase 3 (Target の分割)
-
-Pass the following context to each bdd-coder instance:
-
-| Item              | Content                                                                          |
-| ----------------- | -------------------------------------------------------------------------------- |
-| `skill_dir`       | This skill directory (absolute path)                                             |
-| `local_dir`       | `DECKRD_LOCAL_DATA` (absolute path)                                              |
-| Target ID         | e.g. `T-01` (plus a Case range when the Target is split)                         |
-| Task description  | Full Given/When/Then of the Target's Cases from the checklist                    |
-| Quality gate cmds | Commands table from ENV PROFILE                                                  |
-| Checklist path    | Path to generated checklist file                                                 |
-| `progress_path`   | `<local_dir>/temp/bdd-coder/<scope>/<Target ID>/bdd-todo.md` (one per Target)    |
-| Prior state       | Split parts only: one-line summary of files changed so far. No earlier Case logs |
-
-`<scope>` is the `<ns>/<module>` directory of the task list under `<local_dir>/temp/tasklist/`;
-for a task list with no module it is the task list's file name without `.tasklist.md`.
-
-Do NOT pass: session-wide context, other Targets' info, the full Case logs of finished Cases, or session.json.
-"1 delegation = 1 task" (`docs/.deckrd/rules/deckrd-rule-bdd-cycle.md`) holds with the Target as the task:
-the checklist handed over contains that Target only.
-
-Targets whose write sets do not overlap may run in parallel: each has its own `progress_path`, so progress files never collide.
-Parts of one split Target share its `progress_path` and run one after another.
-
-Each bdd-coder records every finished Case in the `## Case Log` table of its `bdd-todo.md`
-(Case ID / RED / GREEN / REFACTOR, see [implementer.md](references/roles/implementer.md)).
-After the last Case of a Target, the agent runs the Target regression tests and reports `REGRESSION`.
-After each Target, verify the changed files with `git status --short` / `git diff --stat`, not from the self-report.
-
-If bdd-coder reports `BLOCKED`:
-
-1. Collect the blocking issues from the bdd-coder report.
-2. Report to the user with the exact CRITICAL findings and the affected task ID.
-3. In a [Multi-task run](#multi-task-run), stop here (fail-fast): keep the session entry and tell the user to run `--resume`.
-   Otherwise wait for one of the following user instructions:
-   - Fix and retry: user provides guidance → re-run bdd-coder Phase 3–7 for the same task.
-   - Skip task: user decides to defer → mark task as `SKIPPED` and continue with the next task.
-   - Abort session: user stops work → end the session and summarize open blockers.
-
-Do NOT proceed to the next task while any task remains `BLOCKED`.
-
-### Phase 4: Quality Gate
-
-Run the global gates, then the code review. Both must be satisfied before Phase 5.
-
-| Gate       | Must pass                                            |
-| ---------- | ---------------------------------------------------- |
-| Lint       | 0 errors                                             |
-| Type check | 0 errors                                             |
-| Tests      | ALL PASS (with coverage)                             |
-| Review     | code-reviewer returns `PASS` or `PASS_WITH_WARNINGS` |
-
-After the first three gates pass, spawn **code-reviewer ONCE** for the whole session — an
-aggregate review over every file changed in Phase 3, not one invocation per task.
-In a [Multi-task run](#multi-task-run), the session is one item: run Phase 4 once per item, over that item's files.
-
-| Input           | Value                                                                          |
-| --------------- | ------------------------------------------------------------------------------ |
-| `skill_dir`     | This skill directory (absolute path)                                           |
-| `local_dir`     | `DECKRD_LOCAL_DATA` (absolute path)                                            |
-| `task_id`       | The Task ID of this invocation, or `N/A` for multiple tasks                    |
-| `changed_files` | Implementation files from the session scope resolved below                     |
-| `test_files`    | Test files from that same scope, split by the ENV PROFILE test-file convention |
-| `env_profile`   | `<local_dir>/temp/deckrd-work/env-profile.md` (Phase 0 output)                 |
-| `coverage_cmd`  | Coverage command from ENV PROFILE                                              |
-
-**Session scope**, in this order:
-
-1. The union of the `CHANGED_FILES` lists that Phase 3 collected from each bdd-coder.
-2. If those lists are unavailable, every working-tree change minus the SESSION BASELINE
-   captured in Phase 0.
-
-Never send the raw working-tree diff.
-理由と "every working-tree change" の定義: [workflow.md](references/workflow.md) — Phase 4。
-
-The per-task CRAP gate and the Phase 4 CRAP gate are intentionally separate.
-Do not remove either as a duplicate. 理由: [workflow.md](references/workflow.md) — Phase 4。
-
-Checklist items, CRAP thresholds, and failure handling: [workflow.md](references/workflow.md) — Phase 4.
-Role: [roles/code-reviewer.md](references/roles/code-reviewer.md).
-
-The same review is available on demand as `/bdd-coder:bdd-coder-review`; inside this flow it runs here.
-
-#### Where review findings go
-
-| Verdict              | Handling                                                                                                                                                                                            |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `PASS`               | Proceed to Phase 5                                                                                                                                                                                  |
-| `PASS_WITH_WARNINGS` | Proceed to Phase 5 and include the findings in the Step 5 report block. Do NOT retroactively rewrite Phase 3 statuses or `tasks.md` checkboxes — Phase 5's source of truth stays the Phase 3 report |
-| `BLOCKED`            | Do NOT proceed to Phase 5. Present the CRITICAL findings and follow the Phase 3 `BLOCKED` handling (fix and retry / skip / abort)                                                                   |
-
-### Phase 5: Done Check — Task Status Write-back
-
-After all bdd-coder instances in Phase 3 report `DONE` or `DONE_WITH_CONCERNS`,
-and Phase 4 quality gate passes, write the implementation status back to the task files.
-
-#### Step 1: Determine per-case completion status
-
-The source of truth is the **Phase 3 status report table** — not the checkbox state of
-any file. 理由: [workflow.md](references/workflow.md) — Phase 5。
-
-| Phase 3 status                 | Case result                 |
-| ------------------------------ | --------------------------- |
-| `DONE` / `DONE_WITH_CONCERNS`  | completed — check it        |
-| `BLOCKED` / `SKIPPED` / absent | not completed — leave as is |
-
-Checklist-file items (`[T-XX-YY-ZZ-R]`, `-G`, `-F`) may be read as corroboration,
-but MUST NOT override the Phase 3 report: a case reported `DONE` is checked even when
-the checklist file still shows `[ ]`.
-
-#### Step 2: Check case checkboxes in tasks.md (Task ID input only)
-
-If the session was started with a Task ID (e.g. `T01-02`), update the `tasks.md`
-resolved in Phase 1 (`docs/.deckrd/<namespace>/<module>/tasks/tasks.md`):
-
-1. For each completed case ID from Step 1, normalize it to the canonical
-   `T-XX-YY-ZZ` form, then locate its line
-   `- [ ] **T-XX-YY-ZZ**: <description>`.
-   An invocation-form ID (`T01-02`) names a Scenario, not a case: it covers every
-   case line under `T-01-02`.
-2. Replace the checkbox marker only: `- [ ]` becomes `- [x]`.
-   Leave the description and the `Target` / `Scenario` / `Expected` lines untouched.
-3. A line already marked `- [x]` stays as is — the write-back is idempotent.
-4. If a completed case ID has no matching line in `tasks.md`, skip it and report it in Step 5.
-
-書式: [write-back-format.md](references/write-back-format.md) — Step 2。
-
-#### Step 3: Recalculate Task Summary from the checkboxes
-
-Update the **Task Summary** table at the top of `tasks.md` for the Test Targets
-implemented in this invocation ONLY. Leave every other row untouched — a row set by
-hand, or one another session is working on, MUST NOT be recomputed.
-
-For each such Test Target `T-XX`, count its case lines `**T-XX-YY-ZZ**` in `tasks.md`:
-
-| Checked cases | Status                                                    |
-| ------------- | --------------------------------------------------------- |
-| all           | `done`                                                    |
-| some          | `in progress`                                             |
-| none          | leave the current Status unchanged (do not write it back) |
-
-書式と `none` 行の意味: [write-back-format.md](references/write-back-format.md) — Step 3、
-[workflow.md](references/workflow.md) — Phase 5。
-
-Do NOT modify any part of `tasks.md` other than the case checkbox markers (Step 2)
-and the Status column of the affected Test Targets (Step 3).
-
-#### Step 4: Write back to checklist file (all inputs)
-
-Regardless of input type, also update the checklist file:
-
-1. Open `<local_dir>/temp/tasks/<slug>-<adjective>-checklist.md`
-2. For every case reported `DONE` / `DONE_WITH_CONCERNS` in Phase 3, confirm its
-   `-R` / `-G` / `-F` items are `[x]`. Check any the bdd-coder instance left behind,
-   and list them in the Step 5 report so the gap is visible.
-3. Check the Scenario and Target refactor items — these belong to this phase, not to
-   the bdd-coder instances, which may each see only part of a Scenario when a Target is split:
-   - `[T-XX-YY-TF]` — when every Case under Scenario `T-XX-YY` has `-R` / `-G` / `-F` at `[x]`
-   - `[T-XX-CF]` — when every Scenario under Target `T-XX` has its `-TF` at `[x]`
-   - A gate that does not hold yet is normal, not an error: leave the item unchecked
-4. In the frontmatter, set `status` of the corresponding Test Target:
-   - If the file has a per-target status field, update it
-   - If not, add a comment line below the target heading:
-     `<!-- status: done -->` or `<!-- status: in-progress -->`
-
-#### Step 4b: Write back to the task list (TASKLIST PATH only)
-
-Run this step only when Phase 1 used a task list (Phase 1a ran, or `--tasklist` was given).
-
-1. Open TASKLIST PATH and find the item selected in Phase 1a.
-2. If every case of this invocation is completed in Step 1, change the item checkbox to `- [x]`
-   and its `Status:` to `done`. Otherwise leave the item as is.
-3. Do not touch any other item.
-4. In the Step 5 report, add `NEXT: <next pending item ID> → <Handoff>`, or `NEXT: none`,
-   and the command to continue: `/bdd-coder:bdd-coder --tasklist <TASKLIST PATH>`.
-
-#### Step 4c: Update the session entry
-
-If every case of this invocation is completed in Step 1, set `status: done` in the
-[session entry](#session-entry). Otherwise leave it `in-progress`, and add the command to continue
-to the Step 5 report: `/bdd-coder:bdd-coder --resume`.
-
-In a [Multi-task run](#multi-task-run), "this invocation" means the item of this pass.
-When it is completed and a later item is in `queue`, advance `index` and `item` instead of setting `status: done`.
-Set `status: done` only after the last queue item.
-
-#### Step 5: Report to user
-
-After all write-backs complete, output the STATUS WRITE-BACK and CHECKLIST BACKFILL blocks.
-
-書式: [write-back-format.md](references/write-back-format.md) — Step 5。
-
-## References
-
-- Usage and invocation examples: [workflow.md](references/workflow.md) — Usage
-- Full phase details: [workflow.md](references/workflow.md)
-- Write-back formats: [write-back-format.md](references/write-back-format.md)
-- Error recovery: [troubleshooting.md](references/troubleshooting.md)
-- Q&A: [faq.md](references/faq.md)
-- BDD implementer: [roles/implementer.md](references/roles/implementer.md)
-- Code reviewer: [roles/code-reviewer.md](references/roles/code-reviewer.md)
-- Environment explorer: [roles/explorer.md](references/roles/explorer.md)
-- On-demand review command: [bdd-coder-review/SKILL.md](../bdd-coder-review/SKILL.md)
-- Task list builder: [roles/tasklist-builder.md](references/roles/tasklist-builder.md)
-- Task list template: [assets/templates/tasklist.tpl.md](assets/templates/tasklist.tpl.md)
-- Checklist builder: [roles/checklist-builder.md](references/roles/checklist-builder.md)
-- Checklist template: [assets/templates/implementation-checklist.tpl.md](assets/templates/implementation-checklist.tpl.md)
+The same review as Phase 4 is available on demand: [bdd-coder-review](../bdd-coder-review/SKILL.md).

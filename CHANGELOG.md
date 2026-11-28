@@ -1,10 +1,10 @@
 ---
 title: "CHANGELOG"
-description: "ChangeLog: 0.9.1"
-version: "0.9.1"
-date: "2026-11-24"
+description: "ChangeLog: 0.10.0"
+version: "0.10.0"
+date: "2026-11-28"
 summary:
-  - "0.9.1: test case ID checker in bdd-coder, range and all-under-Target multi-task runs, switching to an existing module, rev exempt from the order gate"
+  - "0.10.0: per-language test ID checks in bdd-coder, separate abbreviation checker, bundled library copies in bdd-coder, per-phase bdd-coder reference documents"
 ---
 
 <!-- textlint-disable
@@ -14,6 +14,69 @@ summary:
 <!-- markdownlint-disable line-length -->
 
 ## CHANGELOG
+
+## 0.10.0 - 2026-11-28
+
+### Breaking Changes
+
+- Replace the check modes of `check-test-ids.sh` (`--scopes`, `--module`, `--targets`, `--all`)
+  with `--lang`. The checker no longer reads module declarations, and target abbreviations are now
+  checked by `check-test-abbrs.sh`.
+
+### Features
+
+- Check test IDs per language with plugins in `check-test-ids.sh`. `--lang` selects `sh`, `ts`,
+  `js`, `dart`, or `go` (default `sh`), and `check-ids/languages.sh` maps each language to a plugin
+  under `check-ids/plugins/`.
+- Add `check-test-abbrs.sh` to `bdd-coder` to check that every target abbreviation is declared only
+  once across the module declarations.
+- Add the shared libraries `frontmatter.lib.sh`, `glob.lib.sh`, and `module-decl.lib.sh` to
+  `deckrd`.
+
+### Bug Fixes
+
+- Bundle the shared libraries and dictionaries of `bdd-coder` as real copies of the `deckrd` files
+  instead of symbolic links, because `gh skill` and `npx skills` do not follow symbolic links.
+- Fail `module.sh` with "cannot read module declaration" when a `module.md` cannot be read.
+- Exclude `node_modules` from the spec globs and file listings of the runners, and exclude `.local`
+  and `temp` in `run-shellcheck.sh`.
+
+### Refactor
+
+- Read module declarations in `module.sh` through `frontmatter.lib.sh` and `module-decl.lib.sh`,
+  and move the explicit scope validation into `_validate_explicit_scope`.
+- Reduce the `bdd-coder` `SKILL.md` and `workflow.md` to phase tables, and move the procedures to
+  per-phase documents under `references/phases/`.
+- Move the session entry and resume rules into `references/session-resume.md`.
+- Remove `faq.md`, `implementation.md`, `troubleshooting.md`, and `write-back-format.md` from the
+  `bdd-coder` references.
+- Move `license: MIT` in the `SKILL.md` files from `metadata` to a top-level frontmatter field.
+
+### Docs
+
+- Update `deckrd-rule-testing-guidelines.md` (2.2.0 to 3.0.0): replace the test ID checks A to D
+  with the ID check and the abbreviation check, and add rules for writing test declarations.
+- Document language selection, declaration rules, ID formats, and the plugin architecture in
+  `test-id-check.md`, and add the checker usage to the `bdd-coder` `SKILL.md`.
+- Allow the explorer role to read `prog` from `session.json`.
+- Replace the Step references with Phase and role references in `pressure-scenarios.md`, and point
+  the Phase 4 link of `bdd-coder-review` to `phases/quality-gate.md`.
+- Document the copied libraries and dictionaries in `architecture.md`, `plugin-system.md`, and
+  `workflow.md`.
+- Add the module declarations for `deckrd/lib`, `deckrd/subcommands`, and
+  `bdd-coder/shared-copies`.
+- Use `pnpm run check:skills` for the pre-release skill check in `workflow.md`.
+- Split the introduction of the user guide into one sentence per line.
+
+### Tooling
+
+- Add an integration spec that fails when the copies in `bdd-coder` differ from the `deckrd`
+  sources.
+- Stop ignoring the bundled `.dic` files in `skills/.gitignore`, and remove the self-ignore entry
+  from the docs rules `.gitignore` template.
+- Upgrade the `ci-platform` reusable workflows to `v0.9.0`.
+- Add `.beads/**` to `.textlintignore`, and reword the header comment of
+  `configs/commitlint.config.mjs`.
 
 ## 0.9.1 - 2026-11-24
 

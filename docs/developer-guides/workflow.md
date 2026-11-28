@@ -451,7 +451,8 @@ A pushed tag alone is not enough. Create a GitHub Release for every version:
 gh release create vX.Y.Z --title "deckrd vX.Y.Z" --notes-file release-note.md
 ```
 
-Before releasing, run `gh skill publish --dry-run` to check the skills against the Agent Skills spec.
+Before releasing, run `pnpm run check:skills` to check the skills against the Agent Skills spec.
+The script limits the check to `skills/`; a check from the repository root also scans the dependencies of `aglabo.github.io`.
 Do not use symbolic links inside `skills/deckrd/skills/deckrd/` or `skills/bdd-coder/skills/`;
 `gh skill` and `npx skills` do not copy them reliably.
 

@@ -65,16 +65,19 @@ skills/bdd-coder/skills/bdd-coder/
 ├── scripts/
 │   └── libs/                         # 共通 Shell ライブラリ
 └── references/
-    ├── workflow.md                   # 内部フロー詳細
-    ├── faq.md                        # よくある質問
-    ├── troubleshooting.md            # トラブルシューティング
-    ├── implementation.md             # 実装フローリファレンス
-    ├── write-back-format.md          # 書き戻しフォーマット
+    ├── workflow.md                   # Phase の遷移と Phase 0 / 2 / 6
+    ├── phases/                       # Phase ごとの手順
+    │   ├── tasklist-checklist.md     # Phase 1
+    │   ├── multi-task-run.md         # 範囲指定 / 全指定の順次実行
+    │   ├── dispatch.md               # Phase 3
+    │   ├── quality-gate.md           # Phase 4
+    │   └── write-back.md             # Phase 5
+    ├── session-resume.md             # session.json の書き込みと再開の手順
+    ├── test-id-check.md              # テスト ID の機械検査
+    ├── test-abbr-check.md            # テスト対象略号の機械検査
     ├── guidelines/
     │   └── code-comments.md          # コードコメント ガイドライン (C-1〜C-10)
-    └── roles/
-        ├── comment-refiner.md        # comment-refiner の手順 (Role)
-        └── tasklist-builder.md       # tasklist-builder の手順 (Role)
+    └── roles/                        # 各エージェントの手順 (Role)
 ```
 
 関連スキル (`skills/bdd-coder/skills/` 配下):

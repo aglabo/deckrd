@@ -41,4 +41,4 @@ Inside `/bdd-coder:bdd-coder`, Phase 4 already runs this review; invoking it man
 
 - Role: [roles/code-reviewer.md](../../bdd-coder/references/roles/code-reviewer.md)
 - CRAP formula and thresholds: [bdd-coder/assets/test-quality.md](../../bdd-coder/assets/test-quality.md)
-- Phase 4 in the BDD flow: [bdd-coder/references/workflow.md](../../bdd-coder/references/workflow.md)
+- Phase 4 in the BDD flow: [bdd-coder/references/phases/quality-gate.md](../../bdd-coder/references/phases/quality-gate.md)

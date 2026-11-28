@@ -5,10 +5,10 @@ description: >
   - Use for: "write requirements", "create spec", "plan implementation", "derive tasks",
     "document this module", reverse engineering (/deckrd rev)
   - Not for writing code (use /bdd-coder:bdd-coder)
+license: MIT
 metadata:
   author: aglabo
-  version: 0.9.1
-  license: MIT
+  version: 0.10.0
 ---
 
 <!-- markdownlint-disable line-length -->

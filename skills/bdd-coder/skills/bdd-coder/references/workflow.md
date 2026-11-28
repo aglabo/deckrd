@@ -1,513 +1,66 @@
 ---
-title: WORKFLOW - 内部フロー詳細
-description: bdd-coder マネジメント層の内部フロー
+title: WORKFLOW - Phase の遷移
+description: bdd-coder の Phase ごとの実行内容、遷移条件、参照先
 ---
 
-<!-- textlint-disable
-  ja-technical-writing/max-comma,
-  ja-technical-writing/no-exclamation-question-mark -->
+## WORKFLOW
 
-## WORKFLOW - bdd-coder マネジメント層
-
-bdd-coder はオーケストレーション専用レイヤーです。
-BDD サイクル (テスト・実装・リファクタ) は bdd-coder エージェントに委譲します。
-
-bdd-coder の責務:
-
-- 開発環境の把握と管理
-- チェックリストの読み込みとタスク管理
-- bdd-coder のディスパッチ (順次 or 並列)
-- ステータス収集と進捗記録
-- グローバル品質ゲートの実行
-- エスカレーション (BLOCKED 時のユーザー相談)
-
-## ワークフロー全体マップ
-
-```bash
-Phase 0: 開発環境の取得・設定 (explore-agent 委譲)
-    ↓
-Phase 1: タスクリスト作成 + チェックリスト作成 (tasklist-builder → checklist-builder 委譲)
-    ↓
-Phase 2: タスク分析・依存関係マッピング
-    ↓
-Phase 3: bdd-coder ディスパッチ (Target 単位。独立した Target は並列実行可能)
-    ↓
-Phase 4: グローバル品質ゲート (Lint + 型チェック + テスト)
-    ↓
-Phase 5: チェックリスト確認と完了判定
-    ↓
-Phase 6: ワークフロー終了
-```
-
-| Phase   | 目的                               | Agent                                | 出力                                                                                                                                                |
-| ------- | ---------------------------------- | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Phase 0 | 開発言語・環境を把握               | explore-agent                        | ENV PROFILE (env-profile.md)                                                                                                                        |
-| Phase 1 | タスクリストとチェックリストを生成 | tasklist-builder + checklist-builder | `<local_dir>/temp/tasklist/<ns>/<module>/<name>.tasklist.md`, `<local_dir>/temp/tasks/<slug>-<adjective>-checklist.md`, session.json の `bdd_coder` |
-| Phase 2 | 依存関係を分析                     | bdd-coder                            | 実行グループ (直列 / 並列)                                                                                                                          |
-| Phase 3 | bdd-coder に委譲 (Target 単位)     | bdd-coder                            | 各 Target のステータスと Case ログ                                                                                                                  |
-| Phase 4 | 全体品質を検証                     | bdd-coder                            | 品質ゲート合格確認                                                                                                                                  |
-| Phase 5 | 完了状態を確認                     | bdd-coder                            | セッション終了前の最終確認                                                                                                                          |
-| Phase 6 | セッション終了                     | bdd-coder                            | 開発ツール・状態をリセット                                                                                                                          |
+手順は参照先が定める。**Phase の開始前に参照先を Read する。** 全体に効く規則は [SKILL.md](../SKILL.md)。
 
 ## Usage
 
 ```bash
-# Natural-language instruction
-"グリーティング関数を実装して"
-"implement config file parser"
-
-# Target ID (from tasks.md) — break into Scenario items via tasklist-builder
-/bdd-coder:bdd-coder T01
-
-# Explicit Task ID (from tasks.md)
-/bdd-coder:bdd-coder T01-02
-/bdd-coder:bdd-coder T01-02 --checklist <path>   # skip checklist-builder, use existing checklist
-
-# Range / all Scenarios of a Target — run the tasks one by one (fail-fast)
-/bdd-coder:bdd-coder T01-01..03                  # T01-01, T01-02, T01-03 in order
-/bdd-coder:bdd-coder 'T01-*'                     # every Scenario of T01 (quote it: not a glob)
-
-# Continue an existing task list
-/bdd-coder:bdd-coder --tasklist <path>              # first pending item
-/bdd-coder:bdd-coder --tasklist <path> --item L-02  # a given item
-
-# Resume the work recorded in .local/deckrd/session.json (bdd_coder)
-/bdd-coder:bdd-coder --resume
+/bdd-coder:bdd-coder "implement config file parser"  # 自然言語
+/bdd-coder:bdd-coder T01                             # Target ID: Scenario ごとの項目から 1 件選ぶ
+/bdd-coder:bdd-coder T01-02                          # Scenario ID
+/bdd-coder:bdd-coder T01-02 --checklist <path>       # 既存チェックリストを使う
+/bdd-coder:bdd-coder T01-01..03                      # 範囲指定 (順に実行、fail-fast)
+/bdd-coder:bdd-coder 'T01-*'                         # Target 配下の全 Scenario
+/bdd-coder:bdd-coder --tasklist <path> [--item L-02] # 既存タスクリストを使う
+/bdd-coder:bdd-coder --resume                        # 中断した作業を再開
 ```
 
-### 呼び出し例
-
-**Natural-language instruction:**
-
-> "設定ファイルの読み込みと検証を実装して"
-> → tasklist-builder が Target ごとの項目 (L-01: parseConfig, L-02: validateConfig) を持つ
-> `<local_dir>/temp/tasklist/<active module>/load-config-file-calm.tasklist.md` を生成
-> (アクティブなモジュールがなければ `<local_dir>/temp/tasklist/` の直下に置く)
-> → 項目を 1 件選ぶ → その Handoff から checklist-builder がチェックリストを生成 → bdd-coder で実装
-
-Target が 1 つだけの指示 (例: "グリーティング関数を実装して") は項目が 1 件になるため、確認なしで checklist-builder に進む。
-
-**Target ID from tasks.md:**
-
-> "T01 を実装して"
-> → tasklist-builder が `<local_dir>/temp/tasklist/<ns>/<module>/T-01.tasklist.md` を生成
-> (Scenario ごとの項目 `T01-01`, `T01-02`, …)
-> → 項目を 1 件選ぶ → session.json の `bdd_coder` に記録 → checklist-builder → bdd-coder で実装
-> → 続きは `/bdd-coder:bdd-coder T01` (既存のタスクリストを再利用する) か `/bdd-coder:bdd-coder --resume`
-
-**中断したセッションの再開:**
-
-> `/bdd-coder:bdd-coder --resume`
-> → session.json の `bdd_coder` から作業中のタスクリスト・項目・チェックリストを復元 → bdd-coder で実装
-
-**Task ID from tasks.md:**
-
-> "T01-02 を実装して"
-> → checklist-builder が tasks.md の T01-02 からチェックリストを生成 → bdd-coder で実装
-
-**範囲指定 / Target 配下の全指定:**
-
-> `/bdd-coder:bdd-coder T01-01..03` または `/bdd-coder:bdd-coder 'T01-*'`
-> → Target ID `T01` でタスクリストを作り、対象の項目を Scenario 番号順に並べる
-> → 項目ごとに Phase 1b〜5 を 1 周ずつ実行する (1 項目 = 1 委譲)
-> → 最初に失敗した項目で止める (fail-fast)。続きは `/bdd-coder:bdd-coder --resume`
-
-- 範囲の終端は Scenario 番号だけを書く (`T01-01..03` は `T01-01`〜`T01-03`)
-- 実行前に検査する。終端が始端より小さい、範囲内の Scenario が tasks.md にない、`needs-split` / `removed` の項目がある場合はエラーにして何も実行しない
-- `done` の項目は飛ばし、飛ばしたことを報告する
-- 途中で止まったら `bdd_coder` の `queue` と `index` に停止位置が残る。`--resume` は `queue[index]` から再開する
-- コミットと push は行わない。全項目の変更が作業ツリーに残るので、ユーザーが確認してコミットする
-
-**Existing checklist (skip checklist-builder):**
-
-> `/bdd-coder:bdd-coder T01-02 --checklist <local_dir>/temp/tasks/my-happy-checklist.md`
-> → 既存チェックリストをそのまま使用 → bdd-coder で実装
-
-## Before You Begin (MANDATORY — Phase 0 の前に実行)
-
-対象タスクの tasks.md を読む。
-以下が不明な場合:
-
-1. 対象の関数/クラス/メソッドが明確か？
-2. Given/When/Then 条件がすべて定義されているか？
-3. 未実装の依存タスクが存在しないか？
-
-質問はすべて **1 メッセージにまとめて** Phase 0 開始前に行う。
-Phase 0 開始後はスコープ質問禁止。
-
-## Phase 0: 初期化フェーズ (explore-agent 委譲)
-
-**explore-agent** を起動して環境検出を委譲する。
-
-### Step 0-1: explore-agent の起動
-
-Spawn **explore-agent** with:
-
-- `skill_dir`, `local_dir`: absolute paths, see "Path arguments" in SKILL.md
-
-- `scope`: `pattern-detection`
-- `directory`: repository root (or sub-package root for monorepos)
-- `focus`: `test-framework,build-tools,lint,type-check`
-- Role: [`roles/explorer.md`](roles/explorer.md)
-
-The agent:
-
-1. Reads `prog` from `<local_dir>/session.json`.
-   Without `prog`, reads `.deckrd/profile.json` (`project`, `language`)
-
-2. Loads the language rule file if language is found:
-   `plugins/deckrd/skills/bdd-coder/assets/languages/<language>.md`
-
-3. Detects language from manifest files
-   (`package.json`, `Cargo.toml`, `setup.py`, etc.)
-
-4. Identifies tool commands (build, run, lint, type-check, test, formatter)
-
-5. Writes the environment profile to `<local_dir>/temp/deckrd-work/env-profile.md`
-
-### Step 0-2: ENV PROFILE の取得
-
-Read the **Commands table** returned by the agent.
-Store as **ENV PROFILE** for use in Phase 3 (bdd-coder への渡し), Phase 4, Phase 5。
-
-出力: `<local_dir>/temp/deckrd-work/env-profile.md`
-
-### Step 0-3: SESSION BASELINE の記録
-
-explore-agent の起動前後を問わず、**コードを 1 行も書く前に** 作業ツリーの汚れを記録する。
-
-```bash
-git status --porcelain=v1 --untracked-files=all
-```
-
-各行は先頭 2 文字がステータスコード、3 文字目以降がパスを表す。パス部分だけを取り出して
-集合にし、**SESSION BASELINE** として保持する。リネーム行 (`R  old -> new`) は
-`old` と `new` の両方を登録する。空集合なら正常な状態とみなす。
-
-用途は Phase 4 のフォールバックに限る。ユーザーがセッション開始時点で無関係な未コミット
-変更を抱えていた場合、それらをレビュー対象から外すために使う。
-
-## Phase 1: タスクリスト作成 + チェックリスト作成
-
-入力を振り分ける。必要なら **tasklist-builder** で 1 項目 = 1 チェックリストの粒度に分解する。
-その後、選んだ 1 項目について **checklist-builder** でチェックリストを生成する。
-
-### 入力の振り分け
-
-| 入力                              | Phase 1a (tasklist-builder) | Phase 1b (checklist-builder) への入力   |
-| --------------------------------- | --------------------------- | --------------------------------------- |
-| 自然言語の指示                    | 実行                        | 選んだ項目の Handoff                    |
-| Target ID (例: T01)               | 実行                        | 選んだ項目の Handoff (例: `T01-02`)     |
-| 範囲 (例: T01-01..03)             | 実行 (Target ID `T01`)      | 範囲内の各項目の Handoff を順に渡す     |
-| Target 配下の全指定 (例: T01-\*)  | 実行 (Target ID `T01`)      | `pending` の各項目の Handoff を順に渡す |
-| Scenario ID (例: T01-02)          | スキップ                    | Task ID をそのまま渡す                  |
-| `--tasklist <path> [--item L-02]` | スキップ                    | 指定項目、なければ先頭の `pending`      |
-| `--checklist <path>`              | スキップ                    | スキップ (既存チェックリストを使用)     |
-| `--resume`                        | スキップ                    | session.json の `bdd_coder` から復元    |
-
-### Phase 1a: タスクリスト作成 (tasklist-builder 委譲)
-
-Spawn **tasklist-builder** with:
-
-- `skill_dir`, `local_dir`: absolute paths, see "Path arguments" in SKILL.md
-
-- `instruction`: ユーザーの指示 or Target ID
-- `tasks_md`: tasks.md のパス (Target ID 入力時のみ)
-
-手順の本体は [roles/tasklist-builder.md](roles/tasklist-builder.md)。返却値の扱いと項目の選び方は
-[SKILL.md](../SKILL.md) の Phase 1a に従う。
-
-- 返却されたパスを **TASKLIST PATH** として保存する (Phase 5 Step 4b で使う)
-- checklist-builder に渡すのは選んだ項目の Handoff だけ。タスクリストのファイルは渡さない
-  (他タスクを含む資料を渡さない: `docs/.deckrd/rules/deckrd-rule-bdd-cycle.md` の「1 委譲 = 1 タスク」)
-- タスクリストは `<local_dir>/temp/tasklist/<ns>/<module>/` に置く。モジュールごとにディレクトリを分けるため、
-  別モジュールの同じ Target ID とは衝突しない
-- 同じ Target ID で再実行すると、既存のタスクリストを現在の tasks.md と突き合わせる。
-  `done` の項目と項目 ID は残し、分割済みの Case や新しい Scenario を反映する (`STATUS: updated`)。
-  差分がなければそのまま返す (`STATUS: reused`)。同じ Target ID のタスクリストを 2 本作らない
-- 項目を選んだら session.json の `bdd_coder` に `tasklist` / `item` を書く。書き込み規則と再開の手順は
-  [SKILL.md](../SKILL.md) の「Session entry」「Resume」に従う
-- タスクリストは **オーケストレータの状態ファイル** であり、bdd-coder エージェントへの資料ではない。
-  「タスクリストを渡して L-02 だけ実装させればよい」という短絡は「1 委譲 = 1 タスク」に反する
-
-出力: `<local_dir>/temp/tasklist/<ns>/<module>/<name>.tasklist.md`。Target ID のときは `T-XX.tasklist.md` とする。
-モジュールがない自然言語の指示は `<local_dir>/temp/tasklist/` の直下に置く。
-`<local_dir>/temp` 固定とし、`DECKRD_LOCAL_TEMP` の上書きは Role に伝えない。
-
-### Phase 1b: チェックリスト作成 (checklist-builder 委譲)
-
-**checklist-builder** エージェントを起動してチェックリストを生成する。
-
-### 入力タイプ別の動作
-
-| 入力タイプ                | checklist-builder の動作                                 |
-| ------------------------- | -------------------------------------------------------- |
-| 自然言語の指示            | 指示を解析してタスク分解、チェックリストを生成           |
-| Task ID (例: T01-02)      | tasks.md の該当エントリを展開してチェックリストを生成    |
-| `--checklist <path>` 指定 | checklist-builder をスキップ、既存ファイルをそのまま使用 |
-
-### Step 1-1: checklist-builder の起動
-
-Spawn **checklist-builder** with:
-
-- `skill_dir`, `local_dir`: absolute paths, see "Path arguments" in SKILL.md
-
-- `instruction`: Phase 1a で選んだ項目の Handoff、またはユーザーの指示 / Task ID (Phase 1a をスキップした場合)
-- `tasks_md`: tasks.md のパス (Task ID 入力時のみ)
-- `directory`: リポジトリルート
-
-The agent:
-
-1. 入力を解析してタスクを分解
-2. チェックリストを `<local_dir>/temp/tasks/<slug>-<adjective>-checklist.md` に書き込む
-3. チェックリストのパスをメインセッションに返却 (複数入力の Case を検出した場合は `BLOCKED` を返却)
-
-### Step 1-2: チェックリストの取得
-
-checklist-builder の報告が `BLOCKED:` で始まる場合 (Task ID の Case に複数入力):
-
-- チェックリストは作成されていない。Phase 2 に進まない
-- `BLOCKED` 行と対処 (`/deckrd tasks` で tasks.md の Case を分割し、Task ID で再実行) をユーザーに提示する
-- Phase 6 (セッション終了) へ進む。入力の自力展開や自然言語入力への切り替えはしない
-
-`CHECKLIST:` が返った場合、返却されたチェックリストパスを **CHECKLIST PATH** として保存。
-Phase 2 以降で使用する。再開時に復元できるよう、session.json の `bdd_coder.checklist` にも書く。
-
-出力: `<local_dir>/temp/tasks/<slug>-<adjective>-checklist.md`
-
-## Phase 2: タスク分析・依存関係マッピング
-
-bdd-coder から bdd-coder エージェントへ効率的に情報を受け渡すため、タスク間の依存関係を分析する。
-
-実行内容:
-
-1. 各 Target が変更するファイルを特定
-2. ファイル競合の有無で Target を分類:
-   - 直列実行グループ: 共有ファイルがある、または前段タスクの出力に依存する
-   - 並列実行グループ: 独立したファイル群を変更する (競合なし)
-3. 実行順序・グループを決定
-
-出力: 実行グループ定義 (例: Group-A: 並列[T-01, T-02], Group-B: 直列[T-03])
-
-同じファイルを変更する Case は並列に実行しない。Target 内の Case は常に直列とする。
-
-## Phase 3: bdd-coder ディスパッチ
-
-Phase 2 の実行グループに従って bdd-coder を起動する。
-
-### ディスパッチ単位
-
-**既定の単位は Target (`T-XX`) とする。** 1 つの bdd-coder が Target の全 Case を順に実装する。
-Case ごとの RED → GREEN → REFACTOR は変えない。
-
-- 複数の Case を 1 サイクルにまとめない
-- GREEN を書く前に RED を確認する
-- 各 Case のあとにテストが PASS することを確認する
-
-ロール・チェックリスト・ENV PROFILE・対象ファイルの読み込みは Target ごとに 1 回で済む。
-Case ごとに起動する方式は、Case 数に比例してトークンと時間が増えるため既定にしない。
-
-### ディスパッチ方式
-
-**直列実行 (依存関係あり) :**
-
-```bash
-bdd-coder(T-01) → 完了待ち → bdd-coder(T-02) → 完了待ち → ...
-```
-
-**並列実行 (独立 Target) :**
-
-```bash
-bdd-coder(T-01) ┐
-bdd-coder(T-02) ├→ 全完了待ち → 次グループへ
-bdd-coder(T-03) ┘
-```
-
-### Target の分割
-
-大きな Target だけ、Case の境界で複数の bdd-coder に分ける。次のいずれかに当てはまるときに分割する。
-
-| 条件                   | 目安                                                                                                         |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------ |
-| Case 数                | 1 Target に 30 Case 以上                                                                                     |
-| コンテキストの大きさ   | 対象ファイルとチェックリストでコンテキストの約半分を超える                                                   |
-| 品質ゲートの失敗が続く | 起動の大きさが原因で 3 回以上失敗した (`NEEDS_CONTEXT` を受けて分割する。分割しても直らない失敗は `BLOCKED`) |
-
-手順:
-
-1. Scenario 単位で分け、1 Scenario が大きいときだけ Scenario 内を Case 単位で分ける。Case の途中では分けない
-2. 分けた部分は同じファイルを変更するため、直列に実行する
-3. 次の部分に渡すのは、担当する Case の範囲・チェックリストのパス・ENV PROFILE・
-   前の部分が変更したファイルの 1 行要約だけにする。完了済み Case のログ全文は渡さない
-4. `-TF` / `-CF` と Target のリグレッションは最後の部分、または Phase 5 で行う
-5. 各部分は `CASES: <先頭>..<末尾>` を報告し、オーケストレータが Case の抜け漏れを確認する
-
-### bdd-coder に渡す情報 (Context Isolation)
-
-各 bdd-coder インスタンスに渡す情報:
-
-| 項目              | 内容                                                                                    |
-| ----------------- | --------------------------------------------------------------------------------------- |
-| Target ID         | 例: `T-01` (分割時は Case の範囲を併記)                                                 |
-| Task description  | その Target の Case の Given/When/Then 全文                                             |
-| Quality gate cmds | ENV PROFILE のコマンド表                                                                |
-| Checklist path    | チェックリストファイルパス                                                              |
-| `progress_path`   | `<local_dir>/temp/bdd-coder/<scope>/<Target ID>/bdd-todo.md` (Target ごとに 1 ファイル) |
-| Prior state       | 分割時のみ。前の部分が変更したファイルの 1 行要約                                       |
-
-`<scope>` は task list の置かれた `<ns>/<module>` ディレクトリ (`<local_dir>/temp/tasklist/` 以下)。
-module を持たない task list では、`.tasklist.md` を除いた task list のファイル名にする。
-
-**渡さないもの**: セッション全体コンテキスト、他 Target の情報、完了済み Case のログ全文、session.json。
-「1 委譲 = 1 タスク」は Target を 1 タスクとして守る。渡すチェックリストはその Target だけを含むものにする。
-
-### Target 完了後の確認
-
-bdd-coder は Target の最後の Case のあと、Target の全テスト (共有コードを使う他のテストも含む) を 1 回実行し、
-結果を `REGRESSION` に報告する。失敗したら原因の Case を戻して直し、再実行する。
-オーケストレータは `git status --short` と `git diff --stat` で実際の変更範囲を確認してから次の Target へ進む。
-
-### ステータス収集
-
-各 bdd-coder から受け取ったレポートを記録:
-
-| Target ID | Status             | Cases | Regression | Changed files                         | Notes                   |
-| --------- | ------------------ | ----- | ---------- | ------------------------------------- | ----------------------- |
-| T-01      | DONE               | 12/12 | pass       | `src/parser.ts`, `src/parser.spec.ts` |                         |
-| T-02      | DONE_WITH_CONCERNS | 8/8   | pass       | `src/lexer.ts`                        | 既存テスト 2 件が失敗中 |
-| T-03      | BLOCKED            | 3/9   | fail       | (なし)                                | 型エラーが 3 回以上発生 |
-
-Case ごとの結果は、Target ごとの `bdd-todo.md` (`progress_path`) に残る。
-記録先は `## Case Log` 表 (Case ID / RED / GREEN / REFACTOR) です。
-完了済み Case のログ全文は、後続の bdd-coder に渡さない。
-
-Changed files 列は bdd-coder の Status Report の `CHANGED_FILES` 行をそのまま転記する。
-この列の和集合が Phase 4 のレビュー対象になるため、空欄のまま次へ進まない。
-
-### BLOCKED 時のエスカレーション
-
-いずれかの bdd-coder が `BLOCKED` を報告した場合:
-
-1. 現在のグループの他タスクが完了している場合、それらを先に記録
-2. ユーザーに問題タスクと詳細を報告
-3. ユーザーの指示を待つ (先へ進まない)
-
-### DONE_WITH_CONCERNS 時の対応
-
-1. concerns の内容をユーザーに明示
-2. Phase 4 完了後に改めて報告
-3. ユーザーが続行可否を判断
-
-## Phase 4: グローバル品質ゲート
-
-全タスク完了後、プロジェクト全体の品質を検証する。
-
-実行内容:
-
-1. IDENTIFY — 各基準を証明するコマンドはどれか？
-2. RUN — 今すぐ実行
-3. READ — 完全な出力を読む (要約不可)
-4. VERIFY — 出力が基準を満たしているか確認
-5. ONLY THEN — 品質ゲート合格とみなす
-
-チェック項目:
-
-- [ ] Lint チェック: 合格
-- [ ] 型チェック: 合格
-- [ ] テスト実行: すべてグリーン (カバレッジ付き)
-- [ ] **code-reviewer** 起動: 全変更ファイルを対象に CRAP 算出、および、コードをレビュー
-- [ ] CRAP 判定: スコア > 30 の関数がないこと (16–30 は DONE_WITH_CONCERNS)。
-      カバレッジを取れない関数 (`cov=N/A`) は CC で判定する: CC ≥ 11 がないこと (6–10 は DONE_WITH_CONCERNS)
-- [ ] コードレビュー判定: `PASS` または `PASS_WITH_WARNINGS` であること
-
-**CRAP 計算式:** `CC² × (1 - coverage/100)³ + CC`
-詳細は [../assets/test-quality.md](../assets/test-quality.md) — CRAP Score セクションを参照。
-
-code-reviewer は **セッション全体で 1 回だけ** 起動する (タスクごとのループはしない)。起動パラメータ:
-
-- `task_id`: 単一タスク起動ならその ID。複数タスクにまたがる場合は `N/A`
-- `changed_files`: 下記「セッションスコープの解決」で求めたファイルのうち実装ファイル
-- `test_files`: 同じスコープのうちテストファイル (ENV PROFILE のテストファイル規約で振り分け)
-- `env_profile`: `<local_dir>/temp/deckrd-work/env-profile.md`
-- `coverage_cmd`: ENV PROFILE のカバレッジコマンド
-
-同じレビューは `/bdd-coder:bdd-coder-review` で任意のタイミングでも実行できる。
-
-Role: [roles/code-reviewer.md](roles/code-reviewer.md)
-
-失敗時:
-
-- 失敗回数 1–2: 分析・修正・再実行
-- 失敗回数 3+: ユーザーに相談 (先へ進まない)
-- CRAP > 30、`cov=N/A` で CC ≥ 11、または code-reviewer `BLOCKED`: リファクタリング (CC 削減) またはテスト追加後に再実行
-
-### セッションスコープの解決
-
-<!-- textlint-disable ja-technical-writing/sentence-length -->
-
-Resolve the session scope in this order (same as [SKILL.md](../SKILL.md) — Phase 4):
-
-1. The union of the `CHANGED_FILES` lists that Phase 3 collected from each bdd-coder.
-2. If those lists are unavailable, every working-tree change minus the SESSION BASELINE
-   recorded in Phase 0 Step 0-3. This fallback is the only use of the baseline.
-
-Never send the raw working-tree diff. A user who started the session with unrelated
-staged or unstaged edits would otherwise get those files reviewed, and unrelated findings
-could block the session.
-
-"Every working-tree change" means `git diff --name-only`, `git diff --name-only --cached`,
-and `git ls-files --others --exclude-standard`, merged and deduplicated. The third is
-required: a file bdd-coder just created is untracked and the first two do not list it.
-Keep deleted paths — code-reviewer reads their patch with `git diff -- <path>`.
-
-### CRAP ゲートが 2 か所にある理由
-
-The per-task CRAP gate in [roles/implementer.md](roles/implementer.md) is the implementer's
-own gate over one task. Phase 4 recomputes CRAP across the aggregate diff. The two are
-intentionally separate — do not remove either as a duplicate.
-
-<!-- textlint-enable ja-technical-writing/sentence-length -->
-
-## Phase 5: 完了確認
-
-実行内容:
-
-- 全テスト PASS 確認: Run[test command], read FULL output
-- 型エラーなし確認: Run[type check command], read FULL output
-- チェックリストがすべて `[x]` 済み確認: Read checklist directly, count checked items
-- Refactor が完了したか確認 (Step 7 グローバルリファクタ)
-- Task ID 起動時: tasks.md の該当ケースのチェックボックスを `[x]` に更新
-  (判定源は Phase 3 のステータスレポート)
-- 今回実装した Test Target のみ、Task Summary の Status を
-  チェックボックスの充足率から再計算
-- タスクリストを使った起動時: 実行した項目だけを `[x]` / `done` にし、次の項目と続きのコマンドを報告
-
-書き戻しの詳細な手順は [SKILL.md](../SKILL.md) の Phase 5 を参照。
-
-出力: コーディング完了状態。
-
-### 完了判定の情報源
-
-<!-- textlint-disable ja-technical-writing/sentence-length -->
-
-The source of truth is the **Phase 3 status report table** — not the checkbox state of
-any file. Nothing updates `tasks.md` before this phase, so deciding completion from its
-checkboxes would always yield `in progress`. The checklist file IS updated per step by
-each bdd-coder instance, but a run that ended early can leave it behind the reports.
-
-The `none` row matters when every case came back `BLOCKED`: a target already marked
-`in progress` MUST NOT be regressed to `pending`.
-
-<!-- textlint-enable ja-technical-writing/sentence-length -->
-
-## Phase 6: ワークフロー終了
-
-実行内容:
-
-- 開発ツール・状態をリセット
-- メモリ上のセッション情報 (ENV PROFILE、TASKLIST PATH など) をクリア
-- session.json の `bdd_coder` は消さない。全 Case が完了していれば Phase 5 で `status: done` になっている。
-  途中で終わった場合 (`BLOCKED`、中断) は `in-progress` のまま残し、`--resume` で再開できるようにする
-- コミットはユーザーが手動実施 (bdd-coder は git 操作禁止)
-
-出力: セッション終了。
+## Flow
+
+| Phase | 実行内容                     | 次へ進む条件              | 分岐                                           | 手順                                                  |
+| ----- | ---------------------------- | ------------------------- | ---------------------------------------------- | ----------------------------------------------------- |
+| 0     | 環境検出と SESSION BASELINE  | ENV PROFILE を取得        | —                                              | 下の Phase 0                                          |
+| 1     | 項目選択とチェックリスト生成 | CHECKLIST PATH がある     | `invalid-input` / `BLOCKED` / 実行対象なし → 6 | [tasklist-checklist.md](phases/tasklist-checklist.md) |
+| 2     | Target の依存関係分析        | 直列 / 並列グループを決定 | —                                              | 下の Phase 2                                          |
+| 3     | bdd-coder に委譲             | 全 Target が完了          | `BLOCKED` → ユーザー判断                       | [dispatch.md](phases/dispatch.md)                     |
+| 4     | 品質ゲートとコードレビュー   | 全ゲート合格              | 失敗は修正して再実行。3 回でユーザーに相談     | [quality-gate.md](phases/quality-gate.md)             |
+| 5     | 完了判定と書き戻し           | レポート出力              | 複数タスク実行で次の項目がある → 1b            | [write-back.md](phases/write-back.md)                 |
+| 6     | セッション終了               | —                         | —                                              | 下の Phase 6                                          |
+
+- 範囲指定と `T01-*`: [multi-task-run.md](phases/multi-task-run.md)
+- session.json の保存と `--resume`: [session-resume.md](session-resume.md)
+
+よくある停止:
+
+- Task ID を指定したが tasks.md がない: `/deckrd tasks` までを実行するか、自然言語で指示する
+- Phase 4 でテストが失敗する: Phase 3 に戻って該当タスクを再委譲する。Phase 4 は飛ばさない
+- アナウンスなしで Phase を飛ばした: アナウンスして最初からやり直す
+
+## Phase 0: 環境検出
+
+1. コードを書く前に **SESSION BASELINE** を記録する (Phase 4 のフォールバックで使う)。
+   `git status --porcelain=v1 --untracked-files=all` の各行からパス (3 文字目以降) を取り出す。
+   リネーム行は旧パスと新パスの両方を入れる。空でもよい。
+2. **explore-agent** ([Role](roles/explorer.md)) を Spawn する。
+   渡す値: `skill_dir`, `local_dir`, `scope: pattern-detection`,
+   `directory` (リポジトリルート。monorepo はサブパッケージルート),
+   `focus: test-framework,build-tools,lint,type-check`
+3. 返された Commands 表を **ENV PROFILE** として保持する
+   (`<local_dir>/temp/deckrd-work/env-profile.md`)。
+
+## Phase 2: 依存関係分析
+
+1. 各 Target が変更するファイルを特定する。
+2. ファイルを共有する、または前段の出力に依存する Target は直列、それ以外は並列グループにする。
+3. 同じファイルを変更する Case は並列にしない。Target 内の Case は常に直列とする。
+
+## Phase 6: セッション終了
+
+- メモリ上のセッション情報 (ENV PROFILE、TASKLIST PATH など) を破棄する。
+- session.json の `bdd_coder` は消さない。途中終了なら `in-progress` のまま残す (`--resume` で再開)。
+- コミットはユーザーが行うよう伝える。

@@ -4,10 +4,10 @@ description: >
   Independent review of already-implemented code (CC / CRAP scores + codex second opinion).
   - Use for: "review the code", "コードレビューして", "check CRAP scores", review after /bdd-coder:bdd-coder
   - Read-only: never edits code, never commits
+license: MIT
 metadata:
   author: aglabo
-  version: 0.9.1
-  license: MIT
+  version: 0.10.0
 argument-hint: "[task_id] [--branch [<base>] | <paths...>] [--coverage-cmd <cmd>]"
 ---
 
