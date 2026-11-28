@@ -1,6 +1,7 @@
 # Test ID Checker
 
 Checks that the test cases carry test IDs, belong to their group, and are not duplicated.
+In `ts`, `js`, and `dart`, it also checks that a case ID in a `for` block has a variable branch.
 The target abbreviations are checked by another script (see [test-abbr-check.md](test-abbr-check.md)).
 
 The checker reads one simple way of writing tests. It is not a language parser.
@@ -86,7 +87,8 @@ it(
 - A case keyword with no title literal on its line, and not wrapped this way, is error 1 (`no case ID`).
 
 A wrapped title gets the same checks as a title on the keyword line:
-the case ID, its group, and duplicates (errors 1 to 3 in [What is checked](#what-is-checked)).
+the case ID, its group, duplicates, and the loop branch
+(errors 1 to 3 and 6 in [What is checked](#what-is-checked)).
 An error on a wrapped declaration names the line of the keyword.
 
 `go` does not read wrapped titles.
@@ -104,6 +106,36 @@ it(`T-CFG-GI-03-${branch}: ...`, ...)
 t.Run("T-CFG-GI-03-"+tc.name, ...)
 ```
 
+In `ts`, `js`, and `dart` only, a case ID inside a `for` block needs a variable branch.
+The blocks are those of `for (...) {`, `for await (...) {`, and `await for (...) {`.
+The dropped `-` matters here: the ID as written must end with it, where the branch follows.
+[Loop blocks](#loop-blocks) tells where a block starts and ends.
+Cases after the block are not affected.
+
+| Title in the block, as written | Result                                                    |
+| ------------------------------ | --------------------------------------------------------- |
+| `T-CFG-GI-03-$branch`          | Pass                                                      |
+| `T-CFG-GI-03-${row.branch}`    | Pass                                                      |
+| `T-CFG-GI-03-02-${x}`          | Pass                                                      |
+| `'T-CFG-GI-03-' + branch`      | Pass                                                      |
+| `T-CFG-GI-03`                  | [Error 6](#what-is-checked): no branch                    |
+| `T-CFG-GI-03-01`               | [Error 6](#what-is-checked): a fixed branch is not enough |
+
+### Loop blocks
+
+The checker finds `for` blocks line by line. It does not parse the language or count braces.
+
+- A `for` line starts with `for (`, `for await (`, or `await for (`, after optional spaces and tabs.
+- A `for` line that ends with `{` opens a block.
+- Any other `for` line starts a header that may span lines:
+  - The block opens at a line that starts with `)`, `]`, or `}`
+    at the indentation of the `for` line, and ends with `{`.
+  - Blank lines and deeper lines before it are skipped.
+  - Any other line drops the header. Another `for` line, at any depth, replaces it.
+- A block ends at a line that starts with `}` at the indentation of the `for` line
+  and does not end with `{`. So `} else {` does not end it.
+- Other lines in a block do not change it. An inner `for` loop is part of the outer block.
+
 ## What is checked
 
 | No | Error                                                                        |
@@ -113,6 +145,7 @@ t.Run("T-CFG-GI-03-"+tc.name, ...)
 | 3  | A group ID or a case ID declared twice among the checked files               |
 | 4  | A selected language with no test file, or with no group ID                   |
 | 5  | A listing that fails, or a test file that cannot be read                     |
+| 6  | In `ts`, `js`, `dart`: a case ID without a variable branch in a `for` block  |
 
 - A group declaration without an ID, such as `Describe 'When: ...'`, is allowed.
 - A case ID in the title of a group declaration declares nothing.
@@ -125,10 +158,16 @@ t.Run("T-CFG-GI-03-"+tc.name, ...)
   In `ts`, `js`, and `dart`, a wrapped case declaration with a title literal on the next line
   is therefore not error 1 for being wrapped. In `go` and `sh`, a wrapped case declaration is error 1.
 
-Every error names the file and the line. The checker exits 1 after it reports all of them.
+Error 6 reads `case ID without a variable branch in a loop: <ID>`.
+[Table-driven cases](#table-driven-cases) shows which IDs pass.
+
+Every error names the file and the line, the keyword line for a wrapped case declaration.
+The checker exits 1 after it reports all of them.
 It exits 0 with a count of files, group IDs and case IDs when there is none.
 
 ## What is not checked
+
+### Lines that are not declarations
 
 These lines are not declarations. Their IDs are not read, and duplicates among them are not found.
 
@@ -139,8 +178,54 @@ These lines are not declarations. Their IDs are not read, and duplicates among t
   The cases after it are checked against the group ID read before it,
   so a case of the wrapped group is error 2 unless its ID also fits that earlier group.
 
+### Loop branch check
+
+Error 6 has these limits, and those of loop tracking in [Comments and strings](#comments-and-strings).
+
+#### Scope
+
+- `go` and `sh` are not covered.
+  Their loop cases are expected to be written as `<testID>-{branch}` already.
+- The text after the `-` is not verified. A literal `T-CFG-GI-03-: title` passes.
+- The values a branch takes are not read, so duplicate branch values are not found.
+- Only `for` is tracked. `while`, `do`, and callback loops such as `forEach` are not.
+
+#### `for` shapes that open no block
+
+The cases in these loops are not checked.
+
+- A header whose closing line is indented deeper than the `for` line, such as `i++) {`.
+  `dart format` writes long `for-in` and `await for` headers this way.
+- A `for` that closes on its own line, as `for (...) { ... }`
+- A `for` without braces, as `for (...) stmt;`
+- An opening brace on its own line
+- A `for` that does not start its line, as `outer: for` or `else for`
+- A `for` line that ends in a block comment, as `for (...) { /* note */`
+
+#### Block end
+
+Indentation is compared as written, spaces and tabs.
+A block whose closing `}` is not at the exact indentation of the `for` line stays open
+until a matching line or the end of the file. So later cases can be false errors.
+
+### Comments and strings
+
 A line inside a comment block or a multi-line string is not told apart.
 It is read as a declaration when a keyword starts it. A heredoc body is the same.
+
+Loop tracking, used for error 6, reads such lines as code too.
+
+- A `for (...) {` line in one, without its closing `}`, opens a block.
+  Later cases can then be false errors, not only missed ones.
+- In a block, a line in one that looks like the closing `}` ends the block early.
+  The later cases of the loop are then not checked.
+
+Only loop tracking drops line comments. Declarations are read from the whole line.
+
+- A line is cut from `//` to its end. So `} // end` ends a block,
+  and a `//` comment line counts as blank.
+- A `//` in a URL, such as `http://...`, does not cut the line.
+- Any other `//` in a string literal cuts it too, so such a `for` line may open no block.
 
 ## Scan root
 
@@ -194,6 +279,7 @@ declare -g _TSJS_CASE_PATTERN="^[[:blank:]]*(it|test)[(]${_QUOTE}(.*)"
 declare -g _TSJS_CASE_START_PATTERN='^[[:blank:]]*(it|test)[(]'
 
 check_tsjs_line() {
+  track_loop_block "$2" '//'
   count_line_declaration "$1" "$2" "$_TSJS_GROUP_PATTERN" "$_TSJS_CASE_PATTERN" "$_TSJS_CASE_START_PATTERN" "${3-}"
 }
 
@@ -219,7 +305,8 @@ Everything that differs between languages belongs in the plugin. The libraries d
 | `read_declaration`        | `declaration.lib.sh` | Read a line as a declaration, without counting it                                                                            |
 | `count_group_declaration` | `declaration.lib.sh` | Count a group ID. A title without one adds nothing                                                                           |
 | `count_case_declaration`  | `declaration.lib.sh` | Count a case ID, or report that there is none                                                                                |
-| `parse_title_id`          | `test-id.lib.sh`     | Read the ID of a title and whether it is a group or case                                                                     |
+| `parse_title_id`          | `test-id.lib.sh`     | Read the ID of a title and whether it is a group or case. Set `_ID_TRAILING_HYPHEN` if the ID as written ends with `-`       |
+| `track_loop_block`        | `test-id.lib.sh`     | Track `for` blocks. The optional 2nd argument is the line comment marker; without it, no comment is dropped                  |
 
 - The three patterns are extended regular expressions.
   They match a group declaration, a case declaration, and a line that starts with a case keyword.
@@ -236,6 +323,15 @@ Everything that differs between languages belongs in the plugin. The libraries d
   See the `go` plugin, which uses the form of the ID.
 - Plugins share one shell. Put the plugin ID in the names of the handler and the patterns.
 - A plugin is loaded once for each of its selected languages. Declare nothing `readonly`.
+
+For the loop check ([error 6](#what-is-checked)):
+
+- Call `track_loop_block` for each line in order, before counting the declaration of that line.
+- `count_case_declaration` reports the error when `_IN_LOOP` is non-empty
+  and `_ID_TRAILING_HYPHEN` is empty.
+- A handler that never calls `track_loop_block` gets no loop check, as in `sh` and `go`.
+- `read_file_lines` resets the state for each file with `group_id_reset` and `loop_block_reset`.
+  A plugin does not call them.
 
 Only the plugins of the selected languages are loaded.
 A selected plugin that is missing or fails to load exits 1 and runs no check.
