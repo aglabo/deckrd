@@ -73,7 +73,9 @@ skills/bdd-coder/skills/bdd-coder/
     │   ├── quality-gate.md           # Phase 4
     │   └── write-back.md             # Phase 5
     ├── session-resume.md             # session.json の書き込みと再開の手順
-    ├── test-id-check.md              # テスト ID の機械検査
+    ├── test-id-check.md              # テスト ID の機械検査 (実行とエラー)
+    ├── test-id-check-syntax.md       # 同: 文法と制限 (参照用)
+    ├── test-id-check-extending.md    # 同: 言語の追加 (必要なときに読む)
     ├── test-abbr-check.md            # テスト対象略号の機械検査
     ├── guidelines/
     │   └── code-comments.md          # コードコメント ガイドライン (C-1〜C-10)
