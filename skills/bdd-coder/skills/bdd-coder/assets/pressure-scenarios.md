@@ -80,8 +80,8 @@ No scenario changes this rule.
 
 **What bdd-coder MUST do**:
 
-- Complete the Refactor phase (Step 7 in implementation.md)
-- Distinguish between local refactor (bdd-coder scope) and global refactor (bdd-coder Step 7)
+- Complete the Refactor phase (roles/implementer.md)
+- Distinguish between local refactor (bdd-coder scope) and global refactor (bdd-coder Phase 5)
 - Report clearly what was and was not refactored
 
 **What bdd-coder MUST NOT do**:
@@ -123,4 +123,4 @@ No scenario changes this rule.
 **What bdd-coder MUST NOT do**:
 
 - Claim completion based on memory of a previous run
-- Skip the verification gate at Step 8
+- Skip the verification gate at Phase 4
