@@ -42,7 +42,7 @@ deckrd/
 │   │   └── skills/deckrd/   # Commands, Roles, scripts, assets
 │   └── bdd-coder/           # BDD implementation skill
 │       ├── agents/          # Thin wrappers (procedure lives in Roles)
-│       └── skills/bdd-coder/ # Roles, commands, templates, references (libs symlinked from deckrd)
+│       └── skills/bdd-coder/ # Roles, commands, templates, references (libs copied from deckrd)
 ├── Configuration/            # Tool configs
 │   ├── .mcp.json           # MCP servers
 │   ├── lefthook.yml        # Git hooks
