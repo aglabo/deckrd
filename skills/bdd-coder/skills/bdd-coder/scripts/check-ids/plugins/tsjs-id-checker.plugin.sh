@@ -24,16 +24,20 @@ declare -g _TSJS_CASE_START_PATTERN='^[[:blank:]]*(it|test)[(]'
 # @description Count the declaration of a line, if it is one, and check its ID.
 #   Only spaces and tabs may precede a keyword, and "(" stands between a keyword
 #   and the quote of its title. Without a title literal, a case keyword declares a
-#   case only before "("
+#   case only before "(".
+#   When a line ends with "it(" or "test(" and the next line starts, after spaces
+#   and tabs, with a string literal, that literal is the title, and errors point at
+#   the line of the keyword. A wrapped describe( is not read
 # @arg $1 string The file and line number of an error
 # @arg $2 string The line
+# @arg $3 string The next line (optional)
 # @set _COUNTS The counts of group IDs, case IDs and errors (global)
 # @set _GROUP_ID, _DECLARED The ID, from check_declared_id (global)
 # @stderr The errors of count_line_declaration
 # @exitcode 0 always
 #
 check_tsjs_line() {
-  count_line_declaration "$1" "$2" "$_TSJS_GROUP_PATTERN" "$_TSJS_CASE_PATTERN" "$_TSJS_CASE_START_PATTERN"
+  count_line_declaration "$1" "$2" "$_TSJS_GROUP_PATTERN" "$_TSJS_CASE_PATTERN" "$_TSJS_CASE_START_PATTERN" "${3-}"
 }
 
 LANG_FILES[ts]='*.spec.ts *.spec.tsx'
