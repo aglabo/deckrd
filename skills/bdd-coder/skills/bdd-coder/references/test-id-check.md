@@ -21,7 +21,8 @@ bash "<BDD_CODER_SKILL_DIR>/scripts/check-test-ids.sh" [--lang <lang>[,<lang>...
 
 ## Writing tests
 
-A declaration is one line: a keyword, then a title literal that holds the ID.
+A declaration is one line: a keyword, then a title literal that holds the ID,
+except a [wrapped case declaration](#wrapped-case-declarations) in `ts`, `js`, and `dart`.
 
 ```text
 describe('T-CFG-GI: getInstance', ...)
@@ -42,6 +43,7 @@ describe('T-CFG-GI: getInstance', ...)
   A UTF-8 byte order mark at the start of a file is ignored.
 - The title literal starts right after the keyword, with a quote: `'`, `"`, or a backquote.
   In `sh`, spaces or tabs separate the keyword and the quote.
+  In a wrapped case declaration, it starts the next line, after optional spaces and tabs.
   A keyword followed by anything else, such as `It=1`, is not a declaration. The line end is allowed.
 - The title ends at the next quote of the same kind. Text after it is not read.
 - The ID is the first word of the title that starts like `T-<segment>-`.
@@ -60,6 +62,36 @@ A segment is uppercase letters and digits.
 - A case ID ends with `-NN` or `-NN-NN` after at least two segments.
 - A word with other characters, such as `T-CFG-GI-01a`, is not an ID.
 - The checker does not limit the length of a segment.
+
+### Wrapped case declarations
+
+The title of a case may start on the line after its keyword:
+
+```text
+it(
+  'T-CFG-GI-01: returns the same instance',
+```
+
+- In `ts` and `js`, the keyword line ends right after the `(` of `it(` or `test(`.
+  In `dart`, it ends right after the `(` of `test(` or `testWidgets(`.
+  Even spaces or tabs after the `(` stop the wrapping.
+  The CR of a CRLF line is ignored.
+- The next line starts, after optional spaces and tabs, with a string literal.
+  That literal is read as the title.
+  Only that line is read, so a blank line before the literal stops the wrapping.
+- The literal is a plain one, quoted by `'`, `"`, or a backquote.
+  A Dart raw string, such as `r'...'`, is not one.
+  A Dart triple-quoted string, such as `'''...'''`, is not read as a title either.
+  Both are error 1, on the keyword line as well as on the next line.
+- A case keyword with no title literal on its line, and not wrapped this way, is error 1 (`no case ID`).
+
+A wrapped title gets the same checks as a title on the keyword line:
+the case ID, its group, and duplicates (errors 1 to 3 in [What is checked](#what-is-checked)).
+An error on a wrapped declaration names the line of the keyword.
+
+`go` does not read wrapped titles.
+A line that starts with `t.Run(`, after optional spaces and tabs, and ends there is error 1 (`no case ID`).
+Neither does `sh`: an `It` line without a title is error 1, even when the next line starts with a quote.
 
 ### Table-driven cases
 
@@ -87,8 +119,11 @@ t.Run("T-CFG-GI-03-"+tc.name, ...)
   It is neither counted nor checked for duplicates. `go` reads it as a case.
 - `go` declares groups and cases with `t.Run(` alike. The form of the ID tells them apart.
   Every `t.Run(` line therefore needs a group ID or a case ID.
-- A case keyword needs a title literal right after it. Anything else is error 1.
-  A wrapped line and a variable title are therefore reported.
+- A case keyword needs a title literal right after it,
+  or on the next line in a [wrapped case declaration](#wrapped-case-declarations).
+  Anything else, such as a variable title, is error 1.
+  In `ts`, `js`, and `dart`, a wrapped case declaration with a title literal on the next line
+  is therefore not error 1 for being wrapped. In `go` and `sh`, a wrapped case declaration is error 1.
 
 Every error names the file and the line. The checker exits 1 after it reports all of them.
 It exits 0 with a count of files, group IDs and case IDs when there is none.
@@ -100,6 +135,9 @@ These lines are not declarations. Their IDs are not read, and duplicates among t
 - Derived keywords, such as `xIt` or `fit(`
 - Modified calls, such as `it.each(` or `test.skip(`
 - A call that does not start its line, such as `if !t.Run(`
+- A wrapped group declaration, a line that ends with `describe(` or `group(`.
+  The cases after it are checked against the group ID read before it,
+  so a case of the wrapped group is error 2 unless its ID also fits that earlier group.
 
 A line inside a comment block or a multi-line string is not told apart.
 It is read as a declaration when a keyword starts it. A heredoc body is the same.
@@ -156,7 +194,7 @@ declare -g _TSJS_CASE_PATTERN="^[[:blank:]]*(it|test)[(]${_QUOTE}(.*)"
 declare -g _TSJS_CASE_START_PATTERN='^[[:blank:]]*(it|test)[(]'
 
 check_tsjs_line() {
-  count_line_declaration "$1" "$2" "$_TSJS_GROUP_PATTERN" "$_TSJS_CASE_PATTERN" "$_TSJS_CASE_START_PATTERN"
+  count_line_declaration "$1" "$2" "$_TSJS_GROUP_PATTERN" "$_TSJS_CASE_PATTERN" "$_TSJS_CASE_START_PATTERN" "${3-}"
 }
 
 LANG_FILES[ts]='*.spec.ts *.spec.tsx'
@@ -170,23 +208,29 @@ LANG_HANDLER[js]=check_tsjs_line
 | `LANG_FILES`   | File name globs, separated by spaces |
 | `LANG_HANDLER` | The name of the line handler         |
 
-The handler is called for each line with `<file>:<line number>` and the line.
+The handler is called for each line with `<file>:<line number>`, the line and the next line.
+The next line is the last argument, and it is an empty string for the last line of a file.
 The handler must return 0, otherwise the checker stops with no message (`set -e`).
 Everything that differs between languages belongs in the plugin. The libraries do not branch on the language.
 
-| Function                  | Library              | Use                                                      |
-| ------------------------- | -------------------- | -------------------------------------------------------- |
-| `count_line_declaration`  | `declaration.lib.sh` | Read a line with three patterns and count it             |
-| `read_declaration`        | `declaration.lib.sh` | Read a line as a declaration, without counting it        |
-| `count_group_declaration` | `declaration.lib.sh` | Count a group ID. A title without one adds nothing       |
-| `count_case_declaration`  | `declaration.lib.sh` | Count a case ID, or report that there is none            |
-| `parse_title_id`          | `test-id.lib.sh`     | Read the ID of a title and whether it is a group or case |
+| Function                  | Library              | Use                                                                                                                          |
+| ------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `count_line_declaration`  | `declaration.lib.sh` | Read a line with three patterns and count it. The optional next line, its 6th argument, is used to read a wrapped case title |
+| `read_declaration`        | `declaration.lib.sh` | Read a line as a declaration, without counting it                                                                            |
+| `count_group_declaration` | `declaration.lib.sh` | Count a group ID. A title without one adds nothing                                                                           |
+| `count_case_declaration`  | `declaration.lib.sh` | Count a case ID, or report that there is none                                                                                |
+| `parse_title_id`          | `test-id.lib.sh`     | Read the ID of a title and whether it is a group or case                                                                     |
 
 - The three patterns are extended regular expressions.
   They match a group declaration, a case declaration, and a line that starts with a case keyword.
 - The first two end with the quote and the rest of the line, as `${_QUOTE}(.*)`.
 - The third decides when a case keyword without a title is reported.
   `sh` accepts a space, a tab or the line end after it.
+  A [wrapped case declaration](#wrapped-case-declarations) also needs the line to end with `(`
+  and the third pattern to match the whole line, aside from the CR of a CRLF line.
+  Without the next line, `count_line_declaration` reads no declaration as wrapped.
+- `read_declaration` reads one line only, so it does not read wrapped titles.
+  The `go` plugin calls it directly.
 - Write a literal `.` in a keyword as `[.]`, such as `t[.]Run`.
 - When a group and a case are the same call, the handler tells them apart.
   See the `go` plugin, which uses the form of the ID.
