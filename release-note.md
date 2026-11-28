@@ -1,13 +1,13 @@
 ---
-title: "deckrd v0.9.1 Release Note"
-description: "Release Note: v0.9.1"
-version: "0.9.1"
-date: "2026-11-24"
+title: "deckrd v0.10.0 Release Note"
+description: "Release Note: v0.10.0"
+version: "0.10.0"
+date: "2026-11-28"
 summary:
-  - bdd-coder にテストケース ID チェッカーを追加
-  - bdd-coder で範囲指定 (T01-01..03) と Target 配下一括 (T01-*) の複数タスク実行に対応
-  - /deckrd module が既存モジュールへの切り替えに対応
-breaking: false
+  - bdd-coder のテスト ID チェックが言語別プラグインに対応 (sh / ts / js / dart / go)
+  - テスト対象の略語の重複チェックを check-test-abbrs.sh に分離
+  - bdd-coder の共有ライブラリと辞書を、シンボリックリンクから実ファイルのコピーに変更
+breaking: true
 ---
 
 <!-- textlint-disable
@@ -15,56 +15,56 @@ breaking: false
   ja-technical-writing/max-comma,
   -->
 
-## deckrd v0.9.1 - 2026-11-24
+## deckrd v0.10.0 - 2026-11-28
 
-v0.9.1 では、bdd-coder のテスト ID チェックと複数タスク実行、deckrd のモジュール切り替えを追加しました。
-破壊的変更はありませんが、`module --force` の扱いは Migration を確認してください。
+v0.10.0 では、bdd-coder のテスト ID チェックを多言語対応にし、bdd-coder の手順書を Phase ごとに分割しました。
+`check-test-ids.sh` のオプションに破壊的変更があるため、Migration を確認してください。
 
 ## Highlights
 
-### テストケース ID チェッカー (bdd-coder)
+### 言語別のテスト ID チェック (bdd-coder)
 
-- `check-test-ids.sh` を `runners/` から bdd-coder に移動し、チェック内容を拡張した
-  - 欠落・配置誤り・重複したテストケース ID を検出する
-  - 分岐展開された ID と、数字を含む略称に対応する
-  - Target 略称がモジュールをまたいで一意であることを確認する
-- ファイル探索は `rg` を使い、なければ `find` にフォールバックする。awk は `gawk` を優先し、`AWK` で上書きできる
+- `check-test-ids.sh` が、言語ごとのプラグインでテスト ID をチェックする
+  - `--lang` で `sh`、`ts`、`js`、`dart`、`go` を選ぶ。カンマ区切りで複数指定でき、省略時は `sh`
+  - ID のないテストケース、グループに合わないケース ID、重複した ID を検出する
+  - 言語の追加は、プラグインファイルと `check-ids/languages.sh` の 1 行で行う
 - 使い方は `references/test-id-check.md` を参照
 
-### 複数タスク実行 (bdd-coder)
+### テスト対象の略語チェック (bdd-coder)
 
-- 範囲指定 (`T01-01..03`) と Target 配下一括 (`'T01-*'`) で、タスクを 1 件ずつ順に実行する
-  - シェルのグロブ展開を防ぐため、`T01-*` は引用符で囲む
-  - BLOCKED で停止し (fail-fast)、`--resume` で `queue[index]` から再開する
-  - コミットとプッシュは行わない
-- 範囲と `T01-*` は呼び出し側が展開する。`tasklist-builder` に渡すと `invalid-input` を返す
+- `check-test-abbrs.sh` を追加した
+  - 全モジュール定義 (`module.md`) を読み、テスト対象の略語が 1 回だけ宣言されていることを確認する
+  - 略語表とテストコードの照合はしない
+- 使い方は `references/test-abbr-check.md` を参照
 
-### 既存モジュールへの切り替え (deckrd)
+### スキル単体インストールへの対応 (bdd-coder)
 
-- 既存モジュールに対する `/deckrd module <namespace>/<module>` は、失敗せずアクティブモジュールを切り替える
-  - 書き換えるのは `session.json` の `active` と `updated_at` のみ。進捗と `test_scope` は保持する
-  - 切り替え時に `--test-scope` は指定できない
-  - `session.json` またはモジュールのエントリがない場合は、`module <namespace>/<module> --force` で再初期化する
-- `--force` は再初期化であり、切り替えではない。セッション上の進捗をリセットする
+- `scripts/libs/` と `assets/dic/` を、deckrd へのシンボリックリンクから実ファイルのコピーに変更した
+  - `gh skill` と `npx skills` はシンボリックリンクをたどらないため
+- 正本は deckrd 側のファイル。コピーが一致しない場合は結合テストが失敗する
 
-### rev の順序ゲート免除
+### Phase ごとの手順書 (bdd-coder)
 
-- `rev` はコードから遡るため、順序ゲートの対象外。必要なのは `init` の完了のみ
-- `rev --to impl --path <パス>` はモジュール不要で、モジュールを推定する
+- `SKILL.md` と `workflow.md` を Phase の一覧表にまとめ、手順を `references/phases/` に分割した
+- セッションの記録と再開のルールを `references/session-resume.md` に分離した
+- `faq.md`、`implementation.md`、`troubleshooting.md`、`write-back-format.md` を削除した
 
 ## Other Changes
 
-- テストケース ID のルール (`deckrd-rule-testing-guidelines.md`) を整理した
-  - 「ケース ID」を「テストケース ID」に統一
-  - テーブル駆動・フィクスチャのテスト ID は、リテラル ID と可変の分岐サフィックス (2 桁) で表す
-- `scripts/bump-version.sh` の更新対象を、`package.json`、`deckrd.json`、`marketplace*.json`、各 `plugin.json`、各 `SKILL.md` に変更した
-- `.claude-plugin/` とその JSON を Git の追跡対象にした
-- pnpm を 12.23.0 に、`@dprint/typescript` を 0.101.0 に更新した
-- ci-platform の参照を、コミット SHA からタグ `v0.8.1` に変更した
-- 未使用の設定、runner の単体テスト、`run-check-test-ids.sh` を削除した
+- deckrd に共有ライブラリ `frontmatter.lib.sh`、`glob.lib.sh`、`module-decl.lib.sh` を追加し、`module.sh` で利用するようにした
+- `module.md` が読めない場合、`module.sh` は「cannot read module declaration」で失敗する
+- テストと lint の対象から `node_modules` を除外した。`run-shellcheck.sh` は `.local` と `temp` も除外する
+- テストのルール (`deckrd-rule-testing-guidelines.md`) を 3.0.0 に更新し、テスト宣言の書き方を追加した
+- explorer ロールが、`session.json` の `prog` を読めるようにした
+- 各 `SKILL.md` の `license` を、`metadata` から frontmatter の直下に移動した
+- `deckrd/lib`、`deckrd/subcommands`、`bdd-coder/shared-copies` のモジュール定義を追加した
+- 公開前のスキルチェック用に、`pnpm run check:skills` を追加した
+- ci-platform の再利用ワークフローを `v0.9.0` に更新した
 
 ## Migration
 
-- 既存モジュールに `module <namespace>/<module>` を実行すると、以前のエラーではなく切り替えになります。
-- 既存モジュールを再初期化したい場合は `--force` を付けてください。進捗 (`current_step` / `completed` / `documents`) はリセットされます。
-- `runners/run-check-test-ids.sh` は削除されました。テストケース ID のチェックは bdd-coder の `check-test-ids.sh` を使ってください。
+- `check-test-ids.sh` の `--scopes`、`--module`、`--targets`、`--all` は廃止されました。`--lang` を使ってください。
+- 引数なしで実行すると、`sh` (`*.spec.sh`) のテストだけをチェックします。他の言語は `--lang` で指定してください。
+- 略語の重複チェックは `check-test-abbrs.sh` を実行してください。
+- `check-test-ids.sh` はモジュール定義を読まなくなりました。`test_scope` や担当ファイルのチェック、略語表とテストの照合は行いません。
+- テスト宣言は、行頭のキーワードとタイトルを 1 行で書いてください。`it.each(` などの派生形はチェック対象外です。
