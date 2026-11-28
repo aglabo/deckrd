@@ -25,7 +25,8 @@ readonly CONFIG_GLOBAL_RELPATH='shellcheckrc'
 # Config file path relative to PROJECT_ROOT
 readonly CONFIG_LOCAL_RELPATH='configs/shellcheckrc'
 
-# @description Run shellcheck on .sh files (spec files and node_modules/.tools are skipped).
+# @description Run shellcheck on .sh files. Spec files are skipped. Directory scans also skip
+#              node_modules, .tools, .local and temp directories at any depth.
 #              The rc file is taken from --rcfile, then $SHELLCHECKRC, then the checked-in config,
 #              then the global config
 # @arg $@ string Options (--rcfile|-r <file>) followed by paths to check
@@ -63,7 +64,7 @@ main() {
     if [[ -d $target ]]; then
       while IFS= read -r -d '' f; do
         files+=("$f")
-      done < <(find "$target" -mindepth 1 \( -name node_modules -o -name .tools \) -prune -o -name "*.sh" ! -name "*.spec.sh" -print0)
+      done < <(find "$target" -mindepth 1 -type d \( -name node_modules -o -name .tools -o -name .local -o -name temp \) -prune -o -name "*.sh" ! -name "*.spec.sh" -print0)
     elif [[ $target != *.spec.sh ]]; then
       files+=("$target")
     fi

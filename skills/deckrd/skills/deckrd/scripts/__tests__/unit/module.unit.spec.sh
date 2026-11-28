@@ -17,12 +17,30 @@ Include "${SHELLSPEC_SPECFILE%/*}/../spec_helper.sh"
 
 SCRIPT="${DECKRD_SCRIPTS_DIR}/module.sh"
 
-# Helper: setup tmpdir and create .project.json with project name "myproject"
+# Helper: setup tmpdir and create .project.json with project name "my-project"
 setup_deckrd_tmpdir_with_project() {
   setup_deckrd_tmpdir
   mkdir -p "$DECKRD_LOCAL_DATA"
-  printf '{"project":"myproject","project_type":"feature","language":"shell","ai_model":"sonnet","created_at":"2026-01-01T00:00:00Z","updated_at":"2026-01-01T00:00:00Z"}\n' \
+  printf '{"project":"my-project","project_type":"feature","language":"shell","ai_model":"sonnet","created_at":"2026-01-01T00:00:00Z","updated_at":"2026-01-01T00:00:00Z"}\n' \
     >"${DECKRD_LOCAL_DATA}/.project.json"
+}
+
+# Helpers: make the frontmatter reader fail to run (fm_read_scalar honors $AWK).
+# Works on every platform, unlike removing read permission
+# shellcheck disable=SC2329
+break_frontmatter_reader() { export AWK="${DECKRD_TMPDIR}/no-such-awk"; }
+# shellcheck disable=SC2329
+restore_frontmatter_reader() { unset AWK; }
+
+# Helper: succeed when chmod cannot block reading (root, or Windows file systems)
+# shellcheck disable=SC2329
+chmod_cannot_block_read() {
+  local probe status=1
+  probe="$(mktemp)"
+  chmod 000 "$probe"
+  if { : <"$probe"; } 2>/dev/null; then status=0; fi
+  rm -f "$probe"
+  return "$status"
 }
 
 # ============================================================================
@@ -112,9 +130,9 @@ Describe "module.sh"
       Before "setup_deckrd_tmpdir"
       After "teardown_deckrd_tmpdir"
 
-      Describe "When: run with 'myns/mymod --force=x'"
+      Describe "When: run with 'my-ns/my-mod --force=x'"
         It "[Error] T-CLI-MOD-16: Should: exit with status 1 and output '--force does not take a value' error and Usage"
-          When run bash "$SCRIPT" myns/mymod --force=x
+          When run bash "$SCRIPT" my-ns/my-mod --force=x
           The status should equal 1
           The output should include "Usage:"
           The stderr should include "--force does not take a value"
@@ -130,23 +148,23 @@ Describe "module.sh"
       Before "setup_deckrd_tmpdir"
       After "teardown_deckrd_tmpdir"
 
-      Describe "When: run with 'myns/mymod'"
+      Describe "When: run with 'my-ns/my-mod'"
         It "[Normal] T-CLI-MOD-04: Should: exit with status 0, create all module directories, skip .project.json, and output 'Session updated'"
-          When run bash "$SCRIPT" myns/mymod
+          When run bash "$SCRIPT" my-ns/my-mod
           The status should equal 0
-          The output should include "myns/mymod"
+          The output should include "my-ns/my-mod"
           The output should include "requirements"
           The output should include "specifications"
           The output should include "implementation"
           The output should include "tasks"
           The output should include "workspaces"
           The output should include "Session updated"
-          The path "${DECKRD_DOCS_DIR}/myns/mymod/requirements" should be directory
-          The path "${DECKRD_DOCS_DIR}/myns/mymod/specifications" should be directory
-          The path "${DECKRD_DOCS_DIR}/myns/mymod/implementation" should be directory
-          The path "${DECKRD_DOCS_DIR}/myns/mymod/tasks" should be directory
-          The path "${DECKRD_DOCS_DIR}/myns/mymod/workspaces" should be directory
-          The path "${DECKRD_DOCS_DIR}/myns/mymod/.project.json" should not be exist
+          The path "${DECKRD_DOCS_DIR}/my-ns/my-mod/requirements" should be directory
+          The path "${DECKRD_DOCS_DIR}/my-ns/my-mod/specifications" should be directory
+          The path "${DECKRD_DOCS_DIR}/my-ns/my-mod/implementation" should be directory
+          The path "${DECKRD_DOCS_DIR}/my-ns/my-mod/tasks" should be directory
+          The path "${DECKRD_DOCS_DIR}/my-ns/my-mod/workspaces" should be directory
+          The path "${DECKRD_DOCS_DIR}/my-ns/my-mod/.project.json" should not be exist
         End
       End
 
@@ -167,36 +185,36 @@ Describe "module.sh"
       Before "setup_deckrd_tmpdir"
       After "teardown_deckrd_tmpdir"
 
-      Describe "When: run with '/mymod' (empty namespace)"
+      Describe "When: run with '/my-mod' (empty namespace)"
         It "[Error] T-CLI-MOD-06: Should: exit with status 1 and output 'empty' error"
-          When run bash "$SCRIPT" "/mymod"
+          When run bash "$SCRIPT" "/my-mod"
           The status should equal 1
           The stderr should include "empty"
         End
       End
 
-      Describe "When: run with 'myns/' (empty module)"
+      Describe "When: run with 'my-ns/' (empty module)"
         It "[Error] T-CLI-MOD-07: Should: exit with status 1 and output 'empty' error"
-          When run bash "$SCRIPT" "myns/"
+          When run bash "$SCRIPT" "my-ns/"
           The status should equal 1
           The stderr should include "empty"
         End
       End
 
-      Describe "When: run with 'my ns/mymod' (space in namespace)"
+      Describe "When: run with 'my ns/my-mod' (space in namespace)"
         It "[Error] T-CLI-MOD-08: Should: exit with status 1 and output 'invalid characters' error"
-          When run bash "$SCRIPT" "my ns/mymod"
+          When run bash "$SCRIPT" "my ns/my-mod"
           The status should equal 1
           The stderr should include "invalid characters"
         End
       End
 
-      Describe "When: run with 'myns/mymod' on existing directory with --force"
-        It "[Edge] T-CLI-MOD-10: Should: exit with status 0 and output 'myns/mymod'"
-          mkdir -p "${DECKRD_DOCS_DIR}/myns/mymod"
-          When run bash "$SCRIPT" myns/mymod --force
+      Describe "When: run with 'my-ns/my-mod' on existing directory with --force"
+        It "[Edge] T-CLI-MOD-10: Should: exit with status 0 and output 'my-ns/my-mod'"
+          mkdir -p "${DECKRD_DOCS_DIR}/my-ns/my-mod"
+          When run bash "$SCRIPT" my-ns/my-mod --force
           The status should equal 0
-          The output should include "myns/mymod"
+          The output should include "my-ns/my-mod"
         End
       End
     End
@@ -209,21 +227,21 @@ Describe "module.sh"
       Before "setup_deckrd_tmpdir"
       After "teardown_deckrd_tmpdir"
 
-      Describe "When: run 'create myns/mymod'"
+      Describe "When: run 'create my-ns/my-mod'"
         It "[Normal] T-CLI-MOD-11: Should: exit with status 0, create module dirs, and output 'Session updated'"
-          When run bash "$SCRIPT" create myns/mymod
+          When run bash "$SCRIPT" create my-ns/my-mod
           The status should equal 0
-          The output should include "myns/mymod"
+          The output should include "my-ns/my-mod"
           The output should include "Session updated"
-          The path "${DECKRD_DOCS_DIR}/myns/mymod/requirements" should be directory
-          The path "${DECKRD_DOCS_DIR}/myns/mymod/specifications" should be directory
-          The path "${DECKRD_DOCS_DIR}/myns/mymod/.project.json" should not be exist
+          The path "${DECKRD_DOCS_DIR}/my-ns/my-mod/requirements" should be directory
+          The path "${DECKRD_DOCS_DIR}/my-ns/my-mod/specifications" should be directory
+          The path "${DECKRD_DOCS_DIR}/my-ns/my-mod/.project.json" should not be exist
         End
       End
 
-      Describe "When: run create with invalid namespace 'my ns/mymod'"
+      Describe "When: run create with invalid namespace 'my ns/my-mod'"
         It "[Error] T-CLI-MOD-12: Should: exit with status 1 and output 'invalid characters' error"
-          When run bash "$SCRIPT" create "my ns/mymod"
+          When run bash "$SCRIPT" create "my ns/my-mod"
           The status should equal 1
           The stderr should include "invalid characters"
         End
@@ -238,11 +256,11 @@ Describe "module.sh"
       Before "setup_deckrd_tmpdir"
       After "teardown_deckrd_tmpdir"
 
-      Describe "When: run 'create myfeature'"
-        It "[Normal] T-CLI-MOD-13: Should: exit with status 0 and output 'myfeature'"
-          When run bash "$SCRIPT" create myfeature
+      Describe "When: run 'create my-feature'"
+        It "[Normal] T-CLI-MOD-13: Should: exit with status 0 and output 'my-feature'"
+          When run bash "$SCRIPT" create my-feature
           The status should equal 0
-          The output should include "myfeature"
+          The output should include "my-feature"
         End
       End
     End
@@ -369,11 +387,11 @@ Describe "module.sh"
     Before "init_vars"
 
     Describe "Given: a well-formed <namespace>/<module> path"
-      Describe "When: call validate_and_normalize with 'myns/mymod'"
+      Describe "When: call validate_and_normalize with 'my-ns/my-mod'"
         It "[Normal] T-CLI-VAN-01: Should: return status 0 and output the path unchanged"
-          When call validate_and_normalize "myns/mymod"
+          When call validate_and_normalize "my-ns/my-mod"
           The status should equal 0
-          The output should equal "myns/mymod"
+          The output should equal "my-ns/my-mod"
         End
       End
 
@@ -387,9 +405,9 @@ Describe "module.sh"
     End
 
     Describe "Given: a path without a slash"
-      Describe "When: call validate_and_normalize with 'nopath'"
+      Describe "When: call validate_and_normalize with 'no-path'"
         It "[Error] T-CLI-VAN-02: Should: return status 1 and output a format error to stderr"
-          When call validate_and_normalize "nopath"
+          When call validate_and_normalize "no-path"
           The status should equal 1
           The stderr should include "Path must be in format <namespace>/<module>"
           The output should equal ""
@@ -398,7 +416,7 @@ Describe "module.sh"
 
       Describe "When: call validate_and_normalize inside a caller that handles the failure"
         caller_continues() {
-          validate_and_normalize "nopath" || echo "continued"
+          validate_and_normalize "no-path" || echo "continued"
         }
 
         It "[Error] T-CLI-VAN-08: Should: return to the caller instead of exiting the shell"
@@ -411,18 +429,18 @@ Describe "module.sh"
     End
 
     Describe "Given: a path with an empty part"
-      Describe "When: call validate_and_normalize with '/mymod' (empty namespace)"
+      Describe "When: call validate_and_normalize with '/my-mod' (empty namespace)"
         It "[Error] T-CLI-VAN-03: Should: return status 1 and output an empty-part error to stderr"
-          When call validate_and_normalize "/mymod"
+          When call validate_and_normalize "/my-mod"
           The status should equal 1
           The stderr should include "namespace and module must not be empty"
           The output should equal ""
         End
       End
 
-      Describe "When: call validate_and_normalize with 'myns/' (empty module)"
+      Describe "When: call validate_and_normalize with 'my-ns/' (empty module)"
         It "[Edge] T-CLI-VAN-06: Should: return status 1 and output an empty-part error to stderr"
-          When call validate_and_normalize "myns/"
+          When call validate_and_normalize "my-ns/"
           The status should equal 1
           The stderr should include "namespace and module must not be empty"
           The output should equal ""
@@ -431,18 +449,18 @@ Describe "module.sh"
     End
 
     Describe "Given: a path containing uppercase characters"
-      Describe "When: call validate_and_normalize with 'MyNS/mymod'"
+      Describe "When: call validate_and_normalize with 'MyNS/my-mod'"
         It "[Error] T-CLI-VAN-04: Should: return status 1 and report the invalid namespace"
-          When call validate_and_normalize "MyNS/mymod"
+          When call validate_and_normalize "MyNS/my-mod"
           The status should equal 1
           The stderr should include "namespace 'MyNS' contains invalid characters"
           The output should equal ""
         End
       End
 
-      Describe "When: call validate_and_normalize with 'myns/MyMod'"
+      Describe "When: call validate_and_normalize with 'my-ns/MyMod'"
         It "[Error] T-CLI-VAN-05: Should: return status 1 and report the invalid module"
-          When call validate_and_normalize "myns/MyMod"
+          When call validate_and_normalize "my-ns/MyMod"
           The status should equal 1
           The stderr should include "module 'MyMod' contains invalid characters"
           The output should equal ""
@@ -469,17 +487,17 @@ Describe "module.sh"
     Before "init_vars"
 
     Describe "Given: a <namespace>/<module> path"
-      Describe "When: call validate_and_normalize_with_fallback with 'myns/mymod'"
+      Describe "When: call validate_and_normalize_with_fallback with 'my-ns/my-mod'"
         It "[Normal] T-CLI-VNF-01: Should: return status 0 and output the path unchanged"
-          When call validate_and_normalize_with_fallback "myns/mymod"
+          When call validate_and_normalize_with_fallback "my-ns/my-mod"
           The status should equal 0
-          The output should equal "myns/mymod"
+          The output should equal "my-ns/my-mod"
         End
       End
 
-      Describe "When: call validate_and_normalize_with_fallback with 'MyNS/mymod'"
+      Describe "When: call validate_and_normalize_with_fallback with 'MyNS/my-mod'"
         It "[Error] T-CLI-VNF-04: Should: return status 1 and report the invalid namespace"
-          When call validate_and_normalize_with_fallback "MyNS/mymod"
+          When call validate_and_normalize_with_fallback "MyNS/my-mod"
           The status should equal 1
           The stderr should include "namespace 'MyNS' contains invalid characters"
           The output should equal ""
@@ -495,11 +513,11 @@ Describe "module.sh"
       }
       Before "mock_default_ns_resolves"
 
-      Describe "When: call validate_and_normalize_with_fallback with 'myfeature'"
+      Describe "When: call validate_and_normalize_with_fallback with 'my-feature'"
         It "[Normal] T-CLI-VNF-02: Should: return status 0 and output the path prefixed with the default namespace"
-          When call validate_and_normalize_with_fallback "myfeature"
+          When call validate_and_normalize_with_fallback "my-feature"
           The status should equal 0
-          The output should equal "proj/myfeature"
+          The output should equal "proj/my-feature"
         End
       End
 
@@ -524,9 +542,9 @@ Describe "module.sh"
       }
       Before "mock_default_ns_fails"
 
-      Describe "When: call validate_and_normalize_with_fallback with 'myfeature'"
+      Describe "When: call validate_and_normalize_with_fallback with 'my-feature'"
         It "[Error] T-CLI-VNF-03: Should: return status 1 and output nothing"
-          When call validate_and_normalize_with_fallback "myfeature"
+          When call validate_and_normalize_with_fallback "my-feature"
           The status should equal 1
           The output should equal ""
           The stderr should include "Cannot determine default namespace"
@@ -535,7 +553,7 @@ Describe "module.sh"
 
       Describe "When: call validate_and_normalize_with_fallback inside a caller that handles the failure"
         caller_continues_vnf() {
-          validate_and_normalize_with_fallback "myfeature" || echo "continued"
+          validate_and_normalize_with_fallback "my-feature" || echo "continued"
         }
 
         It "[Error] T-CLI-VNF-06: Should: return to the caller instead of exiting the shell"
@@ -567,25 +585,25 @@ Describe "module.sh"
     After "teardown_deckrd_tmpdir"
 
     Describe "Given: the module directory does not exist"
-      Describe "When: call create_module_dirs with 'myns/mymod' and force=false"
+      Describe "When: call create_module_dirs with 'my-ns/my-mod' and force=false"
         It "[Normal] T-CLI-CMD-01: Should: return status 0 and create every module subdirectory"
-          When call create_module_dirs "myns/mymod" false
+          When call create_module_dirs "my-ns/my-mod" false
           The status should equal 0
-          The output should include "Initializing module: myns/mymod"
-          The path "${DECKRD_DOCS_DIR}/myns/mymod/requirements" should be directory
-          The path "${DECKRD_DOCS_DIR}/myns/mymod/specifications" should be directory
-          The path "${DECKRD_DOCS_DIR}/myns/mymod/implementation" should be directory
-          The path "${DECKRD_DOCS_DIR}/myns/mymod/tasks" should be directory
-          The path "${DECKRD_DOCS_DIR}/myns/mymod/workspaces" should be directory
+          The output should include "Initializing module: my-ns/my-mod"
+          The path "${DECKRD_DOCS_DIR}/my-ns/my-mod/requirements" should be directory
+          The path "${DECKRD_DOCS_DIR}/my-ns/my-mod/specifications" should be directory
+          The path "${DECKRD_DOCS_DIR}/my-ns/my-mod/implementation" should be directory
+          The path "${DECKRD_DOCS_DIR}/my-ns/my-mod/tasks" should be directory
+          The path "${DECKRD_DOCS_DIR}/my-ns/my-mod/workspaces" should be directory
         End
       End
 
-      Describe "When: call create_module_dirs with 'myns/mymod' and force=true"
+      Describe "When: call create_module_dirs with 'my-ns/my-mod' and force=true"
         It "[Edge] T-CLI-CMD-05: Should: return status 0 and create the module as if force were false"
-          When call create_module_dirs "myns/mymod" true
+          When call create_module_dirs "my-ns/my-mod" true
           The status should equal 0
-          The output should include "Initializing module: myns/mymod"
-          The path "${DECKRD_DOCS_DIR}/myns/mymod/workspaces" should be directory
+          The output should include "Initializing module: my-ns/my-mod"
+          The path "${DECKRD_DOCS_DIR}/my-ns/my-mod/workspaces" should be directory
         End
       End
     End
@@ -593,39 +611,39 @@ Describe "module.sh"
     Describe "Given: the module directory already exists"
       # shellcheck disable=SC2329
       setup_existing_module_dir() {
-        mkdir -p "${DECKRD_DOCS_DIR}/myns/mymod"
+        mkdir -p "${DECKRD_DOCS_DIR}/my-ns/my-mod"
       }
       Before "setup_existing_module_dir"
 
-      Describe "When: call create_module_dirs with 'myns/mymod' and force=true"
+      Describe "When: call create_module_dirs with 'my-ns/my-mod' and force=true"
         It "[Normal] T-CLI-CMD-02: Should: return status 0 and re-initialize the module"
-          When call create_module_dirs "myns/mymod" true
+          When call create_module_dirs "my-ns/my-mod" true
           The status should equal 0
-          The output should include "Initializing module: myns/mymod"
+          The output should include "Initializing module: my-ns/my-mod"
         End
       End
 
-      Describe "When: call create_module_dirs with 'myns/mymod' and force=false"
+      Describe "When: call create_module_dirs with 'my-ns/my-mod' and force=false"
         It "[Error] T-CLI-CMD-03: Should: return status 1 and report the existing directory"
-          When call create_module_dirs "myns/mymod" false
+          When call create_module_dirs "my-ns/my-mod" false
           The status should equal 1
           The output should equal ""
-          The stderr should include "Error: Module directory already exists: ${DECKRD_DOCS_DIR}/myns/mymod"
+          The stderr should include "Error: Module directory already exists: ${DECKRD_DOCS_DIR}/my-ns/my-mod"
           The stderr should include "Use --force to re-initialize."
         End
       End
 
-      Describe "When: call create_module_dirs with 'myns/mymod' and force omitted"
+      Describe "When: call create_module_dirs with 'my-ns/my-mod' and force omitted"
         It "[Edge] T-CLI-CMD-04: Should: return status 1 because an omitted force means false"
-          When call create_module_dirs "myns/mymod"
+          When call create_module_dirs "my-ns/my-mod"
           The status should equal 1
-          The stderr should include "Error: Module directory already exists: ${DECKRD_DOCS_DIR}/myns/mymod"
+          The stderr should include "Error: Module directory already exists: ${DECKRD_DOCS_DIR}/my-ns/my-mod"
         End
       End
 
       Describe "When: call create_module_dirs inside a caller that handles the failure"
         caller_continues_cmd() {
-          create_module_dirs "myns/mymod" false || echo "continued"
+          create_module_dirs "my-ns/my-mod" false || echo "continued"
         }
 
         It "[Error] T-CLI-CMD-06: Should: return to the caller instead of exiting the shell"
@@ -640,15 +658,15 @@ Describe "module.sh"
     Describe "Given: the module directory exists and a regular file occupies a subdirectory path"
       # shellcheck disable=SC2329
       setup_blocked_subdir() {
-        mkdir -p "${DECKRD_DOCS_DIR}/myns/mymod"
-        : >"${DECKRD_DOCS_DIR}/myns/mymod/requirements"
+        mkdir -p "${DECKRD_DOCS_DIR}/my-ns/my-mod"
+        : >"${DECKRD_DOCS_DIR}/my-ns/my-mod/requirements"
       }
       Before "setup_blocked_subdir"
 
       Describe "When: call create_module_dirs with force=true inside a caller that handles the failure"
         # main と同じ `|| ` 文脈 (set -e 無効) で呼び出す
         caller_handles_mkdir_failure() {
-          create_module_dirs "myns/mymod" true || echo "failed"
+          create_module_dirs "my-ns/my-mod" true || echo "failed"
         }
 
         It "[Error] T-CLI-CMD-08: Should: return failure without reporting the subdirectory as created"
@@ -656,7 +674,7 @@ Describe "module.sh"
           The status should equal 0
           The output should include "failed"
           The output should not include "created: requirements/"
-          The stderr should include "Error: failed to create directory: ${DECKRD_DOCS_DIR}/myns/mymod/requirements"
+          The stderr should include "Error: failed to create directory: ${DECKRD_DOCS_DIR}/my-ns/my-mod/requirements"
         End
       End
     End
@@ -664,14 +682,14 @@ Describe "module.sh"
     Describe "Given: the module directory already exists and the global force option is true"
       # shellcheck disable=SC2329,SC2034 # OPTIONS is the module.sh global that create_module_dirs must ignore
       setup_existing_module_dir_with_global_force() {
-        mkdir -p "${DECKRD_DOCS_DIR}/myns/mymod"
+        mkdir -p "${DECKRD_DOCS_DIR}/my-ns/my-mod"
         OPTIONS["force"]=true
       }
       Before "setup_existing_module_dir_with_global_force"
 
-      Describe "When: call create_module_dirs with 'myns/mymod' and force=false"
+      Describe "When: call create_module_dirs with 'my-ns/my-mod' and force=false"
         It "[Error] T-CLI-CMD-07: Should: return status 1 because only the force argument is honored"
-          When call create_module_dirs "myns/mymod" false
+          When call create_module_dirs "my-ns/my-mod" false
           The status should equal 1
           The stderr should include "Module directory already exists"
         End
@@ -773,7 +791,7 @@ Describe "module.sh"
       setup_body_text_modules() {
         write_module_md "foxtrot/bodyonly" "---" "title: bodyonly" "---" "" "test_scope: BAD"
         write_module_md "golf/both" "---" "test_scope: GOL" "---" "" "test_scope: BAD"
-        write_module_md "hotel/nofrontmatter" "test_scope: BAD" "" "# no frontmatter"
+        write_module_md "hotel/no-frontmatter" "test_scope: BAD" "" "# no frontmatter"
       }
       Before "setup_body_text_modules"
 
@@ -813,7 +831,7 @@ Describe "module.sh"
         It "[Normal] T-CLI-CDS-07: Should: exit with status 0 and output the scope with the surrounding single quotes stripped"
           When call collect_declared_scopes
           The status should equal 0
-          The output should equal "$(printf 'QSQ\tjuliett/quoted/workspaces/module/module.md')"
+          The output should equal "$(printf 'QSQ\t%s' 'juliett/quoted/workspaces/module/module.md')"
         End
       End
     End
@@ -921,7 +939,7 @@ Describe "module.sh"
       setup_cr_scope_module() {
         # The CR must not sit at end of line: Windows gawk reads in text mode and
         # would strip it, making this case pass vacuously.
-        write_module_md "romeo/crscope" "---" "$(printf 'test_scope: "ALP"\r ')" "---"
+        write_module_md "romeo/cr-scope" "---" "$(printf 'test_scope: "ALP"\r ')" "---"
       }
       Before "setup_cr_scope_module"
 
@@ -929,7 +947,7 @@ Describe "module.sh"
         It "[Edge] T-CLI-CDS-15: Should: exit with status 0 and strip the trailing carriage return as whitespace"
           When call collect_declared_scopes
           The status should equal 0
-          The output should equal "$(printf 'ALP\tromeo/crscope/workspaces/module/module.md')"
+          The output should equal "$(printf 'ALP\tromeo/cr-scope/workspaces/module/module.md')"
           The stderr should equal ""
         End
       End
@@ -965,6 +983,64 @@ Describe "module.sh"
           The status should equal 0
           The output should equal ""
           The stderr should equal ""
+        End
+      End
+    End
+
+    Describe "Given: a module.md nested deeper than <namespace>/<module>"
+      # shellcheck disable=SC2329
+      setup_nested_module_md() {
+        write_module_md "tango/deep/nested" "---" "test_scope: DEP" "---"
+      }
+      Before "setup_nested_module_md"
+
+      Describe "When: call collect_declared_scopes"
+        It "[Edge] T-CLI-CDS-17: Should: exit with status 0 and output nothing because only <namespace>/<module> is searched"
+          When call collect_declared_scopes
+          The status should equal 0
+          The output should equal ""
+          The stderr should equal ""
+        End
+      End
+    End
+
+    Describe "Given: a module.md and a frontmatter reader that cannot run"
+      # shellcheck disable=SC2329
+      setup_module_without_reader() {
+        write_module_md "uniform/no-reader" "---" "test_scope: UNI" "---"
+        break_frontmatter_reader
+      }
+      Before "setup_module_without_reader"
+      After "restore_frontmatter_reader"
+
+      Describe "When: call collect_declared_scopes"
+        It "[Error] T-CLI-CDS-18: Should: exit with status 1 and name the unreadable declaration on stderr"
+          When call collect_declared_scopes
+          The status should equal 1
+          The output should equal ""
+          The stderr should include "cannot read module declaration"
+          The stderr should include "uniform/no-reader/workspaces/module/module.md"
+        End
+      End
+    End
+
+    Describe "Given: a module.md without read permission"
+      Skip if "chmod cannot block reading here" chmod_cannot_block_read
+
+      # shellcheck disable=SC2329
+      setup_unreadable_module() {
+        write_module_md "victor/locked" "---" "test_scope: VIC" "---"
+        chmod 000 "${DECKRD_DOCS_DIR}/victor/locked/workspaces/module/module.md"
+      }
+      Before "setup_unreadable_module"
+
+      Describe "When: call collect_declared_scopes"
+        It "[Error] T-CLI-CDS-19: Should: exit with status 1 and name the unreadable declaration on stderr"
+          When call collect_declared_scopes
+          The status should equal 1
+          The output should equal ""
+          The stderr should include "cannot read module declaration"
+          The stderr should include "victor/locked/workspaces/module/module.md"
         End
       End
     End
@@ -1073,6 +1149,45 @@ Describe "module.sh"
           The status should equal 0
           The output should equal ""
           The stderr should equal ""
+        End
+      End
+    End
+
+    Describe "Given: a module.md and a frontmatter reader that cannot run"
+      # shellcheck disable=SC2329
+      setup_declaration_without_reader() {
+        declare_raw_module_scope "alpha/normalize" "NOR"
+        break_frontmatter_reader
+      }
+      Before "setup_declaration_without_reader"
+      After "restore_frontmatter_reader"
+
+      Describe "When: call read_declared_scope for that module"
+        It "[Error] T-CLI-RDS-06: Should: exit with status 1 and name the unreadable declaration on stderr"
+          When call read_declared_scope "alpha/normalize"
+          The status should equal 1
+          The output should equal ""
+          The stderr should include "cannot read module declaration"
+        End
+      End
+    End
+
+    Describe "Given: a module.md without read permission"
+      Skip if "chmod cannot block reading here" chmod_cannot_block_read
+
+      # shellcheck disable=SC2329
+      setup_unreadable_declaration() {
+        declare_raw_module_scope "alpha/normalize" "NOR"
+        chmod 000 "${DECKRD_DOCS_DIR}/alpha/normalize/workspaces/module/module.md"
+      }
+      Before "setup_unreadable_declaration"
+
+      Describe "When: call read_declared_scope for that module"
+        It "[Error] T-CLI-RDS-07: Should: exit with status 1 and name the unreadable declaration on stderr"
+          When call read_declared_scope "alpha/normalize"
+          The status should equal 1
+          The output should equal ""
+          The stderr should include "cannot read module declaration"
         End
       End
     End
@@ -1286,6 +1401,44 @@ Describe "module.sh"
       End
     End
 
+    Describe "Given: another module's declaration cannot be read"
+      # shellcheck disable=SC2329
+      setup_unread_conflict() {
+        declare_module_scope "bravo/notation" "NOR"
+        break_frontmatter_reader
+      }
+      Before "setup_unread_conflict"
+      After "restore_frontmatter_reader"
+
+      Describe "When: call resolve_test_scope with the scope that module declares"
+        It "[Error] T-CLI-RTS-15: Should: exit with status 1 and output no scope instead of accepting a possible duplicate"
+          When call resolve_test_scope "alpha/normalize" "NOR"
+          The status should equal 1
+          The output should equal ""
+          The stderr should include "bravo/notation/workspaces/module/module.md"
+        End
+      End
+    End
+
+    Describe "Given: another module declares the candidate scope and the reader exits with a failure"
+      # shellcheck disable=SC2329
+      setup_failing_reader_conflict() {
+        declare_module_scope "bravo/notation" "NOR"
+        export AWK=false
+      }
+      Before "setup_failing_reader_conflict"
+      After "restore_frontmatter_reader"
+
+      Describe "When: call resolve_test_scope with the scope that module declares"
+        It "[Error] T-CLI-RTS-16: Should: exit with status 1 and output no scope instead of accepting the duplicate"
+          When call resolve_test_scope "alpha/normalize" "NOR"
+          The status should equal 1
+          The output should equal ""
+          The stderr should include "Error: cannot read module declaration: ${DECKRD_DOCS_DIR}/bravo/notation/workspaces/module/module.md"
+        End
+      End
+    End
+
     Describe "Given: the module itself declares the candidate scope wrapped in single quotes"
       # shellcheck disable=SC2329
       setup_self_single_quoted_module() {
@@ -1316,12 +1469,12 @@ Describe "module.sh"
 
       Describe "When: run module.sh with the module path"
         It "[Normal] T-CLI-MMT-01: Should: exit with status 0 and write module.md declaring the derived test_scope"
-          When run bash "$SCRIPT" myns/mymod
+          When run bash "$SCRIPT" my-ns/my-mod
           The status should equal 0
           The output should include "module.md"
-          The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/workspaces/module/module.md" should include "title: mymod"
-          The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/workspaces/module/module.md" should include "test_scope: MYM"
-          The contents of file "${DECKRD_LOCAL_DATA}/session.json" should include '"test_scope": "MYM"'
+          The contents of file "${DECKRD_DOCS_DIR}/my-ns/my-mod/workspaces/module/module.md" should include "title: my-mod"
+          The contents of file "${DECKRD_DOCS_DIR}/my-ns/my-mod/workspaces/module/module.md" should include "test_scope: MM"
+          The contents of file "${DECKRD_LOCAL_DATA}/session.json" should include '"test_scope": "MM"'
         End
       End
     End
@@ -1332,19 +1485,19 @@ Describe "module.sh"
 
       Describe "When: run module.sh with --test-scope"
         It "[Normal] T-CLI-MMT-02: Should: exit with status 0 and write module.md declaring the explicit test_scope"
-          When run bash "$SCRIPT" myns/mymod --test-scope XY
+          When run bash "$SCRIPT" my-ns/my-mod --test-scope XY
           The status should equal 0
           The output should include "module.md"
-          The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/workspaces/module/module.md" should include "test_scope: XY"
+          The contents of file "${DECKRD_DOCS_DIR}/my-ns/my-mod/workspaces/module/module.md" should include "test_scope: XY"
         End
       End
 
       Describe "When: run module.sh with the inline form --test-scope=XY"
         It "[Normal] T-CLI-MMT-10: Should: exit with status 0 and write module.md declaring the inline test_scope"
-          When run bash "$SCRIPT" myns/mymod --test-scope=XY
+          When run bash "$SCRIPT" my-ns/my-mod --test-scope=XY
           The status should equal 0
           The output should include "module.md"
-          The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/workspaces/module/module.md" should include "test_scope: XY"
+          The contents of file "${DECKRD_DOCS_DIR}/my-ns/my-mod/workspaces/module/module.md" should include "test_scope: XY"
         End
       End
     End
@@ -1353,20 +1506,20 @@ Describe "module.sh"
       # shellcheck disable=SC2329
       setup_conflicting_declaration() {
         setup_deckrd_tmpdir
-        mkdir -p "${DECKRD_DOCS_DIR}/otherns/othermod/workspaces/module"
-        printf '%s\n' "---" "test_scope: XY" "---" >"${DECKRD_DOCS_DIR}/otherns/othermod/workspaces/module/module.md"
+        mkdir -p "${DECKRD_DOCS_DIR}/other-ns/othermod/workspaces/module"
+        printf '%s\n' "---" "test_scope: XY" "---" >"${DECKRD_DOCS_DIR}/other-ns/othermod/workspaces/module/module.md"
       }
       Before "setup_conflicting_declaration"
       After "teardown_deckrd_tmpdir"
 
       Describe "When: run module.sh with the taken scope via --test-scope"
         It "[Error] T-CLI-MMT-03: Should: exit with status 1, report the conflicting module.md and write no module.md"
-          When run bash "$SCRIPT" myns/mymod --test-scope XY
+          When run bash "$SCRIPT" my-ns/my-mod --test-scope XY
           The status should equal 1
           The output should include "Initializing module"
           The stderr should include "conflict"
-          The stderr should include "otherns/othermod/workspaces/module/module.md"
-          The path "${DECKRD_DOCS_DIR}/myns/mymod/workspaces/module/module.md" should not be exist
+          The stderr should include "other-ns/othermod/workspaces/module/module.md"
+          The path "${DECKRD_DOCS_DIR}/my-ns/my-mod/workspaces/module/module.md" should not be exist
         End
       End
     End
@@ -1375,18 +1528,18 @@ Describe "module.sh"
       # shellcheck disable=SC2329
       setup_existing_module_meta() {
         setup_deckrd_tmpdir
-        mkdir -p "${DECKRD_DOCS_DIR}/myns/mymod/workspaces/module"
-        printf '%s\n' "---" "title: mymod" "test_scope: ZZ" "---" >"${DECKRD_DOCS_DIR}/myns/mymod/workspaces/module/module.md"
+        mkdir -p "${DECKRD_DOCS_DIR}/my-ns/my-mod/workspaces/module"
+        printf '%s\n' "---" "title: my-mod" "test_scope: ZZ" "---" >"${DECKRD_DOCS_DIR}/my-ns/my-mod/workspaces/module/module.md"
       }
       Before "setup_existing_module_meta"
       After "teardown_deckrd_tmpdir"
 
       Describe "When: re-initialize the module with --force"
         It "[Edge] T-CLI-MMT-04: Should: exit with status 0 and keep the test_scope already declared in module.md"
-          When run bash "$SCRIPT" myns/mymod --force
+          When run bash "$SCRIPT" my-ns/my-mod --force
           The status should equal 0
           The output should include "module.md"
-          The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/workspaces/module/module.md" should include "test_scope: ZZ"
+          The contents of file "${DECKRD_DOCS_DIR}/my-ns/my-mod/workspaces/module/module.md" should include "test_scope: ZZ"
         End
       End
     End
@@ -1397,7 +1550,7 @@ Describe "module.sh"
 
       Describe "When: run module.sh with a trailing --test-scope"
         It "[Error] T-CLI-MMT-05: Should: exit with status 1 and report that --test-scope requires a value"
-          When run bash "$SCRIPT" myns/mymod --test-scope
+          When run bash "$SCRIPT" my-ns/my-mod --test-scope
           The status should equal 1
           The output should include "Usage:"
           The stderr should include "requires a value"
@@ -1409,19 +1562,19 @@ Describe "module.sh"
       # shellcheck disable=SC2329
       setup_module_with_explicit_scope() {
         setup_deckrd_tmpdir_with_project
-        bash "$SCRIPT" myns/mymod --test-scope XY >/dev/null 2>&1
+        bash "$SCRIPT" my-ns/my-mod --test-scope XY >/dev/null 2>&1
       }
       Before "setup_module_with_explicit_scope"
       After "teardown_deckrd_tmpdir"
 
       Describe "When: re-initialize the module with --force and no --test-scope"
         It "[Normal] T-CLI-MMT-06: Should: keep the declared scope in both module.md and session.json"
-          When run bash "$SCRIPT" myns/mymod --force
+          When run bash "$SCRIPT" my-ns/my-mod --force
           The status should equal 0
           The output should include "module.md"
-          The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/workspaces/module/module.md" should include "test_scope: XY"
+          The contents of file "${DECKRD_DOCS_DIR}/my-ns/my-mod/workspaces/module/module.md" should include "test_scope: XY"
           The contents of file "${DECKRD_LOCAL_DATA}/session.json" should include '"test_scope": "XY"'
-          The contents of file "${DECKRD_LOCAL_DATA}/session.json" should not include '"test_scope": "MYM"'
+          The contents of file "${DECKRD_LOCAL_DATA}/session.json" should not include '"test_scope": "MM"'
         End
       End
     End
@@ -1430,16 +1583,16 @@ Describe "module.sh"
       # shellcheck disable=SC2329
       setup_derived_scope_taken_by_third_module() {
         setup_deckrd_tmpdir_with_project
-        mkdir -p "${DECKRD_DOCS_DIR}/myns/mymod/workspaces/module" "${DECKRD_DOCS_DIR}/thirdns/thirdmod/workspaces/module"
-        printf '%s\n' "---" "title: mymod" "test_scope: XY" "---" >"${DECKRD_DOCS_DIR}/myns/mymod/workspaces/module/module.md"
-        printf '%s\n' "---" "title: thirdmod" "test_scope: MYM" "---" >"${DECKRD_DOCS_DIR}/thirdns/thirdmod/workspaces/module/module.md"
+        mkdir -p "${DECKRD_DOCS_DIR}/my-ns/my-mod/workspaces/module" "${DECKRD_DOCS_DIR}/third-ns/thirdmod/workspaces/module"
+        printf '%s\n' "---" "title: my-mod" "test_scope: XY" "---" >"${DECKRD_DOCS_DIR}/my-ns/my-mod/workspaces/module/module.md"
+        printf '%s\n' "---" "title: thirdmod" "test_scope: MM" "---" >"${DECKRD_DOCS_DIR}/third-ns/thirdmod/workspaces/module/module.md"
       }
       Before "setup_derived_scope_taken_by_third_module"
       After "teardown_deckrd_tmpdir"
 
       Describe "When: re-initialize the module with --force and no --test-scope"
         It "[Edge] T-CLI-MMT-07: Should: exit with status 0 because the declared scope is used instead of the derived one"
-          When run bash "$SCRIPT" myns/mymod --force
+          When run bash "$SCRIPT" my-ns/my-mod --force
           The status should equal 0
           The output should include "module.md"
           The stderr should not include "conflict"
@@ -1452,21 +1605,21 @@ Describe "module.sh"
       # shellcheck disable=SC2329
       setup_quoted_declaration() {
         setup_deckrd_tmpdir_with_project
-        mkdir -p "${DECKRD_DOCS_DIR}/myns/mymod/workspaces/module"
-        printf '%s\n' "---" "title: mymod" 'test_scope: "ZZ"' "---" \
-          >"${DECKRD_DOCS_DIR}/myns/mymod/workspaces/module/module.md"
+        mkdir -p "${DECKRD_DOCS_DIR}/my-ns/my-mod/workspaces/module"
+        printf '%s\n' "---" "title: my-mod" 'test_scope: "ZZ"' "---" \
+          >"${DECKRD_DOCS_DIR}/my-ns/my-mod/workspaces/module/module.md"
       }
       Before "setup_quoted_declaration"
       After "teardown_deckrd_tmpdir"
 
       Describe "When: re-initialize the module with --force and no --test-scope"
         It "[Normal] T-CLI-MMT-08: Should: exit with status 0 and keep the quoted scope, recording it unquoted in session.json"
-          When run bash "$SCRIPT" myns/mymod --force
+          When run bash "$SCRIPT" my-ns/my-mod --force
           The status should equal 0
           The stderr should not include "invalid test scope"
           The output should include "kept existing test_scope"
           The contents of file "${DECKRD_LOCAL_DATA}/session.json" should include '"test_scope": "ZZ"'
-          The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/workspaces/module/module.md" should include 'test_scope: "ZZ"'
+          The contents of file "${DECKRD_DOCS_DIR}/my-ns/my-mod/workspaces/module/module.md" should include 'test_scope: "ZZ"'
         End
       End
     End
@@ -1487,10 +1640,110 @@ Describe "module.sh"
 
       Describe "When: run module.sh with a module path"
         It "[Error] T-CLI-MMT-09: Should: exit with status 1 and print only the library message to stderr"
-          When run bash "$SCRIPT" myns/mymod
+          When run bash "$SCRIPT" my-ns/my-mod
           The status should equal 1
           The lines of entire stderr should eq 1
           The stderr should include "jq or jaq is required"
+        End
+      End
+    End
+
+    Describe "Given: a declared module.md and a frontmatter reader that cannot run"
+      # shellcheck disable=SC2329
+      setup_cli_without_reader() {
+        setup_deckrd_tmpdir
+        mkdir -p "${DECKRD_DOCS_DIR}/bravo/notation/workspaces/module"
+        printf '%s\n' "---" "test_scope: NOR" "---" >"${DECKRD_DOCS_DIR}/bravo/notation/workspaces/module/module.md"
+        # module.sh ignores $AWK, so the reader is broken through the awk command itself
+        awk() { return 1; }
+        export -f awk
+      }
+      # shellcheck disable=SC2329
+      restore_awk_command() { unset -f awk; }
+      Before "setup_cli_without_reader"
+      After "restore_awk_command" "teardown_deckrd_tmpdir"
+
+      Describe "When: run module.sh for another module that would derive the same scope"
+        It "[Error] T-CLI-MMT-11: Should: exit with status 1 and write neither module.md nor session.json"
+          When run bash "$SCRIPT" alpha/normalize
+          The status should equal 1
+          The output should not include "Session updated"
+          The stderr should include "cannot read module declaration"
+          The path "${DECKRD_DOCS_DIR}/alpha/normalize/workspaces/module/module.md" should not be exist
+          The path "${DECKRD_LOCAL_DATA}/session.json" should not be exist
+        End
+      End
+
+      Describe "When: run module.sh with --force for the declared module itself"
+        It "[Error] T-CLI-MMT-12: Should: exit with status 1 and write no session.json"
+          When run bash "$SCRIPT" bravo/notation --force --test-scope XYZ
+          The status should equal 1
+          The output should not include "Session updated"
+          The stderr should include "cannot read module declaration"
+          The path "${DECKRD_LOCAL_DATA}/session.json" should not be exist
+        End
+      End
+    End
+
+    # Helper: declare <test_scope> in the module.md of <namespace/module>, then set a
+    # multi-word AWK that no command lookup can resolve
+    # shellcheck disable=SC2329
+    setup_awk_env_with_declaration() {
+      setup_deckrd_tmpdir
+      mkdir -p "${DECKRD_DOCS_DIR}/$1/workspaces/module"
+      printf '%s\n' "---" "test_scope: $2" "---" >"${DECKRD_DOCS_DIR}/$1/workspaces/module/module.md"
+      export AWK="gawk --posix"
+    }
+
+    Describe "Given: another module declares a different scope and AWK is a multi-word command"
+      # shellcheck disable=SC2329
+      setup_awk_env_with_other_scope() { setup_awk_env_with_declaration "bravo/notation" "NOR"; }
+      Before "setup_awk_env_with_other_scope"
+      After "restore_frontmatter_reader" "teardown_deckrd_tmpdir"
+
+      Describe "When: run module.sh for a new module"
+        It "[Normal] T-CLI-MMT-13: Should: exit with status 0 and create the module with the derived scope"
+          When run bash "$SCRIPT" my-ns/my-mod
+          The status should equal 0
+          The output should include "Session updated"
+          The stderr should equal ""
+          The contents of file "${DECKRD_DOCS_DIR}/my-ns/my-mod/workspaces/module/module.md" should include "test_scope: MM"
+          The contents of file "${DECKRD_LOCAL_DATA}/session.json" should include '"test_scope": "MM"'
+        End
+      End
+    End
+
+    Describe "Given: another module declares the derived scope and AWK is a multi-word command"
+      # shellcheck disable=SC2329
+      setup_awk_env_with_taken_scope() { setup_awk_env_with_declaration "third-ns/thirdmod" "MM"; }
+      Before "setup_awk_env_with_taken_scope"
+      After "restore_frontmatter_reader" "teardown_deckrd_tmpdir"
+
+      Describe "When: run module.sh for a new module"
+        It "[Error] T-CLI-MMT-14: Should: exit with status 1, report the conflicting module.md and write no module.md"
+          When run bash "$SCRIPT" my-ns/my-mod
+          The status should equal 1
+          The output should include "Initializing module"
+          The stderr should include "conflict"
+          The stderr should include "third-ns/thirdmod/workspaces/module/module.md"
+          The path "${DECKRD_DOCS_DIR}/my-ns/my-mod/workspaces/module/module.md" should not be exist
+        End
+      End
+    End
+
+    Describe "Given: a module declaring its own test scope and AWK is a multi-word command"
+      # shellcheck disable=SC2329
+      setup_awk_env_with_own_scope() { setup_awk_env_with_declaration "my-ns/my-mod" "ZZ"; }
+      Before "setup_awk_env_with_own_scope"
+      After "restore_frontmatter_reader" "teardown_deckrd_tmpdir"
+
+      Describe "When: re-initialize the module with --force"
+        It "[Edge] T-CLI-MMT-15: Should: exit with status 0 and read back the declared scope into session.json"
+          When run bash "$SCRIPT" my-ns/my-mod --force
+          The status should equal 0
+          The output should include "kept existing test_scope"
+          The stderr should equal ""
+          The contents of file "${DECKRD_LOCAL_DATA}/session.json" should include '"test_scope": "ZZ"'
         End
       End
     End

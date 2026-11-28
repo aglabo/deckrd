@@ -333,8 +333,8 @@ Regeneration during the Phase D, E, and F feedback loops does not bump.
 Restore and bump after the user approves.
 
 On approval, run the steps below for **every file** in OUTPUT FILES — each of
-`implementation-1.md`, `implementation-2.md`, and so on in split mode, not only an
-unsuffixed `implementation.md`. Each file is versioned independently.
+`implementation-1.md`, `implementation-2.md`, and so on in split mode, not only
+`implementation.md` without a number suffix. Each file is versioned independently.
 
 **No baseline** (first generation) — keep `1.0.0` and the initial row.
 

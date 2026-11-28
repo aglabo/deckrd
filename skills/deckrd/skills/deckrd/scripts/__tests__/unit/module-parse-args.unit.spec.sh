@@ -70,11 +70,11 @@ _load_script_with_dumper() {
 }
 
 ##
-# @description Expected dump for `main myns/mymod` (every option at its default)
+# @description Expected dump for `main my-ns/my-mod` (every option at its default)
 # @stdout The dump lines
 _default_dump() {
   printf '%s\n' \
-    subcommand= module_path=myns/mymod force=false test_scope= \
+    subcommand= module_path=my-ns/my-mod force=false test_scope= \
     set_module_path=true set_force= set_test_scope= show_help=false help=
 }
 
@@ -82,8 +82,8 @@ _default_dump() {
 # @description Run main with every option, then again with defaults, in the same shell
 # @stdout The dump of the second main only
 _main_with_options_then_defaults() {
-  main create myns/mymod --force --test-scope XY >/dev/null
-  main myns/mymod
+  main create my-ns/my-mod --force --test-scope XY >/dev/null
+  main my-ns/my-mod
 }
 
 # ============================================================================
@@ -148,35 +148,35 @@ Describe "T-CLI-MPA: module.sh: main argument parsing"
   Before "_load_script_with_dumper"
 
   Describe "When: 正常系"
-    It "[Normal] T-CLI-MPA-02: main myns/mymod -> module path set, every option at its default"
-      When run main myns/mymod
+    It "[Normal] T-CLI-MPA-02: main my-ns/my-mod -> module path set, every option at its default"
+      When run main my-ns/my-mod
       The status should equal 0
       The stdout should equal "$(_default_dump)"
     End
 
-    It "[Normal] T-CLI-MPA-03: main create myns/mymod -> SUBCOMMAND=create, create shifted off"
-      When run main create myns/mymod
+    It "[Normal] T-CLI-MPA-03: main create my-ns/my-mod -> SUBCOMMAND=create, create shifted off"
+      When run main create my-ns/my-mod
       The status should equal 0
       The line 1 of stdout should equal "subcommand=create"
-      The line 2 of stdout should equal "module_path=myns/mymod"
+      The line 2 of stdout should equal "module_path=my-ns/my-mod"
     End
 
     It "[Normal] T-CLI-MPA-04: --force -> force=true and marked as given"
-      When run main myns/mymod --force
+      When run main my-ns/my-mod --force
       The status should equal 0
       The line 3 of stdout should equal "force=true"
       The line 6 of stdout should equal "set_force=true"
     End
 
     It "[Normal] T-CLI-MPA-05: --test-scope XY -> test_scope=XY and marked as given"
-      When run main myns/mymod --test-scope XY
+      When run main my-ns/my-mod --test-scope XY
       The status should equal 0
       The line 4 of stdout should equal "test_scope=XY"
       The line 7 of stdout should equal "set_test_scope=true"
     End
 
     It "[Normal] T-CLI-MPA-15: --test-scope=XY (inline form) -> test_scope=XY and marked as given"
-      When run main myns/mymod --test-scope=XY
+      When run main my-ns/my-mod --test-scope=XY
       The status should equal 0
       The line 4 of stdout should equal "test_scope=XY"
       The line 7 of stdout should equal "set_test_scope=true"
@@ -219,24 +219,31 @@ Describe "T-CLI-MPA: module.sh: main argument parsing"
       The stdout should include "--test-scope=<SCOPE>"
     End
 
-    It "[Normal] T-CLI-MPA-20: main myns/mymod -> help reported via SHOW_HELP, legacy key OPTIONS[help] absent"
-      When run main myns/mymod
+    It "[Normal] T-CLI-MPA-20: main my-ns/my-mod -> help reported via SHOW_HELP, legacy key OPTIONS[help] absent"
+      When run main my-ns/my-mod
       The status should equal 0
       The line 8 of stdout should equal "show_help=false"
       The line 9 of stdout should equal "help="
+    End
+
+    It "[Normal] T-CLI-MPA-28: module.sh source -> the shared lib functions are defined"
+      When call declare -F fm_read_scalar module_decl_file_of
+      The status should equal 0
+      The stdout should include "fm_read_scalar"
+      The stdout should include "module_decl_file_of"
     End
   End
 
   Describe "When: 異常系"
     It "[Error] T-CLI-MPA-08: --bogus -> exit 1, library error on stderr, Usage on stdout"
-      When run main myns/mymod --bogus
+      When run main my-ns/my-mod --bogus
       The status should equal 1
       The stderr should include "Error: Unknown option: --bogus"
       The stdout should include "Usage:"
     End
 
     It "[Error] T-CLI-MPA-26: --bogus -> exit 1, Usage on stdout lists <module> with --force and --test-scope"
-      When run main myns/mymod --bogus
+      When run main my-ns/my-mod --bogus
       The status should equal 1
       The stdout should include "module.sh <module> [--force] [--test-scope <SCOPE>]"
       The stderr should be present
@@ -250,14 +257,14 @@ Describe "T-CLI-MPA: module.sh: main argument parsing"
     End
 
     It "[Error] T-CLI-MPA-07: trailing --test-scope -> exit 1, requires a value, Usage on stdout"
-      When run main myns/mymod --test-scope
+      When run main my-ns/my-mod --test-scope
       The status should equal 1
       The stderr should include "Error: --test-scope requires a value"
       The stdout should include "Usage:"
     End
 
     It "[Error] T-CLI-MPA-16: --force=x -> exit 1, flag does not take a value, Usage on stdout"
-      When run main myns/mymod --force=x
+      When run main my-ns/my-mod --force=x
       The status should equal 1
       The stderr should include "Error: --force does not take a value"
       The stdout should include "Usage:"
@@ -282,18 +289,30 @@ Describe "T-CLI-MPA: module.sh: main argument parsing"
       The status should equal 1
       The stdout should equal 0
     End
+
+    It "[Error] T-CLI-MPA-29: module.sh source -> no local frontmatter reader (the library's is used)"
+      When call grep -c '_read_frontmatter_scope' "$SCRIPT"
+      The status should equal 1
+      The stdout should equal 0
+    End
+
+    It "[Error] T-CLI-MPA-30: module.sh source -> no literal module.md layout (the library's is used)"
+      When call grep -c 'MODULE_META_SUBPATH="workspaces' "$SCRIPT"
+      The status should equal 1
+      The stdout should equal 0
+    End
   End
 
   Describe "When: エッジケース"
     It "[Edge] T-CLI-MPA-10: --test-scope \"\" (empty separate value) -> exit 1, requires a value, Usage on stdout"
-      When run main myns/mymod --test-scope ""
+      When run main my-ns/my-mod --test-scope ""
       The status should equal 1
       The stderr should include "Error: --test-scope requires a value"
       The stdout should include "Usage:"
     End
 
     It "[Edge] T-CLI-MPA-17: --test-scope= (empty inline value) -> exit 1, requires a value, Usage on stdout"
-      When run main myns/mymod --test-scope=
+      When run main my-ns/my-mod --test-scope=
       The status should equal 1
       The stderr should include "Error: --test-scope requires a value"
       The stdout should include "Usage:"
@@ -306,8 +325,8 @@ Describe "T-CLI-MPA: module.sh: main argument parsing"
       The stdout should include "Usage:"
     End
 
-    It "[Edge] T-CLI-MPA-13: myns/mymod create -> non-leading create is a positional, exit 1, Unexpected argument"
-      When run main myns/mymod create
+    It "[Edge] T-CLI-MPA-13: my-ns/my-mod create -> non-leading create is a positional, exit 1, Unexpected argument"
+      When run main my-ns/my-mod create
       The status should equal 1
       The stderr should include "Error: Unexpected argument: create"
       The stdout should include "Usage:"

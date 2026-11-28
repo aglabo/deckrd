@@ -1,0 +1,134 @@
+#!/usr/bin/env bash
+# skills/bdd-coder/skills/bdd-coder/scripts/check-ids/plugins/__tests__/unit/dart-id-checker.plugin.unit.spec.sh
+# @(#) : BDD unit tests for dart-id-checker.plugin.sh
+#
+# Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
+#
+# This software is released under the MIT License.
+# https://opensource.org/licenses/MIT
+
+# shellcheck shell=bash
+# SC2034: プラグインが使う言語の表は、このファイルでは宣言するだけ
+# shellcheck disable=SC2034
+
+# --- テスト対象 ---
+_PLUGIN_DIR="${SHELLSPEC_PROJECT_ROOT}/skills/bdd-coder/skills/bdd-coder/scripts/check-ids/plugins"
+# 検査スクリプトが宣言する言語の表。プラグインの読み込み前に宣言する
+declare -gA LANG_FILES=() LANG_HANDLER=()
+Include "${_PLUGIN_DIR}/dart-id-checker.plugin.sh"
+
+# --- 内部ヘルパー ---
+
+# 関数
+# プラグインが言語の表に登録した dart の値を出力する。$1: 表の名前
+_registered_value() {
+  local -n _table="$1"
+  echo "${_table[dart]}"
+}
+
+# 直前のグループ ID を設定して 1 行を読み、グループ・ケース・エラーの件数を出力する。
+# counts_init と declared_ids_init の後に呼ぶ。$1: 直前のグループ ID、$2: 行
+_check_line() {
+  _GROUP_ID="$1"
+  check_dart_line a.spec.dart:1 "$2" || return 1
+  echo "${_COUNTS[group]} ${_COUNTS[case]} ${_COUNTS[errors]}"
+}
+
+# --- テスト本体 ---
+
+# dart-id-checker.plugin.sh の check_dart_line。言語の表への登録と、group と test の宣言行の計数と検査
+Describe 'T-RUN-PDA: check_dart_line'
+  BeforeEach 'counts_init' 'declared_ids_init'
+
+  Describe 'When: 正常系'
+    Describe 'language tables'
+      # 枝番、説明、表の名前、期待する値
+      Parameters
+        '01' 'the file name glob' LANG_FILES '*.spec.dart'
+        '02' 'the line handler' LANG_HANDLER check_dart_line
+      End
+
+      It "Then: [Normal] T-RUN-PDA-01-$1: registers $2"
+        When call _registered_value "$3"
+        The status should be success
+        The output should equal "$4"
+      End
+    End
+
+    Describe 'group declarations'
+      It 'Then: [Normal] T-RUN-PDA-02-01: counts a group declared by group('
+        When call _check_line '' "group('T-ABC-AA: x', () {"
+        The status should be success
+        The output should equal '1 0 0'
+        The stderr should equal ''
+      End
+    End
+
+    Describe 'case declarations'
+      # 枝番、説明、行
+      Parameters
+        '01' 'a case declared by test(' "test('T-ABC-AA-01: x', f);"
+        '02' 'a case declared by testWidgets(' "testWidgets('T-ABC-AA-01: x', f);"
+      End
+
+      It "Then: [Normal] T-RUN-PDA-03-$1: counts $2"
+        When call _check_line T-ABC-AA "$3"
+        The status should be success
+        The output should equal '0 1 0'
+        The stderr should equal ''
+      End
+    End
+  End
+
+  Describe 'When: 異常系'
+    Describe 'case keyword lines without a readable title'
+      # 枝番、説明、行
+      Parameters
+        '01' 'a test( call without a title literal' 'test(title, f);'
+        '02' 'a testWidgets( call without a title literal' 'testWidgets(title, f);'
+        '03' 'a blank before the quote' "test( 'T-ABC-AA-01: x', f);"
+      End
+
+      It "Then: [Error] T-RUN-PDA-04-$1: reports $2"
+        When call _check_line T-ABC-AA "$3"
+        The status should be success
+        The output should equal '0 0 1'
+        The stderr should equal 'Error: a.spec.dart:1: no case ID'
+      End
+    End
+  End
+
+  Describe 'When: エッジケース'
+    Describe 'indented lines'
+      # 枝番、説明、直前のグループ ID、行、期待する件数、期待する stderr
+      Parameters
+        '01' 'counts an indented group line' '' $' \tgroup(\'T-ABC-AA: x\', () {' '1 0 0' ''
+        '02' 'counts an indented case line' T-ABC-AA $' \ttest(\'T-ABC-AA-01: x\', f);' '0 1 0' ''
+        '03' 'reports an indented case line without a title literal' T-ABC-AA $'\ttest(title, f);' '0 0 1' 'Error: a.spec.dart:1: no case ID'
+      End
+
+      It "Then: [Edge] T-RUN-PDA-05-$1: $2"
+        When call _check_line "$3" "$4"
+        The status should be success
+        The output should equal "$5"
+        The stderr should equal "$6"
+      End
+    End
+
+    Describe 'lines that declare nothing'
+      # 枝番、説明、行
+      Parameters
+        '01' 'a case keyword after another character' "// test('T-ABC-AA-01: x', f);"
+        '02' 'a case keyword not followed by (' "test.skip('T-ABC-AA-01: x', f);"
+        '03' 'a group keyword after another character' "// group('T-ABC-BB: x', () {"
+      End
+
+      It "Then: [Edge] T-RUN-PDA-06-$1: ignores $2"
+        When call _check_line T-ABC-AA "$3"
+        The status should be success
+        The output should equal '0 0 0'
+        The stderr should equal ''
+      End
+    End
+  End
+End

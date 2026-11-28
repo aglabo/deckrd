@@ -30,7 +30,7 @@ You will receive:
 
 ## Core Principles
 
-- This specification is **behavioral**, not implementational.
+- This specification is **behavioral**, not about implementation.
 - Do NOT generate:
   - Source code
   - Function names or signatures (except as `<!-- impl-note: ... -->` when FUNCTION DECISIONS is provided)

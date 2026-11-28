@@ -7,7 +7,7 @@
 # https://opensource.org/licenses/MIT
 
 # shellcheck disable=SC1090
-# cspell:words myproject
+# cspell:words
 
 _RUNTIME_BOOTSTRAP="${SHELLSPEC_PROJECT_ROOT}/skills/deckrd/skills/deckrd/scripts/libs/bootstrap.lib.sh"
 . "$_RUNTIME_BOOTSTRAP" "--no-finalize"
@@ -100,13 +100,13 @@ Describe "session.sh"
     Before "declare -gA BUF=(); session_init BUF \"$SESSION_SCHEMA_TEST\""
 
     Describe "Given: BUF にキーをセットした状態"
-      Before "session_set BUF active myproject"
+      Before "session_set BUF active my-project"
 
       Describe "When: session_get を呼ぶ"
         It "Then: [Normal] T-LIB-SGS-01: セットした値が返る"
           When call session_get BUF "active"
           The status should equal 0
-          The output should equal "myproject"
+          The output should equal "my-project"
         End
 
         It "Then: [Error] T-LIB-SGS-02: スキーマ外キーは exit 1 を返す"
@@ -184,16 +184,16 @@ Describe "session.sh"
 
       Describe "When: session_load を呼ぶ"
         It "Then: [Normal] T-LIB-SLOAD-05: active キーが読み込まれる"
-          printf '{"active":"myproject","ai_model":"opus","lang":"ja"}' \
+          printf '{"active":"my-project","ai_model":"opus","lang":"ja"}' \
             > "${DECKRD_LOCAL}/session.kv"
           session_load "${DECKRD_LOCAL}/session" BUF
           When call session_get BUF "active"
           The status should equal 0
-          The output should equal "myproject"
+          The output should equal "my-project"
         End
 
         It "Then: [Normal] T-LIB-SLOAD-06: ai_model キーが読み込まれる"
-          printf '{"active":"myproject","ai_model":"opus","lang":"ja"}' \
+          printf '{"active":"my-project","ai_model":"opus","lang":"ja"}' \
             > "${DECKRD_LOCAL}/session.kv"
           session_load "${DECKRD_LOCAL}/session" BUF
           When call session_get BUF "ai_model"
@@ -202,7 +202,7 @@ Describe "session.sh"
         End
 
         It "Then: [Normal] T-LIB-SLOAD-07: lang キーが読み込まれる"
-          printf '{"active":"myproject","ai_model":"opus","lang":"ja"}' \
+          printf '{"active":"my-project","ai_model":"opus","lang":"ja"}' \
             > "${DECKRD_LOCAL}/session.kv"
           session_load "${DECKRD_LOCAL}/session" BUF
           When call session_get BUF "lang"
@@ -282,7 +282,7 @@ Describe "session.sh"
 
     Describe "Given: lang にプログラミング言語が入り prog が無い session.json"
       Describe "When: session_migrate_lang_to_prog を呼ぶ"
-        Describe "Then: Task T-01-01 - lang を prog に移行する"
+        Describe "Then: lang を prog に移行する"
           It "[Normal] T-LIB-SMIG-01: lang=typescript が prog=typescript に移り lang が消える"
             printf '{"lang":"typescript"}' > "${DECKRD_LOCAL}/session.json"
             When call session_migrate_lang_to_prog "${DECKRD_LOCAL}/session.json"
@@ -319,7 +319,7 @@ Describe "session.sh"
 
     Describe "Given: 移行の必要が無い session.json"
       Describe "When: session_migrate_lang_to_prog を呼ぶ"
-        Describe "Then: Task T-01-02 - 何もせず内容不変で return 0"
+        Describe "Then: 何もせず内容不変で return 0"
           It "[Normal] T-LIB-SMIG-04: prog が既に存在すれば変更しない"
             printf '{"lang":"typescript","prog":"go"}' > "${DECKRD_LOCAL}/session.json"
             before="$(cat "${DECKRD_LOCAL}/session.json")"
@@ -361,7 +361,7 @@ Describe "session.sh"
 
     Describe "Given: session.json が無い、または JSON オブジェクトとして読めない"
       Describe "When: session_migrate_lang_to_prog を呼ぶ"
-        Describe "Then: Task T-01-03 - エラーを出して return 1"
+        Describe "Then: エラーを出して return 1"
           It "[Error] T-LIB-SMIG-08: 存在しないパスは return 1 でファイルを作らない"
             When call session_migrate_lang_to_prog "${DECKRD_LOCAL}/missing.json"
             The status should equal 1
@@ -392,7 +392,7 @@ Describe "session.sh"
 
     Describe "Given: 境界値・特殊値の session.json"
       Describe "When: session_migrate_lang_to_prog を呼ぶ"
-        Describe "Then: Task T-01-04 - 許可リストの完全一致だけを移行する"
+        Describe "Then: 許可リストの完全一致だけを移行する"
           It "[Edge] T-LIB-SMIG-11: 許可リスト末尾の bash は移行される"
             printf '{"lang":"bash"}' > "${DECKRD_LOCAL}/session.json"
             When call session_migrate_lang_to_prog "${DECKRD_LOCAL}/session.json"
@@ -432,7 +432,7 @@ Describe "session.sh"
 
     Describe "Given: session.json だけがあるディレクトリ"
       Describe "When: session_migrate_lang_to_prog で移行する"
-        Describe "Then: Task T-01-05 - 一時ファイル経由で書き込み残骸を残さない"
+        Describe "Then: 一時ファイル経由で書き込み残骸を残さない"
           It "[Normal] T-LIB-SMIG-15: 移行後のディレクトリには session.json だけが残る"
             printf '{"lang":"rust"}' > "${DECKRD_LOCAL}/session.json"
             When call session_migrate_lang_to_prog "${DECKRD_LOCAL}/session.json"
@@ -447,7 +447,7 @@ Describe "session.sh"
 
     Describe "Given: 一度移行した session.json"
       Describe "When: session_migrate_lang_to_prog を再度呼ぶ"
-        Describe "Then: Task T-01-06 - 2 回目は no-op (冪等)"
+        Describe "Then: 2 回目は no-op (冪等)"
           It "[Normal] T-LIB-SMIG-16: 2 回目は return 0 で stderr 空、内容は 1 回目の結果のまま"
             printf '{"lang":"typescript"}' > "${DECKRD_LOCAL}/session.json"
             session_migrate_lang_to_prog "${DECKRD_LOCAL}/session.json" 2>/dev/null
@@ -464,7 +464,7 @@ Describe "session.sh"
 
     Describe "Given: 移行が必要な session.json と書き込みに失敗する環境"
       Describe "When: session_migrate_lang_to_prog を呼ぶ"
-        Describe "Then: Task T-01-08 - エラー行を出し return 1、ファイル不変、tmp を残さない"
+        Describe "Then: エラー行を出し return 1、ファイル不変、tmp を残さない"
           It "[Error] T-LIB-SMIG-18: mv が失敗すると return 1 でエラー行を出し、内容不変で tmp も残らない"
             printf '{"lang":"typescript"}' > "${DECKRD_LOCAL}/session.json"
             # shellcheck disable=SC2329
@@ -517,7 +517,7 @@ Describe "session.sh"
 
     Describe "Given: lang にプログラミング言語が入り prog が無い session.json"
       Describe "When: session_lang_migration_needed を呼ぶ"
-        Describe "Then: Task T-01-01 - 移行が必要なら return 0"
+        Describe "Then: 移行が必要なら return 0"
           It "[Normal] T-LIB-SLMN-01: lang=typescript は return 0 で出力なし、ファイル不変"
             printf '{"active":"true","lang":"typescript"}' > "${DECKRD_LOCAL}/session.json"
             before="$(cat "${DECKRD_LOCAL}/session.json")"
@@ -533,7 +533,7 @@ Describe "session.sh"
 
     Describe "Given: 移行の必要が無い JSON オブジェクトの session.json"
       Describe "When: session_lang_migration_needed を呼ぶ"
-        Describe "Then: Task T-01-02 - 移行不要なら return 1"
+        Describe "Then: 移行不要なら return 1"
           It "[Normal] T-LIB-SLMN-02: prog が既にあれば return 1 で出力なし"
             printf '{"lang":"typescript","prog":"go"}' > "${DECKRD_LOCAL}/session.json"
             When call session_lang_migration_needed "${DECKRD_LOCAL}/session.json"
@@ -563,7 +563,7 @@ Describe "session.sh"
 
     Describe "Given: session.json が無い、または JSON オブジェクトとして読めない"
       Describe "When: session_lang_migration_needed を呼ぶ"
-        Describe "Then: Task T-01-03 - エラーを出して return 2"
+        Describe "Then: エラーを出して return 2"
           It "[Error] T-LIB-SLMN-05: 存在しないパスは return 2 でファイルを作らない"
             When call session_lang_migration_needed "${DECKRD_LOCAL}/missing/session.json"
             The status should equal 2
@@ -593,7 +593,7 @@ Describe "session.sh"
 
     Describe "Given: 境界値・特殊値の session.json"
       Describe "When: session_lang_migration_needed を呼ぶ"
-        Describe "Then: Task T-01-04 - 許可リストの完全一致だけを移行要とし、空ファイルはエラー"
+        Describe "Then: 許可リストの完全一致だけを移行要とし、空ファイルはエラー"
           It "[Edge] T-LIB-SLMN-08: 許可リスト末尾の bash は return 0 で出力なし"
             printf '{"lang":"bash"}' > "${DECKRD_LOCAL}/session.json"
             When call session_lang_migration_needed "${DECKRD_LOCAL}/session.json"
