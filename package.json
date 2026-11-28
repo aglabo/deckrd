@@ -1,6 +1,6 @@
 {
   "name": "@aglabo/deckrd",
-  "version": "0.9.1",
+  "version": "0.10.0",
   "private": true,
   "description": "deckrd: goal to tasks",
   "keywords": [
@@ -20,6 +20,7 @@
     "scan:secrets": "concurrently --raw --group \"bash runners/run-betterleaks.sh\" \"secretlint\"",
     "check:dprint": "dprint check --list-different",
     "check:dprint:diff": "dprint check",
+    "check:skills": "gh skill publish skills --dry-run",
     "format:dprint": "dprint fmt",
     "check:sh": "cross-env MSYS=NOGLOB bash runners/run-shfmt.sh --list ",
     "format:sh": "cross-env MSYS=NOGLOB bash runners/run-shfmt.sh --format ",
