@@ -1,3 +1,7 @@
+<!-- textlint-disable
+  ja-technical-writing/sentence-length,
+  ja-technical-writing/max-comma -->
+
 # Test ID Checker: Extending
 
 Read this only to change the checker or to add a language.

@@ -1,3 +1,7 @@
+<!-- textlint-disable
+  ja-technical-writing/sentence-length,
+  ja-technical-writing/max-comma -->
+
 # Test ID Checker: Syntax and Limits
 
 Reference for [test-id-check.md](test-id-check.md).

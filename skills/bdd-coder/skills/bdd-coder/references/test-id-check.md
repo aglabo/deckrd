@@ -1,3 +1,7 @@
+<!-- textlint-disable
+  ja-technical-writing/sentence-length,
+  ja-technical-writing/max-comma -->
+
 # Test ID Checker
 
 Checks that the test cases carry test IDs, belong to their group, and are not duplicated.
