@@ -452,7 +452,8 @@ gh release create vX.Y.Z --title "deckrd vX.Y.Z" --notes-file release-note.md
 ```
 
 Before releasing, run `gh skill publish --dry-run` to check the skills against the Agent Skills spec.
-Do not use symbolic links inside `skills/deckrd/skills/deckrd/`; `gh skill` and `npx skills` do not copy them reliably.
+Do not use symbolic links inside `skills/deckrd/skills/deckrd/` or `skills/bdd-coder/skills/`;
+`gh skill` and `npx skills` do not copy them reliably.
 
 ## Troubleshooting
 

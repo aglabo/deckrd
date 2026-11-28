@@ -127,7 +127,16 @@ skills/{skill-name}/
 **Location**: `skills/deckrd/skills/deckrd/scripts/libs/`
 
 **Purpose**: Shared libraries used by both deckrd and bdd-coder.
-bdd-coder links them via the `skills/bdd-coder/skills/bdd-coder/scripts/libs` symlink.
+The deckrd directories are the source of truth.
+bdd-coder bundles real copies of them, because `gh skill` and `npx skills` do not follow symbolic links.
+
+| Source (in `skills/deckrd/skills/deckrd/`) | Copy (in `skills/bdd-coder/skills/bdd-coder/`) |
+| ------------------------------------------ | ---------------------------------------------- |
+| `scripts/libs/` without `__tests__/`       | `scripts/libs/`                                |
+| `assets/dic/`                              | `assets/dic/`                                  |
+
+Update the copies in the same change as the sources.
+`shared-copies.integration.spec.sh` in bdd-coder fails when they differ.
 
 **Components**:
 

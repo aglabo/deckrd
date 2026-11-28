@@ -36,7 +36,7 @@ owns:
 
 ## lib
 
-deckrd プラグインの共有シェルライブラリ。bdd-coder の `scripts/libs` からも参照する。
+deckrd プラグインの共有シェルライブラリ。bdd-coder は `scripts/libs` にコピーを持つ。
 `owns` には本モジュールが所有する spec を 1 本ずつ列挙する。
 
 ## テスト対象の略語
