@@ -52,6 +52,18 @@ _print_group_id() {
   echo "[${_GROUP_ID}]"
 }
 
+# 行の for ループ状態を追跡し、_IN_LOOP を [] で囲んで出力するハンドラ
+_track_loop() {
+  track_loop_block "$2"
+  echo "[${_IN_LOOP}]"
+}
+
+# 前のファイル a.txt ($1 の 1 行) を _track_loop で読み、出力は捨てる
+_read_previous_file() {
+  _write_file a.txt "$1"
+  read_file_lines "$_FIXTURE" a.txt _track_loop >/dev/null
+}
+
 # --- テスト本体 ---
 
 # file-reader.lib.sh の read_file_lines。ファイルの各行を、次の行とともにハンドラに渡す
@@ -81,6 +93,22 @@ Describe 'T-RUN-RFL: read_file_lines'
       The status should be success
       The output should equal $'a.txt:1|a|b\na.txt:2|b|'
     End
+
+    It 'Then: [Normal] T-RUN-RFL-10: does not carry an unclosed for block to the next file'
+      _read_previous_file 'for (const x of xs) {'
+      _write_file b.txt 'f(x);'
+      When call read_file_lines "$_FIXTURE" b.txt _track_loop
+      The status should be success
+      The output should equal '[]'
+    End
+
+    It 'Then: [Normal] T-RUN-RFL-11: does not carry a pending for header to the next file'
+      _read_previous_file 'for (final c in ['
+      _write_file b.txt ']) {'
+      When call read_file_lines "$_FIXTURE" b.txt _track_loop
+      The status should be success
+      The output should equal '[]'
+    End
   End
 
   Describe 'When: 異常系'
@@ -90,6 +118,14 @@ Describe 'T-RUN-RFL: read_file_lines'
       The output should equal ''
       The stderr should include 'Error: gone.txt: cannot read'
       The variable '_COUNTS[errors]' should equal 1
+    End
+
+    It 'Then: [Error] T-RUN-RFL-12: leaves the loop state unchanged for an unreadable file'
+      _IN_LOOP='}'
+      When call read_file_lines "$_FIXTURE" gone.txt _record
+      The status should be success
+      The stderr should include 'Error: gone.txt: cannot read'
+      The variable '_IN_LOOP' should equal '}'
     End
   End
 
@@ -137,6 +173,25 @@ Describe 'T-RUN-RFL: read_file_lines'
       When call read_file_lines "$_FIXTURE" a.txt _record
       The status should be success
       The output should equal $'a.txt:1|a|b\na.txt:2|b|'
+    End
+
+    It 'Then: [Edge] T-RUN-RFL-13: resets the loop state for an empty file without calling the handler'
+      : >"${_FIXTURE}/a.txt"
+      _IN_LOOP='}' _LOOP_PENDING='}'
+      When call read_file_lines "$_FIXTURE" a.txt _record
+      The status should be success
+      The output should equal ''
+      The variable '_IN_LOOP' should equal ''
+      The variable '_LOOP_PENDING' should equal ''
+    End
+  End
+
+  Describe 'When: 状態遷移'
+    It 'Then: [Normal] T-RUN-RFL-14: keeps the loop state from line to line within a file'
+      _write_file a.txt 'for (const x of xs) {' '  f(x);'
+      When call read_file_lines "$_FIXTURE" a.txt _track_loop
+      The status should be success
+      The output should equal $'[}]\n[}]'
     End
   End
 End

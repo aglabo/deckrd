@@ -78,14 +78,18 @@ count_group_declaration() {
 }
 
 #
-# @description Count a case declaration and check its ID. Source report.lib.sh and
-#   test-id.lib.sh before the call
+# @description Count a case declaration and check its ID. Inside a for block, a case
+#   ID must also be written with a trailing '-', where its variable branch follows.
+#   The text after the '-' is not checked. Source report.lib.sh and test-id.lib.sh
+#   before the call
 # @arg $1 string The file and line number of an error
 # @arg $2 string The title
-# @set _ID, _ID_KIND The ID of the title, from parse_title_id (global)
+# @set _ID, _ID_KIND, _ID_TRAILING_HYPHEN The ID of the title, from parse_title_id
+#   (global)
 # @set _COUNTS The counts of case IDs and errors (global)
 # @set _DECLARED The ID, from check_declared_id (global)
-# @stderr The errors of check_declared_id
+# @stderr No case ID; or the errors of check_declared_id, then a case ID without a
+#   variable branch in a loop, when _IN_LOOP of test-id.lib.sh is non-empty
 # @exitcode 0 always
 #
 count_case_declaration() {
@@ -93,6 +97,9 @@ count_case_declaration() {
   if [[ $_ID_KIND == case ]]; then
     counts_add case
     check_declared_id case "$_ID" "$1"
+    if [[ -n $_IN_LOOP && -z $_ID_TRAILING_HYPHEN ]]; then
+      report_error "$1: case ID without a variable branch in a loop: $_ID"
+    fi
   else
     report_error "$1: no case ID"
   fi

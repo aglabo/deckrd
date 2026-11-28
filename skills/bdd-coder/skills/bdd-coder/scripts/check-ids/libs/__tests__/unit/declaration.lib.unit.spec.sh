@@ -90,6 +90,11 @@ _count_wrapped_in_utf8() {
   _count_wrapped "$@"
 }
 
+# for ブロックの中にいる状態にする
+_enter_loop() {
+  _IN_LOOP='}'
+}
+
 # --- テスト本体 ---
 
 # declaration.lib.sh の read_declaration。行を宣言として読む
@@ -135,7 +140,7 @@ End
 
 # declaration.lib.sh の count_group_declaration。グループ宣言の ID の計数と検査
 Describe 'T-RUN-CGD: count_group_declaration'
-  BeforeEach 'counts_init' 'declared_ids_init' 'group_id_reset'
+  BeforeEach 'counts_init' 'declared_ids_init' 'group_id_reset' 'loop_block_reset'
 
   Describe 'When: 正常系'
     It 'Then: [Normal] T-RUN-CGD-01: counts a group declaration with a group ID'
@@ -171,11 +176,22 @@ Describe 'T-RUN-CGD: count_group_declaration'
       The variable '_GROUP_ID' should equal 'T-ABC-BB'
     End
   End
+
+  Describe 'When: for ブロック内のエッジケース'
+    BeforeEach '_enter_loop'
+
+    It 'Then: [Edge] T-RUN-CGD-04: does not report a group ID without a variable branch'
+      When call _count_declarations 'group a.spec.sh:1 T-ABC-AA: x'
+      The status should be success
+      The output should equal '1 0 0'
+      The stderr should equal ''
+    End
+  End
 End
 
 # declaration.lib.sh の count_case_declaration。ケース宣言の ID の計数と検査
 Describe 'T-RUN-CCD: count_case_declaration'
-  BeforeEach 'counts_init' 'declared_ids_init' 'group_id_reset'
+  BeforeEach 'counts_init' 'declared_ids_init' 'group_id_reset' 'loop_block_reset'
 
   Describe 'When: 正常系'
     It 'Then: [Normal] T-RUN-CCD-01: counts a case declaration with a case ID in its group'
@@ -196,6 +212,62 @@ Describe 'T-RUN-CCD: count_case_declaration'
 
     It "Then: [Error] T-RUN-CCD-02-$1: reports $2"
       When call _count_declarations "${@:5}"
+      The status should be success
+      The output should equal "$3"
+      The stderr should equal "$4"
+    End
+  End
+
+  Describe 'When: for ブロック内の異常系'
+    BeforeEach '_enter_loop'
+
+    # 枝番、説明、行 2 のケース ID
+    Parameters
+      '01' 'a case ID without a branch' 'T-ABC-AA-01'
+      '02' 'a case ID with a fixed branch' 'T-ABC-AA-01-01'
+    End
+
+    It "Then: [Error] T-RUN-CCD-03-$1: reports $2"
+      When call _count_declarations 'group a.spec.sh:1 T-ABC-AA: x' "case a.spec.sh:2 $3: x"
+      The status should be success
+      The output should equal '1 1 1'
+      The stderr should equal "Error: a.spec.sh:2: case ID without a variable branch in a loop: $3"
+    End
+  End
+
+  Describe 'When: for ブロック内の正常系'
+    BeforeEach '_enter_loop'
+
+    # 枝番、説明、行 2 のタイトル
+    Parameters
+      '01' 'a $variable branch' 'T-ABC-AA-01-$branch: x'
+      '02' 'a ${row.branch} branch' 'T-ABC-AA-01-${row.branch}: x'
+      '03' 'a variable branch after a fixed branch' 'T-ABC-AA-01-02-${x}: x'
+      '04' 'a title ending with "-"' 'T-ABC-AA-01-'
+      '05' 'a "-" followed by ": title"' 'T-ABC-AA-01-: title'
+    End
+
+    It "Then: [Normal] T-RUN-CCD-04-$1: accepts $2"
+      When call _count_declarations 'group a.spec.sh:1 T-ABC-AA: x' "case a.spec.sh:2 $3"
+      The status should be success
+      The output should equal '1 1 0'
+      The stderr should equal ''
+    End
+  End
+
+  Describe 'When: for ブロック内のエッジケース'
+    BeforeEach '_enter_loop'
+
+    # 枝番、説明、期待する件数、期待するエラー出力、グループ宣言の後に順に数える宣言
+    Parameters
+      '01' 'only no case ID for a title without an ID' '1 0 1' 'Error: a.spec.sh:2: no case ID' 'case a.spec.sh:2 sample'
+      '02' 'only no case ID for a group ID followed by a variable' '1 0 1' 'Error: a.spec.sh:2: no case ID' 'case a.spec.sh:2 T-ABC-AA-$x: x'
+      '03' 'a case ID outside the group, then the missing branch' '1 1 2' $'Error: a.spec.sh:2: case ID outside the group: T-ABC-BB-01\nError: a.spec.sh:2: case ID without a variable branch in a loop: T-ABC-BB-01' 'case a.spec.sh:2 T-ABC-BB-01: x'
+      '04' 'only the duplicate ID for a declared ID with a variable branch' '1 2 1' 'Error: a.spec.sh:3: duplicate ID: T-ABC-AA-01' 'case a.spec.sh:2 T-ABC-AA-01-$a: x' 'case a.spec.sh:3 T-ABC-AA-01-$b: y'
+    End
+
+    It "Then: [Edge] T-RUN-CCD-05-$1: reports $2"
+      When call _count_declarations 'group a.spec.sh:1 T-ABC-AA: x' "${@:5}"
       The status should be success
       The output should equal "$3"
       The stderr should equal "$4"
@@ -237,7 +309,7 @@ End
 
 # declaration.lib.sh の count_line_declaration。行を読み、宣言なら計数と検査をする
 Describe 'T-RUN-CLD2: count_line_declaration'
-  BeforeEach 'counts_init' 'declared_ids_init'
+  BeforeEach 'counts_init' 'declared_ids_init' 'loop_block_reset'
 
   Describe 'When: 正常系'
     Describe 'a one-line declaration'
@@ -402,6 +474,17 @@ Describe 'T-RUN-CLD2: count_line_declaration'
         The output should equal '0 0 1 T-ABC-AA'
         The stderr should equal 'Error: a:2: no case ID'
       End
+    End
+  End
+
+  Describe 'When: for ブロック内の異常系'
+    BeforeEach '_enter_loop'
+
+    It 'Then: [Error] T-RUN-CLD2-33: reports a wrapped case without a branch at its keyword line'
+      When call _count_wrapped T-ABC-AA a:2 'it(' "  'T-ABC-AA-01: x',"
+      The status should be success
+      The output should equal '0 1 1 T-ABC-AA'
+      The stderr should equal 'Error: a:2: case ID without a variable branch in a loop: T-ABC-AA-01'
     End
   End
 
