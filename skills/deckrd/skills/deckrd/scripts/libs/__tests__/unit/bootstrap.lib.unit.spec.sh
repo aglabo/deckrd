@@ -31,19 +31,8 @@ Include "${SHELLSPEC_SPECFILE%/*}/../spec_helper.sh"
 
 SCRIPT="${_RUNTIME_LIBS_DIR}/bootstrap.lib.sh"
 
-# bootstrap.lib.sh as seen through bdd-coder's linked scripts/libs
-_CODER_LINKED_LIBS_DIR="${SHELLSPEC_PROJECT_ROOT}/skills/bdd-coder/skills/bdd-coder/scripts/libs"
-_CODER_LINKED_SCRIPT="${_CODER_LINKED_LIBS_DIR}/bootstrap.lib.sh"
-
-# _bexp_coder_libs_not_linked - bdd-coder の scripts/libs が実リンクでないかを調べる (Skip if の条件)
-#
-# core.symlinks=false の Windows checkout ではリンクがテキストファイルになり、
-# bdd-coder 側から bootstrap.lib.sh を source できない。
-#
-# @return 0 実リンクでない (Skip する), 1 実リンク
-_bexp_coder_libs_not_linked() {
-  [[ ! -L "$_CODER_LINKED_LIBS_DIR" ]]
-}
+# bootstrap.lib.sh in bdd-coder's copy of scripts/libs
+_CODER_SCRIPT="${SHELLSPEC_PROJECT_ROOT}/skills/bdd-coder/skills/bdd-coder/scripts/libs/bootstrap.lib.sh"
 
 # Source bootstrap with no-finalize so variables remain writable in this spec
 # process. Before blocks call bootstrap_init with fixed dependencies to re-set
@@ -182,17 +171,15 @@ Describe "bootstrap.lib.sh"
       The output should equal "no-x:no-x:no-x:no-x"
     End
 
-    Describe "Given: bdd-coder の scripts/libs が deckrd の scripts/libs への symlink"
-      Skip if "scripts/libs が symlink でない (core.symlinks=false)" _bexp_coder_libs_not_linked
-
+    Describe "Given: bdd-coder の scripts/libs が deckrd の scripts/libs のコピー"
       It "[Edge] T-LIB-BEXP-16: deckrd で source した親の子が bdd-coder 側を source すると DECKRD_ROOT は bdd-coder になる"
-        When run bash -c "unset DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_ASSETS_DIR DECKRD_LIB_DIR; export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" || exit 1; bash -c '. \"${_CODER_LINKED_SCRIPT}\" || exit 1; printf \"%s\" \"\$DECKRD_ROOT\"'"
+        When run bash -c "unset DECKRD_ROOT DECKRD_SCRIPTS_DIR DECKRD_ASSETS_DIR DECKRD_LIB_DIR; export PROJECT_ROOT=/tmp/proj; . \"$SCRIPT\" || exit 1; bash -c '. \"${_CODER_SCRIPT}\" || exit 1; printf \"%s\" \"\$DECKRD_ROOT\"'"
         The status should equal 0
         The output should end with "/skills/bdd-coder/skills/bdd-coder"
       End
 
       It "[Edge] T-LIB-BEXP-18: 親が空文字の DECKRD_ROOT を export して deckrd 側を source しても、子が bdd-coder 側を source すると DECKRD_ROOT は bdd-coder になる"
-        When run bash -c "unset DECKRD_SCRIPTS_DIR DECKRD_ASSETS_DIR DECKRD_LIB_DIR; export PROJECT_ROOT=/tmp/proj DECKRD_ROOT=''; . \"$SCRIPT\" || exit 1; bash -c '. \"${_CODER_LINKED_SCRIPT}\" || exit 1; printf \"%s\" \"\$DECKRD_ROOT\"'"
+        When run bash -c "unset DECKRD_SCRIPTS_DIR DECKRD_ASSETS_DIR DECKRD_LIB_DIR; export PROJECT_ROOT=/tmp/proj DECKRD_ROOT=''; . \"$SCRIPT\" || exit 1; bash -c '. \"${_CODER_SCRIPT}\" || exit 1; printf \"%s\" \"\$DECKRD_ROOT\"'"
         The status should equal 0
         The output should end with "/skills/bdd-coder/skills/bdd-coder"
       End
