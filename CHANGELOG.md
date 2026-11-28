@@ -1,10 +1,10 @@
 ---
 title: "CHANGELOG"
-description: "ChangeLog: 0.10.0"
-version: "0.10.0"
+description: "ChangeLog: 0.10.1"
+version: "0.10.1"
 date: "2026-11-28"
 summary:
-  - "0.10.0: per-language test ID checks in bdd-coder, separate abbreviation checker, bundled library copies in bdd-coder, per-phase bdd-coder reference documents"
+  - "0.10.1: wrapped test titles and loop branch checks for case IDs in the bdd-coder test ID checker, split test ID check reference documents"
 ---
 
 <!-- textlint-disable
@@ -14,6 +14,30 @@ summary:
 <!-- markdownlint-disable line-length -->
 
 ## CHANGELOG
+
+## 0.10.1 - 2026-11-28
+
+### Features
+
+- Read wrapped test titles in `check-test-ids.sh` for `ts`, `js`, and `dart`. When an `it(` /
+  `test(` (`dart`: `test(` / `testWidgets(`) line ends with `(`, the title literal is read from the
+  next line. `go` and `sh` still report such declarations as having no case ID.
+- Require a variable branch on case IDs inside `for` blocks in `ts`, `js`, and `dart`. A case ID in
+  a loop must end with `-`, where the branch follows; otherwise `check-test-ids.sh` reports "case ID
+  without a variable branch in a loop".
+
+### Docs
+
+- Split `test-id-check.md` in `bdd-coder`: move the ID rules and limits to
+  `test-id-check-syntax.md` and the language extension guide to `test-id-check-extending.md`, add a
+  Fix column to the error table, and list the new references in the `bdd-coder` README.
+- Document wrapped case declarations, `for` block tracking, and the loop branch check with its limits
+  in the `bdd-coder` test ID references.
+- Update `deckrd-rule-testing-guidelines.md` (3.0.0 to 3.1.2): allow wrapped test titles, require
+  the trailing `-` on case IDs inside `for` loops, define the ID patterns inside and outside loops,
+  and point the references to `test-id-check-syntax.md`.
+- Add the abbreviations `LBR` (`loop_block_reset`) and `TLB` (`track_loop_block`) to the
+  `bdd-coder/test-ids` module declaration.
 
 ## 0.10.0 - 2026-11-28
 
