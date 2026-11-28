@@ -1,7 +1,8 @@
 # Test ID Checker
 
 Checks that the test cases carry test IDs, belong to their group, and are not duplicated.
-In `ts`, `js`, and `dart`, it also checks that a case ID in a `for` block has a variable branch.
+In `ts`, `js`, and `dart`, it also checks that a case ID in a `for` block ends with `-`,
+where its branch follows.
 The target abbreviations are checked by another script (see [test-abbr-check.md](test-abbr-check.md)).
 
 The checker reads one simple way of writing tests. It is not a language parser.
@@ -106,9 +107,18 @@ it(`T-CFG-GI-03-${branch}: ...`, ...)
 t.Run("T-CFG-GI-03-"+tc.name, ...)
 ```
 
-In `ts`, `js`, and `dart` only, a case ID inside a `for` block needs a variable branch.
+The form of an ID as written depends on where its declaration is:
+
+```text
+Outside a loop block                 : T-([A-Z0-9]+-)+[A-Z0-9]+-?   the last - is optional
+In a for block (ts, js, dart only)   : T-([A-Z0-9]+-)+[A-Z0-9]+-    the last - is required
+```
+
+A case ID also ends with `-NN` or `-NN-NN`, before that last `-`, in both places.
+Letters, digits, and `-` right after the last `-` are read as part of the ID,
+so `T-CFG-GI-03-case-${n}` is error 1 in both places.
+
 The blocks are those of `for (...) {`, `for await (...) {`, and `await for (...) {`.
-The dropped `-` matters here: the ID as written must end with it, where the branch follows.
 [Loop blocks](#loop-blocks) tells where a block starts and ends.
 Cases after the block are not affected.
 
@@ -118,7 +128,8 @@ Cases after the block are not affected.
 | `T-CFG-GI-03-${row.branch}`    | Pass                                                      |
 | `T-CFG-GI-03-02-${x}`          | Pass                                                      |
 | `'T-CFG-GI-03-' + branch`      | Pass                                                      |
-| `T-CFG-GI-03`                  | [Error 6](#what-is-checked): no branch                    |
+| `T-CFG-GI-03-: title`          | Pass: no variable is looked for after the `-`             |
+| `T-CFG-GI-03`                  | [Error 6](#what-is-checked): no last `-`                  |
 | `T-CFG-GI-03-01`               | [Error 6](#what-is-checked): a fixed branch is not enough |
 
 ### Loop blocks
@@ -126,6 +137,7 @@ Cases after the block are not affected.
 The checker finds `for` blocks line by line. It does not parse the language or count braces.
 
 - A `for` line starts with `for (`, `for await (`, or `await for (`, after optional spaces and tabs.
+  The space before `(` is optional, as in `for(`.
 - A `for` line that ends with `{` opens a block.
 - Any other `for` line starts a header that may span lines:
   - The block opens at a line that starts with `)`, `]`, or `}`
@@ -145,7 +157,7 @@ The checker finds `for` blocks line by line. It does not parse the language or c
 | 3  | A group ID or a case ID declared twice among the checked files               |
 | 4  | A selected language with no test file, or with no group ID                   |
 | 5  | A listing that fails, or a test file that cannot be read                     |
-| 6  | In `ts`, `js`, `dart`: a case ID without a variable branch in a `for` block  |
+| 6  | In `ts`, `js`, `dart`: a case ID in a `for` block that does not end with `-` |
 
 - A group declaration without an ID, such as `Describe 'When: ...'`, is allowed.
 - A case ID in the title of a group declaration declares nothing.
@@ -161,7 +173,9 @@ The checker finds `for` blocks line by line. It does not parse the language or c
 Error 6 reads `case ID without a variable branch in a loop: <ID>`.
 [Table-driven cases](#table-driven-cases) shows which IDs pass.
 
-Every error names the file and the line, the keyword line for a wrapped case declaration.
+Errors 1, 2, 3, and 6 name the file and the line, the keyword line for a wrapped case declaration.
+Error 4 names the language. Error 5 names the file that cannot be read,
+or the language whose files cannot be listed.
 The checker exits 1 after it reports all of them.
 It exits 0 with a count of files, group IDs and case IDs when there is none.
 
@@ -186,7 +200,8 @@ Error 6 has these limits, and those of loop tracking in [Comments and strings](#
 
 - `go` and `sh` are not covered.
   Their loop cases are expected to be written as `<testID>-{branch}` already.
-- The text after the `-` is not verified. A literal `T-CFG-GI-03-: title` passes.
+- Only the last `-` of the ID is checked. No variable is looked for after it,
+  so a literal `T-CFG-GI-03-: title` passes.
 - The values a branch takes are not read, so duplicate branch values are not found.
 - Only `for` is tracked. `while`, `do`, and callback loops such as `forEach` are not.
 
@@ -195,7 +210,9 @@ Error 6 has these limits, and those of loop tracking in [Comments and strings](#
 The cases in these loops are not checked.
 
 - A header whose closing line is indented deeper than the `for` line, such as `i++) {`.
-  `dart format` writes long `for-in` and `await for` headers this way.
+  `dart format` can write a long header this way, such as a split `in` clause
+  of `for-in` or `await for`. A header that it closes with `]) {`
+  at the `for` indentation is checked.
 - A `for` that closes on its own line, as `for (...) { ... }`
 - A `for` without braces, as `for (...) stmt;`
 - An opening brace on its own line
