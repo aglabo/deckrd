@@ -6,7 +6,7 @@ description: >
 license: MIT
 metadata:
   author: aglabo
-  version: 0.10.0
+  version: 0.10.1
 allowed-tools: Read Write Bash(codex:*) Bash(mkdir:*) Bash(jq:*)
 argument-hint: "<file_or_phase> [--focus completeness|risk|consistency|feasibility]"
 ---
