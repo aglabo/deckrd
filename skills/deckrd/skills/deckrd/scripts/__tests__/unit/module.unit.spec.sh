@@ -25,7 +25,7 @@ setup_deckrd_tmpdir_with_project() {
     >"${DECKRD_LOCAL_DATA}/.project.json"
 }
 
-# Helpers: make the frontmatter reader unrunnable (fm_read_scalar honors $AWK).
+# Helpers: make the frontmatter reader fail to run (fm_read_scalar honors $AWK).
 # Works on every platform, unlike removing read permission
 # shellcheck disable=SC2329
 break_frontmatter_reader() { export AWK="${DECKRD_TMPDIR}/no-such-awk"; }
@@ -1007,7 +1007,7 @@ Describe "module.sh"
     Describe "Given: a module.md and a frontmatter reader that cannot run"
       # shellcheck disable=SC2329
       setup_module_without_reader() {
-        write_module_md "uniform/noreader" "---" "test_scope: UNI" "---"
+        write_module_md "uniform/no-reader" "---" "test_scope: UNI" "---"
         break_frontmatter_reader
       }
       Before "setup_module_without_reader"
@@ -1019,7 +1019,7 @@ Describe "module.sh"
           The status should equal 1
           The output should equal ""
           The stderr should include "cannot read module declaration"
-          The stderr should include "uniform/noreader/workspaces/module/module.md"
+          The stderr should include "uniform/no-reader/workspaces/module/module.md"
         End
       End
     End
@@ -1703,43 +1703,43 @@ Describe "module.sh"
 
       Describe "When: run module.sh for a new module"
         It "[Normal] T-CLI-MMT-13: Should: exit with status 0 and create the module with the derived scope"
-          When run bash "$SCRIPT" myns/mymod
+          When run bash "$SCRIPT" my-ns/my-mod
           The status should equal 0
           The output should include "Session updated"
           The stderr should equal ""
-          The contents of file "${DECKRD_DOCS_DIR}/myns/mymod/workspaces/module/module.md" should include "test_scope: MYM"
-          The contents of file "${DECKRD_LOCAL_DATA}/session.json" should include '"test_scope": "MYM"'
+          The contents of file "${DECKRD_DOCS_DIR}/my-ns/my-mod/workspaces/module/module.md" should include "test_scope: MM"
+          The contents of file "${DECKRD_LOCAL_DATA}/session.json" should include '"test_scope": "MM"'
         End
       End
     End
 
     Describe "Given: another module declares the derived scope and AWK is a multi-word command"
       # shellcheck disable=SC2329
-      setup_awk_env_with_taken_scope() { setup_awk_env_with_declaration "thirdns/thirdmod" "MYM"; }
+      setup_awk_env_with_taken_scope() { setup_awk_env_with_declaration "third-ns/thirdmod" "MM"; }
       Before "setup_awk_env_with_taken_scope"
       After "restore_frontmatter_reader" "teardown_deckrd_tmpdir"
 
       Describe "When: run module.sh for a new module"
         It "[Error] T-CLI-MMT-14: Should: exit with status 1, report the conflicting module.md and write no module.md"
-          When run bash "$SCRIPT" myns/mymod
+          When run bash "$SCRIPT" my-ns/my-mod
           The status should equal 1
           The output should include "Initializing module"
           The stderr should include "conflict"
-          The stderr should include "thirdns/thirdmod/workspaces/module/module.md"
-          The path "${DECKRD_DOCS_DIR}/myns/mymod/workspaces/module/module.md" should not be exist
+          The stderr should include "third-ns/thirdmod/workspaces/module/module.md"
+          The path "${DECKRD_DOCS_DIR}/my-ns/my-mod/workspaces/module/module.md" should not be exist
         End
       End
     End
 
     Describe "Given: a module declaring its own test scope and AWK is a multi-word command"
       # shellcheck disable=SC2329
-      setup_awk_env_with_own_scope() { setup_awk_env_with_declaration "myns/mymod" "ZZ"; }
+      setup_awk_env_with_own_scope() { setup_awk_env_with_declaration "my-ns/my-mod" "ZZ"; }
       Before "setup_awk_env_with_own_scope"
       After "restore_frontmatter_reader" "teardown_deckrd_tmpdir"
 
       Describe "When: re-initialize the module with --force"
         It "[Edge] T-CLI-MMT-15: Should: exit with status 0 and read back the declared scope into session.json"
-          When run bash "$SCRIPT" myns/mymod --force
+          When run bash "$SCRIPT" my-ns/my-mod --force
           The status should equal 0
           The output should include "kept existing test_scope"
           The stderr should equal ""

@@ -336,10 +336,10 @@ _validate_explicit_scope() {
 # @arg $1 string Normalized module path (namespace/module)
 # @arg $2 string Explicit test scope (optional, may be empty)
 # @stdout The resolved scope (uppercase alphanumeric, 2-4 characters)
-# @stderr Error message if the explicit scope is malformed, underivable, or already taken,
-#         or if a module.md cannot be read
+# @stderr Error message if the explicit scope is malformed or already taken, no scope can be derived,
+#         or a module.md cannot be read
 # @exitcode 0 Success
-# @exitcode 1 Malformed explicit scope, underivable scope, conflict with an existing module,
+# @exitcode 1 Malformed explicit scope, failure to derive a scope, conflict with an existing module,
 #           or an unreadable module.md
 resolve_test_scope() {
   local path="$1"
