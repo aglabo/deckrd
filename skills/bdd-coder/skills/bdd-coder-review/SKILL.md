@@ -7,7 +7,7 @@ description: >
 license: MIT
 metadata:
   author: aglabo
-  version: 0.10.0
+  version: 0.10.1
 argument-hint: "[task_id] [--branch [<base>] | <paths...>] [--coverage-cmd <cmd>]"
 ---
 
