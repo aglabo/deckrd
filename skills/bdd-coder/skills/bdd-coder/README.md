@@ -70,6 +70,7 @@ skills/bdd-coder/skills/bdd-coder/
     ├── troubleshooting.md            # トラブルシューティング
     ├── implementation.md             # 実装フローリファレンス
     ├── write-back-format.md          # 書き戻しフォーマット
+    ├── session-resume.md             # session.json の書き込みと再開の手順
     ├── guidelines/
     │   └── code-comments.md          # コードコメント ガイドライン (C-1〜C-10)
     └── roles/

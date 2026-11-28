@@ -5,10 +5,10 @@ description: >
   - Use for any coding instruction: natural language, Task ID (T01-02), or a task list
   - One task per delegation; a range (T01-01..03) or all Scenarios of a Target (T01-*) runs its tasks one by one
   - Never commits or pushes
+license: MIT
 metadata:
   author: aglabo
-  version: 0.9.1
-  license: MIT
+  version: 0.10.0
 ---
 
 <!-- textlint-disable
@@ -110,110 +110,28 @@ Branches are prepared by the caller: one task branch per Target (T-XX), cut from
 
 Route the input first. Only natural language, Target IDs, and the range / all-under-parent forms go through tasklist-builder.
 
-| Input                             | Phase 1a: tasklist-builder   | Phase 1b: checklist-builder input                    |
-| --------------------------------- | ---------------------------- | ---------------------------------------------------- |
-| Natural-language                  | Run                          | `Handoff` of the selected item                       |
-| Target ID (e.g. `T01`)            | Run                          | `Handoff` of the selected item (`T01-02`)            |
-| Range (e.g. `T01-01..03`)         | Run with the Target ID `T01` | `Handoff` of each item in the range, in order        |
-| All under a Target (e.g. `T01-*`) | Run with the Target ID `T01` | `Handoff` of each `pending` item, in order           |
-| Scenario ID (e.g. `T01-02`)       | Skip                         | The Task ID as given                                 |
-| `--tasklist <path> [--item L-02]` | Skip                         | `Handoff` of the given item, or first `pending`      |
-| `--checklist <path>`              | Skip                         | Skip checklist-builder; use the file                 |
-| `--resume`                        | Skip                         | Restored from `session.json` (see [Resume](#resume)) |
+| Input                             | Phase 1a: tasklist-builder   | Phase 1b: checklist-builder input                                                |
+| --------------------------------- | ---------------------------- | -------------------------------------------------------------------------------- |
+| Natural-language                  | Run                          | `Handoff` of the selected item                                                   |
+| Target ID (e.g. `T01`)            | Run                          | `Handoff` of the selected item (`T01-02`)                                        |
+| Range (e.g. `T01-01..03`)         | Run with the Target ID `T01` | `Handoff` of each item in the range, in order                                    |
+| All under a Target (e.g. `T01-*`) | Run with the Target ID `T01` | `Handoff` of each `pending` item, in order                                       |
+| Scenario ID (e.g. `T01-02`)       | Skip                         | The Task ID as given                                                             |
+| `--tasklist <path> [--item L-02]` | Skip                         | `Handoff` of the given item, or first `pending`                                  |
+| `--checklist <path>`              | Skip                         | Skip checklist-builder; use the file                                             |
+| `--resume`                        | Skip                         | Restored from `session.json` (see [Resume](references/session-resume.md#resume)) |
 
 The range and all-under-parent forms run several tasks one by one: see [Multi-task run](#multi-task-run).
 Quote `T01-*` in a shell so that it is not expanded as a glob.
 
-#### Session entry
+#### Session entry and resume
 
 The skill keeps the work in progress in the `bdd_coder` entry of `<local_dir>/session.json`,
-so an interrupted session can be resumed. Stored paths start with the `local_dir` value (`<local_dir>` below).
+so an interrupted session can be resumed. Only this skill (the orchestrator) reads or writes that entry.
 
-```json
-{
-  "bdd_coder": {
-    "tasklist": "<local_dir>/temp/tasklist/deckrd/libs/T-01.tasklist.md",
-    "item": "L-02",
-    "checklist": "<local_dir>/temp/tasks/parse-config-calm-checklist.md",
-    "queue": null,
-    "index": null,
-    "status": "in-progress",
-    "updated_at": "2026-11-09T00:00:00Z"
-  }
-}
-```
-
-| Field        | Value                                                                                                          |
-| ------------ | -------------------------------------------------------------------------------------------------------------- |
-| `tasklist`   | TASKLIST PATH, or `null` when Phase 1 used no task list                                                        |
-| `item`       | Item ID selected in Phase 1a (in a multi-task run, the item being run), or `null` without a task list          |
-| `checklist`  | CHECKLIST PATH, or `null` until Phase 1b returns it                                                            |
-| `queue`      | Multi-task run only: the item IDs to run, in order (`["L-01","L-02","L-03"]`). `null` otherwise                |
-| `index`      | Multi-task run only: the position in `queue` of the item being run (0-based). `null` otherwise                 |
-| `status`     | `in-progress` from Phase 1 on; `done` when Phase 5 completes every case (every queue item in a multi-task run) |
-| `updated_at` | UTC timestamp of the last write (`date -u +"%Y-%m-%dT%H:%M:%SZ"`)                                              |
-
-Rules:
-
-- Only this skill (the orchestrator) reads or writes `bdd_coder`. tasklist-builder, checklist-builder,
-  and the bdd-coder agent never see it (Phase 3: "Do NOT pass ... session.json").
-- Replace the `bdd_coder` value as a whole and leave every other key untouched.
-  Write through a temporary file, as `module.sh` does:
-
-  ```bash
-  jq --arg tl "$TASKLIST" --arg item "$ITEM" --arg cl "$CHECKLIST" --arg st "$STATUS" \
-     --argjson queue "$QUEUE" --argjson index "$INDEX" \
-     --arg now "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
-     'def nz: if . == "" then null else . end;
-      .bdd_coder = {tasklist: ($tl | nz), item: ($item | nz), checklist: ($cl | nz),
-                    queue: $queue, index: $index,
-                    status: $st, updated_at: $now}' \
-     <local_dir>/session.json > <local_dir>/session.json.tmp &&
-    mv <local_dir>/session.json.tmp <local_dir>/session.json
-  ```
-
-  Pass an empty string for a `null` string field. Pass `null` for `QUEUE` and `INDEX` in a single-task run,
-  and a JSON array (`'["L-01","L-02"]'`) and a number in a multi-task run. Do not use `select(. != "")` instead of `nz`:
-  an empty value inside `{...}` makes jq output nothing, and the `mv` then empties `session.json`.
-  `jaq` accepts the same filter.
-- If `<local_dir>/session.json` does not exist, do not create it. Warn that the session cannot be
-  saved (`/deckrd init` has not run) and continue without it.
-
-| When                                    | Write                                                                                                    |
-| --------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Phase 1a: an item is selected           | `tasklist`, `item`, `checklist: null`, `status: in-progress`                                             |
-| Phase 1b: CHECKLIST PATH is returned    | Keep `tasklist` / `item` (or `null`), set `checklist`, `status: in-progress`                             |
-| Phase 5 Step 4c: every case is complete | `status: done` (single-task run), or move to the next queue item (see [Multi-task run](#multi-task-run)) |
-
-A session that ends early (`BLOCKED`, abort) keeps `status: in-progress`, so it can be resumed.
-
-#### Resume
-
-`--resume` continues the work recorded in `bdd_coder`:
-
-| `bdd_coder` state                                         | Action                                                                                  |
-| --------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Missing, or `status: done`                                | Report "nothing to resume" and end the session (Phase 6)                                |
-| `queue` set                                               | Continue the multi-task run from `queue[index]` (see [Multi-task run](#multi-task-run)) |
-| `checklist` set and the file exists                       | Use it as `--checklist`; restore TASKLIST PATH and the item                             |
-| `checklist` is `null`, `tasklist` set and the file exists | Run as `--tasklist <tasklist> --item <item>`                                            |
-| A recorded file does not exist                            | Report the missing path and end the session. Do not rebuild it                          |
-
-A Target ID or `--tasklist` also restores the selected item. After Phase 1a (or after reading `--tasklist`),
-check the `bdd_coder` entry against these conditions:
-
-- `bdd_coder.tasklist` equals TASKLIST PATH
-- `status` is `in-progress`
-- the recorded `item` is still `pending` in the task list
-- `--item` is not given, or names the recorded `item`
-
-If all of them hold, select that item without asking and tell the user which item was restored.
-Otherwise select the item as usual. An explicit `--item` always wins over the recorded item.
-
-Run Phase 1b for the restored item even when the recorded checklist still exists.
-tasks.md may have changed since the checklist was built (a Case added or changed in the Scenario),
-and reconciliation keeps the item's ID and its `pending` status, so the old checklist cannot be trusted.
-Only `--resume` reuses the recorded checklist as is. If tasks.md has changed, run the Target ID instead of `--resume`.
+Before you write the session entry, and before you handle `--resume` or restore a selected item,
+Read [session-resume.md](references/session-resume.md). It defines the fields, the write rules, and the resume conditions.
+Do not write `session.json` from memory.
 
 #### Phase 1a: Tasklist Build
 
@@ -238,7 +156,7 @@ Select the item:
 - On `updated`, show the `CHANGED` line to the user before selecting.
 - No `pending` item → report it and end the session (Phase 6).
 
-After selecting the item, write the [session entry](#session-entry).
+After selecting the item, write the [session entry](references/session-resume.md#session-entry).
 
 Pass **only the selected item's `Handoff`** to Phase 1b.
 Never pass the task list file to checklist-builder or bdd-coder: it lists other tasks.
@@ -297,7 +215,7 @@ Run the queue:
 - On a stop, keep `status: in-progress`, `queue`, and `index` at the stopped item.
   Report the stopped item and its cause, the completed items, and the items not run.
   Tell the user to fix the cause and run `/bdd-coder:bdd-coder --resume`, which continues from `queue[index]`.
-  Run Phase 1b again for that item (see [Resume](#resume)).
+  Run Phase 1b again for that item (see [Resume](references/session-resume.md#resume)).
 - Never commit or push, not even between items.
   The changes of all items stay in the working tree for the user to review and commit.
 
@@ -315,7 +233,7 @@ Role: [roles/checklist-builder.md](references/roles/checklist-builder.md).
 Output: `<local_dir>/temp/tasks/<slug>-<adjective>-checklist.md`
 
 When the checklist path is returned (or given by `--checklist`), keep it as **CHECKLIST PATH**
-and write the [session entry](#session-entry).
+and write the [session entry](references/session-resume.md#session-entry).
 
 If checklist-builder reports `BLOCKED` (a Task ID's Case lists more than one input):
 
@@ -512,7 +430,7 @@ Run this step only when Phase 1 used a task list (Phase 1a ran, or `--tasklist` 
 #### Step 4c: Update the session entry
 
 If every case of this invocation is completed in Step 1, set `status: done` in the
-[session entry](#session-entry). Otherwise leave it `in-progress`, and add the command to continue
+[session entry](references/session-resume.md#session-entry). Otherwise leave it `in-progress`, and add the command to continue
 to the Step 5 report: `/bdd-coder:bdd-coder --resume`.
 
 In a [Multi-task run](#multi-task-run), "this invocation" means the item of this pass.
@@ -528,6 +446,7 @@ After all write-backs complete, output the STATUS WRITE-BACK and CHECKLIST BACKF
 ## References
 
 - Usage and invocation examples: [workflow.md](references/workflow.md) — Usage
+- Session entry and resume: [session-resume.md](references/session-resume.md)
 - Full phase details: [workflow.md](references/workflow.md)
 - Write-back formats: [write-back-format.md](references/write-back-format.md)
 - Error recovery: [troubleshooting.md](references/troubleshooting.md)

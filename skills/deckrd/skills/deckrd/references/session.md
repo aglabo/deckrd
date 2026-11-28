@@ -94,7 +94,7 @@ deckrd commands do not read or write it. They must keep it when they rewrite `se
 | `bdd_coder.status`     | string         | `in-progress` or `done`                      |
 | `bdd_coder.updated_at` | string         | UTC timestamp of the last write              |
 
-Write rules and the resume procedure: bdd-coder `SKILL.md`, "Session entry" and "Resume".
+Write rules and the resume procedure: bdd-coder `references/session-resume.md`.
 
 ## State Transitions
 

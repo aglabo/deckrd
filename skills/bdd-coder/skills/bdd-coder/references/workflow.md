@@ -226,7 +226,7 @@ Spawn **tasklist-builder** with:
   `done` の項目と項目 ID は残し、分割済みの Case や新しい Scenario を反映する (`STATUS: updated`)。
   差分がなければそのまま返す (`STATUS: reused`)。同じ Target ID のタスクリストを 2 本作らない
 - 項目を選んだら session.json の `bdd_coder` に `tasklist` / `item` を書く。書き込み規則と再開の手順は
-  [SKILL.md](../SKILL.md) の「Session entry」「Resume」に従う
+  [session-resume.md](session-resume.md) に従う
 - タスクリストは **オーケストレータの状態ファイル** であり、bdd-coder エージェントへの資料ではない。
   「タスクリストを渡して L-02 だけ実装させればよい」という短絡は「1 委譲 = 1 タスク」に反する
 

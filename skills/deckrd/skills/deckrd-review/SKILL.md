@@ -3,10 +3,10 @@ name: deckrd-review
 description: >
   Independent second opinion from codex on a document or deckrd phase.
   - Use after /deckrd review, before phase transitions, or when a design decision is unclear
+license: MIT
 metadata:
   author: aglabo
-  version: 0.9.1
-  license: MIT
+  version: 0.10.0
 allowed-tools: Read Write Bash(codex:*) Bash(mkdir:*) Bash(jq:*)
 argument-hint: "<file_or_phase> [--focus completeness|risk|consistency|feasibility]"
 ---
