@@ -19,16 +19,22 @@ readonly _LIB_FILE_READER_LOADED=1
 declare -g _BOM=$'\xEF\xBB\xBF'
 
 #
-# @description Pass each line of a file to a handler, in order. A byte order mark at
-#   the start of the file is ignored. A group ID does not reach the next file.
-#   Source report.lib.sh and test-id.lib.sh before the call, for report_error and
-#   group_id_reset.
+# @description Pass each line of a file to a handler, in order, with the line that
+#   follows it. The next line of the last line is an empty string. A byte order mark at
+#   the start of the file is ignored. A group ID and the loop state do not reach the
+#   next file.
+#   Source report.lib.sh and test-id.lib.sh before the call, for report_error,
+#   group_id_reset and loop_block_reset.
 #   The handler must return 0, otherwise the checker stops with no message (set -e)
 # @arg $1 string The root directory
 # @arg $2 string The file, relative to the root
-# @arg $3 string The handler, called as: handler <file>:<line number> <line> [args...]
-# @arg $@ string The extra arguments of the handler, from the fourth argument on
+# @arg $3 string The handler, called as:
+#   handler <file>:<line number> <line> [args...] <next line>
+# @arg $@ string The extra arguments of the handler, from the fourth argument on.
+#   The next line is always passed after them, as the last argument
 # @set _GROUP_ID Empty before the first line, unless the file cannot be read (global)
+# @set _IN_LOOP Empty before the first line, unless the file cannot be read (global)
+# @set _LOOP_PENDING Empty before the first line, unless the file cannot be read (global)
 # @set _COUNTS The count of errors, when the file cannot be read (global)
 # @stderr That the file cannot be read
 # @exitcode 0 The file cannot be read, and the handler is not called
@@ -43,10 +49,12 @@ read_file_lines() {
     return 0
   fi
   group_id_reset
+  loop_block_reset
   # bash 4.3 treats an empty array as unbound
   for line in ${lines[@]+"${lines[@]}"}; do
     number=$((number + 1))
     [[ $number -ne 1 ]] || line="${line#"$_BOM"}"
-    "$3" "${2}:${number}" "$line" "${@:4}"
+    # lines[number] is the next line, unset after the last one
+    "$3" "${2}:${number}" "$line" "${@:4}" "${lines[number]-}"
   done
 }
