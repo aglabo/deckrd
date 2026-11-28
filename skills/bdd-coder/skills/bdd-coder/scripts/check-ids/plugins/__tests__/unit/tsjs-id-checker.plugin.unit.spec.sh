@@ -21,6 +21,8 @@ Include "${_PLUGIN_DIR}/../libs/file-reader.lib.sh"
 # --- テストデータ ---
 # ファイルの先頭に置くグループ宣言の行
 _DESCRIBE_LINE="describe('T-ABC-AA: x', () => {"
+# for ブロックのテストで、ファイルの先頭に置くグループ宣言の行
+_LOOP_DESCRIBE_LINE="describe('T-A-B: x', () => {"
 
 # --- 内部ヘルパー ---
 
@@ -41,6 +43,13 @@ _check_file() {
   printf '%s\n' "${@:3}" > "${_TMPDIR}/$2"
   read_file_lines "$_TMPDIR" "$2" "${LANG_HANDLER[$1]}" || return 1
   _print_counts
+}
+
+# for ブロックを閉じない ts ファイルを読んだ後に、次の ts ファイルを読み、最後の件数だけを出力する。
+# _check_file と同じ準備の後に呼ぶ。引数: 次のファイルの各行
+_check_file_after_open_loop() {
+  _check_file ts a.spec.ts "$_LOOP_DESCRIBE_LINE" '  for (const r of rows) {' > /dev/null || return 1
+  _check_file ts b.spec.ts "$@"
 }
 
 # グループ・ケース・エラーの件数を出力する
@@ -65,7 +74,8 @@ _check_line() {
 
 # --- テスト本体 ---
 
-# tsjs-id-checker.plugin.sh の check_tsjs_line。言語の表への登録と、ts / js の宣言行の計数と検査
+# tsjs-id-checker.plugin.sh の check_tsjs_line。言語の表への登録と、ts / js の宣言行の計数と検査、
+# for ブロック内のケース ID の可変枝番の検査
 Describe 'T-RUN-PTS: check_tsjs_line'
   BeforeEach 'counts_init' 'declared_ids_init'
 
@@ -171,6 +181,28 @@ Describe 'T-RUN-PTS: check_tsjs_line'
         The stderr should equal ''
       End
     End
+
+    Describe 'case IDs with a variable branch in a for block'
+      BeforeEach '_setup_tmpdir'
+      AfterEach '_cleanup_tmpdir'
+
+      # 枝番、説明、言語、for ブロック内の行
+      Parameters
+        '01' 'a $ variable branch' ts '    it(`T-A-B-01-$branch: x`, f);'
+        '02' 'a ${} variable branch' js '    it(`T-A-B-01-${row.branch}: x`, f);'
+        '03' 'a variable second branch' ts '    it(`T-A-B-01-02-${x}: x`, f);'
+        '04' 'a concatenated title' ts "    it('T-A-B-01-' + branch, f);"
+        '05' 'a trailing - with no variable' ts "    it('T-A-B-01-: title', f);"
+      End
+
+      It "Then: [Normal] T-RUN-PTS-27-$1: passes $2"
+        When call _check_file "$3" "a.spec.$3" \
+          "$_LOOP_DESCRIBE_LINE" '  for (const r of rows) {' "$4" '  }'
+        The status should be success
+        The output should equal '1 1 0'
+        The stderr should equal ''
+      End
+    End
   End
 
   Describe 'When: 異常系'
@@ -265,9 +297,64 @@ Describe 'T-RUN-PTS: check_tsjs_line'
         The stderr should equal 'Error: a.spec.ts:1: no case ID'
       End
     End
+
+    Describe 'case IDs without a variable branch in a for block'
+      BeforeEach '_setup_tmpdir'
+      AfterEach '_cleanup_tmpdir'
+
+      # 枝番、説明、言語、グループ宣言より後の行、エラーの行番号、ID
+      Parameters
+        '01' 'an ID without a branch in a ts file' ts $'  for (const r of rows) {\n    it(\'T-A-B-01: x\', f);\n  }' 3 T-A-B-01
+        '02' 'a fixed branch in a js file' js $'  for (const r of rows) {\n    it(\'T-A-B-01-01: x\', f);\n  }' 3 T-A-B-01-01
+        '03' 'a for line with a trailing comment' ts $'  for (const r of rows) { // each row\n    it(\'T-A-B-01: x\', f);\n  }' 3 T-A-B-01
+        '04' 'a case after an inner loop closes' ts $'  for (const a of as) {\n    for (const b of bs) {\n    }\n    it(\'T-A-B-01: x\', f);\n  }' 5 T-A-B-01
+        '05' 'a case in a for await block' ts $'  for await (const r of rows) {\n    it(\'T-A-B-01: x\', f);\n  }' 3 T-A-B-01
+        '06' 'a case after a for header on several lines' ts $'  for (\n    const r of rows\n  ) {\n    it(\'T-A-B-01: x\', f);\n  }' 5 T-A-B-01
+        '07' 'a wrapped it( at the keyword line' ts $'  for (const r of rows) {\n    it(\n      \'T-A-B-01: x\',\n      f);\n  }' 3 T-A-B-01
+        '08' 'a wrapped test( at the keyword line' js $'  for (const r of rows) {\n    test(\n      \'T-A-B-01: x\',\n      f);\n  }' 3 T-A-B-01
+      End
+
+      It "Then: [Error] T-RUN-PTS-26-$1: reports $2"
+        When call _check_file "$3" "a.spec.$3" "$_LOOP_DESCRIBE_LINE" "$4"
+        The status should be success
+        The output should equal '1 1 1'
+        The stderr should equal "Error: a.spec.$3:$5: case ID without a variable branch in a loop: $6"
+      End
+    End
   End
 
   Describe 'When: エッジケース'
+    Describe 'cases that a for loop does not reach'
+      BeforeEach '_setup_tmpdir'
+      AfterEach '_cleanup_tmpdir'
+
+      # 枝番、説明、グループ宣言より後の行
+      Parameters
+        '01' 'a case after a for block' $'  for (const r of rows) {\n    run(r);\n  }\n  it(\'T-A-B-01: x\', f);'
+        '02' 'a case after a brace-less for' $'  for (const r of rows) run(r);\n  it(\'T-A-B-01: x\', f);'
+      End
+
+      It "Then: [Edge] T-RUN-PTS-28-$1: passes $2"
+        When call _check_file ts a.spec.ts "$_LOOP_DESCRIBE_LINE" "$3"
+        The status should be success
+        The output should equal '1 1 0'
+        The stderr should equal ''
+      End
+    End
+
+    Describe 'a file read after an unclosed for block'
+      BeforeEach '_setup_tmpdir'
+      AfterEach '_cleanup_tmpdir'
+
+      It "Then: [Edge] T-RUN-PTS-29: passes a case of the next file"
+        When call _check_file_after_open_loop \
+          "describe('T-A-C: x', () => {" "  it('T-A-C-01: x', f);"
+        The status should be success
+        The output should equal '2 1 0'
+        The stderr should equal ''
+      End
+    End
+
     Describe 'wrapped case declarations with CRLF line ends'
       BeforeEach '_setup_tmpdir'
       AfterEach '_cleanup_tmpdir'

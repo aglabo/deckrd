@@ -21,6 +21,8 @@ Include "${_PLUGIN_DIR}/../libs/file-reader.lib.sh"
 # --- テストデータ ---
 # ファイルの先頭に置くグループ宣言の行
 _GROUP_LINE="group('T-ABC-AA: x', () {"
+# for ブロックのテストで、ファイルの先頭に置くグループ宣言の行
+_LOOP_GROUP_LINE="group('T-A-B: x', () {"
 
 # --- 内部ヘルパー ---
 
@@ -35,11 +37,24 @@ _cleanup_tmpdir() {
 }
 
 # 行をファイルに書き、dart のハンドラで読んで、グループ・ケース・エラーの件数を出力する。
-# _setup_tmpdir、counts_init、declared_ids_init の後に呼ぶ。$@: ファイルの各行
-_check_file() {
-  printf '%s\n' "$@" > "${_TMPDIR}/a.spec.dart"
-  read_file_lines "$_TMPDIR" a.spec.dart "${LANG_HANDLER[dart]}" || return 1
+# _setup_tmpdir、counts_init、declared_ids_init の後に呼ぶ。$1: ファイル名、
+# 残り: ファイルの各行
+_check_named_file() {
+  printf '%s\n' "${@:2}" > "${_TMPDIR}/$1"
+  read_file_lines "$_TMPDIR" "$1" "${LANG_HANDLER[dart]}" || return 1
   _print_counts
+}
+
+# a.spec.dart を _check_named_file で読む。$@: ファイルの各行
+_check_file() {
+  _check_named_file a.spec.dart "$@"
+}
+
+# for ブロックを閉じないファイルを読んだ後に、次のファイルを読み、最後の件数だけを出力する。
+# _check_file と同じ準備の後に呼ぶ。$@: 次のファイルの各行
+_check_file_after_open_loop() {
+  _check_file "$_LOOP_GROUP_LINE" '  for (final r in rows) {' > /dev/null || return 1
+  _check_named_file b.spec.dart "$@"
 }
 
 # グループ・ケース・エラーの件数を出力する
@@ -64,7 +79,8 @@ _check_line() {
 
 # --- テスト本体 ---
 
-# dart-id-checker.plugin.sh の check_dart_line。言語の表への登録と、group と test の宣言行 (折り返しを含む) の計数と検査
+# dart-id-checker.plugin.sh の check_dart_line。言語の表への登録と、group と test の宣言行 (折り返しを含む) の計数と検査、
+# for ブロック内のケース ID の可変枝番の検査
 Describe 'T-RUN-PDA: check_dart_line'
   BeforeEach 'counts_init' 'declared_ids_init'
 
@@ -142,6 +158,28 @@ Describe 'T-RUN-PDA: check_dart_line'
         When call _check_line T-ABC-AA "test('T-ABC-AA-01: x', f);"
         The status should be success
         The output should equal '0 1 0'
+        The stderr should equal ''
+      End
+    End
+
+    Describe 'case IDs with a variable branch in a for block'
+      BeforeEach '_setup_tmpdir'
+      AfterEach '_cleanup_tmpdir'
+
+      # 枝番、説明、for ブロック内の行
+      Parameters
+        '01' 'a $ variable branch' $'    test(\'T-A-B-01-$branch: x\', f);'
+        '02' 'a ${} variable branch' $'    test(\'T-A-B-01-${row.branch}: x\', f);'
+        '03' 'a variable second branch' $'    test(\'T-A-B-01-02-${x}: x\', f);'
+        '04' 'a concatenated title' $'    test(\'T-A-B-01-\' + branch, f);'
+        '05' 'a trailing - with no variable' $'    test(\'T-A-B-01-: title\', f);'
+      End
+
+      It "Then: [Normal] T-RUN-PDA-25-$1: passes $2"
+        When call _check_file \
+          "$_LOOP_GROUP_LINE" '  for (final r in rows) {' "$3" '  }'
+        The status should be success
+        The output should equal '1 1 0'
         The stderr should equal ''
       End
     End
@@ -238,9 +276,64 @@ Describe 'T-RUN-PDA: check_dart_line'
         The stderr should equal 'Error: a.spec.dart:1: no case ID'
       End
     End
+
+    Describe 'case IDs without a variable branch in a for block'
+      BeforeEach '_setup_tmpdir'
+      AfterEach '_cleanup_tmpdir'
+
+      # 枝番、説明、グループ宣言より後の行、エラーの行番号、ID
+      Parameters
+        '01' 'an ID without a branch' $'  for (final r in rows) {\n    test(\'T-A-B-01: x\', f);\n  }' 3 T-A-B-01
+        '02' 'a fixed branch' $'  for (final r in rows) {\n    test(\'T-A-B-01-01: x\', f);\n  }' 3 T-A-B-01-01
+        '03' 'a for line with a comment' $'  for (final r in rows) { // each row\n    test(\'T-A-B-01: x\', f);\n  }' 3 T-A-B-01
+        '04' 'a case after an inner loop closes' $'  for (final a in rows) {\n    for (final b in a) {\n      run(b);\n    }\n    test(\'T-A-B-01: x\', f);\n  }' 6 T-A-B-01
+        '05' 'a case in an await for block' $'  await for (final r in stream) {\n    test(\'T-A-B-01: x\', f);\n  }' 3 T-A-B-01
+        '06' 'a case after a for header on several lines' $'  for (final c in [\n    \'a\',\n  ]) {\n    test(\'T-A-B-01: x\', f);\n  }' 5 T-A-B-01
+        '07' 'a wrapped test( at the keyword line' $'  for (final r in rows) {\n    test(\n      \'T-A-B-01: x\',\n      f);\n  }' 3 T-A-B-01
+        '08' 'a wrapped testWidgets( at the keyword line' $'  for (final r in rows) {\n    testWidgets(\n      \'T-A-B-01: x\',\n      f);\n  }' 3 T-A-B-01
+      End
+
+      It "Then: [Error] T-RUN-PDA-24-$1: reports $2"
+        When call _check_file "$_LOOP_GROUP_LINE" "$3"
+        The status should be success
+        The output should equal '1 1 1'
+        The stderr should equal "Error: a.spec.dart:$4: case ID without a variable branch in a loop: $5"
+      End
+    End
   End
 
   Describe 'When: エッジケース'
+    Describe 'cases that a for loop does not reach'
+      BeforeEach '_setup_tmpdir'
+      AfterEach '_cleanup_tmpdir'
+
+      # 枝番、説明、グループ宣言より後の行
+      Parameters
+        '01' 'a case after a for block' $'  for (final r in rows) {\n    run(r);\n  }\n  test(\'T-A-B-01: x\', f);'
+        '02' 'a case after a brace-less for' $'  for (final r in rows) run(r);\n  test(\'T-A-B-01: x\', f);'
+      End
+
+      It "Then: [Edge] T-RUN-PDA-26-$1: passes $2"
+        When call _check_file "$_LOOP_GROUP_LINE" "$3"
+        The status should be success
+        The output should equal '1 1 0'
+        The stderr should equal ''
+      End
+    End
+
+    Describe 'a file read after an unclosed for block'
+      BeforeEach '_setup_tmpdir'
+      AfterEach '_cleanup_tmpdir'
+
+      It "Then: [Edge] T-RUN-PDA-27: passes a case of the next file"
+        When call _check_file_after_open_loop \
+          "group('T-A-C: x', () {" "  test('T-A-C-01: x', f);"
+        The status should be success
+        The output should equal '2 1 0'
+        The stderr should equal ''
+      End
+    End
+
     Describe 'wrapped case declarations with CRLF line ends'
       BeforeEach '_setup_tmpdir'
       AfterEach '_cleanup_tmpdir'
